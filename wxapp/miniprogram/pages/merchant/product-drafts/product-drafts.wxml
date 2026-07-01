@@ -1,0 +1,85 @@
+﻿<view class="merchant-page has-bottom-actions" style="{{pageStyle}}">
+  <view class="status-space"></view>
+
+  <view class="page-titlebar">
+    <view class="icon-box icon-btn" bindtap="goBack">
+      <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+    </view>
+    <view class="title-block">
+      <view class="page-title">草稿箱</view>
+    </view>
+    <text></text>
+  </view>
+
+  <view class="top-actions" style="justify-content: space-between;">
+    <view class="search-pill" style="flex:1; max-width: 420rpx; height: 64rpx; border-radius: 999rpx; background: var(--merchant-bg); display: flex; align-items: center; gap: 12rpx; padding: 0 20rpx;">
+      <image src="/assets/icons/search.svg" mode="aspectFit" style="width:32rpx;height:32rpx" />
+      <input style="flex:1;min-width:0;height:100%;font-size:26rpx;color:var(--merchant-text)" placeholder="搜索草稿商品" value="{{searchKeyword}}" bindinput="onSearchInput" />
+    </view>
+    <view class="icon-btn filter" bindtap="openFilter">
+      <t-icon name="filter" size="40rpx"></t-icon>
+    </view>
+  </view>
+
+  <scroll-view scroll-x class="tabs" enhanced show-scrollbar="{{false}}">
+    <view class="tab {{filterTab === 'all' ? 'active' : ''}}" bindtap="onFilterTabTap" data-tab="all">全部</view>
+    <view class="tab {{filterTab === 'noimage' ? 'active' : ''}}" bindtap="onFilterTabTap" data-tab="noimage">缺图片</view>
+    <view class="tab {{filterTab === 'noprice' ? 'active' : ''}}" bindtap="onFilterTabTap" data-tab="noprice">缺价格</view>
+    <view class="tab {{filterTab === 'nosku' ? 'active' : ''}}" bindtap="onFilterTabTap" data-tab="nosku">缺规格</view>
+    <view class="tab {{filterTab === 'ready' ? 'active' : ''}}" bindtap="onFilterTabTap" data-tab="ready">可提交</view>
+  </scroll-view>
+
+  <view class="draft-list" wx:if="{{drafts.length}}">
+    <view class="draft-row" wx:for="{{drafts}}" wx:key="id">
+      <view class="draft-icon">
+        <t-icon name="{{item.icon}}" size="40rpx"></t-icon>
+      </view>
+      <view class="draft-main">
+        <text class="draft-title">{{item.title}}</text>
+        <text class="draft-desc">{{item.desc}}</text>
+      </view>
+      <view class="pill-btn {{item.actionType}}" bindtap="onDraftAction" data-id="{{item.id}}" data-action="{{item.action}}">{{item.actionLabel}}</view>
+    </view>
+  </view>
+
+  <view class="empty-state" wx:else>
+    <image class="fit-img" src="/assets/illustrations/empty.svg" mode="aspectFit" style="width:128rpx;height:128rpx" />
+    <text class="empty-title">没有匹配草稿</text>
+  </view>
+
+  <view class="bottom-actions">
+    <view class="action-btn secondary" bindtap="cleanDrafts">清理无效草稿</view>
+    <view class="action-btn primary" bindtap="goPublish">发布新商品</view>
+  </view>
+
+  <view class="sheet-mask" wx:if="{{showFilter}}" bindtap="closeFilter"></view>
+  <view class="bottom-sheet" wx:if="{{showFilter}}">
+    <view class="sheet-head">
+      <text class="sheet-title">草稿筛选</text>
+      <view class="icon-box icon-btn" bindtap="closeFilter">
+        <t-icon name="close" size="40rpx"></t-icon>
+      </view>
+    </view>
+    <view class="sheet-group">
+      <text class="sheet-label">完整度</text>
+      <view class="option-grid">
+        <view class="option {{sheetCompleteness === 'all' ? 'active' : ''}}" bindtap="setCompleteness" data-val="all">全部</view>
+        <view class="option {{sheetCompleteness === 'ready' ? 'active' : ''}}" bindtap="setCompleteness" data-val="ready">可提交</view>
+        <view class="option {{sheetCompleteness === 'noimage' ? 'active' : ''}}" bindtap="setCompleteness" data-val="noimage">缺图片</view>
+        <view class="option {{sheetCompleteness === 'nosku' ? 'active' : ''}}" bindtap="setCompleteness" data-val="nosku">缺规格</view>
+      </view>
+    </view>
+    <view class="sheet-group">
+      <text class="sheet-label">保存时间</text>
+      <view class="option-grid">
+        <view class="option {{sheetTime === 'recent' ? 'active' : ''}}" bindtap="setTimeFilter" data-val="recent">最近保存</view>
+        <view class="option {{sheetTime === 'today' ? 'active' : ''}}" bindtap="setTimeFilter" data-val="today">今天</view>
+        <view class="option {{sheetTime === 'week' ? 'active' : ''}}" bindtap="setTimeFilter" data-val="week">7天内</view>
+      </view>
+    </view>
+    <view class="sheet-actions">
+      <view class="action-btn secondary" bindtap="resetFilter">重置</view>
+      <view class="action-btn primary" bindtap="applyFilter">应用</view>
+    </view>
+  </view>
+</view>

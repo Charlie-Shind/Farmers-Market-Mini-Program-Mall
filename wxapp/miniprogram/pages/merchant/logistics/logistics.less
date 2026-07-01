@@ -1,0 +1,171 @@
+@import "../common.less";
+
+.goods-card {
+  margin: 0 32rpx 20rpx;
+  padding: 20rpx;
+  border-radius: 24rpx;
+  background: var(--merchant-surface);
+  border: 1rpx solid var(--merchant-line-soft);
+  display: flex;
+  align-items: flex-start;
+  gap: 18rpx;
+}
+
+.goods-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.goods-title {
+  font-size: 28rpx;
+  font-weight: 800;
+  color: var(--merchant-text);
+  line-height: 1.35;
+}
+
+.goods-desc {
+  font-size: 24rpx;
+  color: var(--merchant-text-muted);
+  line-height: 1.4;
+}
+
+.goods-price {
+  font-size: 28rpx;
+  font-weight: 900;
+  color: var(--merchant-accent);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.section-line-title {
+  padding: 24rpx 32rpx 16rpx;
+  font-size: 28rpx;
+  font-weight: 800;
+  color: var(--merchant-text);
+}
+
+.form-card {
+  margin: 0 32rpx 20rpx;
+  border-radius: 24rpx;
+  background: var(--merchant-surface);
+  border: 1rpx solid var(--merchant-line-soft);
+  overflow: hidden;
+}
+
+.form-line {
+  min-height: 104rpx;
+  padding: 20rpx 24rpx;
+  border-bottom: 1rpx solid var(--merchant-line-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.form-line:last-child {
+  border-bottom: 0;
+}
+
+.form-line label {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: var(--merchant-text-sub);
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.required {
+  font-size: 20rpx;
+  color: var(--merchant-danger);
+  font-weight: 500;
+}
+
+.optional {
+  font-size: 20rpx;
+  color: var(--merchant-text-placeholder);
+  font-weight: 500;
+}
+
+.form-line input {
+  width: 100%;
+  height: 64rpx;
+  font-size: 28rpx;
+  color: var(--merchant-text);
+}
+
+.form-line textarea {
+  width: 100%;
+  min-height: 80rpx;
+  font-size: 28rpx;
+  color: var(--merchant-text);
+  line-height: 1.45;
+}
+
+.process-list {
+  margin: 0 32rpx 32rpx;
+  border-radius: 24rpx;
+  background: var(--merchant-surface);
+  border: 1rpx solid var(--merchant-line-soft);
+  overflow: hidden;
+}
+
+.process-row {
+  position: relative;
+  padding: 22rpx 24rpx 22rpx 64rpx;
+  border-bottom: 1rpx solid var(--merchant-line-soft);
+  display: flex;
+  align-items: flex-start;
+  gap: 14rpx;
+}
+
+.process-row:last-child {
+  border-bottom: 0;
+}
+
+.process-index {
+  position: absolute;
+  left: 20rpx;
+  top: 24rpx;
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: 999rpx;
+  background: var(--merchant-bg-soft);
+  color: var(--merchant-text-muted);
+  font-size: 20rpx;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.process-row.done .process-index {
+  background: var(--merchant-primary-soft);
+  color: var(--merchant-primary);
+}
+
+.process-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.process-name {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: var(--merchant-text);
+}
+
+.process-desc {
+  font-size: 24rpx;
+  color: var(--merchant-text-muted);
+  line-height: 1.35;
+}
+
+.status-pill {
+  flex-shrink: 0;
+}

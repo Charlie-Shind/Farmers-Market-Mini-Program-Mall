@@ -1,0 +1,60 @@
+﻿<view class="merchant-page has-tabbar has-bottom-actions" style="{{pageStyle}}">
+  <view class="status-space"></view>
+
+  <view class="page-titlebar">
+    <view class="icon-box icon-btn" bindtap="goBack">
+      <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+    </view>
+    <view class="title-block">
+      <view class="page-title">资质认证</view>
+      <view class="page-subtitle">主体、经营类目、收款资料</view>
+    </view>
+  </view>
+
+  <view class="visual-row">
+    <view class="visual-main">
+      <view class="visual-title">认证状态：已通过</view>
+      <view class="visual-desc">店铺经营类目：生鲜果蔬、粮油干货、特产礼盒。</view>
+    </view>
+    <t-icon name="shop" size="40rpx"></t-icon>
+  </view>
+
+  <view class="process-list">
+    <view class="process-row done" wx:for="{{certSteps}}" wx:key="id">
+      <view class="process-index">{{item.index}}</view>
+      <view class="process-main">
+        <text class="process-title">{{item.title}}</text>
+        <text class="process-desc">{{item.desc}}</text>
+      </view>
+      <text class="status-pill {{item.pillClass}}">{{item.status}}</text>
+    </view>
+  </view>
+
+  <view class="bottom-actions">
+    <button class="action-btn secondary" bindtap="onDownload">下载资料</button>
+    <button class="action-btn primary" bindtap="onApplyChange">申请变更</button>
+  </view>
+
+  <view class="bottom-nav">
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/dashboard/dashboard">
+      <t-icon name="home" size="40rpx"></t-icon>
+      <text>首页</text>
+    </view>
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/messages/messages">
+      <t-icon name="message" size="40rpx"></t-icon>
+      <text>聊天</text>
+    </view>
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/orders/orders">
+      <t-icon name="invoice" size="40rpx"></t-icon>
+      <text>订单</text>
+    </view>
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/products/products">
+      <t-icon name="package" size="40rpx"></t-icon>
+      <text>库存</text>
+    </view>
+    <view class="nav-item active">
+      <t-icon name="profile" size="40rpx"></t-icon>
+      <text>账号</text>
+    </view>
+  </view>
+</view>

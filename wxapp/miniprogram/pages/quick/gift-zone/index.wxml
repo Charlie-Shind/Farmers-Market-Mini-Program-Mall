@@ -1,0 +1,154 @@
+<view class="phone-page zone-page zone-page--gift" style="{{pageStyle}}">
+  <!-- 导航栏 -->
+  <view class="zone-head">
+    <view class="page-title-bar">
+      <button class="back-btn" bindtap="goBack" hover-class="back-btn--hover">
+        <t-icon name="back" size="40rpx" color="#ffffff"></t-icon>
+      </button>
+      <text class="page-title-bar__title">{{pageTitle}}</text>
+      <button class="head-action" bindtap="onShare">
+        <t-icon name="share" size="32rpx"></t-icon>
+      </button>
+    </view>
+  </view>
+
+  <!-- Banner -->
+  <view class="gift-hero">
+    <image
+      class="gift-hero-bg"
+      src="{{heroImageUrl}}"
+      mode="aspectFill"
+    />
+  </view>
+
+  <!-- 胶囊 Tab -->
+  <view class="gift-tabs">
+    <view
+      wx:for="{{tabs}}"
+      wx:key="key"
+      wx:if="{{item.key !== 'ALL'}}"
+      class="gift-tab {{activeFilter === item.key ? 'active' : ''}}"
+      data-key="{{item.key}}"
+      bindtap="setFilter"
+    >
+      {{item.label}}
+    </view>
+  </view>
+
+  <block wx:if="{{products.length}}">
+    <!-- 主推礼盒卡片 -->
+    <view
+      wx:if="{{mainGift}}"
+      class="gift-product-card"
+      data-id="{{mainGift.id}}"
+      bindtap="openProductDetail"
+    >
+      <view class="gift-product-img-wrap">
+        <image
+          wx:if="{{mainGift.coverUrl}}"
+          class="gift-product-img"
+          src="{{mainGift.coverUrl}}"
+          mode="aspectFill"
+          binderror="onGoodsImgError"
+          data-i="main"
+        />
+        <view wx:else class="gift-product-img {{mainGift.imageClass}}"></view>
+      </view>
+      <view class="gift-product-info">
+        <view class="gift-product-title">{{mainGift.title}}</view>
+        <view class="gift-product-desc">{{mainGift.subtitle}}</view>
+        <view wx:if="{{mainGift.tags.length}}" class="tag-row">
+          <text wx:for="{{mainGift.tags}}" wx:key="*this" class="gift-tag">{{item}}</text>
+        </view>
+        <view class="gift-bottom">
+          <view class="gift-price">
+            <text class="gift-price__symbol">¥</text>{{mainGift.price}}
+          </view>
+          <button
+            wx:if="{{mainGift.skuId}}"
+            class="gift-buy-btn"
+            data-sku-id="{{mainGift.skuId}}"
+            catchtap="addToCart"
+          >立即购买</button>
+        </view>
+      </view>
+    </view>
+
+    <!-- 第二个礼盒推荐卡片 -->
+    <view
+      wx:if="{{secondGift}}"
+      class="gift-product-card"
+      data-id="{{secondGift.id}}"
+      bindtap="openProductDetail"
+    >
+      <view class="gift-product-img-wrap">
+        <image
+          wx:if="{{secondGift.coverUrl}}"
+          class="gift-product-img"
+          src="{{secondGift.coverUrl}}"
+          mode="aspectFill"
+          binderror="onGoodsImgError"
+          data-i="second"
+        />
+        <view wx:else class="gift-product-img {{secondGift.imageClass}}"></view>
+      </view>
+      <view class="gift-product-info">
+        <view class="gift-product-title">{{secondGift.title}}</view>
+        <view class="gift-product-desc">{{secondGift.subtitle}}</view>
+        <view wx:if="{{secondGift.tags.length}}" class="tag-row">
+          <text wx:for="{{secondGift.tags}}" wx:key="*this" class="gift-tag">{{item}}</text>
+        </view>
+        <view class="gift-bottom">
+          <view class="gift-price">
+            <text class="gift-price__symbol">¥</text>{{secondGift.price}}
+          </view>
+          <button
+            wx:if="{{secondGift.skuId}}"
+            class="gift-buy-btn"
+            data-sku-id="{{secondGift.skuId}}"
+            catchtap="addToCart"
+          >立即购买</button>
+        </view>
+      </view>
+    </view>
+
+    <!-- 更多礼盒推荐 -->
+    <view wx:if="{{moreGifts.length}}" class="more-gift-section">
+      <view class="more-gift-title">全部礼盒</view>
+      <view class="more-gift-grid">
+        <view
+          wx:for="{{moreGifts}}"
+          wx:key="id"
+          class="small-gift-card"
+          data-id="{{item.id}}"
+          bindtap="openProductDetail"
+        >
+          <view class="small-gift-img-wrap">
+            <image
+              wx:if="{{item.coverUrl}}"
+              class="small-gift-img"
+              src="{{item.coverUrl}}"
+              mode="aspectFill"
+            />
+            <view wx:else class="small-gift-img {{item.imageClass}}"></view>
+          </view>
+          <view class="small-gift-info">
+            <view class="small-gift-name">{{item.title}}</view>
+            <view class="small-gift-price">¥{{item.price}}</view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <!-- 空态 -->
+  <view wx:elif="{{!loading}}" class="empty-block">
+    <text class="empty-hint">当前暂无礼盒商品</text>
+    <text class="empty-hint__sub">可以先去其他分类逛逛</text>
+  </view>
+
+  <!-- 加载态 -->
+  <text wx:elif="{{loading}}" class="empty-hint" style="margin-top: 120rpx;">加载中…</text>
+
+  <view class="safe-bottom"></view>
+</view>

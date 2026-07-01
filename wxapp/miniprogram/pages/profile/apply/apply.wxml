@@ -1,0 +1,169 @@
+﻿<view class="phone-page profile-apply-page" style="{{pageStyle}}">
+  <view class="board-head">
+    <view class="page-title-bar">
+      <view class="back-btn" bindtap="goBack" hover-class="back-btn--hover">
+        <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+      </view>
+      <text class="page-title-bar__title">商户资质入驻</text>
+      <text></text>
+    </view>
+  </view>
+
+  <scroll-view scroll-y="true" class="apply-scroll" enhanced="true" show-scrollbar="{{false}}">
+    <view class="apply-content-inner">
+      <view class="tip-card">
+        <text class="tip-card__title">入驻申请</text>
+        <text class="tip-card__meta">按要求填写店铺信息并上传资质，提交后进入审核流程。</text>
+      </view>
+
+      <view class="status-wrap" wx:if="{{merchantStatus === 'PENDING_AUDIT'}}">
+        <view class="status-card">
+          <view class="status-icon-box status-icon-box--pending">
+            <t-icon name="package" size="80rpx" color="brandGold"></t-icon>
+          </view>
+          <text class="status-title">资料审核中</text>
+          <text class="status-desc">申请已提交，正在审核。</text>
+
+          <view class="progress-bar">
+            <view class="progress-step progress-step--active">
+              <view class="step-dot"></view>
+              <text>提交申请</text>
+            </view>
+            <view class="progress-line progress-line--active"></view>
+            <view class="progress-step progress-step--active">
+              <view class="step-dot step-dot--pulse"></view>
+              <text>平台审核</text>
+            </view>
+            <view class="progress-line"></view>
+            <view class="progress-step">
+              <view class="step-dot"></view>
+              <text>入驻成功</text>
+            </view>
+          </view>
+
+          <button class="action-btn action-btn--ghost" plain="true" bindtap="goBack">返回个人中心</button>
+        </view>
+      </view>
+
+      <view class="form-wrap" wx:else>
+        <view class="reject-alert-card" wx:if="{{merchantStatus === 'REJECTED'}}">
+          <t-icon name="refund" size="36rpx" color="brandDanger"></t-icon>
+          <view class="reject-alert-card__body">
+            <text class="reject-alert-card__title">申请已被驳回</text>
+            <text class="reject-alert-card__desc">原因：{{rejectRemark || '资料不完整，请修改后重新提交。'}}</text>
+          </view>
+        </view>
+
+        <view class="cell-group">
+          <view class="cell-row cell-row--avatar" bindtap="chooseLogo">
+            <text class="cell-label">店铺 Logo</text>
+            <view class="cell-right">
+              <view class="avatar-preview">
+                <image wx:if="{{form.storeLogo}}" class="avatar-preview__img" src="{{form.storeLogo}}" mode="aspectFill"></image>
+                <view wx:else class="avatar-preview__empty">
+                  <text>上传</text>
+                </view>
+              </view>
+              <t-icon name="chevronRight" size="24rpx" opacity="0.3"></t-icon>
+            </view>
+          </view>
+
+          <view class="cell-row">
+            <text class="cell-label">店铺名称</text>
+            <input
+              class="cell-input"
+              value="{{form.storeName}}"
+              placeholder="请输入店铺名称"
+              placeholder-class="cell-placeholder"
+              data-field="storeName"
+              bindinput="onInput"
+            />
+          </view>
+
+          <view class="cell-row">
+            <text class="cell-label">联系人</text>
+            <input
+              class="cell-input"
+              value="{{form.contactName}}"
+              placeholder="请输入联系人姓名"
+              placeholder-class="cell-placeholder"
+              data-field="contactName"
+              bindinput="onInput"
+            />
+          </view>
+
+          <view class="cell-row">
+            <text class="cell-label">联系电话</text>
+            <input
+              class="cell-input"
+              type="number"
+              value="{{form.contactMobile}}"
+              placeholder="请输入手机号"
+              placeholder-class="cell-placeholder"
+              data-field="contactMobile"
+              bindinput="onInput"
+            />
+          </view>
+        </view>
+
+        <view class="bio-card">
+          <view class="bio-header">
+            <text class="bio-title">店铺简介</text>
+            <text class="bio-counter">{{form.storeDesc.length || 0}}/200</text>
+          </view>
+          <textarea
+            class="bio-textarea"
+            value="{{form.storeDesc}}"
+            placeholder="请简要说明主营内容"
+            placeholder-class="bio-placeholder"
+            data-field="storeDesc"
+            bindinput="onInput"
+            maxlength="200"
+          ></textarea>
+        </view>
+
+        <text class="panel-title">资质上传</text>
+        <view class="qualification-uploaders">
+          <view class="qual-uploader" data-type="BUSINESS_LICENSE" bindtap="chooseQualification" hover-class="qual-uploader--hover">
+            <image wx:if="{{form.businessLicense}}" src="{{form.businessLicense}}" class="qual-uploader__image" mode="aspectFill"></image>
+            <view wx:else class="qual-uploader__placeholder">
+              <t-icon name="invoice" size="48rpx" color="brandGold"></t-icon>
+              <text>营业执照</text>
+            </view>
+          </view>
+
+          <view class="qual-uploader" data-type="ORIGIN_QUALIFICATION" bindtap="chooseQualification" hover-class="qual-uploader--hover">
+            <image wx:if="{{form.originQualification}}" src="{{form.originQualification}}" class="qual-uploader__image" mode="aspectFill"></image>
+            <view wx:else class="qual-uploader__placeholder">
+              <t-icon name="origin" size="48rpx" color="brandGold"></t-icon>
+              <text>产地资质</text>
+            </view>
+          </view>
+        </view>
+
+        <view class="submit-bar">
+          <button class="ghost" plain="true" disabled="{{submitting}}" bindtap="goBack">取消</button>
+          <button class="primary" plain="true" disabled="{{submitting}}" bindtap="submitApplication">
+            {{submitting ? '提交中...' : '提交审核'}}
+          </button>
+        </view>
+
+        <view class="apply-bottom-spacer"></view>
+      </view>
+    </view>
+  </scroll-view>
+
+  <loading show="{{loading}}" text="{{loadingText}}"></loading>
+  <toast show="{{toastVisible}}" message="{{toastMessage}}" type="{{toastType}}" bindclose="hideToast"></toast>
+  <view class="bottom-safe"></view>
+
+  <image-cropper
+    show="{{cropperVisible}}"
+    imageUrl="{{cropperImageUrl}}"
+    aspectRatio="{{1.0}}"
+    exportWidth="{{400}}"
+    exportHeight="{{400}}"
+    bind:success="onCropSuccess"
+    bind:cancel="onCropCancel"
+  ></image-cropper>
+</view>

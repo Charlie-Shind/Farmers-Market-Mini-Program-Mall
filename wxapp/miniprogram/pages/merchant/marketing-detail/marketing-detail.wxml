@@ -1,0 +1,78 @@
+﻿<view class="merchant-page has-bottom-actions detail-page" style="{{pageStyle}}">
+  <view class="status-space"></view>
+
+  <view class="page-titlebar">
+    <view class="icon-box icon-btn" bindtap="goBack">
+      <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+    </view>
+    <view class="title-block">
+      <view class="page-title">活动详情</view>
+      <view class="page-subtitle">{{activityName}}</view>
+    </view>
+    <text></text>
+  </view>
+
+  <view class="top-actions">
+    <view class="icon-action" bindtap="goEdit">
+      <t-icon name="edit" size="40rpx"></t-icon>
+      <text>编辑</text>
+    </view>
+  </view>
+
+  <view class="detail-head">
+    <view class="detail-info">
+      <text class="detail-title">{{activityName}}</text>
+      <text class="detail-sub">{{statusText}} · {{typeName}} · {{timeDesc}}</text>
+    </view>
+    <text class="status-pill {{statusClass}}">{{statusText}}</text>
+  </view>
+
+  <view class="metric-strip">
+    <view class="metric-item">
+      <text class="metric-value">{{orderCount}}</text>
+      <text class="metric-label">活动订单</text>
+    </view>
+    <view class="metric-item">
+      <text class="metric-value">¥{{amount}}</text>
+      <text class="metric-label">成交额</text>
+    </view>
+    <view class="metric-item">
+      <text class="metric-value">{{remainStock}}</text>
+      <text class="metric-label">剩余库存</text>
+    </view>
+  </view>
+
+  <view class="section-line-title">
+    <text>活动商品（仅 1 个）</text>
+    <text class="row-right" bindtap="goProducts">更换商品<t-icon name="chevronRight" size="40rpx"></t-icon></text>
+  </view>
+
+  <view class="full-list">
+    <view class="product-list-item" wx:for="{{products}}" wx:key="id">
+      <image class="goods-img" src="{{item.cover}}" mode="aspectFill" />
+      <view class="product-list-body">
+        <view class="product-list-head">
+          <text class="product-list-title">{{item.name}}</text>
+          <text class="status-pill {{item.tag}}">{{item.status}}</text>
+        </view>
+        <text class="product-list-meta">活动价 ¥{{item.price}} · 库存 {{item.stock}} · 已售 {{item.sold}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="divider"></view>
+
+  <view class="section-line-title"><text>活动时间线</text></view>
+  <view class="timeline">
+    <view class="timeline-row" wx:for="{{timeline}}" wx:key="title">
+      <text>{{item.title}}</text>
+      <text>{{item.desc}}</text>
+    </view>
+  </view>
+
+  <view class="bottom-actions">
+    <button class="action-btn secondary" bindtap="goStatistics">查看数据</button>
+    <button class="action-btn secondary" bindtap="pauseActivity">暂停</button>
+    <button class="action-btn danger" bindtap="endActivity">结束活动</button>
+  </view>
+</view>

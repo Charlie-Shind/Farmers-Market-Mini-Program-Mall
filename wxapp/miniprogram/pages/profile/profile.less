@@ -1,0 +1,554 @@
+.profile-page {
+  min-height: 100vh;
+  background: #f4f6f4;
+  padding-bottom: 152rpx;
+  box-sizing: border-box;
+}
+
+/* ========== 顶部 Header ========== */
+.profile-header {
+  position: relative;
+  padding: calc(var(--header-content-top, var(--page-top, 68rpx)) + -71rpx) 28rpx 0;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.profile-header__bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 85% 12%, rgba(214, 166, 101, 0.35), transparent 42%),
+    radial-gradient(circle at 10% 90%, rgba(255, 255, 255, 0.08), transparent 36%),
+    linear-gradient(145deg, #1f3629 0%, #2c4a39 48%, #3d6b52 100%);
+  pointer-events: none;
+}
+
+.profile-header__user {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 32rpx;
+}
+
+.profile-header__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.profile-header__avatar-wrap {
+  position: relative;
+  flex: 0 0 128rpx;
+  width: 128rpx;
+  height: 128rpx;
+}
+
+.profile-header__avatar {
+  width: 128rpx;
+  height: 128rpx;
+  border-radius: 36rpx;
+  border: 4rpx solid rgba(255, 255, 255, 0.72);
+  box-shadow: 0 16rpx 36rpx rgba(0, 0, 0, 0.18);
+  display: block;
+}
+
+.profile-header__vip-tag {
+  position: absolute;
+  right: -8rpx;
+  bottom: -8rpx;
+  display: inline-flex;
+  align-items: center;
+  gap: 4rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 999rpx;
+  background: linear-gradient(135deg, #f8e9c9, #e9cf98);
+  color: #72501d;
+  font-size: 20rpx;
+  font-weight: 800;
+  box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.12);
+}
+
+.profile-header__meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+}
+
+.profile-header__name {
+  font-size: 40rpx;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-header__phone {
+  font-size: 26rpx;
+  color: rgba(255, 255, 255, 0.76);
+  line-height: 1.2;
+}
+
+.profile-header__actions {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding-left: 8rpx;
+}
+
+.profile-header__tool {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48rpx;
+  min-height: 48rpx;
+  padding: 8rpx;
+  box-sizing: border-box;
+}
+
+.profile-header__badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  min-width: 28rpx;
+  height: 28rpx;
+  padding: 0 6rpx;
+  border-radius: 999rpx;
+  background: #e54d42;
+  color: #fff;
+  font-size: 18rpx;
+  font-weight: 700;
+  line-height: 28rpx;
+  text-align: center;
+  border: 2rpx solid #1f3629;
+  box-sizing: border-box;
+  transform: translate(20%, -20%);
+}
+
+.profile-asset-bar {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: stretch;
+  margin-bottom: 24rpx;
+  padding: 20rpx 0;
+  border-radius: 24rpx;
+  background: rgba(255, 255, 255, 0.08);
+  border: 2rpx solid rgba(255, 255, 255, 0.1);
+}
+
+.profile-asset-bar__item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+  position: relative;
+}
+
+.profile-asset-bar__item:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2rpx;
+  height: 48rpx;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.profile-asset-bar__value {
+  font-size: 36rpx;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1;
+}
+
+.profile-asset-bar__label {
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.72);
+  font-weight: 600;
+}
+
+.profile-vip-card {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
+  margin-bottom: 28rpx;
+  padding: 24rpx 28rpx;
+  border-radius: 24rpx;
+  background: linear-gradient(135deg, #f8e9c9 0%, #edd9a8 100%);
+  box-shadow: 0 16rpx 40rpx rgba(0, 0, 0, 0.12);
+}
+
+.profile-vip-card__info {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.profile-vip-card__title {
+  font-size: 30rpx;
+  font-weight: 900;
+  color: #72501d;
+  line-height: 1.2;
+}
+
+.profile-vip-card__desc {
+  font-size: 22rpx;
+  color: rgba(114, 80, 29, 0.72);
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.profile-vip-card__action {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4rpx;
+  padding: 12rpx 20rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.72);
+  color: #72501d;
+  font-size: 24rpx;
+  font-weight: 800;
+}
+
+/* ========== 主体内容 ========== */
+.profile-body {
+  position: relative;
+  z-index: 3;
+  margin-top: -8rpx;
+  padding: 0 24rpx;
+  box-sizing: border-box;
+}
+
+.profile-section {
+  margin-bottom: 20rpx;
+  padding: 28rpx 24rpx 24rpx;
+  border-radius: 28rpx;
+  background: #fff;
+  box-shadow: 0 12rpx 40rpx rgba(44, 74, 57, 0.06);
+  box-sizing: border-box;
+}
+
+.profile-section__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24rpx;
+}
+
+.profile-section__title {
+  font-size: 32rpx;
+  font-weight: 900;
+  color: #1a1a1a;
+  line-height: 1.2;
+}
+
+.profile-section__more {
+  display: inline-flex;
+  align-items: center;
+  gap: 4rpx;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  color: #9aa097;
+  font-size: 24rpx;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.profile-section__more::after {
+  border: 0;
+}
+
+/* ========== 订单快捷入口 ========== */
+.order-shortcuts {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8rpx;
+}
+
+.order-shortcuts__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12rpx;
+  padding: 8rpx 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  border-radius: 20rpx;
+}
+
+.order-shortcuts__item:active {
+  background: rgba(44, 74, 57, 0.04);
+}
+
+.order-shortcuts__icon {
+  position: relative;
+  width: 56rpx;
+  height: 56rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.order-shortcuts__badge {
+  position: absolute;
+  top: -6rpx;
+  right: -6rpx;
+  min-width: 32rpx;
+  height: 32rpx;
+  padding: 0 8rpx;
+  border-radius: 999rpx;
+  background: #e54d42;
+  color: #fff;
+  font-size: 20rpx;
+  font-weight: 700;
+  line-height: 32rpx;
+  text-align: center;
+  border: 2rpx solid #fff;
+  box-sizing: border-box;
+}
+
+.order-shortcuts__label {
+  font-size: 24rpx;
+  color: #333;
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: center;
+}
+
+/* ========== 服务网格 ========== */
+.service-shortcuts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 28rpx 12rpx;
+}
+
+.service-shortcuts__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12rpx;
+  padding: 4rpx 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  border-radius: 16rpx;
+}
+
+.service-shortcuts__item:active {
+  background: rgba(44, 74, 57, 0.04);
+}
+
+.service-shortcuts__icon {
+  width: 52rpx;
+  height: 52rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.service-shortcuts__label {
+  font-size: 24rpx;
+  color: #333;
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: center;
+}
+
+/* ========== 推广卡片（背景图） ========== */
+.promo-card {
+  position: relative;
+  min-height: 260rpx;
+  margin-bottom: 20rpx;
+  border-radius: 28rpx;
+  overflow: hidden;
+  box-shadow: 0 16rpx 48rpx rgba(44, 74, 57, 0.12);
+}
+
+.promo-card__bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.promo-card__mask {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.promo-card__mask--leader {
+  background: linear-gradient(105deg, rgba(31, 54, 41, 0.88) 0%, rgba(31, 54, 41, 0.62) 42%, rgba(31, 54, 41, 0.18) 100%);
+}
+
+.promo-card__mask--trace {
+  background: linear-gradient(105deg, rgba(20, 48, 36, 0.9) 0%, rgba(28, 62, 46, 0.58) 45%, rgba(28, 62, 46, 0.15) 100%);
+}
+
+.promo-card--pending .promo-card__mask--leader {
+  background: linear-gradient(105deg, rgba(72, 54, 28, 0.88) 0%, rgba(72, 54, 28, 0.55) 45%, rgba(72, 54, 28, 0.15) 100%);
+}
+
+.promo-card__content {
+  position: relative;
+  z-index: 2;
+  min-height: 260rpx;
+  padding: 28rpx 32rpx 32rpx;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10rpx;
+  box-sizing: border-box;
+}
+
+.promo-card__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8rpx;
+  align-self: flex-start;
+  padding: 6rpx 16rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  font-size: 22rpx;
+  font-weight: 700;
+  backdrop-filter: blur(8rpx);
+}
+
+.promo-card__tag--pending {
+  background: rgba(214, 166, 101, 0.32);
+}
+
+.promo-card__tag--trace {
+  background: rgba(120, 190, 140, 0.28);
+}
+
+.promo-card__title {
+  font-size: 34rpx;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.25;
+  text-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.18);
+}
+
+.promo-card__desc {
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.84);
+  line-height: 1.5;
+  font-weight: 500;
+  max-width: 72%;
+}
+
+.promo-card__btn {
+  align-self: flex-start;
+  margin-top: 12rpx;
+  padding: 16rpx 32rpx;
+  min-height: 64rpx;
+  border-radius: 999rpx;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.promo-card__btn text {
+  font-size: 26rpx;
+  font-weight: 700;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.promo-card__btn--solid {
+  background: #fff;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.14);
+}
+
+.promo-card__btn--solid text {
+  color: #2c4a39;
+}
+
+.promo-card__btn--trace text {
+  color: #1f5038;
+}
+
+.promo-card__btn--ghost {
+  background: rgba(255, 255, 255, 0.16);
+  border: 2rpx solid rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(8rpx);
+}
+
+.promo-card__btn--ghost text {
+  color: #fff;
+}
+
+.safe-bottom {
+  height: 120rpx;
+}
+
+button::after {
+  border: 0;
+}
+
+@media (max-width: 360px) {
+  .profile-header {
+    padding-left: 20rpx;
+    padding-right: 20rpx;
+  }
+
+  .profile-body {
+    padding-left: 16rpx;
+    padding-right: 16rpx;
+  }
+
+  .profile-header__avatar-wrap,
+  .profile-header__avatar {
+    width: 112rpx;
+    height: 112rpx;
+    flex: 0 0 112rpx;
+  }
+
+  .profile-header__name {
+    font-size: 36rpx;
+  }
+
+  .order-shortcuts__icon {
+    width: 52rpx;
+    height: 52rpx;
+  }
+
+  .order-shortcuts__label,
+  .service-shortcuts__label {
+    font-size: 22rpx;
+  }
+
+  .promo-card,
+  .promo-card__content {
+    min-height: 240rpx;
+  }
+
+  .promo-card__title {
+    font-size: 30rpx;
+  }
+}

@@ -1,0 +1,11 @@
+<view class="app-page no-bottom">
+<view class="status-space"></view>
+<view class="page-titlebar">
+<view class="back-btn" bindtap="goBack"><image class="icon" mode="aspectFit" src="/assets/icons/back.svg" /></view><view class="title-block"><view class="page-title">活动数据</view><view class="page-subtitle">蓝莓礼盒限时秒杀</view></view>
+</view>
+<view class="metric-strip"><view class="metric-item"><view class="metric-value">126</view><view class="metric-label">活动订单</view></view><view class="metric-item"><view class="metric-value">¥18,640</view><view class="metric-label">成交额</view></view><view class="metric-item"><view class="metric-value">8.2%</view><view class="metric-label">转化率</view></view></view>
+<view class="section-line-title">近 7 天成交趋势</view><view class="stat-chart"><view class="stat-bar" style="--h:44px"><text>周一</text></view><view class="stat-bar" style="--h:58px"><text>周二</text></view><view class="stat-bar" style="--h:70px"><text>周三</text></view><view class="stat-bar" style="--h:92px"><text>周四</text></view><view class="stat-bar" style="--h:118px"><text>周五</text></view><view class="stat-bar" style="--h:88px"><text>周六</text></view><view class="stat-bar" style="--h:64px"><text>周日</text></view></view><view style="height:30px"></view>
+<view class="divider"></view><view class="section-line-title">商品表现</view><view class="full-list"><navigator class="product-list-item compact" url="/pages/merchant-design/product-edit/product-edit"><image class="goods-img" mode="aspectFill" src="/assets/goods/g2.svg" /><view class="product-list-body"><view class="product-list-head"><view class="product-list-title">蓝莓礼盒 2kg</view><text class="必填-main">¥14,994</text></view><view class="product-list-meta">售出 63 件 · 转化 9.4%</view></view></navigator><navigator class="product-list-item compact" url="/pages/merchant-design/product-edit/product-edit"><image class="goods-img" mode="aspectFill" src="/assets/goods/g9.svg" /><view class="product-list-body"><view class="product-list-head"><view class="product-list-title">冷链果切组合</view><text class="必填-main">¥3,646</text></view><view class="product-list-meta">售出 53 件 · 转化 6.8%</view></view></navigator></view>
+</view>
+
+<view class="toast {{toastText ? 'show' : ''}}">{{toastText}}</view>

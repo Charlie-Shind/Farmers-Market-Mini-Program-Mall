@@ -1,0 +1,139 @@
+﻿<view class="phone-page profile-edit-page profile-edit-shell" style="{{pageStyle}}">
+  <!-- Top Navigation Bar -->
+  <view class="board-head">
+    <view class="page-title-bar">
+      <view class="back-btn" bindtap="goBack" hover-class="back-btn--hover">
+        <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+      </view>
+      <text class="page-title-bar__title">修改个人资料</text>
+      <text></text>
+    </view>
+  </view>
+
+  <scroll-view scroll-y="true" class="edit-scroll" enhanced="true" show-scrollbar="{{false}}">
+    <view class="edit-content-inner">
+      <!-- 基础资料 Cell List Group -->
+      <view class="cell-group">
+        <!-- 头像行 -->
+        <button class="cell-row cell-row--avatar" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar" plain="true" disabled="{{saving}}">
+          <text class="cell-label">头像</text>
+          <view class="cell-right">
+            <view class="avatar-preview">
+              <image class="avatar-preview__img" src="{{avatarUrl}}" mode="aspectFill"></image>
+            </view>
+            <t-icon name="chevronRight" size="24rpx" opacity="0.3"></t-icon>
+          </view>
+        </button>
+
+        <!-- 昵称行 -->
+        <view class="cell-row">
+          <text class="cell-label">个人昵称</text>
+          <input
+            class="cell-input"
+            value="{{form.displayName}}"
+            placeholder="请输入你的昵称"
+            placeholder-class="cell-placeholder"
+            data-field="displayName"
+            bindinput="onInput"
+            disabled="{{saving}}"
+          />
+        </view>
+
+        <!-- 身份类型行（仅商户可见） -->
+        <view wx:if="{{isMerchantProfile}}" class="cell-row">
+          <text class="cell-label">身份类型</text>
+          <picker mode="selector" range="{{identityOptions}}" value="{{identityIndex}}" bindchange="onIdentityChange" disabled="{{saving}}" class="cell-picker">
+            <view class="picker-inner">
+              <text class="picker-value">{{form.identityType}}</text>
+              <t-icon name="chevronRight" size="24rpx" opacity="0.3"></t-icon>
+            </view>
+          </picker>
+        </view>
+
+        <!-- 联系人行（仅商户可见） -->
+        <view wx:if="{{isMerchantProfile}}" class="cell-row">
+          <text class="cell-label">联系人</text>
+          <input
+            class="cell-input"
+            value="{{form.contactName}}"
+            placeholder="请输入联系人姓名"
+            placeholder-class="cell-placeholder"
+            data-field="contactName"
+            bindinput="onInput"
+            disabled="{{saving}}"
+          />
+        </view>
+
+        <!-- 联系电话行 -->
+        <view class="cell-row">
+          <text class="cell-label">联系电话</text>
+          <view class="cell-right">
+            <text wx:if="{{form.contactMobile}}" class="cell-text--readonly">{{form.contactMobile}}</text>
+            <button
+              wx:else
+              class="cell-auth-btn"
+              open-type="getPhoneNumber"
+              bindgetphonenumber="onGetPhoneNumber"
+              plain="true"
+              disabled="{{saving}}"
+            >
+              一键绑定
+            </button>
+          </view>
+        </view>
+
+        <!-- 所在地区行 -->
+        <view class="cell-row">
+          <text class="cell-label">所在地区</text>
+          <picker mode="region" value="{{regionValue}}" bindchange="onRegionPickerChange" disabled="{{saving}}" class="cell-picker">
+            <view class="picker-inner">
+              <text wx:if="{{form.region}}" class="picker-value">{{form.region}}</text>
+              <text wx:else class="picker-placeholder">点击选择省、市、区</text>
+              <t-icon name="chevronRight" size="24rpx" opacity="0.3"></t-icon>
+            </view>
+          </picker>
+        </view>
+      </view>
+
+      <!-- 个人简介卡片 -->
+      <view class="bio-card">
+        <view class="bio-header">
+          <text class="bio-title">个人简介</text>
+          <text class="bio-counter">{{form.bio.length || 0}}/120</text>
+        </view>
+        <textarea
+          class="bio-textarea"
+          value="{{form.bio}}"
+          placeholder="写写你的个人简介，让农友们更了解你..."
+          placeholder-class="bio-placeholder"
+          data-field="bio"
+          bindinput="onInput"
+          maxlength="120"
+          disabled="{{saving}}"
+        ></textarea>
+      </view>
+
+      <!-- 保存修改按钮 -->
+      <view class="form-submit-wrap">
+        <button class="primary-btn" plain="true" disabled="{{saving || userRole === 'GUEST'}}" bindtap="saveProfile">
+          {{saving ? '保存中...' : (userRole === 'GUEST' ? '游客不可保存' : '保存修改')}}
+        </button>
+      </view>
+
+      <!-- 底部占位区 -->
+      <view class="scroll-spacer"></view>
+    </view>
+  </scroll-view>
+
+  <loading show="{{loading}}" text="{{loadingText}}"></loading>
+
+  <image-cropper
+    show="{{cropperVisible}}"
+    imageUrl="{{cropperImageUrl}}"
+    aspectRatio="{{1.0}}"
+    exportWidth="{{400}}"
+    exportHeight="{{400}}"
+    bind:success="onCropSuccess"
+    bind:cancel="onCropCancel"
+  ></image-cropper>
+</view>

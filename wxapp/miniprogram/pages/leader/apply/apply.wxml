@@ -1,0 +1,185 @@
+﻿<view class="phone-page leader-apply-page" style="{{pageStyle}}">
+  <view class="board-head">
+    <view class="page-title-bar">
+      <view class="back-btn" bindtap="goBack" hover-class="back-btn--hover">
+        <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+      </view>
+      <text class="page-title-bar__title">社区团长申请</text>
+      <text></text>
+    </view>
+  </view>
+
+  <scroll-view scroll-y="true" class="apply-scroll leader-page-scroll" enhanced="true" show-scrollbar="{{false}}">
+    <view class="apply-content-inner">
+      <view class="apply-hero">
+        <image class="apply-hero__bg" src="/assets/images/leader/leader-header-bg.png" mode="aspectFill"></image>
+        <view class="apply-hero__mask"></view>
+        <view class="apply-hero__content">
+          <text class="apply-hero__title">成为社区团长</text>
+          <text class="apply-hero__meta" wx:if="{{applicationStatus === 'PENDING_AUDIT'}}">您的自提站点申请正在审核，请耐心等待</text>
+          <text class="apply-hero__meta" wx:else>认证成为社区团长，设立自提点，获取订单佣金收益</text>
+        </view>
+      </view>
+
+      <view class="audit-page" wx:if="{{applicationStatus === 'PENDING_AUDIT'}}">
+        <view class="site-preview-card">
+          <view class="site-preview-card__badge">审核中</view>
+          <view class="site-preview-card__main">
+            <image wx:if="{{form.businessCertUrl}}" class="site-preview-card__photo" src="{{form.businessCertUrl}}" mode="aspectFill"></image>
+            <view wx:else class="site-preview-card__photo site-preview-card__photo--placeholder">
+              <t-icon name="shop" size="48rpx" color="#2c4a39"></t-icon>
+            </view>
+            <view class="site-preview-card__info">
+              <text class="site-preview-card__name">{{sitePreviewName}}</text>
+              <text class="site-preview-card__addr">审核通过后可完善地址、营业时间与门店照片</text>
+              <view class="site-preview-card__meta">
+                <text class="site-preview-card__leader">团长：{{form.realName || '—'}}</text>
+                <text class="site-preview-card__phone">{{maskedMobile}}</text>
+              </view>
+            </view>
+          </view>
+          <view class="site-preview-card__footer">
+            <t-icon name="clock" size="28rpx" color="#b8894c"></t-icon>
+            <text class="site-preview-card__footer-text">平台正在核实资质，预计 1-3 个工作日完成</text>
+          </view>
+        </view>
+
+        <view class="audit-timeline-card">
+          <text class="audit-timeline-card__title">审核进度</text>
+          <view class="audit-timeline">
+            <view class="audit-timeline__item audit-timeline__item--done">
+              <view class="audit-timeline__dot"></view>
+              <view class="audit-timeline__body">
+                <text class="audit-timeline__label">提交申请</text>
+                <text class="audit-timeline__desc">{{submittedAtText}}</text>
+              </view>
+            </view>
+            <view class="audit-timeline__item audit-timeline__item--current">
+              <view class="audit-timeline__dot audit-timeline__dot--pulse"></view>
+              <view class="audit-timeline__body">
+                <text class="audit-timeline__label">平台审核</text>
+                <text class="audit-timeline__desc">工作人员正在核对身份与资质材料</text>
+              </view>
+            </view>
+            <view class="audit-timeline__item">
+              <view class="audit-timeline__dot"></view>
+              <view class="audit-timeline__body">
+                <text class="audit-timeline__label">审核通过</text>
+                <text class="audit-timeline__desc">开通团长工作台，设置自提站点</text>
+              </view>
+            </view>
+          </view>
+        </view>
+
+        <view class="audit-info-card">
+          <view class="audit-info-row">
+            <text class="audit-info-row__label">申请人</text>
+            <text class="audit-info-row__value">{{form.realName || '—'}}</text>
+          </view>
+          <view class="audit-info-row">
+            <text class="audit-info-row__label">联系电话</text>
+            <text class="audit-info-row__value">{{maskedMobile}}</text>
+          </view>
+          <view class="audit-info-row">
+            <text class="audit-info-row__label">身份证号</text>
+            <text class="audit-info-row__value">{{maskedIdCard}}</text>
+          </view>
+        </view>
+
+        <button class="action-btn action-btn--ghost audit-back-btn" plain="true" bindtap="goBack">返回个人中心</button>
+      </view>
+
+      <view class="form-wrap" wx:else>
+        <view class="reject-alert-card" wx:if="{{applicationStatus === 'REJECTED'}}">
+          <t-icon name="warning" size="36rpx" color="brandDanger"></t-icon>
+          <view class="reject-alert-card__body">
+            <text class="reject-alert-card__title">申请已被驳回</text>
+            <text class="reject-alert-card__desc">原因：{{rejectRemark || '资料不完整，请修改后重新提交。'}}</text>
+          </view>
+        </view>
+
+        <text class="section-title">个人信息</text>
+        <view class="cell-group">
+          <view class="cell-row">
+            <text class="cell-label">真实姓名</text>
+            <input
+              class="cell-input"
+              value="{{form.realName}}"
+              placeholder="请输入真实姓名"
+              placeholder-class="cell-placeholder"
+              data-field="realName"
+              bindinput="onInput"
+            />
+          </view>
+
+          <view class="cell-row">
+            <text class="cell-label">身份证号</text>
+            <input
+              class="cell-input"
+              value="{{form.idCardNo}}"
+              placeholder="请输入身份证号"
+              placeholder-class="cell-placeholder"
+              data-field="idCardNo"
+              bindinput="onInput"
+            />
+          </view>
+
+          <view class="cell-row">
+            <text class="cell-label">手机号</text>
+            <input
+              class="cell-input"
+              type="number"
+              value="{{form.mobile}}"
+              placeholder="请输入手机号"
+              placeholder-class="cell-placeholder"
+              data-field="mobile"
+              bindinput="onInput"
+            />
+          </view>
+        </view>
+
+        <text class="section-title">身份认证</text>
+        <view class="id-card-uploaders">
+          <view class="id-uploader" data-type="idCardFrontUrl" bindtap="chooseImage" hover-class="id-uploader--hover">
+            <image wx:if="{{form.idCardFrontUrl}}" src="{{form.idCardFrontUrl}}" class="id-uploader__image" mode="aspectFill"></image>
+            <view wx:else class="id-uploader__placeholder">
+              <t-icon name="avatar" size="48rpx" color="brandGreen"></t-icon>
+              <text>身份证正面</text>
+            </view>
+          </view>
+
+          <view class="id-uploader" data-type="idCardBackUrl" bindtap="chooseImage" hover-class="id-uploader--hover">
+            <image wx:if="{{form.idCardBackUrl}}" src="{{form.idCardBackUrl}}" class="id-uploader__image" mode="aspectFill"></image>
+            <view wx:else class="id-uploader__placeholder">
+              <t-icon name="avatar" size="48rpx" color="brandGreen"></t-icon>
+              <text>身份证反面</text>
+            </view>
+          </view>
+        </view>
+
+        <text class="section-title">资质证明</text>
+        <view class="qual-uploader" data-type="businessCertUrl" bindtap="chooseImage" hover-class="qual-uploader--hover">
+          <image wx:if="{{form.businessCertUrl}}" src="{{form.businessCertUrl}}" class="qual-uploader__image" mode="aspectFill"></image>
+          <view wx:else class="qual-uploader__placeholder">
+            <t-icon name="shop" size="56rpx" color="brandGold"></t-icon>
+            <text class="qual-uploader__title">上传营业执照</text>
+            <text class="qual-uploader__desc">请上传清晰的营业执照照片</text>
+          </view>
+        </view>
+
+        <view class="submit-bar">
+          <button class="ghost" plain="true" disabled="{{submitting}}" bindtap="goBack">取消</button>
+          <button class="primary" plain="true" disabled="{{submitting}}" bindtap="submitApplication">
+            {{submitting ? '提交中...' : (applicationStatus === 'REJECTED' ? '重新提交' : '提交审核')}}
+          </button>
+        </view>
+
+        <view class="apply-bottom-spacer"></view>
+      </view>
+    </view>
+    <view class="leader-bottom-safe"></view>
+  </scroll-view>
+
+  <loading show="{{loading}}" text="{{loadingText}}"></loading>
+  <toast show="{{toastVisible}}" message="{{toastMessage}}" type="{{toastType}}" bindclose="hideToast"></toast>
+</view>

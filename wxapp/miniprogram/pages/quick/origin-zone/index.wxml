@@ -1,0 +1,119 @@
+<view class="phone-page zone-page zone-page--origin" style="{{pageStyle}}">
+  <!-- 导航栏 -->
+  <view class="zone-head">
+    <view class="page-title-bar">
+      <button class="back-btn" bindtap="goBack" hover-class="back-btn--hover">
+        <t-icon name="back" size="40rpx" color="#ffffff"></t-icon>
+      </button>
+      <text class="page-title-bar__title">{{pageTitle}}</text>
+      <button class="head-action" bindtap="onShare">
+        <t-icon name="share" size="32rpx"></t-icon>
+      </button>
+    </view>
+  </view>
+
+  <!-- Banner + 保障卡片 -->
+  <view class="origin-main-card">
+    <view class="hero">
+      <image
+        wx:if="{{heroImageUrl}}"
+        class="hero-bg"
+        src="{{heroImageUrl}}"
+        mode="aspectFill"
+        binderror="onHeroError"
+      />
+      <view wx:else class="hero-bg--fallback"></view>
+      <view class="hero-mask">
+      </view>
+    </view>
+  </view>
+
+  <view class="origin-photo-card">
+    <view class="section-header">
+      <text class="section-title">产地实拍</text>
+      <text class="section-more" bindtap="onPhotoMore">查看更多 ></text>
+    </view>
+    <view class="photo-list">
+      <view
+        wx:for="{{photos}}"
+        wx:key="*this"
+        class="photo-item {{item.fallbackClass}}"
+      >
+        <image
+          wx:if="{{item.url}}"
+          class="photo-img"
+          src="{{item.url}}"
+          mode="aspectFill"
+          binderror="onPhotoError"
+          data-i="{{index}}"
+        />
+      </view>
+    </view>
+  </view>
+
+  <!-- 分类 Tab -->
+  <view class="category-tabs">
+    <view
+      wx:for="{{tabs}}"
+      wx:key="key"
+      class="tab-item {{activeFilter === item.key ? 'active' : ''}}"
+      data-key="{{item.key}}"
+      bindtap="setFilter"
+    >
+      {{item.label}}
+    </view>
+  </view>
+
+  <!-- 双列商品 -->
+  <view wx:if="{{products.length}}" class="goods-grid">
+    <view
+      wx:for="{{products}}"
+      wx:key="id"
+      class="goods-card"
+      data-id="{{item.id}}"
+      bindtap="openProductDetail"
+    >
+      <view class="goods-img-wrap">
+        <image
+          wx:if="{{item.coverUrl}}"
+          class="goods-img"
+          src="{{item.coverUrl}}"
+          mode="aspectFill"
+          binderror="onGoodsImgError"
+          data-i="{{index}}"
+        />
+        <view wx:else class="goods-img {{item.imageClass}}"></view>
+        <text wx:if="{{item.badge}}" class="goods-badge">{{item.badge}}</text>
+      </view>
+      <view class="goods-info">
+        <view class="goods-title">{{item.title}}</view>
+        <view class="goods-desc">{{item.subtitle}}</view>
+        <view class="goods-bottom">
+          <view class="goods-price">
+            <text class="goods-price__symbol">¥</text>{{item.price}}
+            <text wx:if="{{item.originPrice}}" class="goods-origin-price">¥{{item.originPrice}}</text>
+          </view>
+          <button
+            wx:if="{{item.skuId}}"
+            class="cart-btn"
+            data-sku-id="{{item.skuId}}"
+            catchtap="addToCart"
+          >
+            <t-icon name="cart" size="30rpx" color="brandWhite"></t-icon>
+          </button>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空态 -->
+  <view wx:elif="{{!loading}}" class="empty-block">
+    <text class="empty-hint">当前类目暂无产地直供商品</text>
+    <text class="empty-hint__sub">可以先去其他分类逛逛</text>
+  </view>
+
+  <!-- 加载态 -->
+  <text wx:elif="{{loading}}" class="empty-hint" style="margin-top: 120rpx;">加载中…</text>
+
+  <view class="safe-bottom"></view>
+</view>

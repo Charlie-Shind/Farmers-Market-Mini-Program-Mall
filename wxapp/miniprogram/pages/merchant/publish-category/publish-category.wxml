@@ -1,0 +1,36 @@
+﻿<view class="merchant-page no-bottom" style="{{pageStyle}}">
+  <view class="status-space"></view>
+
+  <view class="page-titlebar">
+    <view class="icon-box icon-btn" bindtap="goBack">
+      <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+    </view>
+    <view class="title-block">
+      <view class="page-title">选择分类</view>
+      <view class="page-subtitle">选择一级类目和二级分类</view>
+    </view>
+  </view>
+
+  <scroll-view scroll-x class="tabs" enhanced show-scrollbar="{{false}}">
+    <view class="tab {{item.active ? 'active' : ''}}" wx:for="{{primaryCategories}}" wx:key="name" bindtap="onPrimaryTap" data-index="{{index}}">{{item.name}}</view>
+  </scroll-view>
+
+  <view class="category-list">
+    <view class="category-card {{item.active ? 'active' : ''}}" wx:for="{{subCategories}}" wx:key="name" bindtap="onSubTap" data-index="{{index}}">
+      <view class="category-icon {{item.active ? 'checked' : ''}}">
+        <t-icon wx:if="{{item.active}}" name="check" size="28rpx"></t-icon>
+        <t-icon wx:else name="{{item.icon}}" size="28rpx"></t-icon>
+      </view>
+      <view class="category-main">
+        <text class="category-name">{{item.name}}</text>
+        <text class="category-desc">{{item.desc}}</text>
+      </view>
+      <text wx:if="{{item.recommended}}" class="category-tag">推荐</text>
+      <t-icon name="chevronRight" size="40rpx"></t-icon>
+    </view>
+  </view>
+
+  <view class="bottom-actions">
+    <view class="action-btn primary" bindtap="confirmCategory">确认分类</view>
+  </view>
+</view>

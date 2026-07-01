@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" /><title>活动选品</title><link rel="stylesheet" href="../styles/components.css" /></head>
+<body>
+<main class="app-page no-bottom with-sticky">
+
+<div class="status-space"></div>
+<header class="app-topbar"><a class="back-btn" href="marketing-edit.html"><svg class="icon" aria-hidden="true"><use href="../assets/icons.svg#back"></use></svg></a><div class="search-pill"><svg class="icon-sm" aria-hidden="true"><use href="../assets/icons.svg#search"></use></svg><input data-search-input placeholder="搜索商品名称 / 规格 / 分类" /></div><a class="icon-action" href="marketing-edit.html" data-toast="已完成选择"><svg class="icon"><use href="../assets/icons.svg#check"></use></svg><span>完成</span></a></header>
+<nav class="toolbar" data-chip-group="chips"><button class="chip active" data-chip="all">全部</button><button class="chip" data-chip="fruit">果蔬</button><button class="chip" data-chip="gift">礼盒</button><button class="chip" data-chip="low">低库存</button><button class="chip" data-chip="active">活动中</button></nav>
+<div class="section-line-title"><span>已选商品</span><span class="status-pill info"><span data-selected-count="#productPickList">0</span> 个</span></div>
+<section id="productPickList" data-filter-list>
+  <div class="goods-select-row selected" data-toggle-check data-status="fruit" data-tags="fruit,gift,active" data-search="蓝莓 高山 礼盒 4盒装"><span class="check-dot active"><svg class="icon-sm"><use href="../assets/icons.svg#check"></use></svg></span><img class="goods-img sm" src="../assets/goods/g2.svg"/><div><div class="product-title">高山蓝莓礼盒 4盒装</div><div class="product-sub">库存 168 · 原价 ¥298 · 活动价 ¥238</div></div></div>
+  <div class="goods-select-row selected" data-toggle-check data-status="fruit" data-tags="fruit" data-search="时令果蔬 家庭装"><span class="check-dot active"><svg class="icon-sm"><use href="../assets/icons.svg#check"></use></svg></span><img class="goods-img sm" src="../assets/goods/g8.svg"/><div><div class="product-title">时令果蔬家庭装</div><div class="product-sub">库存 220 · 建议拼团价 ¥49</div></div></div>
+  <div class="goods-select-row" data-toggle-check data-status="gift" data-tags="gift,low" data-search="山货 干货 礼盒"><span class="check-dot"><svg class="icon-sm"><use href="../assets/icons.svg#check"></use></svg></span><img class="goods-img sm" src="../assets/goods/g6.svg"/><div><div class="product-title">山货干货礼盒</div><div class="product-sub">库存 24 · 低库存提醒</div></div></div>
+  <div class="goods-select-row" data-toggle-check data-status="fruit" data-tags="fruit" data-search="脆甜玉米 6根装"><span class="check-dot"><svg class="icon-sm"><use href="../assets/icons.svg#check"></use></svg></span><img class="goods-img sm" src="../assets/goods/g11.svg"/><div><div class="product-title">脆甜玉米 6根装</div><div class="product-sub">库存 360 · 可参加满减</div></div></div>
+  <div class="goods-select-row" data-toggle-check data-status="gift" data-tags="gift" data-search="端午 礼品 装"><span class="check-dot"><svg class="icon-sm"><use href="../assets/icons.svg#check"></use></svg></span><img class="goods-img sm" src="../assets/goods/g12.svg"/><div><div class="product-title">端午特产礼品装</div><div class="product-sub">库存 82 · 建议优惠券活动</div></div></div><div class="list-empty">没有匹配商品</div>
+</section><div class="bottom-actions"><button class="action-btn secondary" data-toast="已清空选择">清空</button><a class="action-btn" href="marketing-edit.html">确认</a></div>
+
+
+</main>
+<script src="../scripts/prototype.js"></script>
+</body></html>

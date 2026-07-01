@@ -1,0 +1,174 @@
+@import "../common.less";
+
+.workbench-page {
+  background: var(--merchant-bg);
+  padding-bottom: calc(120rpx + env(safe-area-inset-bottom));
+}
+
+.workbench-titlebar {
+  min-height: 96rpx;
+  padding: 0 var(--space-3);
+  display: grid;
+  grid-template-columns: 80rpx minmax(0, 1fr) 80rpx;
+  align-items: center;
+  background: var(--merchant-surface);
+  border-bottom: 1rpx solid var(--merchant-line-soft);
+}
+
+.titlebar-back {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18rpx;
+  background: var(--merchant-bg-soft);
+}
+
+.workbench-titlebar .title-block {
+  min-width: 0;
+}
+
+.workbench-titlebar .page-title {
+  color: var(--merchant-primary-strong);
+  font-size: 40rpx;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.action-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  background: var(--merchant-surface);
+  border-bottom: 1rpx solid var(--merchant-line-soft);
+}
+
+.action-entry {
+  min-height: 168rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border-right: 1rpx solid var(--merchant-line-soft);
+  color: var(--merchant-text);
+  font-size: 24rpx;
+  font-weight: 600;
+}
+
+.action-entry:nth-child(4n) {
+  border-right: 0;
+}
+
+.color-icon {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: var(--radius-md);
+  padding: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--merchant-primary-soft);
+}
+
+.color-icon.accent {
+  background: var(--merchant-accent-soft);
+}
+
+.color-icon.info {
+  background: var(--merchant-info-soft);
+}
+
+.color-icon.warn {
+  background: var(--merchant-warning-soft);
+}
+
+.section-line-title {
+  min-height: 88rpx;
+  padding: 28rpx var(--space-3) 16rpx;
+  display: flex;
+  align-items: center;
+  color: var(--merchant-primary-strong);
+  font-size: 32rpx;
+  font-weight: 600;
+}
+
+.full-list {
+  background: var(--merchant-surface);
+  border-top: 1rpx solid var(--merchant-line-soft);
+  border-bottom: 1rpx solid var(--merchant-line-soft);
+}
+
+.func-row {
+  min-height: 104rpx;
+  padding: 0 var(--space-3);
+  display: grid;
+  grid-template-columns: 56rpx minmax(0, 1fr) auto;
+  gap: var(--space-2);
+  align-items: center;
+  border-bottom: 1rpx solid var(--merchant-line-soft);
+}
+
+.func-row:last-child {
+  border-bottom: 0;
+}
+
+.func-icon {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: var(--radius-sm);
+  padding: 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--merchant-primary-soft);
+}
+
+.func-main {
+  min-width: 0;
+}
+
+.func-main text {
+  color: var(--merchant-text);
+  font-size: 28rpx;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.func-right {
+  min-width: 44rpx;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8rpx;
+  color: var(--merchant-text-muted);
+  font-size: 26rpx;
+}
+
+.status-pill {
+  min-height: 44rpx;
+  padding: 0 18rpx;
+  border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22rpx;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.status-pill.warning {
+  color: var(--merchant-warning);
+  background: var(--merchant-warning-soft);
+}
+
+.status-pill.danger {
+  color: var(--merchant-danger);
+  background: var(--merchant-danger-soft);
+}
+
+.chevron {
+  width: 28rpx;
+  height: 28rpx;
+}

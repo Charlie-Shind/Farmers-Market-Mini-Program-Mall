@@ -1,0 +1,155 @@
+﻿<view class="phone-page" style="{{pageStyle}}">
+  <view class="head">
+    <button class="back-btn" bindtap="goBack">
+      <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+    </button>
+    <text class="head-title">{{shopName || '店铺主页'}}</text>
+    <text class="head-spacer"></text>
+  </view>
+
+  <scroll-view class="detail-scroll" scroll-y="true" enhanced="true" show-scrollbar="{{false}}" bindscrolltolower="loadMore">
+    <view wx:if="{{shop}}" class="shop">
+      <view class="shop__head">
+        <view class="shop__logo-wrap">
+          <image
+            class="shop__logo {{shop.storeLogo ? '' : 'shop__logo--placeholder'}}"
+            src="{{shop.storeLogo || icons.defaultAvatar}}"
+            mode="aspectFill"
+          ></image>
+        </view>
+
+        <view class="shop__meta">
+          <text class="shop__name">{{shop.storeName}}</text>
+          <text wx:if="{{shop.contactName}}" class="shop__contact">联系人：{{shop.contactName}}</text>
+          <text wx:if="{{shop.description}}" class="shop__desc">{{shop.description}}</text>
+          <view class="shop__tags">
+            <text class="shop__tag">认证店铺</text>
+            <text class="shop__tag shop__tag--soft">{{shop.qualificationCount}} 项资质</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="shop__stats">
+        <view class="shop__stat">
+          <text class="shop__stat-value">{{shop.productCount}}</text>
+          <text class="shop__stat-label">在售商品</text>
+        </view>
+        <view class="shop__stat">
+          <text class="shop__stat-value">{{shop.totalSales}}</text>
+          <text class="shop__stat-label">累计销量</text>
+        </view>
+        <view class="shop__stat">
+          <text class="shop__stat-value">{{shop.qualificationCount}}</text>
+          <text class="shop__stat-label">资质</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="section section--coupon">
+      <view class="section__head">
+        <view class="section__head-main">
+          <text class="section__title">可领优惠券</text>
+          <text class="section__subtitle">领取后可直接用于下单</text>
+        </view>
+        <text class="section__count">共 {{coupons.length}} 张</text>
+      </view>
+
+      <view wx:if="{{coupons.length}}">
+        <view class="coupon-list">
+          <view
+            wx:for="{{visibleCoupons}}"
+            wx:key="couponId"
+            class="coupon {{item.received || !item.isActive ? 'coupon--disabled' : ''}}"
+          >
+            <view class="coupon__main">
+              <view class="coupon__amount">
+                <text class="coupon__amount-symbol">¥</text>
+                <text class="coupon__amount-num">{{item.discountAmount}}</text>
+              </view>
+              <text class="coupon__threshold">满 {{item.thresholdAmount}} 可用</text>
+              <text wx:if="{{item.name}}" class="coupon__name">{{item.name}}</text>
+            </view>
+            <view class="coupon__side">
+              <view
+                class="coupon__cta {{item.received || !item.isActive ? 'coupon__cta--disabled' : ''}}"
+                data-coupon-id="{{item.couponId}}"
+                data-received="{{item.received}}"
+                data-active="{{item.isActive}}"
+                bindtap="onReceiveCoupon"
+              >
+                <text>{{item.received ? '已领取' : item.isActive ? '立即领取' : '已结束'}}</text>
+              </view>
+              <text wx:if="{{item.scope === 'SHOP'}}" class="coupon__scope">店铺券</text>
+            </view>
+          </view>
+        </view>
+
+        <button wx:if="{{moreCouponsCount > 0}}" class="coupon-more" bindtap="toggleCoupons">
+          <text>{{couponMoreText}}</text>
+        </button>
+      </view>
+
+      <view wx:elif="{{!loading && hasLoaded}}" class="empty-inline">
+        <text>暂无可领取的优惠券</text>
+      </view>
+    </view>
+
+    <view class="section section--product">
+      <view class="section__head">
+        <view class="section__head-main">
+          <text class="section__title">在售商品</text>
+          <text class="section__subtitle">按热度与上新持续更新</text>
+        </view>
+        <text class="section__count">共 {{total}} 件</text>
+      </view>
+
+      <view wx:if="{{products.length}}" class="product-list">
+        <view
+          wx:for="{{products}}"
+          wx:key="productId"
+          class="product-card"
+          data-product-id="{{item.productId}}"
+          bindtap="openProductDetail"
+        >
+          <image
+            wx:if="{{item.coverUrl}}"
+            class="product-card__img"
+            src="{{item.coverUrl}}"
+            mode="aspectFill"
+          ></image>
+          <view wx:else class="product-card__img product-card__img--placeholder"></view>
+
+          <view class="product-card__body">
+            <view class="product-card__top-row">
+              <text wx:if="{{item.originPlace}}" class="product-card__origin-pill">{{item.originPlace}}</text>
+              <text wx:if="{{item.saleCount > 0}}" class="product-card__sales">已售 {{item.saleCount}}件</text>
+            </view>
+            <text class="product-card__title">{{item.title}}</text>
+            <text wx:if="{{item.subtitle}}" class="product-card__subtitle">{{item.subtitle}}</text>
+            <view class="product-card__price-row">
+              <view class="product-card__price">
+                <text class="product-card__price-symbol">¥</text>
+                <text class="product-card__price-num">{{item.minPrice}}</text>
+                <text wx:if="{{item.originPrice}}" class="product-card__price-origin">¥{{item.originPrice}}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view wx:elif="{{!loading}}" class="empty-inline">
+        <text>暂无在售商品</text>
+      </view>
+
+      <view wx:if="{{!noMore && products.length > 0 && !loading}}" class="load-more">
+        <text>下滑加载更多</text>
+      </view>
+      <view wx:if="{{loadingMore}}" class="load-more">
+        <text>加载中…</text>
+      </view>
+      <view wx:if="{{noMore && products.length > 0}}" class="load-more load-more--end">
+        <text>已加载全部</text>
+      </view>
+    </view>
+  </scroll-view>
+</view>

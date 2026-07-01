@@ -1,0 +1,86 @@
+<view class="pickup-points-page leader-page-shell" style="{{pageStyle}}">
+  <view class="leader-page-header">
+    <view class="leader-header-back" bindtap="goBack" hover-class="leader-header-back--hover">
+      <t-icon name="chevronLeft" size="36rpx"></t-icon>
+    </view>
+    <text class="leader-header-title">{{selectMode ? '选择自提点' : '附近自提点'}}</text>
+  </view>
+
+  <view class="search-bar">
+    <view class="search-input-wrap">
+      <t-icon name="search" size="28rpx" opacity="0.5"></t-icon>
+      <input
+        class="search-input"
+        placeholder="搜索自提点名称或地址"
+        placeholder-class="search-placeholder"
+        value="{{keyword}}"
+        bindinput="onSearchInput"
+        bindconfirm="onSearch"
+        confirm-type="search"
+      />
+    </view>
+  </view>
+
+  <view class="location-tip" wx:if="{{!locationEnabled}}">
+    <t-icon name="location" size="28rpx" color="#8a877f"></t-icon>
+    <text class="tip-text">未获取位置，将显示全部自提点</text>
+  </view>
+
+  <scroll-view
+    scroll-y="true"
+    class="points-scroll leader-page-scroll"
+    enhanced="true"
+    show-scrollbar="{{false}}"
+    bindscrolltolower="onReachBottom"
+  >
+    <view class="points-list" wx:if="{{pickupPoints.length > 0}}">
+      <view
+        class="point-card {{item.isSelected ? 'selected' : ''}}"
+        wx:for="{{pickupPoints}}"
+        wx:key="id"
+        data-id="{{item.id}}"
+        bindtap="goDetail"
+      >
+        <view class="point-card__main">
+          <image wx:if="{{item.storePhoto}}" class="point-img" src="{{item.storePhoto}}" mode="aspectFill"></image>
+          <view wx:else class="point-img point-img--placeholder">
+            <t-icon name="shop" size="48rpx" opacity="0.4"></t-icon>
+          </view>
+          <view class="point-info">
+            <view class="point-header">
+              <text class="point-name">{{item.storeName}}</text>
+              <text wx:if="{{item.distanceLabel}}" class="point-distance">{{item.distanceLabel}}</text>
+            </view>
+            <text class="point-address">{{item.storeAddress}}</text>
+            <view class="point-meta">
+              <text class="point-leader">团长：{{item.leaderName}}</text>
+              <text class="point-phone">{{item.leaderPhone}}</text>
+            </view>
+            <text wx:if="{{item.businessHours}}" class="point-hours">营业时间：{{item.businessHours}}</text>
+          </view>
+        </view>
+        <view class="point-card__footer" wx:if="{{selectMode}}">
+          <view class="select-radio {{item.isSelected ? 'active' : ''}}">
+            <view wx:if="{{item.isSelected}}" class="radio-inner"></view>
+          </view>
+          <text class="select-text">{{item.isSelected ? '已选择' : '选择此自提点'}}</text>
+        </view>
+      </view>
+
+      <view class="load-more">
+        <text wx:if="{{hasMore}}">加载更多...</text>
+        <text wx:else>没有更多了</text>
+      </view>
+    </view>
+
+    <view class="empty-state" wx:else>
+      <t-icon name="shop" size="120rpx" opacity="0.3"></t-icon>
+      <text class="empty-text">暂无自提点</text>
+    </view>
+
+    <view class="leader-bottom-safe"></view>
+  </scroll-view>
+
+  <loading show="{{loading}}" text="加载中..."></loading>
+  <toast show="{{toastVisible}}" message="{{toastMessage}}" type="{{toastType}}" bindclose="hideToast"></toast>
+</view>

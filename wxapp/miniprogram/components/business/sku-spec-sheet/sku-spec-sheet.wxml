@@ -1,0 +1,55 @@
+<!-- components/business/sku-spec-sheet/sku-spec-sheet.wxml -->
+<view class="custom-sheet-mask {{show ? 'custom-sheet-mask--show' : ''}}" bindtap="onClose" catchtouchmove="preventTouchMove">
+  <view class="custom-sheet {{show ? 'custom-sheet--show' : ''}}" catchtap="preventBubble">
+    <view class="sheet-header">
+      <view class="sku-preview-row">
+        <image class="sku-img" src="{{selectedSku.imageUrl || heroImageUrl || product.coverUrl}}" mode="aspectFill"></image>
+        <view class="sku-meta-box">
+          <view class="sku-price-row">
+            <text class="sku-price-symbol">¥</text>
+            <text class="sku-price-val">{{selectedSku ? selectedSku.price : product.minPrice || '0.00'}}</text>
+          </view>
+          <text class="sku-stock-val">库存: {{selectedSku ? selectedSku.stock : totalStock}} 件</text>
+          <text class="sku-selected-text">已选: {{selectedSku ? selectedSku.skuName : '请选择规格'}}</text>
+          <text class="sku-selected-text" wx:if="{{selectedSkuSpecSummary}}">{{selectedSkuSpecSummary}}</text>
+        </view>
+      </view>
+      <button class="sheet-close-btn" bindtap="onClose">
+        <t-icon name="close" size="32rpx" opacity="0.8"></t-icon>
+      </button>
+    </view>
+
+    <scroll-view scroll-y="true" enhanced show-scrollbar="{{false}}" class="sheet-body">
+      <view class="spec-section" wx:if="{{product.skus && product.skus.length}}">
+        <text class="spec-title">规格</text>
+        <view class="spec-list">
+          <button wx:for="{{product.skus || []}}" wx:key="id" class="spec-btn {{selectedSku.id === item.id ? 'spec-btn--active' : ''}}" data-index="{{index}}" bindtap="onSelectSku">
+            <view class="spec-btn__main">
+              <text>{{item.skuName}}</text>
+              <text wx:if="{{item.specSummary}}" class="spec-btn__sub">
+                {{item.specSummary}}
+              </text>
+            </view>
+          </button>
+        </view>
+      </view>
+
+      <view class="qty-section">
+        <text class="qty-title">购买数量</text>
+        <view class="qty-picker">
+          <button class="qty-btn" bindtap="onDecreaseQty">
+            <t-icon name="minus" size="24rpx"></t-icon>
+          </button>
+          <text class="qty-num">{{purchaseQty}}</text>
+          <button class="qty-btn" bindtap="onIncreaseQty">
+            <t-icon name="plus" size="24rpx"></t-icon>
+          </button>
+        </view>
+      </view>
+    </scroll-view>
+
+    <view class="sheet-footer">
+      <button class="sheet-confirm-btn" bindtap="onConfirm">确认</button>
+    </view>
+  </view>
+</view>

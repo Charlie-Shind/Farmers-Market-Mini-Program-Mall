@@ -1,0 +1,139 @@
+@import "../common.less";
+
+.visual-row {
+  margin: 0 32rpx 20rpx;
+  padding: 24rpx;
+  border-radius: 24rpx;
+  background: var(--merchant-surface-warm);
+  border: 1rpx solid var(--merchant-line-soft);
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.visual-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+}
+
+.visual-title {
+  font-size: 32rpx;
+  font-weight: 900;
+  color: var(--merchant-primary-strong);
+}
+
+.visual-desc {
+  font-size: 24rpx;
+  color: var(--merchant-text-sub);
+  line-height: 1.4;
+}
+
+.visual-img {
+  width: 88rpx;
+  height: 88rpx;
+  flex-shrink: 0;
+}
+
+.goods-card {
+  margin: 0 32rpx 20rpx;
+  padding: 20rpx;
+  border-radius: 24rpx;
+  background: var(--merchant-surface);
+  border: 1rpx solid var(--merchant-line-soft);
+  display: flex;
+  align-items: flex-start;
+  gap: 16rpx;
+}
+
+.goods-img {
+  width: 112rpx;
+  height: 112rpx;
+  border-radius: 16rpx;
+  flex-shrink: 0;
+}
+
+.goods-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.goods-name {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: var(--merchant-text);
+}
+
+.goods-meta {
+  font-size: 24rpx;
+  color: var(--merchant-text-muted);
+}
+
+.goods-price {
+  font-size: 28rpx;
+  font-weight: 900;
+  color: var(--merchant-accent);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.section-line-title {
+  padding: 24rpx 32rpx 16rpx;
+  font-size: 28rpx;
+  font-weight: 800;
+  color: var(--merchant-text);
+}
+
+.panel-line {
+  margin: 0 32rpx 20rpx;
+  padding: 20rpx 24rpx;
+  border-radius: 20rpx;
+  background: var(--merchant-surface);
+  border: 1rpx solid var(--merchant-line-soft);
+}
+
+.panel-title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: var(--merchant-text);
+  margin-bottom: 8rpx;
+}
+
+.panel-sub {
+  font-size: 24rpx;
+  color: var(--merchant-text-muted);
+  line-height: 1.45;
+}
+
+.evidence-grid {
+  margin: 0 32rpx 20rpx;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14rpx;
+}
+
+.evidence-img {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 16rpx;
+  background: var(--merchant-bg-soft);
+}
+
+.bottom-actions.three {
+  gap: 14rpx;
+}
+
+.bottom-actions.three .action-btn {
+  flex: 1;
+  font-size: 26rpx;
+}
+
+.action-btn.danger {
+  background: var(--merchant-danger-soft);
+  color: var(--merchant-danger);
+}

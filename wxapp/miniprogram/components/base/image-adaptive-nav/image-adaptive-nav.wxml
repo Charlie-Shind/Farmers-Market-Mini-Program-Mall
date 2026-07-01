@@ -1,0 +1,30 @@
+<view class="image-adaptive-nav image-adaptive-nav--{{theme}}">
+  <view class="image-adaptive-nav__side">
+    <button
+      wx:if="{{showBack}}"
+      class="image-adaptive-nav__btn image-adaptive-nav__btn--back"
+      bindtap="onBack"
+      hover-class="image-adaptive-nav__btn--hover"
+    >
+      <t-icon name="back" size="32rpx" color="{{iconColor}}"></t-icon>
+    </button>
+  </view>
+
+  <view class="image-adaptive-nav__side image-adaptive-nav__side--right">
+    <button
+      wx:if="{{showShare}}"
+      class="image-adaptive-nav__btn"
+      bindtap="onShare"
+      hover-class="image-adaptive-nav__btn--hover"
+    >
+      <t-icon name="share" size="30rpx" color="{{iconColor}}"></t-icon>
+    </button>
+  </view>
+
+  <canvas
+    type="2d"
+    id="probe-canvas"
+    class="image-adaptive-nav__probe"
+    style="width: 24px; height: 24px;"
+  ></canvas>
+</view>

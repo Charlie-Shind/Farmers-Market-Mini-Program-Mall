@@ -1,0 +1,81 @@
+<view class="commissions-page leader-page-shell" style="{{pageStyle}}">
+  <view class="leader-page-header">
+    <view class="leader-header-back" bindtap="goBack" hover-class="leader-header-back--hover">
+      <t-icon name="chevronLeft" size="36rpx"></t-icon>
+    </view>
+    <text class="leader-header-title">佣金明细</text>
+    
+  </view>
+
+  <view class="summary-card">
+    <view class="summary-item">
+      <text class="summary-value">¥{{summary.totalAmount}}</text>
+      <text class="summary-label">累计佣金</text>
+    </view>
+    <view class="summary-divider"></view>
+    <view class="summary-item">
+      <text class="summary-value">¥{{summary.settledAmount}}</text>
+      <text class="summary-label">已结算</text>
+    </view>
+    <view class="summary-divider"></view>
+    <view class="summary-item">
+      <text class="summary-value">¥{{summary.pendingAmount}}</text>
+      <text class="summary-label">待结算</text>
+    </view>
+  </view>
+
+  <view class="tabs-bar">
+    <view
+      class="tab-item {{item.active ? 'active' : ''}}"
+      wx:for="{{tabs}}"
+      wx:key="key"
+      data-key="{{item.key}}"
+      bindtap="switchTab"
+    >
+      {{item.label}}
+    </view>
+  </view>
+
+  <scroll-view
+    scroll-y="true"
+    class="commissions-scroll leader-page-scroll"
+    enhanced="true"
+    show-scrollbar="{{false}}"
+    bindscrolltolower="onReachBottom"
+  >
+    <view class="commissions-list" wx:if="{{commissions.length > 0}}">
+      <view class="commission-item" wx:for="{{commissions}}" wx:key="id">
+        <view class="commission-left">
+          <view class="commission-icon {{item.isIncome ? 'income' : 'expense'}}">
+            <t-icon name="{{item.isIncome ? 'plus' : 'minus'}}" size="32rpx" color="#ffffff"></t-icon>
+          </view>
+          <view class="commission-info">
+            <text class="commission-title">{{item.description || item.typeLabel}}</text>
+            <text class="commission-time">{{item.timeText}}</text>
+          </view>
+        </view>
+        <view class="commission-right">
+          <text class="commission-amount {{item.isIncome ? 'income' : 'expense'}}">
+            {{item.isIncome ? '+' : '-'}}¥{{item.amount}}
+          </text>
+          <text class="commission-status {{item.status}}">{{item.statusLabel}}</text>
+        </view>
+      </view>
+
+      <view class="load-more">
+        <text wx:if="{{hasMore}}">加载更多...</text>
+        <text wx:else>没有更多了</text>
+      </view>
+    </view>
+
+    <view class="empty-state" wx:else>
+      <t-icon name="wallet" size="120rpx" opacity="0.3"></t-icon>
+      <text class="empty-text">暂无佣金记录</text>
+    </view>
+
+    <view class="leader-bottom-safe"></view>
+  </scroll-view>
+
+  <loading show="{{loading}}" text="加载中..."></loading>
+  <toast show="{{toastVisible}}" message="{{toastMessage}}" type="{{toastType}}" bindclose="hideToast"></toast>
+</view>

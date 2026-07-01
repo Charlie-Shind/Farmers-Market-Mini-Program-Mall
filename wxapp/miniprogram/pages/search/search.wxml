@@ -1,0 +1,111 @@
+<view class="search-page" style="{{pageStyle}}">
+  <view class="search-header">
+    <view class="search-header__back" bindtap="goBack" hover-class="search-header__back--hover">
+      <t-icon name="chevronLeft" size="36rpx" color="#25372d"></t-icon>
+    </view>
+    <view class="search-header__bar">
+      <t-icon name="search" size="32rpx" opacity="0.45"></t-icon>
+      <input
+        class="search-header__input"
+        value="{{searchText}}"
+        placeholder="搜索商品名称"
+        placeholder-class="search-header__placeholder"
+        confirm-type="search"
+        focus="{{focusSearch}}"
+        bindinput="onSearchInput"
+        bindconfirm="submitSearch"
+      />
+      <view wx:if="{{searchText}}" class="search-header__clear" bindtap="clearSearch" hover-class="search-header__clear--hover">
+        <t-icon name="close" size="22rpx" opacity="0.55"></t-icon>
+      </view>
+    </view>
+    <button class="search-header__submit" bindtap="submitSearch">搜索</button>
+  </view>
+
+  <scroll-view
+    class="search-scroll"
+    scroll-y="true"
+    enhanced="true"
+    show-scrollbar="{{false}}"
+    bindscrolltolower="loadMore"
+  >
+    <view wx:if="{{activeKeyword}}" class="search-results">
+      <view class="result-bar">
+        <view class="result-bar__main">
+          <text class="result-bar__keyword">“{{activeKeyword}}”</text>
+          <text class="result-bar__count">
+            {{loading ? '搜索中…' : loadingMore ? '加载更多…' : '共 ' + total + ' 件商品'}}
+          </text>
+        </view>
+        <text wx:if="{{resultNote}}" class="result-bar__note">{{resultNote}}</text>
+      </view>
+
+      <view wx:if="{{results.length}}" class="result-grid">
+        <view wx:for="{{results}}" wx:key="id" class="result-grid__item">
+          <product-card layout="vertical" product="{{item}}" bindaddtocart="onAddToCart"></product-card>
+        </view>
+      </view>
+
+      <view wx:elif="{{!loading}}" class="empty-panel">
+        <t-icon name="search" size="96rpx" opacity="0.18"></t-icon>
+        <text class="empty-panel__title">没有找到相关商品</text>
+        <text class="empty-panel__desc">换个关键词试试，或看看热门搜索</text>
+      </view>
+
+      <view wx:else class="loading-panel">
+        <text class="loading-panel__text">正在全站匹配商品…</text>
+      </view>
+
+      <view wx:if="{{results.length}}" class="load-more-area">
+        <text wx:if="{{loadingMore}}" class="load-more-area__text">正在继续加载…</text>
+        <text wx:elif="{{noMore}}" class="load-more-area__text">— 已经到底了 —</text>
+      </view>
+    </view>
+
+    <view wx:else class="search-landing">
+      <view wx:if="{{searchHistory.length}}" class="search-section">
+        <view class="section-head">
+          <text class="section-head__title">搜索历史</text>
+          <view class="section-head__action" bindtap="clearSearchHistory" hover-class="section-head__action--hover">
+            <t-icon name="close" size="24rpx" opacity="0.45"></t-icon>
+            <text>清空</text>
+          </view>
+        </view>
+        <view class="history-list">
+          <view wx:for="{{searchHistory}}" wx:key="*this" class="history-item">
+            <text class="history-item__text" data-keyword="{{item}}" bindtap="tapHistoryKeyword">{{item}}</text>
+            <view
+              class="history-item__delete"
+              data-keyword="{{item}}"
+              catchtap="removeHistoryItem"
+              hover-class="history-item__delete--hover"
+            >
+              <t-icon name="close" size="20rpx" opacity="0.45"></t-icon>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view class="search-section">
+        <view class="section-head">
+          <text class="section-head__title">热门搜索</text>
+        </view>
+        <view class="hot-list">
+          <view
+            wx:for="{{hotKeywords}}"
+            wx:key="*this"
+            class="hot-chip {{index < 3 ? 'hot-chip--top' : ''}}"
+            data-keyword="{{item}}"
+            bindtap="tapHotKeyword"
+            hover-class="hot-chip--hover"
+          >
+            <text wx:if="{{index < 3}}" class="hot-chip__rank">{{index + 1}}</text>
+            <text>{{item}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="safe-bottom"></view>
+  </scroll-view>
+</view>

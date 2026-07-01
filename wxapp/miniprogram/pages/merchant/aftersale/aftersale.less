@@ -1,0 +1,256 @@
+@import "../common.less";
+// Re-compile trigger for watch less compilation.
+
+.aftersale-topbar {
+  height: 112rpx;
+  padding: 0 32rpx;
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.search-pill {
+  flex: 1;
+  height: 72rpx;
+  padding: 0 24rpx;
+  border-radius: 999rpx;
+  background: var(--merchant-bg-soft);
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.search-pill .icon-sm {
+  width: 32rpx;
+  height: 32rpx;
+  flex-shrink: 0;
+}
+
+.search-input {
+  flex: 1;
+  height: 100%;
+  font-size: 26rpx;
+  color: var(--merchant-text);
+}
+
+.icon-action {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4rpx;
+  font-size: 20rpx;
+  color: var(--merchant-text-sub);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.icon-action .fit-icon {
+  width: 36rpx;
+  height: 36rpx;
+}
+
+.aftersale-list {
+  padding: 16rpx 32rpx 32rpx;
+}
+
+.aftersale-item {
+  margin-bottom: 18rpx;
+  padding: 20rpx;
+  border-radius: 24rpx;
+  background: var(--merchant-surface);
+  border: 1rpx solid var(--merchant-line-soft);
+}
+
+.buyer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16rpx;
+}
+
+.buyer-info {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+}
+
+.buyer-name {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: var(--merchant-text);
+}
+
+.goods-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 16rpx;
+  padding: 16rpx 0;
+  border-top: 1rpx solid var(--merchant-line-soft);
+  border-bottom: 1rpx solid var(--merchant-line-soft);
+}
+
+.goods-img {
+  width: 112rpx;
+  height: 112rpx;
+  border-radius: 16rpx;
+  flex-shrink: 0;
+}
+
+.goods-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.goods-title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: var(--merchant-text);
+}
+
+.goods-sub {
+  font-size: 24rpx;
+  color: var(--merchant-text-muted);
+  line-height: 1.35;
+}
+
+.goods-price {
+  font-size: 26rpx;
+  font-weight: 800;
+  color: var(--merchant-text);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.item-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16rpx;
+}
+
+.more-link {
+  font-size: 24rpx;
+  color: var(--merchant-text-muted);
+  font-weight: 600;
+}
+
+.btn-row {
+  display: flex;
+  gap: 14rpx;
+}
+
+.pill-btn {
+  height: 60rpx;
+  padding: 0 26rpx;
+  border-radius: 999rpx;
+  background: var(--merchant-bg-soft);
+  color: var(--merchant-text-sub);
+  font-size: 24rpx;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pill-btn.primary {
+  background: var(--merchant-primary);
+  color: #fff;
+}
+
+.list-empty {
+  padding: 80rpx 32rpx;
+  text-align: center;
+  font-size: 26rpx;
+  color: var(--merchant-text-placeholder);
+}
+
+.sheet-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(31, 42, 36, 0.4);
+  z-index: 40;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.24s;
+}
+
+.sheet-mask.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--merchant-surface);
+  border-radius: 36rpx 36rpx 0 0;
+  padding: 28rpx 32rpx calc(28rpx + env(safe-area-inset-bottom));
+  z-index: 41;
+  transform: translateY(100%);
+  transition: transform 0.24s;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.sheet.show {
+  transform: translateY(0);
+}
+
+.sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24rpx;
+}
+
+.sheet-title {
+  font-size: 32rpx;
+  font-weight: 900;
+  color: var(--merchant-primary-strong);
+}
+
+.sheet-group {
+  margin-bottom: 24rpx;
+}
+
+.sheet-label {
+  font-size: 24rpx;
+  font-weight: 700;
+  color: var(--merchant-text-sub);
+  margin-bottom: 16rpx;
+}
+
+.option-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14rpx;
+}
+
+.option {
+  height: 64rpx;
+  padding: 0 28rpx;
+  border-radius: 999rpx;
+  background: var(--merchant-bg-soft);
+  color: var(--merchant-text-sub);
+  font-size: 24rpx;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.option.active {
+  background: var(--merchant-primary-soft);
+  color: var(--merchant-primary);
+}
+
+.sheet-actions {
+  display: flex;
+  gap: 18rpx;
+  padding-top: 8rpx;
+}

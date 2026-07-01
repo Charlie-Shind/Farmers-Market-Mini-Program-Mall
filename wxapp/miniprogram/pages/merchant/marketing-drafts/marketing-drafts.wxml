@@ -1,0 +1,41 @@
+﻿<view class="merchant-page has-bottom-actions drafts-page" style="{{pageStyle}}">
+  <view class="status-space"></view>
+
+  <view class="marketing-topbar">
+    <view class="icon-box icon-btn" bindtap="goBack">
+      <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+    </view>
+    <view class="search-pill">
+      <t-icon name="search" size="40rpx"></t-icon>
+      <input class="search-input" placeholder="搜索活动草稿" value="{{searchValue}}" bindinput="onSearchInput" />
+    </view>
+  </view>
+
+  <scroll-view scroll-x class="tabs" enhanced show-scrollbar="{{false}}">
+    <view class="tab {{item.active ? 'active' : ''}}" wx:for="{{tabs}}" wx:key="name" bindtap="onTabTap" data-index="{{index}}">{{item.name}}</view>
+  </scroll-view>
+
+  <view class="full-list">
+    <view class="draft-row" wx:for="{{drafts}}" wx:key="id">
+      <view class="draft-mark">
+        <t-icon name="{{item.icon}}" size="40rpx"></t-icon>
+      </view>
+      <view class="draft-main">
+        <text class="draft-title">{{item.name}}</text>
+        <text class="draft-desc">{{item.desc}}</text>
+      </view>
+      <view wx:if="{{item.actionType === 'edit'}}" class="pill-btn" bindtap="goEdit" data-id="{{item.id}}">{{item.actionText}}</view>
+      <view wx:elif="{{item.actionType === 'products'}}" class="pill-btn" bindtap="goSelectProducts">{{item.actionText}}</view>
+      <view wx:else class="pill-btn primary" bindtap="publishDraft" data-id="{{item.id}}">{{item.actionText}}</view>
+    </view>
+  </view>
+
+  <view wx:if="{{drafts.length === 0}}" class="empty-state">
+    <text class="empty-title">没有匹配草稿</text>
+  </view>
+
+  <view class="bottom-actions">
+    <button class="action-btn secondary" bindtap="clearExpired">清理过期</button>
+    <button class="action-btn primary" bindtap="newActivity">新建活动</button>
+  </view>
+</view>

@@ -1,0 +1,56 @@
+@import '../../search/search.less';
+
+.search-page {
+  padding-top: 28rpx;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.search-landing {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  gap: 22rpx;
+}
+
+.product-scroll {
+  flex: 1;
+  min-height: 0;
+  margin: 0 -28rpx;
+  padding: 0 28rpx;
+  box-sizing: border-box;
+}
+
+.origin-panel {
+  display: grid;
+  gap: 16rpx;
+}
+
+.chip--active {
+  background: linear-gradient(180deg, rgba(44, 74, 57, 0.96), rgba(63, 108, 82, 0.96));
+  color: #fff;
+  box-shadow: 0 10rpx 24rpx rgba(44, 74, 57, 0.18);
+}
+
+.load-more-area {
+  display: grid;
+  place-items: center;
+  padding: 24rpx 0 8rpx;
+}
+
+.load-more-area__text {
+  color: var(--muted);
+  font-size: 22rpx;
+}
+
+.load-more-area__button {
+  padding: 14rpx 24rpx;
+  border-radius: 999rpx;
+  background: rgba(44, 74, 57, 0.08);
+  color: var(--green);
+  font-size: 22rpx;
+  font-weight: 700;
+}

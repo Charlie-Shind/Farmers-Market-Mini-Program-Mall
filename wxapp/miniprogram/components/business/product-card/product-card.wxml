@@ -1,0 +1,70 @@
+<!-- components/business/product-card/product-card.wxml -->
+
+<!-- 1. Vertical Grid Layout -->
+<view wx:if="{{layout === 'vertical'}}" class="product-card product-card--vertical" bindtap="onCardTap" hover-class="product-card--hover">
+  <view class="product-card__img {{displayProduct.imageClass || product.imageClass}}" style="{{displayProduct.imageStyle || product.imageStyle}}"></view>
+  <text class="product-card__title">{{displayProduct.title || product.title}}</text>
+  <text class="product-card__desc">{{displayProduct.desc || displayProduct.subtitle || product.desc || product.subtitle || ''}}</text>
+  <view class="product-card__price-row">
+    <text class="product-card__price">¥{{displayProduct.price || product.price}}</text>
+    <button class="product-card__add-btn" catchtap="onAddToCart">
+      <t-icon name="cart" size="32rpx" color="brandOrange"></t-icon>
+    </button>
+  </view>
+</view>
+
+<!-- 2. Horizontal List Layout -->
+<view wx:elif="{{layout === 'horizontal'}}" class="product-card product-card--horizontal" bindtap="onCardTap" hover-class="product-card--hover">
+  <view class="product-card__img {{displayProduct.imageClass || product.imageClass}}" style="{{displayProduct.imageStyle || product.imageStyle}}"></view>
+  <view class="product-card__body">
+    <view class="product-card__top">
+      <text class="product-card__title">{{displayProduct.title || product.title}}</text>
+      <text wx:if="{{displayProduct.badge || product.badge}}" class="product-card__badge {{displayProduct.isGroupBuy ? 'product-card__badge--activity' : ''}}">{{displayProduct.badge || product.badge}}</text>
+    </view>
+    <text class="product-card__desc">{{displayProduct.subtitle || displayProduct.desc || product.subtitle || product.desc || ''}}</text>
+    <text wx:if="{{displayProduct.ctaText}}" class="product-card__cta">{{displayProduct.ctaText}}</text>
+    <view class="product-card__price-row">
+      <view class="product-card__price">
+        <text>¥</text>
+        <text class="product-card__price-num">{{displayProduct.priceNum || displayProduct.price || product.priceNum || product.price}}</text>
+      </view>
+      <view class="product-card__actions">
+        <view wx:if="{{displayProduct.id || product.id}}" class="product-card__add-btn-circle" catchtap="onAddToCart">
+          <t-icon name="cart" size="36rpx" color="brandOrange"></t-icon>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>
+
+<!-- 3. Rank Card Layout -->
+<view
+  wx:elif="{{layout === 'rank'}}"
+  class="product-card product-card--rank product-card--rank-{{displayProduct.rank || product.rank}}"
+  bindtap="onCardTap"
+  hover-class="product-card--hover"
+>
+  <view class="product-card__rank-wrap">
+    <view class="product-card__rank-badge product-card__rank-badge--{{displayProduct.rank || product.rank}}">
+      <text class="product-card__rank-num">{{displayProduct.rank || product.rank}}</text>
+    </view>
+    <view class="product-card__img {{displayProduct.imageClass || product.imageClass}}" style="{{displayProduct.imageStyle || product.imageStyle}}"></view>
+  </view>
+  <view class="product-card__body">
+    <text class="product-card__title">{{displayProduct.title || product.title}}</text>
+    <text class="product-card__desc">{{displayProduct.desc || product.desc || product.subtitle || product.originPlace || ''}}</text>
+    <view class="product-card__footer">
+      <view class="product-card__meta">
+        <view class="product-card__price-row">
+          <text class="product-card__price-symbol">¥</text>
+          <text class="product-card__price-num">{{displayProduct.priceNum || displayProduct.price || product.price}}</text>
+        </view>
+        <text wx:if="{{displayProduct.sales || product.sales}}" class="product-card__sales">{{displayProduct.sales || product.sales}}</text>
+      </view>
+      <button class="product-card__buy-btn" catchtap="onAddToCart">
+        <t-icon name="cart" size="28rpx" color="brandWhite"></t-icon>
+        <text class="product-card__buy-text">抢购</text>
+      </button>
+    </view>
+  </view>
+</view>

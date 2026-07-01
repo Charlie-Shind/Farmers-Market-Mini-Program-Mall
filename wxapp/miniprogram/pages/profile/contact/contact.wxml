@@ -1,0 +1,66 @@
+﻿<view class="phone-page profile-support-page" style="{{pageStyle}}">
+  <view class="board-head">
+    <view class="page-title-bar">
+      <button class="back-btn" plain="true" bindtap="goBack" hover-class="back-btn--hover">
+        <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+      </button>
+      <text class="page-title-bar__title">联系客服</text>
+      <text></text>
+    </view>
+  </view>
+
+  <view class="support-content">
+    <view class="support-card support-card--hero">
+      <text class="support-eyebrow">Support Center</text>
+      <text class="support-title">问题直接找平台客服</text>
+      <text class="support-desc">订单、物流、退款、地址和活动问题，都可以从这里直达客服会话。</text>
+    </view>
+
+    <view class="support-card">
+      <view class="support-row">
+        <view class="support-row__icon">
+          <t-icon name="message" size="30rpx" color="brandGreen"></t-icon>
+        </view>
+        <view class="support-row__body">
+          <text class="support-row__title">在线客服</text>
+          <text class="support-row__desc">{{supportSubtitle}}</text>
+        </view>
+      </view>
+      <view class="support-actions">
+        <button class="support-btn support-btn--primary" plain="true" bindtap="goToChat">立即咨询</button>
+        <button wx:if="{{supportTarget && supportTarget.hotline}}" class="support-btn support-btn--ghost" plain="true" bindtap="callHotline">拨打电话</button>
+      </view>
+    </view>
+
+    <view class="support-grid">
+      <view class="support-mini-card">
+        <text class="support-mini-card__label">服务范围</text>
+        <text class="support-mini-card__value">{{supportTarget ? (supportTarget.sceneLabel || '平台客服') : '平台客服'}}</text>
+      </view>
+      <view class="support-mini-card">
+        <text class="support-mini-card__label">接待来源</text>
+        <text class="support-mini-card__value">{{supportTarget ? (supportTarget.sceneSource || '个人中心') : '个人中心'}}</text>
+      </view>
+      <view class="support-mini-card">
+        <text class="support-mini-card__label">电话客服</text>
+        <text class="support-mini-card__value">{{supportTarget && supportTarget.hotline ? supportTarget.hotline : '暂未开通'}}</text>
+      </view>
+    </view>
+
+    <view class="support-card">
+      <view class="support-section-head">
+        <text class="support-section-title">常见入口</text>
+        <text class="support-section-subtitle">常见问题可以直接转到对应页面</text>
+      </view>
+      <view class="support-tags">
+        <text class="support-tag">订单售后</text>
+        <text class="support-tag">物流查询</text>
+        <text class="support-tag">地址修改</text>
+        <text class="support-tag">优惠券问题</text>
+      </view>
+    </view>
+  </view>
+
+  <loading show="{{loading}}" text="{{loadingText}}"></loading>
+  <view class="bottom-safe"></view>
+</view>

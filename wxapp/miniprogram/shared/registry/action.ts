@@ -1,0 +1,28 @@
+// Tabler Icons (MIT) 内联 SVG — 操作类
+
+export const actionIcons = {
+  search: '<path d="M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0M21 21l-6 -6"/>',
+  plus: '<path d="M12 5l0 14M5 12l14 0"/>',
+  plusLight: '<path d="M12 5l0 14M5 12l14 0"/>',
+  minus: '<path d="M5 12l14 0"/>',
+  check: '<path d="M5 12l5 5l10 -10"/>',
+  edit: '<path d="M4 20h4l11 -11l-4 -4l-11 11zM14 5l4 4"/>',
+  delete: '<path d="M3 6h18M8 6v-2a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2l-1 -14"/>',
+  refresh: '<path d="M20 11a8 8 0 1 0 -2 5.6M20 4v7h-7"/>',
+  filter: '<path d="M4 4h16v3l-6 7v6l-4 -2v-4l-6 -7z"/>',
+  sort: '<path d="M4 6l8 0M4 12l5 0M4 18l2 0M14 4l0 16M14 4l4 4M14 20l4 -4"/>',
+  share: '<path d="M6 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0M18 6m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0M18 18m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0M8.7 10.7l6.6 -3.7M8.7 13.3l6.6 3.7"/>',
+  upload: '<path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2M7 9l5 -5l5 5M12 4v12"/>',
+  download: '<path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2M7 11l5 5l5 -5M12 4v12"/>',
+  camera: '<path d="M3 7h4l2 -3h6l2 3h4a1 1 0 0 1 1 1v11a1 1 0 0 1 -1 1h-18a1 1 0 0 1 -1 -1v-11a1 1 0 0 1 1 -1zM12 13m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0"/>',
+  image: '<path d="M3 5h18v14h-18zM7 9m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0M3 17l5 -5l4 4l3 -3l6 6"/>',
+  eye: '<path d="M12 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0M2 12s4 -8 10 -8s10 8 10 8s-4 8 -10 8s-10 -8 -10 -8"/>',
+  eyeOff: '<path d="M3 3l18 18M10.6 10.6a3 3 0 0 0 4 4M9.4 5.4a9 9 0 0 1 12.6 6.6M6.4 6.4a9 9 0 0 0 -4.4 5.6s4 8 10 8a9 9 0 0 0 5.6 -1.4"/>',
+  qrcode: '<path d="M4 4h6v6h-6zM14 4h6v6h-6zM4 14h6v6h-6zM14 17h.01M14 14h.01M17 14h.01M17 17h.01M20 14h.01M20 17h.01M20 20h.01M14 20h.01M17 20h.01"/>',
+  scan: '<path d="M4 7v-2a2 2 0 0 1 2 -2h2M4 17v2a2 2 0 0 0 2 2h2M16 4h2a2 2 0 0 1 2 2v2M16 20h2a2 2 0 0 0 2 -2v-2M7 12h10"/>',
+  logout: '<path d="M14 8v-2a2 2 0 0 0 -2 -2h-7a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2 -2v-2M10 12h11M16 8l4 4l-4 4"/>',
+  play: '<path d="M6 4l14 8l-14 8z"/>',
+  pause: '<path d="M6 5h4v14h-4zM14 5h4v14h-4z"/>',
+  copy: '<path d="M9 5h-2a2 2 0 0 0 -2 2v10a2 2 0 0 0 2 2h2M15 5h2a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-2M9 5a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z"/>',
+  loader: '<path d="M12 3a9 9 0 1 0 9 9"/>',
+} as const;

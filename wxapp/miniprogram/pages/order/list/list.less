@@ -1,0 +1,360 @@
+.order-list-page {
+  padding: var(--page-top, 24rpx) 32rpx 140rpx;
+  background-color: #fbf8ef;
+  min-height: 100vh;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.board-head {
+  position: sticky;
+  top: 0;
+  margin: 0 -32rpx;
+  padding: 0 32rpx 12rpx;
+  background: linear-gradient(180deg, #fbf8ef 0%, rgba(251, 248, 239, 0.96) 76%, rgba(251, 248, 239, 0) 100%);
+  z-index: 10;
+}
+
+.page-title-bar {
+  height: 104rpx;
+  display: grid;
+  grid-template-columns: 88rpx 1fr 88rpx;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+}
+
+.page-title-bar__title {
+  text-align: center;
+  font-size: 36rpx;
+  font-weight: 900;
+  color: #111;
+}
+
+/* Tabs */
+.tabs-wrap {
+  margin: 12rpx -32rpx 24rpx;
+  background-color: transparent;
+  padding: 0 32rpx;
+}
+
+.tabs-scroll {
+  white-space: nowrap;
+  width: 100%;
+}
+
+.tabs-flex {
+  display: flex;
+  gap: 36rpx;
+}
+
+.tab-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12rpx 8rpx;
+  position: relative;
+}
+
+.tab-item__text {
+  font-size: 28rpx;
+  color: var(--muted, #8a7a5f);
+  font-weight: 700;
+  transition: color 0.2s ease;
+}
+
+.tab-item__line {
+  width: 36rpx;
+  height: 6rpx;
+  background-color: transparent;
+  border-radius: 4rpx;
+  margin-top: 8rpx;
+  transition: background-color 0.2s ease;
+}
+
+.tab-item--active .tab-item__text {
+  color: var(--green, #2c4a39);
+  font-size: 30rpx;
+  font-weight: 900;
+}
+
+.tab-item--active .tab-item__line {
+  background-color: var(--green, #2c4a39);
+}
+
+/* Orders Scroll */
+.orders-scroll {
+  flex: 1;
+  min-height: 0;
+  height: calc(100vh - 104rpx - 100rpx - var(--page-top, 24rpx) - 100rpx);
+}
+
+.scroll-spacer {
+  height: 80rpx;
+}
+
+.orders-list {
+  display: grid;
+  gap: 24rpx;
+}
+
+.order-card {
+  border-radius: 40rpx;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1rpx solid rgba(237, 224, 201, 0.6);
+  box-shadow: 0 20rpx 44rpx rgba(44, 74, 57, 0.06);
+  padding: 32rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.order-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.store-info {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.store-name {
+  font-size: 28rpx;
+  font-weight: 900;
+  color: #111;
+}
+
+.status-tag {
+  font-size: 24rpx;
+  font-weight: 900;
+  padding: 6rpx 16rpx;
+  border-radius: 12rpx;
+}
+
+.status-tag--PENDING_PAY,
+.status-tag--gold {
+  background: #fffbe6;
+  color: #d46b08;
+  border: 1rpx solid #ffe58f;
+}
+.status-tag--PENDING_SHIP,
+.status-tag--blue {
+  background: #e6f7ff;
+  color: #096dd9;
+  border: 1rpx solid #91d5ff;
+}
+.status-tag--PENDING_RECEIVE {
+  background: #f6ffed;
+  color: #389e0d;
+  border: 1rpx solid #b7eb8f;
+}
+.status-tag--PENDING_COMMENT {
+  background: #f9f0ff;
+  color: #722ed1;
+  border: 1rpx solid #d3adf7;
+}
+.status-tag--COMPLETED,
+.status-tag--green {
+  background: #f6ffed;
+  color: #237804;
+  border: 1rpx solid #95de64;
+}
+.status-tag--CANCELLED,
+.status-tag--EXPIRED,
+.status-tag--gray {
+  background: #f5f5f5;
+  color: #8c8c8c;
+  border: 1rpx solid #d9d9d9;
+}
+.status-tag--REFUNDING,
+.status-tag--AFTER_SALE {
+  background: #fff1f0;
+  color: #cf1322;
+  border: 1rpx solid #ffa39e;
+}
+.status-tag--GROUP_BUYING {
+  background: #fff7e6;
+  color: #d48806;
+  border: 1rpx solid #ffd591;
+}
+.status-tag--GROUP_FAILED {
+  background: #fff2f0;
+  color: #ff4d4f;
+  border: 1rpx solid #ffccc7;
+}
+
+.order-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.goods-item {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.goods-img {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 20rpx;
+  background-color: #f7f8fa;
+  flex-shrink: 0;
+}
+
+.goods-img--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.goods-img__text {
+  font-size: 22rpx;
+  color: #a6a6a6;
+}
+
+.goods-detail {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.goods-title {
+  font-size: 28rpx;
+  font-weight: 900;
+  color: #111;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.goods-sku {
+  font-size: 22rpx;
+  color: var(--muted, #8a7a5f);
+  margin-top: 6rpx;
+}
+
+.goods-price-info {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.goods-price {
+  font-size: 26rpx;
+  font-weight: 900;
+  color: #111;
+}
+
+.goods-quantity {
+  font-size: 22rpx;
+  color: #888;
+  margin-top: 6rpx;
+}
+
+.order-card-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12rpx;
+  padding-top: 12rpx;
+  border-top: 1rpx solid rgba(0, 0, 0, 0.04);
+}
+
+.total-desc {
+  font-size: 24rpx;
+  color: #666;
+}
+
+.total-price {
+  font-size: 32rpx;
+  font-weight: 900;
+  color: #2c4a39;
+}
+
+.order-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.action-btn {
+  height: 64rpx;
+  line-height: 64rpx !important;
+  border-radius: 32rpx;
+  font-size: 24rpx;
+  font-weight: 900;
+  background: var(--green, #2c4a39) !important;
+  color: #fff !important;
+  border: none !important;
+  margin: 0;
+  padding: 0 32rpx;
+}
+
+.action-btn--ghost {
+  background: transparent !important;
+  color: var(--green, #2c4a39) !important;
+  border: 1rpx solid var(--green, #2c4a39) !important;
+}
+
+/* Empty State */
+.empty-state-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 120rpx 40rpx;
+  text-align: center;
+}
+
+.empty-icon-box {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 50%;
+  background: rgba(244, 234, 215, 0.3);
+  display: grid;
+  place-items: center;
+  margin-bottom: 32rpx;
+}
+
+.empty-text {
+  font-size: 32rpx;
+  font-weight: 900;
+  color: #111;
+  margin-bottom: 12rpx;
+}
+
+.empty-sub {
+  font-size: 24rpx;
+  color: var(--muted, #8a7a5f);
+}
+
+.load-more-area {
+  display: grid;
+  place-items: center;
+  padding: 24rpx 0 8rpx;
+}
+
+.load-more-area__text {
+  color: var(--muted);
+  font-size: 22rpx;
+}
+
+.load-more-area__button {
+  padding: 14rpx 24rpx;
+  border-radius: 999rpx;
+  background: rgba(44, 74, 57, 0.08);
+  color: var(--green);
+  font-size: 22rpx;
+  font-weight: 700;
+}

@@ -1,0 +1,79 @@
+﻿<view class="phone-page trace-page" style="{{pageStyle}}">
+  <view class="board-head">
+    <view class="page-title-bar">
+      <button class="back-btn" bindtap="goBack" hover-class="back-btn--hover">
+        <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+      </button>
+      <text class="page-title-bar__title">溯源详情</text>
+      <text></text>
+    </view>
+  </view>
+
+  <scroll-view scroll-y="true" class="trace-scroll" enhanced="true" show-scrollbar="{{false}}">
+    <view class="trace-summary-card" wx:if="{{traceDetail}}">
+      <view class="trace-summary-top">
+        <view>
+          <text class="trace-status">已核验</text>
+          <text class="trace-code">溯源码：{{traceDetail.traceCode}}</text>
+        </view>
+        <text class="trace-status-badge">{{traceDetail.status}}</text>
+      </view>
+      <text class="trace-desc">{{traceDetail.traceDesc || '该商品已完成平台溯源建档。'}}</text>
+      <text class="trace-recorded">建档时间：{{recordedAtLabel}}</text>
+    </view>
+
+    <view class="trace-product-card" wx:if="{{traceDetail}}">
+      <image class="product-cover" src="{{traceDetail.product.coverUrl}}" mode="aspectFill"></image>
+      <view class="product-meta">
+        <text class="product-title">{{traceDetail.product.title}}</text>
+        <text class="product-subtitle" wx:if="{{traceDetail.product.subtitle}}">{{traceDetail.product.subtitle}}</text>
+        <view class="meta-chip-row">
+          <text class="meta-chip" wx:if="{{traceDetail.product.originPlace}}">{{traceDetail.product.originPlace}}</text>
+          <text class="meta-chip" wx:if="{{traceDetail.product.categoryName}}">{{traceDetail.product.categoryName}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="panel detail-card" wx:if="{{traceDetail}}">
+      <view class="section-title">
+        <text class="section-title__title">建档信息</text>
+      </view>
+      <view class="detail-line" wx:for="{{traceDetail.detailLines}}" wx:key="label">
+        <text class="detail-label">{{item.label}}</text>
+        <text class="detail-value">{{item.value}}</text>
+      </view>
+    </view>
+
+    <view class="panel timeline-card" wx:if="{{traceDetail}}">
+      <view class="section-title">
+        <text class="section-title__title">流转节点</text>
+      </view>
+      <view class="timeline-item" wx:for="{{traceDetail.timeline}}" wx:key="title">
+        <view class="timeline-dot-wrap">
+          <view class="timeline-dot {{item.status === 'pending' ? 'timeline-dot--pending' : ''}}"></view>
+          <view class="timeline-line" wx:if="{{index !== traceDetail.timeline.length - 1}}"></view>
+        </view>
+        <view class="timeline-content">
+          <view class="timeline-head">
+            <text class="timeline-title">{{item.title}}</text>
+            <text class="timeline-time" wx:if="{{item.time}}">{{item.time}}</text>
+          </view>
+          <text class="timeline-desc">{{item.desc}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="trace-empty" wx:if="{{!loading && !traceDetail}}">
+      <t-icon name="scan" size="56rpx"></t-icon>
+      <text class="trace-empty__title">未找到对应溯源码</text>
+      <text class="trace-empty__desc">请确认扫码内容是否正确，或联系官方客服核实。</text>
+    </view>
+
+    <view class="scroll-spacer"></view>
+  </scroll-view>
+
+  <view class="bottom-action-bar" wx:if="{{traceDetail}}">
+    <button class="toolbar-btn toolbar-btn--ghost" bindtap="contactMerchant">官方客服</button>
+    <button class="toolbar-btn" bindtap="openProductDetail">查看商品详情</button>
+  </view>
+</view>

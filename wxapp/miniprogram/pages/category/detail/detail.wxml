@@ -1,0 +1,76 @@
+﻿<view class="phone-page category-detail-page" style="{{pageStyle}}">
+  <view class="board-head">
+    <view class="page-title-bar">
+      <button class="back-btn" bindtap="goBack" hover-class="back-btn--hover">
+        <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+      </button>
+      <text class="page-title-bar__title">{{categoryName || '分类商品'}}</text>
+      <text></text>
+    </view>
+
+    <!-- 次分类筛选标签 -->
+    <view class="filter-tabs">
+      <view 
+        wx:for="{{filterOptions}}" 
+        wx:key="value" 
+        class="filter-tab-item {{activeFilter === item.value ? 'active' : ''}}"
+        bindtap="onFilterChange"
+        data-value="{{item.value}}"
+      >
+        <text class="filter-tab-text">{{item.label}}</text>
+        <t-icon wx:if="{{item.value === 'origin'}}" name="chevronRight" size="16rpx" class="chevron-icon" style="transform: rotate(90deg); margin-left: 4rpx; display: inline-block;"></t-icon>
+      </view>
+    </view>
+
+    <!-- 产地筛选项横向滚动 -->
+    <scroll-view 
+      wx:if="{{activeFilter === 'origin' && originPlaces.length > 0}}" 
+      scroll-x 
+      class="origin-chips-scroll" 
+      show-scrollbar="{{false}}" 
+      enhanced
+    >
+      <view class="origin-chips-wrapper">
+        <view 
+          class="origin-chip-item {{selectedOrigin === '' ? 'active' : ''}}"
+          bindtap="onSelectOrigin"
+          data-origin=""
+        >全部产地</view>
+        <view 
+          wx:for="{{originPlaces}}" 
+          wx:key="*this" 
+          class="origin-chip-item {{selectedOrigin === item ? 'active' : ''}}"
+          bindtap="onSelectOrigin"
+          data-origin="{{item}}"
+        >{{item}}</view>
+      </view>
+    </scroll-view>
+  </view>
+
+
+  <view class="list-meta">
+    <text class="list-meta__title">{{categoryName || '推荐商品'}}</text>
+    <text class="list-meta__count">{{loading ? '加载中' : '共 ' + products.length + ' 件'}}</text>
+  </view>
+
+  <view wx:if="{{products.length}}" class="product-list">
+    <product-card
+      wx:for="{{products}}"
+      wx:key="id"
+      product="{{item}}"
+      layout="horizontal"
+      bind:addtocart="addToCart"
+    ></product-card>
+  </view>
+
+  <text wx:else class="empty-hint">{{loading ? '加载中…' : '该分类暂无商品'}}</text>
+
+  <sku-spec-sheet
+    show="{{showSpecSheet}}"
+    product="{{activeSpecProduct}}"
+    bind:close="onCloseSpecSheet"
+    bind:confirm="onConfirmSpecSheet"
+  ></sku-spec-sheet>
+</view>
+
+<bottom-nav active="category" cart-badge="{{cartBadge}}"></bottom-nav>

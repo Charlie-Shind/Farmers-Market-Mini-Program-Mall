@@ -1,0 +1,8 @@
+{
+  "usingComponents": {
+    "confirm-dialog": "../../components/base/confirm-dialog/confirm-dialog",
+    "loading": "../../components/base/loading/loading",
+    "toast": "../../components/base/toast/toast",
+    "t-icon": "../../components/base/t-icon/t-icon"
+  }
+}

@@ -1,0 +1,253 @@
+@import "../common.less";
+
+.visual-row {
+  margin: 12rpx 32rpx 20rpx;
+  padding: 28rpx 24rpx;
+  border-radius: 28rpx;
+  background: var(--merchant-surface-warm);
+  border: 1rpx solid var(--merchant-line-soft);
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.visual-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.visual-title {
+  color: var(--merchant-text);
+  font-size: 28rpx;
+  font-weight: 700;
+  margin-bottom: 8rpx;
+}
+
+.visual-desc {
+  color: var(--merchant-text-muted);
+  font-size: 24rpx;
+  line-height: 1.4;
+}
+
+.visual-chart-icon {
+  width: 104rpx;
+  height: 104rpx;
+  padding: 18rpx;
+  border-radius: 28rpx;
+  background: var(--merchant-primary-soft);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 8rpx;
+  flex-shrink: 0;
+}
+
+.icon-bar {
+  width: 16rpx;
+  border-radius: 999rpx;
+  background: var(--merchant-primary);
+}
+
+.icon-bar.sm { height: 34rpx; opacity: 0.55; }
+.icon-bar.md { height: 52rpx; opacity: 0.76; }
+.icon-bar.lg { height: 68rpx; }
+
+.data-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16rpx;
+  padding: 0 32rpx 20rpx;
+}
+
+.data-cell {
+  padding: 24rpx 16rpx;
+  border-radius: 20rpx;
+  background: var(--merchant-surface);
+  border: 1rpx solid var(--merchant-line-soft);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6rpx;
+}
+
+.data-value {
+  color: var(--merchant-primary-strong);
+  font-size: 34rpx;
+  font-weight: 900;
+}
+
+.data-label {
+  color: var(--merchant-text-muted);
+  font-size: 22rpx;
+}
+
+.section-line-title {
+  padding: 8rpx 32rpx 12rpx;
+}
+
+.section-line-title text {
+  color: var(--merchant-text-sub);
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
+.chart-card {
+  margin: 0 32rpx 24rpx;
+  padding: 24rpx;
+  border-radius: 24rpx;
+  background: var(--merchant-surface);
+  border: 1rpx solid var(--merchant-line-soft);
+}
+
+.chart-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16rpx;
+  margin-bottom: 22rpx;
+}
+
+.chart-title {
+  color: var(--merchant-primary-strong);
+  font-size: 30rpx;
+  font-weight: 900;
+}
+
+.chart-sub {
+  margin-top: 6rpx;
+  color: var(--merchant-text-muted);
+  font-size: 22rpx;
+}
+
+.chart-total {
+  color: var(--merchant-primary);
+  font-size: 28rpx;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.chart-plot {
+  position: relative;
+  height: 248rpx;
+  padding-top: 24rpx;
+}
+
+.grid-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1rpx;
+  background: var(--merchant-line-soft);
+}
+
+.grid-line.top { top: 32rpx; }
+.grid-line.middle { top: 118rpx; }
+.grid-line.bottom { top: 204rpx; }
+
+.bar-chart-row {
+  position: relative;
+  z-index: 1;
+  height: 224rpx;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 14rpx;
+}
+
+.bar-item {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.bar-value {
+  height: 28rpx;
+  color: var(--merchant-primary-strong);
+  font-size: 20rpx;
+  font-weight: 800;
+  line-height: 28rpx;
+  white-space: nowrap;
+}
+
+.bar-track {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.bar-col {
+  width: 34rpx;
+  min-height: 18rpx;
+  border-radius: 999rpx 999rpx 8rpx 8rpx;
+  background: linear-gradient(180deg, #5E8364, var(--merchant-primary));
+  box-shadow: 0 8rpx 18rpx rgba(47, 79, 58, 0.14);
+}
+
+.bar-label {
+  height: 30rpx;
+  margin-top: 8rpx;
+  font-size: 20rpx;
+  color: var(--merchant-text-muted);
+  white-space: nowrap;
+}
+
+.rank-list {
+  padding: 0 32rpx 24rpx;
+}
+
+.rank-row {
+  display: flex;
+  align-items: center;
+  gap: 18rpx;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid var(--merchant-line-soft);
+}
+
+.rank-num {
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 999rpx;
+  background: var(--merchant-primary-soft);
+  color: var(--merchant-primary);
+  font-size: 24rpx;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.rank-thumb {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 16rpx;
+  flex-shrink: 0;
+}
+
+.rank-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.rank-title {
+  color: var(--merchant-text);
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+.rank-desc {
+  color: var(--merchant-text-muted);
+  font-size: 24rpx;
+}
+
+.rank-value {
+  color: var(--merchant-accent);
+  font-size: 28rpx;
+  font-weight: 900;
+  flex-shrink: 0;
+}

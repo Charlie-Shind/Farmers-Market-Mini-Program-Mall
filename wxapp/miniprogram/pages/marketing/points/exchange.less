@@ -1,0 +1,196 @@
+.points-page {
+  padding: var(--page-top, 24rpx) 32rpx 44rpx;
+  display: flex;
+  flex-direction: column;
+}
+
+.points-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
+  margin-bottom: 20rpx;
+}
+
+.points-summary__left {
+  flex: 0 0 auto;
+  min-width: 160rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.points-summary__label {
+  font-size: 22rpx;
+  color: #8a877f;
+}
+
+.points-summary__value {
+  font-size: 52rpx;
+  font-weight: 900;
+  color: var(--green);
+  line-height: 1;
+}
+
+.points-loading,
+.points-empty {
+  padding: 72rpx 20rpx;
+  text-align: center;
+}
+
+.points-loading__title,
+.points-empty__title {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 800;
+  color: #24362c;
+}
+
+.points-loading__desc,
+.points-empty__desc {
+  display: block;
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  color: #7d7d7d;
+  line-height: 1.6;
+}
+
+.points-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.points-card {
+  overflow: hidden;
+  border-radius: 26rpx;
+  background: #fffdf8;
+  border: 1rpx solid rgba(44, 74, 57, 0.08);
+  box-shadow: 0 14rpx 30rpx rgba(44, 74, 57, 0.06);
+  display: flex;
+  gap: 18rpx;
+  padding: 16rpx;
+  box-sizing: border-box;
+}
+
+.points-card--done {
+  opacity: 0.72;
+}
+
+.points-card__cover {
+  width: 164rpx;
+  height: 164rpx;
+  flex: 0 0 164rpx;
+  background: linear-gradient(150deg, #e8ddc7, #d8e1d0);
+  display: grid;
+  place-items: center;
+  border-radius: 20rpx;
+  overflow: hidden;
+}
+
+.points-card__cover-fallback {
+  width: 86rpx;
+  height: 86rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.7);
+  display: grid;
+  place-items: center;
+}
+
+.points-card__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+  justify-content: space-between;
+}
+
+.points-card__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12rpx;
+}
+
+.points-card__title-box {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.points-card__title {
+  font-size: 26rpx;
+  font-weight: 800;
+  color: #222;
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.points-card__desc {
+  font-size: 22rpx;
+  color: #8b8880;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  overflow: hidden;
+}
+
+.points-card__tag {
+  flex: 0 0 auto;
+  height: 36rpx;
+  padding: 0 12rpx;
+  border-radius: 999rpx;
+  background: #edf5e9;
+  color: #2c4a39;
+  font-size: 18rpx;
+  line-height: 36rpx;
+  font-weight: 800;
+}
+
+.points-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12rpx;
+}
+
+.points-card__cost-box {
+  display: flex;
+  flex-direction: column;
+  gap: 2rpx;
+}
+
+.points-card__cost-label {
+  font-size: 18rpx;
+  color: #8b8880;
+}
+
+.points-card__cost {
+  font-size: 34rpx;
+  font-weight: 900;
+  color: var(--orange);
+  line-height: 1;
+}
+
+.points-card__btn {
+  min-width: 120rpx;
+  height: 60rpx;
+  padding: 0 16rpx;
+  border-radius: 999rpx;
+  background: var(--green);
+  color: #fff;
+  font-size: 22rpx;
+  font-weight: 800;
+  line-height: 60rpx;
+  text-align: center;
+}
+
+.points-card__btn--disabled {
+  background: #d7d7d7;
+}

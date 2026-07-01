@@ -1,0 +1,152 @@
+﻿<view class="merchant-page has-bottom-actions" style="{{pageStyle}}">
+  <view class="status-space"></view>
+
+  <view class="page-titlebar">
+    <view class="icon-box icon-btn" bindtap="goBack">
+      <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+    </view>
+    <view class="title-block">
+      <view class="page-title">发布商品</view>
+    </view>
+  </view>
+
+  <view class="section-head">
+    <text>商品图片</text>
+    <text class="section-link" bindtap="goImages">管理图片<t-icon name="chevronRight" size="40rpx"></t-icon></text>
+  </view>
+  <view class="photo-strip">
+    <view class="photo-thumb" wx:for="{{gallery}}" wx:key="*this">
+      <image class="fit-img" src="{{item}}" mode="aspectFill" />
+      <view wx:if="{{index === 0}}" class="mini-label">主图</view>
+    </view>
+    <view class="photo-add" bindtap="goImages">
+      <view class="icon-box" style="width:40rpx;height:40rpx">
+        <t-icon name="camera" size="40rpx"></t-icon>
+      </view>
+    </view>
+  </view>
+
+  <view class="section-head">
+    <text>商品视频</text>
+    <text>可选</text>
+  </view>
+  <view class="media-row">
+    <view wx:if="{{video.cover}}" class="video-thumb">
+      <image class="fit-img" src="{{video.cover}}" mode="aspectFill" />
+    </view>
+    <view wx:else class="video-thumb video-empty"></view>
+    <view class="media-main">
+      <text class="media-title">上传商品视频</text>
+      <text class="media-meta">支持产地、开箱、商品细节展示</text>
+    </view>
+    <view class="pill-btn primary" bindtap="uploadVideo">上传</view>
+  </view>
+
+  <view class="section-head">
+    <text>商品信息</text>
+  </view>
+  <view class="form-card">
+    <navigator url="/pages/merchant/publish-category/publish-category" class="form-row picker-row">
+      <view class="form-label-row">
+        <text class="form-label">商品分类</text>
+      </view>
+      <view class="picker-value">
+        <text>{{categoryDisplayName || categoryName || '请选择'}}</text>
+        <t-icon name="chevronRight" size="40rpx"></t-icon>
+      </view>
+    </navigator>
+    <view class="form-row">
+      <view class="form-label-row">
+        <text class="form-label">商品标题</text>
+        <text class="form-hint">必填</text>
+      </view>
+      <input class="form-input" value="{{title}}" placeholder="请输入商品标题" bindinput="onTitleInput" />
+    </view>
+    <view class="form-row">
+      <view class="form-label-row">
+        <text class="form-label">副标题</text>
+        <text class="form-hint">卖点</text>
+      </view>
+      <input class="form-input" value="{{subtitle}}" placeholder="请输入商品卖点" bindinput="onSubtitleInput" />
+    </view>
+    <view class="form-row">
+      <view class="form-label-row">
+        <text class="form-label">商品详情</text>
+        <text class="form-hint">图文详情</text>
+      </view>
+      <textarea class="form-textarea" value="{{description}}" placeholder="请输入商品图文详情" bindinput="onDescInput" auto-height />
+    </view>
+  </view>
+
+  <view class="section-head">
+    <text>价格库存</text>
+    <text class="section-link" bindtap="goSku">规格库存<t-icon name="chevronRight" size="40rpx"></t-icon></text>
+  </view>
+  <view class="data-grid-3">
+    <view class="data-cell">
+      <text class="data-value">¥{{price}}</text>
+      <text class="data-label">销售价</text>
+    </view>
+    <view class="data-cell">
+      <text class="data-value">{{stock}}</text>
+      <text class="data-label">库存</text>
+    </view>
+    <view class="data-cell">
+      <text class="data-value">{{weight}}</text>
+      <text class="data-label">重量</text>
+    </view>
+  </view>
+
+  <view class="section-head">
+    <text>规格模式</text>
+  </view>
+  <view class="spec-mode-bar">
+    <view class="chip {{specMode === 'multi' ? 'active' : ''}}" bindtap="onSpecModeChange" data-mode="multi">多规格</view>
+    <view class="chip {{specMode === 'single' ? 'active' : ''}}" bindtap="onSpecModeChange" data-mode="single">单规格</view>
+    <text class="spec-edit-link" bindtap="goSku">编辑规格<t-icon name="chevronRight" size="40rpx"></t-icon></text>
+  </view>
+
+  <view class="section-head">
+    <text>服务标签多选</text>
+  </view>
+  <view class="form-card">
+    <view class="form-row">
+      <view class="chip-row">
+        <view class="chip {{item.active ? 'active' : ''}}" wx:for="{{serviceTags}}" wx:key="name" bindtap="onServiceTagTap" data-index="{{index}}">{{item.name}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="section-head">
+    <text>更多设置</text>
+  </view>
+  <view class="form-card">
+    <view class="switch-row">
+      <view class="switch-main">
+        <text class="switch-title">开启预售</text>
+        <text class="switch-desc">设置发货周期和预售库存</text>
+      </view>
+      <switch checked="{{presaleEnabled}}" bindchange="onPresaleSwitch" color="#2F4F3A" />
+    </view>
+    <view class="switch-row">
+      <view class="switch-main">
+        <text class="switch-title">启用溯源码</text>
+        <text class="switch-desc">展示产地、采摘、质检信息</text>
+      </view>
+      <switch checked="{{traceEnabled}}" bindchange="onTraceSwitch" color="#2F4F3A" />
+    </view>
+    <view class="switch-row">
+      <view class="switch-main">
+        <text class="switch-title">商品视频</text>
+        <text class="switch-desc">上传 15 秒产地介绍视频</text>
+      </view>
+      <switch checked="{{videoEnabled}}" bindchange="onVideoSwitch" color="#2F4F3A" />
+    </view>
+  </view>
+
+  <view class="bottom-actions">
+    <view class="action-btn secondary" bindtap="saveDraft"><image class="btn-icon" src="/assets/icons/edit.svg" mode="aspectFit" />存草稿</view>
+    <view class="action-btn secondary" bindtap="goDrafts"><image class="btn-icon" src="/assets/icons/clock.svg" mode="aspectFit" />草稿箱</view>
+    <view class="action-btn primary" bindtap="submitPublish"><image class="btn-icon" src="/assets/icons/check.svg" mode="aspectFit" />提交上架</view>
+  </view>
+</view>

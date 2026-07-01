@@ -1,0 +1,97 @@
+﻿<view class="merchant-page has-tabbar notice-page" style="{{pageStyle}}">
+  <view class="status-space"></view>
+
+  <view class="page-titlebar">
+    <view class="icon-box icon-btn" bindtap="goBack">
+      <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+    </view>
+    <view class="title-block">
+      <view class="page-title">消息通知</view>
+    </view>
+    <text></text>
+  </view>
+
+  <view class="tabs-wrap">
+    <scroll-view scroll-x="true" class="tabs-scroll" show-scrollbar="{{false}}" enhanced="true" enable-flex="true">
+      <view class="tabs-flex">
+        <view
+          wx:for="{{tabs}}"
+          wx:key="key"
+          class="tab-item {{activeTab === item.key ? 'tab-item--active' : ''}}"
+          data-key="{{item.key}}"
+          bindtap="onTabTap"
+        >
+          <text class="tab-item__text">{{item.name}}</text>
+          <view wx:if="{{item.unread}}" class="tab-item__badge">{{item.unread > 99 ? '99+' : item.unread}}</view>
+          <view class="tab-item__line"></view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <scroll-view scroll-y="true" class="notice-scroll" enhanced="true" show-scrollbar="{{false}}" bindscrolltolower="loadMore">
+    <view wx:if="{{filteredNotices.length > 0}}" class="notice-list">
+      <view
+        wx:for="{{filteredNotices}}"
+        wx:key="id"
+        class="notice-card {{item.isRead ? '' : 'notice-card--unread'}}"
+        bindtap="openNotice"
+        data-item="{{item}}"
+      >
+        <view class="notice-card__icon {{item.iconClass}}">
+          <image class="icon-sm" src="{{item.icon}}" mode="aspectFit" />
+        </view>
+        <view class="notice-card__body">
+          <view class="notice-card__top">
+            <text class="notice-card__title">{{item.title}}</text>
+            <view wx:if="{{!item.isRead}}" class="notice-card__dot"></view>
+          </view>
+          <text class="notice-card__desc">{{item.desc}}</text>
+          <view class="notice-card__foot">
+            <text class="notice-card__type">{{item.typeLabel}}</text>
+            <text class="notice-card__time">{{item.timeText}}</text>
+          </view>
+        </view>
+        <t-icon name="chevronRight" size="40rpx"></t-icon>
+      </view>
+    </view>
+
+    <view wx:else class="empty-state-box">
+      <view class="empty-icon-box">
+        <t-icon name="bell" size="80rpx" opacity="0.3"></t-icon>
+      </view>
+      <text class="empty-text">{{loading ? '加载中…' : '暂无匹配通知'}}</text>
+      <text class="empty-sub">这里会展示订单通知、官方通知和风险提醒</text>
+    </view>
+
+    <view wx:if="{{filteredNotices.length}}" class="load-more-area">
+      <text wx:if="{{loadingMore}}" class="load-more-area__text">正在继续加载…</text>
+      <text wx:elif="{{noMore}}" class="load-more-area__text">已经到底了</text>
+    </view>
+
+    <view class="scroll-spacer"></view>
+  </scroll-view>
+
+  <view class="bottom-nav">
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/dashboard/dashboard?tab=0" data-tab="0">
+      <t-icon name="home" size="40rpx"></t-icon>
+      <text>首页</text>
+    </view>
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/messages/messages?tab=1" data-tab="1">
+      <t-icon name="message" size="40rpx"></t-icon>
+      <text>聊天</text>
+    </view>
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/orders/orders?tab=2" data-tab="2">
+      <t-icon name="invoice" size="40rpx"></t-icon>
+      <text>订单</text>
+    </view>
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/products/products?tab=3" data-tab="3">
+      <t-icon name="package" size="40rpx"></t-icon>
+      <text>库存</text>
+    </view>
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/shop/shop?tab=4" data-tab="4">
+      <t-icon name="profile" size="40rpx"></t-icon>
+      <text>账号</text>
+    </view>
+  </view>
+</view>

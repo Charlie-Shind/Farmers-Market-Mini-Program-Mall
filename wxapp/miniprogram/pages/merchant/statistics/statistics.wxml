@@ -1,0 +1,92 @@
+﻿<view class="merchant-page has-tabbar" style="{{pageStyle}}">
+  <view class="status-space"></view>
+
+  <view class="page-titlebar">
+    <view class="icon-box icon-btn" bindtap="goBack">
+      <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+    </view>
+    <view class="title-block">
+      <view class="page-title">经营统计</view>
+      <view class="page-subtitle">成交、访客、转化、商品排行</view>
+    </view>
+  </view>
+
+  <view class="visual-row">
+    <view class="visual-main">
+      <view class="visual-title">本周成交 ¥{{weekTotal}}</view>
+      <view class="visual-desc">{{weekTrend}}，主要来自当前活动商品与商家经营数据。</view>
+    </view>
+    <view class="visual-chart-icon">
+      <view class="icon-bar sm"></view>
+      <view class="icon-bar md"></view>
+      <view class="icon-bar lg"></view>
+    </view>
+  </view>
+
+  <view class="data-grid-3">
+    <view class="data-cell" wx:for="{{summaryData}}" wx:key="label">
+      <text class="data-value">{{item.value}}</text>
+      <text class="data-label">{{item.label}}</text>
+    </view>
+  </view>
+
+  <view class="chart-card">
+    <view class="chart-head">
+      <view>
+        <view class="chart-title">近7日成交</view>
+        <view class="chart-sub">单位：千元</view>
+      </view>
+      <view class="chart-total">¥{{weekTotal}}</view>
+    </view>
+    <view class="chart-plot">
+      <view class="grid-line top"></view>
+      <view class="grid-line middle"></view>
+      <view class="grid-line bottom"></view>
+      <view class="bar-chart-row">
+        <view class="bar-item" wx:for="{{chartData}}" wx:key="name">
+          <text class="bar-value">{{item.value}}</text>
+          <view class="bar-track">
+            <view class="bar-col" style="height: {{item.height}};"></view>
+          </view>
+          <text class="bar-label">{{item.name}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="section-line-title"><text>商品排行</text></view>
+  <view class="rank-list">
+    <view class="rank-row" wx:for="{{rankings}}" wx:key="id">
+      <view class="rank-num">{{item.index}}</view>
+      <image class="rank-thumb" src="{{item.thumb}}" mode="aspectFill" />
+      <view class="rank-main">
+        <view class="rank-title">{{item.title}}</view>
+        <view class="rank-desc">{{item.desc}}</view>
+      </view>
+      <text class="rank-value">{{item.value}}</text>
+    </view>
+  </view>
+
+  <view class="bottom-nav">
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/dashboard/dashboard">
+      <t-icon name="home" size="40rpx"></t-icon>
+      <text>首页</text>
+    </view>
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/messages/messages">
+      <t-icon name="message" size="40rpx"></t-icon>
+      <text>聊天</text>
+    </view>
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/orders/orders">
+      <t-icon name="invoice" size="40rpx"></t-icon>
+      <text>订单</text>
+    </view>
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/products/products">
+      <t-icon name="package" size="40rpx"></t-icon>
+      <text>库存</text>
+    </view>
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/shop/shop">
+      <t-icon name="profile" size="40rpx"></t-icon>
+      <text>账号</text>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,155 @@
+.message-view-page {
+  padding: var(--page-top, 0rpx) 0 0;
+  background: #ededed;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.board-head {
+  position: sticky;
+  top: 0;
+  padding: 0 28rpx 8rpx;
+  background: #ededed;
+  z-index: 20;
+}
+
+.page-title-bar {
+  height: 68rpx;
+  display: grid;
+  grid-template-columns: 68rpx 1fr 68rpx;
+  align-items: center;
+}
+
+.page-title-bar__title {
+  text-align: center;
+  font-size: 34rpx;
+  font-weight: 800;
+  color: #111;
+  letter-spacing: 1rpx;
+}
+
+.page-title-bar__spacer {
+  width: 68rpx;
+  height: 1rpx;
+}
+
+.detail-card {
+  margin: 24rpx 32rpx 0;
+  background: #fff;
+  border-radius: 14rpx;
+  padding: 28rpx 28rpx 36rpx;
+  box-sizing: border-box;
+}
+
+.publisher-row {
+  display: flex;
+  align-items: center;
+  gap: 18rpx;
+  padding-bottom: 22rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+  box-sizing: border-box;
+}
+
+.publisher-row__avatar {
+  width: 68rpx;
+  height: 68rpx;
+  border-radius: 50%;
+  background: #f4f4f4;
+  flex-shrink: 0;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+}
+
+.publisher-row__avatar-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.publisher-row__meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.publisher-row__name {
+  color: #111;
+  font-size: 30rpx;
+  font-weight: 700;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.publisher-row__date {
+  color: #999;
+  font-size: 24rpx;
+  line-height: 1.2;
+}
+
+.detail-body {
+  padding-top: 28rpx;
+  box-sizing: border-box;
+}
+
+.detail-title {
+  display: block;
+  color: #111;
+  font-size: 36rpx;
+  font-weight: 800;
+  line-height: 1.4;
+  word-break: break-all;
+}
+
+.detail-summary {
+  display: block;
+  margin-top: 14rpx;
+  color: #666;
+  font-size: 28rpx;
+  line-height: 1.6;
+  word-break: break-all;
+}
+
+.detail-block {
+  margin-top: 22rpx;
+  box-sizing: border-box;
+}
+
+.detail-text {
+  display: block;
+  color: #222;
+  font-size: 30rpx;
+  line-height: 1.75;
+  word-break: break-all;
+}
+
+.detail-image-wrap {
+  overflow: hidden;
+  border-radius: 12rpx;
+  background: #f5f5f5;
+  box-sizing: border-box;
+}
+
+.detail-image {
+  width: 100%;
+  display: block;
+}
+
+.empty-state {
+  padding: 200rpx 0 0;
+  text-align: center;
+}
+
+.empty-state__text {
+  color: #999;
+  font-size: 28rpx;
+}
+
+.safe-bottom {
+  height: 100rpx;
+}

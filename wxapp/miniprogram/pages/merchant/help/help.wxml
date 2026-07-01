@@ -1,0 +1,73 @@
+﻿<view class="merchant-page has-tabbar" style="{{pageStyle}}">
+  <view class="status-space"></view>
+
+  <view class="app-topbar">
+    <view class="icon-box icon-btn" bindtap="goBack">
+      <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+    </view>
+    <view class="search-pill">
+      <image class="search-icon" src="/assets/icons/search.svg" mode="aspectFit" />
+      <input class="search-input" placeholder="搜索发布、订单、活动、提现问题" value="{{searchKeyword}}" bindinput="onSearchInput" />
+    </view>
+  </view>
+
+  <view class="help-hero">
+    <view class="help-hero-main">
+      <view class="help-hero-title">商家帮助中心</view>
+      <view class="help-hero-desc">发布、订单、活动、提现问题都在这里快速查。</view>
+    </view>
+    <image class="help-hero-illust" src="/assets/illustrations/service.svg" mode="aspectFit" />
+  </view>
+
+  <view class="help-categories">
+    <view class="help-cat-item" wx:for="{{categories}}" wx:key="title" bindtap="onCatTap" data-index="{{index}}">
+      <view class="help-cat-icon {{item.iconClass}}">
+        <t-icon name="{{item.icon}}" size="40rpx"></t-icon>
+      </view>
+      <text class="help-cat-name">{{item.title}}</text>
+    </view>
+  </view>
+
+  <view class="section-line-title"><text>常见问题</text></view>
+  <view class="full-list">
+    <view class="faq-row" wx:for="{{faqs}}" wx:key="title" bindtap="onFaqTap" data-item="{{item}}">
+      <view class="faq-mark">问</view>
+      <view class="row-main">
+        <view class="row-title">{{item.title}}</view>
+        <view class="row-desc">{{item.desc}}</view>
+      </view>
+      <t-icon name="chevronRight" size="40rpx"></t-icon>
+    </view>
+  </view>
+
+  <view class="help-tip-card">
+    <view class="help-tip-main">
+      <view class="help-tip-title">找不到入口？</view>
+      <view class="help-tip-desc">先去“账号”页看店铺入口，再从帮助中心跳转到对应页面。</view>
+    </view>
+    <view class="help-tip-action" bindtap="goPage" data-url="/pages/merchant/shop/shop">去账号页</view>
+  </view>
+
+  <view class="bottom-nav">
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/dashboard/dashboard?tab=0" data-tab="0">
+      <t-icon name="home" size="40rpx"></t-icon>
+      <text>首页</text>
+    </view>
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/messages/messages?tab=1" data-tab="1">
+      <t-icon name="message" size="40rpx"></t-icon>
+      <text>聊天</text>
+    </view>
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/orders/orders?tab=2" data-tab="2">
+      <t-icon name="invoice" size="40rpx"></t-icon>
+      <text>订单</text>
+    </view>
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/products/products?tab=3" data-tab="3">
+      <t-icon name="package" size="40rpx"></t-icon>
+      <text>库存</text>
+    </view>
+    <view class="nav-item active" data-tab="4">
+      <t-icon name="profile" size="40rpx"></t-icon>
+      <text>账号</text>
+    </view>
+  </view>
+</view>

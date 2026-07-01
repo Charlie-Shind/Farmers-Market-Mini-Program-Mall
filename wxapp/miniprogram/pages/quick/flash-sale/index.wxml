@@ -1,0 +1,134 @@
+<view class="phone-page zone-page zone-page--flash" style="{{pageStyle}}">
+  <view class="flash-hero-bg">
+    <image class="flash-hero-bg__img" src="/assets/images/flash/flash-hero.png" mode="aspectFill"/>
+    <view class="flash-hero-bg__mask"></view>
+  </view>
+
+  <view class="flash-hero">
+    <view class="zone-head">
+      <view class="page-title-bar">
+        <button class="back-btn" bindtap="goBack" hover-class="back-btn--hover">
+          <t-icon name="back" size="40rpx" color="#ffffff"></t-icon>
+        </button>
+        <text class="page-title-bar__title">{{pageTitle}}</text>
+      </view>
+    </view>
+
+    <view wx:if="{{activeWindow}}" class="countdown-panel">
+      <view class="countdown-panel__badge">
+        <text class="countdown-panel__badge-dot"></text>
+        <text class="countdown-panel__badge-text">限时抢购</text>
+      </view>
+      <view class="countdown-row">
+        <text class="countdown-row__label">{{activeWindow.statusLabel}}</text>
+        <view class="countdown-row__timer">
+          <view class="time-box">{{activeWindow.countdownParts.hh}}</view>
+          <text class="time-colon">:</text>
+          <view class="time-box">{{activeWindow.countdownParts.mm}}</view>
+          <text class="time-colon">:</text>
+          <view class="time-box">{{activeWindow.countdownParts.ss}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="flash-body">
+    <view wx:if="{{windows.length}}" class="session-card">
+      <view
+        wx:for="{{windows}}"
+        wx:key="id"
+        class="session-item {{index === activeWindowIndex ? 'session-item--active' : ''}}"
+        data-index="{{index}}"
+        bindtap="selectWindow"
+      >
+        <text class="session-item__time">{{item.startTime}}</text>
+        <text class="session-item__status">{{item.statusLabel}}</text>
+      </view>
+    </view>
+
+    <view wx:if="{{!loading && windows.length === 0}}" class="empty">
+      <image class="empty__illus" src="/assets/illustrations/empty.svg" mode="aspectFit"/>
+      <text class="empty__title">暂未发布限时秒杀活动</text>
+      <text class="empty__desc">请关注平台活动公告</text>
+    </view>
+
+    <view wx:elif="{{!loading && windows.length > 0 && products.length === 0}}" class="empty">
+      <image class="empty__illus" src="/assets/illustrations/empty.svg" mode="aspectFit"/>
+      <text class="empty__title">当前时间段暂无秒杀商品</text>
+      <text class="empty__desc">切换上方时间段查看其它场次的商品</text>
+    </view>
+
+    <view wx:elif="{{loading}}" class="empty">
+      <text class="empty__title">加载中…</text>
+    </view>
+
+    <scroll-view
+      wx:if="{{!loading && windows.length > 0 && products.length}}"
+      class="product-scroll"
+      scroll-y="true"
+      enhanced="true"
+      show-scrollbar="{{false}}"
+      bindscrolltolower="loadMore"
+    >
+      <view class="product-list">
+        <view
+          wx:for="{{products}}"
+          wx:key="id"
+          class="product-card"
+          data-item-id="{{item.itemId}}"
+          data-title="{{item.title}}"
+          data-subtitle="{{item.subtitle}}"
+          data-cover-url="{{item.coverUrl}}"
+          data-origin-price="{{item.originPrice}}"
+          bindtap="openProductDetail"
+        >
+          <view class="product-card__media">
+            <image
+              wx:if="{{item.coverUrl}}"
+              class="product-card__img"
+              src="{{item.coverUrl}}"
+              mode="aspectFill"
+            ></image>
+            <view wx:else class="product-card__img card-image--placeholder"></view>
+            <text wx:if="{{item.discount}}" class="product-card__discount">{{item.discount}}</text>
+          </view>
+
+          <view class="product-card__body">
+            <view class="product-card__head">
+              <text class="product-card__title">{{item.title}}</text>
+            </view>
+            <text wx:if="{{item.subtitle}}" class="product-card__subtitle">{{item.subtitle}}</text>
+
+            <view class="product-card__price-row">
+              <view class="price">
+                <text class="price__symbol">¥</text>
+                <text class="price__num">{{item.price}}</text>
+                <text wx:if="{{item.originPrice}}" class="price__origin">¥{{item.originPrice}}</text>
+              </view>
+              <text class="sold">
+                已抢 <text class="sold-num">{{item.sold}}</text> 件
+              </text>
+              <button
+                wx:if="{{item.itemId}}"
+                class="buy-btn"
+                data-item-id="{{item.itemId}}"
+                data-title="{{item.title}}"
+                data-subtitle="{{item.subtitle}}"
+                data-cover-url="{{item.coverUrl}}"
+                data-origin-price="{{item.originPrice}}"
+                catchtap="buyFlashSale"
+              >立即抢</button>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view wx:if="{{loadingMore}}" class="load-more">
+        <text>加载中…</text>
+      </view>
+      <view wx:if="{{noMore}}" class="load-more load-more--end">
+        <text>已加载全部</text>
+      </view>
+    </scroll-view>
+  </view>
+</view>

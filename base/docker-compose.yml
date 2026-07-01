@@ -1,0 +1,133 @@
+# =============================================================================
+# 湾源农仓本地基础设施栈
+# =============================================================================
+# 包含：PostgreSQL / Redis / MinIO（含内置 Console UI）/ MinIO Client
+# 用法：
+#   1. cp .env.example .env，按需改密码
+#   2. docker compose up -d           启动核心服务
+#   3. docker compose --profile tools up -d   启动 mc 工具容器
+#   4. docker compose down            停止（保留数据卷）
+#   5. docker compose down -v         停止 + 清空所有数据（慎用）
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # PostgreSQL 16（主数据库）
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: farm-postgres
+    restart: unless-stopped
+    mem_limit: 512m
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-farm}
+      POSTGRES_USER: ${POSTGRES_USER:-farm}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-farm123456}
+      TZ: Asia/Shanghai
+    ports:
+      - "${POSTGRES_PORT:-6001}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-farm} -d ${POSTGRES_DB:-farm}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - farm-net
+
+  # ---------------------------------------------------------------------------
+  # Redis 7.4（缓存 / 会话 / 队列）
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7.4-alpine
+    container_name: farm-redis
+    restart: unless-stopped
+    mem_limit: 256m
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --requirepass
+      - ${REDIS_PASSWORD:-redis123456}
+      - --maxmemory
+      - "200mb"
+      - --maxmemory-policy
+      - "allkeys-lru"
+    environment:
+      TZ: Asia/Shanghai
+    ports:
+      - "${REDIS_PORT:-6003}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a ${REDIS_PASSWORD:-redis123456} --no-auth-warning ping | grep PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - farm-net
+
+  # ---------------------------------------------------------------------------
+  # MinIO（S3 兼容对象存储，自带 Console UI on :9001）
+  # 镜像走 quay.io，国内拉取比 docker.io 稳定；如要换回 docker.io 改 MINIO_IMAGE 即可
+  # ---------------------------------------------------------------------------
+  minio:
+    image: ${MINIO_IMAGE:-quay.io/minio/minio:RELEASE.2025-01-20T14-49-07Z}
+    container_name: farm-minio
+    restart: unless-stopped
+    mem_limit: 512m
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin123}
+      TZ: Asia/Shanghai
+    ports:
+      - "${MINIO_API_PORT:-6004}:9000"
+      - "${MINIO_CONSOLE_PORT:-6005}:9001"
+    volumes:
+      - minio_data:/data
+      - minio_config:/root/.minio
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - farm-net
+
+  # ---------------------------------------------------------------------------
+  # MinIO Client（只在 --profile tools 启动，日常不用起来）
+  # ---------------------------------------------------------------------------
+  minio-mc:
+    image: ${MC_IMAGE:-quay.io/minio/mc:RELEASE.2025-01-17T23-25-50Z}
+    container_name: farm-minio-mc
+    profiles:
+      - tools
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MC_HOST_local: http://${MINIO_ROOT_USER:-minioadmin}:${MINIO_ROOT_PASSWORD:-minioadmin123}@minio:9000
+      TZ: Asia/Shanghai
+    entrypoint: ["mc"]
+    networks:
+      - farm-net
+
+volumes:
+  postgres_data:
+    name: farm-postgres-data
+  redis_data:
+    name: farm-redis-data
+  minio_data:
+    name: farm-minio-data
+  minio_config:
+    name: farm-minio-config
+
+networks:
+  farm-net:
+    name: farm-net
+    driver: bridge

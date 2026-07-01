@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>商品草稿箱</title>
+<link rel="stylesheet" href="../styles/components.css" />
+</head>
+<body>
+<main class="app-page no-bottom with-sticky">
+<div class="status-space"></div>
+
+<header class="app-topbar">
+  <a class="back-btn" href="javascript:history.back()"><svg class="icon" aria-hidden="true"><use href="../assets/icons.svg#back"></use></svg></a>
+  <label class="search-pill"><svg class="icon-sm" aria-hidden="true"><use href="../assets/icons.svg#search"></use></svg><input data-search-input placeholder="搜索草稿商品" /></label>
+  <button class="icon-action" data-open-sheet="draftFilter"><svg class="icon" aria-hidden="true"><use href="../assets/icons.svg#filter"></use></svg><span>筛选</span></button>
+</header>
+<nav class="tabs" data-filter-tabs><button class="tab active" data-filter="all"><span>全部</span></button><button class="tab " data-filter="image"><span>缺图片</span></button><button class="tab " data-filter="必填"><span>缺价格</span></button><button class="tab " data-filter="sku"><span>缺规格</span></button><button class="tab " data-filter="ready"><span>可提交</span></button></nav>
+<section class="full-list" data-filter-list>
+  <article class="draft-row" data-status="ready" data-search="蓝莓礼盒 顺丰冷链 可提交"> <div class="draft-mark"><svg class="icon" aria-hidden="true"><use href="../assets/icons.svg#edit"></use></svg></div><div class="draft-main"><div class="draft-title">湾源农仓 蓝莓礼盒 顺丰冷链装</div><div class="draft-desc">已完成 8/9 项 · 12 分钟前保存</div></div><a class="pill-btn primary" href="product-edit.html">继续编辑</a></article>
+  <article class="draft-row" data-status="image" data-search="山货礼盒 缺图片"> <div class="draft-mark"><svg class="icon" aria-hidden="true"><use href="../assets/icons.svg#camera"></use></svg></div><div class="draft-main"><div class="draft-title">山货礼盒端午组合装</div><div class="draft-desc">缺少主图 · 昨天 22:15 保存</div></div><a class="pill-btn" href="product-edit.html">补图片</a></article>
+  <article class="draft-row" data-status="sku" data-search="土鸡蛋 缺规格"> <div class="draft-mark"><svg class="icon" aria-hidden="true"><use href="../assets/icons.svg#box"></use></svg></div><div class="draft-main"><div class="draft-title">林下散养土鸡蛋 30枚</div><div class="draft-desc">缺少规格库存 · 2 天前保存</div></div><a class="pill-btn" href="publish-sku.html">补规格</a></article>
+  <div class="list-empty">没有匹配草稿</div>
+</section>
+<div class="bottom-actions"><button class="action-btn secondary" data-toast="已清理无效草稿">清理无效草稿</button><a class="action-btn" href="publish.html" style="display:flex;align-items:center;justify-content:center">发布新商品</a></div>
+<div class="sheet-mask" data-sheet-mask></div><section class="sheet" id="draftFilter"><div class="sheet-head"><div class="sheet-title">草稿筛选</div><button class="icon-btn" data-close-sheet><svg class="icon" aria-hidden="true"><use href="../assets/icons.svg#close"></use></svg></button></div><div class="sheet-group"><div class="sheet-label">完整度</div><div class="option-grid"><button class="option active">全部</button><button class="option">可提交</button><button class="option">缺图片</button><button class="option">缺规格</button></div></div><div class="sheet-group"><div class="sheet-label">保存时间</div><div class="option-grid"><button class="option active">最近保存</button><button class="option">今天</button><button class="option">7天内</button></div></div><div class="bottom-actions" style="position:static;transform:none;padding:0;border-top:0"><button class="action-btn secondary" data-toast="已重置筛选">重置</button><button class="action-btn" data-close-sheet data-toast="已应用筛选">应用</button></div></section>
+
+
+</main>
+<script src="../scripts/prototype.js"></script>
+</body>
+</html>

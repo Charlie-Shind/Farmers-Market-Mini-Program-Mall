@@ -1,0 +1,7 @@
+{
+  "usingComponents": {
+    "loading": "../../../components/base/loading/loading",
+    "image-cropper": "../../../components/image-cropper/image-cropper",
+    "t-icon": "../../../components/base/t-icon/t-icon"
+  }
+}

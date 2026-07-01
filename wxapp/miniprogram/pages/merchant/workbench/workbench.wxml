@@ -1,0 +1,49 @@
+﻿<view class="merchant-page has-tabbar workbench-page" style="{{pageStyle}}">
+  <view class="status-space"></view>
+
+  <view class="page-titlebar workbench-titlebar">
+    <view class="titlebar-back" bindtap="goBack">
+      <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+    </view>
+    <view class="title-block">
+      <text class="page-title">工作台</text>
+    </view>
+  </view>
+
+  <view class="action-strip">
+    <view class="action-entry" wx:for="{{quickActions}}" wx:key="title" bindtap="goPage" data-url="{{item.url}}">
+      <view class="color-icon {{item.tone}}">
+        <t-icon name="{{item.icon}}" size="40rpx"></t-icon>
+      </view>
+      <text>{{item.title}}</text>
+    </view>
+  </view>
+
+  <block wx:for="{{sections}}" wx:key="title">
+    <view class="section-line-title">
+      <text>{{item.title}}</text>
+    </view>
+    <view class="full-list">
+      <view class="func-row" wx:for="{{item.rows}}" wx:for-item="row" wx:key="title" bindtap="goPage" data-url="{{row.url}}">
+        <view class="func-icon">
+          <t-icon name="{{row.icon}}" size="40rpx"></t-icon>
+        </view>
+        <view class="func-main">
+          <text>{{row.title}}</text>
+        </view>
+        <text wx:if="{{row.status}}" class="status-pill {{row.statusType}}">{{row.status}}</text>
+        <view wx:else class="func-right">
+          <text wx:if="{{row.value}}">{{row.value}}</text>
+          <t-icon name="chevronRight" size="40rpx"></t-icon>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <view class="bottom-nav">
+    <view class="nav-item {{item.active ? 'active' : ''}}" wx:for="{{nav}}" wx:key="name" bindtap="goPage" data-url="{{item.url}}">
+      <view class="icon-box nav-icon"><t-icon name="{{item.icon}}" size="40rpx"></t-icon></view>
+      <text>{{item.name}}</text>
+    </view>
+  </view>
+</view>

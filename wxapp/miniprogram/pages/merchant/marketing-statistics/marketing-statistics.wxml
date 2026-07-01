@@ -1,0 +1,51 @@
+﻿<view class="merchant-page statistics-page" style="{{pageStyle}}">
+  <view class="status-space"></view>
+
+  <view class="page-titlebar">
+    <view class="icon-box icon-btn" bindtap="goBack">
+      <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+    </view>
+    <view class="title-block">
+      <view class="page-title">活动数据</view>
+      <view class="page-subtitle">{{activityName}}</view>
+    </view>
+  </view>
+
+  <view class="metric-strip">
+    <view class="metric-item">
+      <text class="metric-value">{{orderCount}}</text>
+      <text class="metric-label">活动订单</text>
+    </view>
+    <view class="metric-item">
+      <text class="metric-value">¥{{amount}}</text>
+      <text class="metric-label">成交额</text>
+    </view>
+    <view class="metric-item">
+      <text class="metric-value">{{conversion}}%</text>
+      <text class="metric-label">转化率</text>
+    </view>
+  </view>
+
+  <view class="section-line-title"><text>近 7 天成交趋势</text></view>
+  <view class="stat-chart">
+    <view class="stat-bar" wx:for="{{chart}}" wx:key="name" style="height: {{item.height}}rpx;">
+      <text>{{item.name}}</text>
+    </view>
+  </view>
+
+  <view class="divider"></view>
+
+  <view class="section-line-title"><text>商品表现</text></view>
+  <view class="full-list">
+    <view class="product-list-item" wx:for="{{products}}" wx:key="id">
+      <image class="goods-img" src="{{item.cover}}" mode="aspectFill" />
+      <view class="product-list-body">
+        <view class="product-list-head">
+          <text class="product-list-title">{{item.name}}</text>
+          <text class="product-list-amount">¥{{item.amount}}</text>
+        </view>
+        <text class="product-list-meta">售出 {{item.sold}} 件 · 转化 {{item.conversion}}%</text>
+      </view>
+    </view>
+  </view>
+</view>

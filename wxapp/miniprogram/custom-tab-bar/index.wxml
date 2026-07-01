@@ -1,0 +1,17 @@
+<view wx:if="{{visible}}" class="custom-tab-bar">
+  <view
+    wx:for="{{items}}"
+    wx:key="key"
+    class="custom-tab-bar__item {{active === item.key ? 'custom-tab-bar__item--active' : ''}}"
+    data-url="{{item.url}}"
+    bindtap="go"
+  >
+    <text wx:if="{{item.badge}}" class="custom-tab-bar__badge">{{item.badge}}</text>
+    <t-icon
+      name="{{item.icon}}"
+      size="44rpx"
+      color="{{active === item.key ? '#2C4A39' : '#8A877F'}}"
+    ></t-icon>
+    <text class="custom-tab-bar__label">{{item.label}}</text>
+  </view>
+</view>

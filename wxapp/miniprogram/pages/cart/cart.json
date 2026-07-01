@@ -1,0 +1,6 @@
+{
+  "usingComponents": {
+    "sku-spec-sheet": "../../components/business/sku-spec-sheet/sku-spec-sheet",
+    "t-icon": "../../components/base/t-icon/t-icon"
+  }
+}

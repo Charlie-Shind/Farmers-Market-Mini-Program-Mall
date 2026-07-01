@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>湾源农仓管理后台 - 用户管理</title>
+  <link rel="stylesheet" href="./00-管理面板公共.css">
+</head>
+<body>
+<input class="drawer-check" type="checkbox" id="drawerToggle">
+<aside class="sidebar">
+  <div class="brand"><div class="brand-mark">湾</div><div><strong>湾源农仓</strong><span>运营管理后台</span></div></div>
+  <nav class="menu" aria-label="后台导航"><a class="" href="01-控制台首页.html">控制台首页</a>
+<a class="active" href="02-用户管理页.html">用户管理</a>
+<a class="" href="03-商户管理页.html">商户管理</a>
+<a class="" href="04-商品管理页.html">商品管理</a>
+<a class="" href="05-活动管理页.html">活动管理</a>
+<a class="" href="06-订单列表页.html">订单列表</a>
+<a class="" href="07-订单详情页.html">订单详情</a>
+<a class="" href="08-售后仲裁页.html">售后仲裁</a>
+<a class="" href="09-数据看板页.html">数据看板</a>
+<a class="" href="10-物流配置页.html">物流配置</a>
+<a class="" href="11-系统配置页.html">系统配置</a></nav>
+  <div class="sidebar-user"><div class="avatar">管</div><div class="user-text"><strong>平台管理员</strong><span>admin@wanyuan</span></div><button type="button">退出</button></div>
+</aside>
+<label class="drawer-mask" for="drawerToggle" aria-label="关闭菜单"></label>
+<main class="app">
+<header class="topbar">
+  <div class="top-left"><label class="menu-toggle" for="drawerToggle" aria-label="打开菜单">☰</label><div><div class="breadcrumb">后台管理 / 用户管理</div><h1>用户管理</h1></div></div>
+  <label class="global-search"><span>⌕</span><input type="text" placeholder="搜索订单号 / 商品 / 商户 / 用户手机号"></label>
+  <div class="top-actions"><button class="text-btn" type="button">导出</button><button class="primary-btn" type="button">新增标签</button><div class="admin-user"><div class="avatar small">管</div><span>平台管理员</span></div></div>
+</header>
+<section class="metric-grid"><article class="metric-card"><div class="metric-title">用户总数</div><strong>18,926</strong><p>近 7 日新增 628</p></article><article class="metric-card"><div class="metric-title">高复购用户</div><strong>3,820</strong><p>复购率 42%</p></article><article class="metric-card"><div class="metric-title">黑名单用户</div><strong>36</strong><p>需谨慎处理</p></article><article class="metric-card"><div class="metric-title">待跟进用户</div><strong>128</strong><p>客服回访队列</p></article></section><section class="filter-panel"><div class="filter-grid"><div class="filter-field"><label>用户关键词</label><input placeholder="昵称 / 手机号 / 用户ID"></div><div class="filter-field"><label>用户状态</label><select><option>全部</option><option>正常</option><option>待跟进</option><option>黑名单</option></select></div><div class="filter-field"><label>用户标签</label><select><option>全部</option><option>高复购</option><option>社区团购</option><option>新客</option></select></div><div class="filter-field"><label>注册时间</label><input placeholder="开始 ~ 结束"></div><div class="filter-actions"><button class="text-btn">重置</button><button class="primary-btn">查询</button></div></div></section><section class="panel"><div class="panel-head"><div><h2>用户列表</h2><p>支持批量打标签、加入黑名单和回访分组</p></div></div><div class="batch-toolbar"><span>已选择 <strong>2</strong> 项</span><div class="batch-actions"><button class="primary-btn">批量打标签</button><button class="warn-btn">加入回访</button><button class="danger-btn">加入黑名单</button></div></div><div class="table-x"><table class="data-table"><col class="check-col"><thead><tr><th class="check-cell"><input type="checkbox" aria-label="全选"></th><th>用户</th><th>手机号</th><th>消费金额</th><th>标签</th><th>状态</th><th>操作</th></tr></thead><tbody><tr><td class="check-cell" data-label="选择"><input type="checkbox" aria-label="选择" checked></td><td data-label="用户"><div class="cell-main"><div class="thumb">用</div><div><strong>林小雨</strong><span>ID: U20260607001</span></div></div></td><td data-label="手机号">138****8899</td><td data-label="消费金额">¥3,620</td><td data-label="标签">社区团购 / 高复购</td><td data-label="状态"><span class="status ok">正常</span></td><td data-label="操作"><div class="op-links"><button>详情</button><button>备注</button></div></td></tr><tr><td class="check-cell" data-label="选择"><input type="checkbox" aria-label="选择" checked></td><td data-label="用户"><div class="cell-main"><div class="thumb">用</div><div><strong>张先生</strong><span>ID: U20260607012</span></div></div></td><td data-label="手机号">136****9012</td><td data-label="消费金额">¥920</td><td data-label="标签">新客 / 待回访</td><td data-label="状态"><span class="status warn">待跟进</span></td><td data-label="操作"><div class="op-links"><button>详情</button><button>备注</button></div></td></tr><tr><td class="check-cell" data-label="选择"><input type="checkbox" aria-label="选择"></td><td data-label="用户"><div class="cell-main"><div class="thumb">用</div><div><strong>王女士</strong><span>ID: U20260607033</span></div></div></td><td data-label="手机号">139****1120</td><td data-label="消费金额">¥0</td><td data-label="标签">异常退款</td><td data-label="状态"><span class="status danger">黑名单</span></td><td data-label="操作"><div class="op-links"><button>详情</button><button>移出</button></div></td></tr></tbody></table></div><div class="pagination"><span>共 128 条</span><button>上一页</button><button>1</button><button>2</button><button>下一页</button></div></section>
+</main>
+</body>
+</html>

@@ -1,0 +1,121 @@
+<view class="leader-dashboard-page" style="{{pageStyle}}">
+  <view class="dashboard-header">
+    <image class="dashboard-header__bg" src="/assets/images/leader/leader-header-bg.png" mode="aspectFill"></image>
+    <view class="dashboard-header__mask"></view>
+    <view class="dashboard-header__content">
+    <view class="header-top">
+      <view class="header-icon-btn" bindtap="goBack">
+        <t-icon name="chevronLeft" size="40rpx" color="#ffffff"></t-icon>
+      </view>
+      <view class="header-title">
+        <text class="title-main">团长工作台</text>
+        <text class="title-sub">社区自提 · 轻松赚佣</text>
+      </view>
+      <view class="header-spacer"></view>
+    </view>
+
+    <view class="overview-card">
+      <view class="overview-main">
+        <view class="overview-item">
+          <text class="overview-value">¥{{overview.totalCommission}}</text>
+          <text class="overview-label">累计佣金</text>
+        </view>
+        <view class="overview-divider"></view>
+        <view class="overview-item">
+          <text class="overview-value">{{overview.totalOrders}}</text>
+          <text class="overview-label">累计订单</text>
+        </view>
+      </view>
+      <view class="overview-bottom">
+        <view class="overview-sub-item">
+          <text class="sub-value">¥{{overview.todayCommission}}</text>
+          <text class="sub-label">今日佣金</text>
+        </view>
+        <view class="overview-sub-item">
+          <text class="sub-value">{{overview.todayOrders}}</text>
+          <text class="sub-label">今日订单</text>
+        </view>
+        <view class="overview-sub-item">
+          <text class="sub-value">{{overview.pendingPickup}}</text>
+          <text class="sub-label">待提货</text>
+        </view>
+        <view class="overview-sub-item">
+          <text class="sub-value">¥{{overview.availableWithdraw}}</text>
+          <text class="sub-label">可提现</text>
+        </view>
+      </view>
+    </view>
+    </view>
+  </view>
+
+  <scroll-view scroll-y="true" class="dashboard-scroll" enhanced="true" show-scrollbar="{{false}}">
+    <view class="dashboard-content">
+      <view class="quick-actions">
+        <view class="action-item" wx:for="{{quickActions}}" wx:key="key" bindtap="goPage" data-key="{{item.key}}" data-url="{{item.url}}">
+          <view class="action-icon" style="background: {{item.color}}15;">
+            <t-icon name="{{item.icon}}" size="44rpx" color="{{item.color}}"></t-icon>
+          </view>
+          <text class="action-label">{{item.label}}</text>
+        </view>
+      </view>
+
+      <view class="section-card">
+        <view class="section-header">
+          <text class="section-title">数据趋势</text>
+          <view class="chart-tabs">
+            <view class="chart-tab {{item.active ? 'active' : ''}}" wx:for="{{chartTabs}}" wx:key="name" bindtap="onChartTabTap" data-index="{{index}}">
+              {{item.name}}
+            </view>
+          </view>
+        </view>
+        <view class="chart-container">
+          <view class="chart-y-axis">
+            <text>高</text>
+            <text>中</text>
+            <text>低</text>
+          </view>
+          <view class="chart-bars">
+            <view class="bar-item" wx:for="{{trend}}" wx:key="name">
+              <text class="bar-value" wx:if="{{activeChartTab === 0}}">¥{{item.value}}</text>
+              <text class="bar-value" wx:else>{{item.orders}}</text>
+              <view class="bar-track">
+                <view class="bar-fill" style="height: {{item.height}};"></view>
+              </view>
+              <text class="bar-label">{{item.name}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view class="section-card">
+        <view class="section-header">
+          <text class="section-title">最近订单</text>
+          <view class="section-more" bindtap="goOrders">
+            <text>查看全部</text>
+            <t-icon name="chevronRight" size="24rpx" opacity="0.5"></t-icon>
+          </view>
+        </view>
+        <view class="order-list" wx:if="{{recentOrders.length > 0}}">
+          <view class="order-item" wx:for="{{recentOrders}}" wx:key="orderNo">
+            <view class="order-info">
+              <text class="order-buyer">{{item.buyerName}}</text>
+              <text class="order-time">{{item.timeText}}</text>
+            </view>
+            <view class="order-right">
+              <text class="order-amount">¥{{item.totalAmount}}</text>
+              <text class="order-commission">佣金 ¥{{item.commission}}</text>
+            </view>
+          </view>
+        </view>
+        <view class="empty-state" wx:else>
+          <text class="empty-text">暂无订单记录</text>
+        </view>
+      </view>
+
+      <view class="leader-bottom-safe"></view>
+    </view>
+  </scroll-view>
+
+  <loading show="{{loading}}" text="加载中..."></loading>
+  <toast show="{{toastVisible}}" message="{{toastMessage}}" type="{{toastType}}" bindclose="hideToast"></toast>
+</view>

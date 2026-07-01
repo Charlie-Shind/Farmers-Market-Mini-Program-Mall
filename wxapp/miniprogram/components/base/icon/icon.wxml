@@ -1,0 +1,16 @@
+<view class="ui-icon-wrap" style="width: {{size}}; height: {{size}}; display: {{display === 'block' ? 'flex' : 'inline-flex'}};">
+  <block wx:if="{{src}}">
+    <view
+      wx:if="{{useMask}}"
+      class="ui-icon ui-icon--mask"
+      style="{{maskStyle}}"
+    ></view>
+    <image
+      wx:else
+      class="ui-icon"
+      src="{{src}}"
+      mode="{{mode}}"
+      style="{{imageStyle}}"
+    />
+  </block>
+</view>

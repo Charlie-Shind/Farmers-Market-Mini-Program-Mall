@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "物流详情",
+  "usingComponents": {
+    "t-icon": "../../../../components/base/t-icon/t-icon"
+  }
+}

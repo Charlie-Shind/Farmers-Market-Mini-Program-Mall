@@ -1,0 +1,7 @@
+{
+  "usingComponents": {
+    "t-icon": "../../components/base/t-icon/t-icon",
+    "ui-icon": "../../components/base/icon/icon",
+    "bottom-nav": "../../components/base/bottom-nav/bottom-nav"
+  }
+}

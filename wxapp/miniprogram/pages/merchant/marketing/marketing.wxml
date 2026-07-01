@@ -1,0 +1,104 @@
+﻿<view class="merchant-page has-tabbar marketing-page" style="{{pageStyle}}">
+  <view class="status-space"></view>
+
+  <view class="page-titlebar">
+    <view class="icon-box icon-btn" bindtap="goBack">
+      <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+    </view>
+    <view class="title-block">
+      <view class="page-title">活动管理</view>
+    </view>
+    <text></text>
+  </view>
+
+  <view class="top-actions" style="justify-content: space-between;">
+    <view class="search-pill" style="flex:1; max-width: 420rpx; height: 64rpx; border-radius: 999rpx; background: var(--merchant-bg); display: flex; align-items: center; gap: 12rpx; padding: 0 20rpx;">
+      <image src="/assets/icons/search.svg" mode="aspectFit" style="width:32rpx;height:32rpx" />
+      <input style="flex:1;min-width:0;height:100%;font-size:26rpx;color:var(--merchant-text)" placeholder="搜索活动名称" value="{{searchValue}}" bindinput="onSearchInput" />
+    </view>
+    <view class="icon-action" bindtap="goPublish">
+      <t-icon name="plus" size="40rpx"></t-icon>
+      <text>发布</text>
+    </view>
+  </view>
+
+  <scroll-view scroll-x class="tabs" enhanced show-scrollbar="{{false}}">
+    <view class="tab {{item.active ? 'active' : ''}}" wx:for="{{tabs}}" wx:key="name" bindtap="onTabTap" data-index="{{index}}">{{item.name}}</view>
+  </scroll-view>
+
+  <view class="segment-bar">
+    <view class="segment-item active">活动列表</view>
+    <view class="segment-item" bindtap="goPublish">发布活动</view>
+    <view class="segment-item" bindtap="goDrafts">草稿箱</view>
+    <view class="segment-item" bindtap="goStatistics">活动数据</view>
+  </view>
+
+  <view class="metric-strip">
+    <view class="metric-item">
+      <text class="metric-value">¥{{weekAmount}}</text>
+      <text class="metric-label">本周活动成交</text>
+    </view>
+    <view class="metric-item">
+      <text class="metric-value">{{runningCount}}</text>
+      <text class="metric-label">进行中</text>
+    </view>
+    <view class="metric-item">
+      <text class="metric-value">{{stockRate}}%</text>
+      <text class="metric-label">库存消耗</text>
+    </view>
+  </view>
+
+  <view wx:if="{{activities.length}}" class="card-list">
+    <view class="activity-card" wx:for="{{activities}}" wx:key="id">
+      <view class="activity-top">
+        <view class="activity-info">
+          <text class="activity-name">{{item.name}}</text>
+          <text class="activity-meta">{{item.typeName}} · {{item.timeText}}</text>
+        </view>
+        <text class="status-pill {{item.statusClass}}">{{item.statusText}}</text>
+      </view>
+      <view class="activity-body">
+        <view class="activity-cover">
+          <image src="{{item.cover}}" mode="aspectFill" />
+        </view>
+        <view class="activity-detail">
+          <view class="rule-grid">
+            <view class="rule-tile" wx:for="{{item.rules}}" wx:key="label" wx:for-item="rule">
+              <text class="rule-value">{{rule.value}}</text>
+              <text class="rule-label">{{rule.label}}</text>
+            </view>
+          </view>
+          <view wx:if="{{item.percent !== undefined}}" class="activity-progress">
+            <view class="progress-line">
+              <view class="progress-inner" style="width: {{item.percent}}%;"></view>
+            </view>
+            <view class="progress-label">
+              <text>{{item.progressText}}</text>
+              <text>{{item.percent}}%</text>
+            </view>
+          </view>
+        </view>
+      </view>
+      <view class="activity-actions">
+        <view class="pill-btn outline" bindtap="goDetail" data-id="{{item.id}}">详情</view>
+        <view class="btn-row">
+          <view class="pill-btn" bindtap="goEdit" data-id="{{item.id}}">编辑</view>
+          <view class="pill-btn danger" bindtap="deleteActivity" data-id="{{item.id}}">删除</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:else class="empty-state">
+    <image class="empty-illust" src="/assets/illustrations/empty.svg" mode="aspectFit" />
+    <text class="empty-title">暂无营销活动</text>
+    <view class="action-btn primary" bindtap="goPublish">发布活动</view>
+  </view>
+
+  <view class="bottom-nav">
+    <view class="nav-item {{item.active ? 'active' : ''}}" wx:for="{{nav}}" wx:key="name" bindtap="goPage" data-url="{{item.url}}">
+      <view class="icon-box nav-icon"><t-icon name="{{item.icon}}" size="40rpx"></t-icon></view>
+      <text>{{item.name}}</text>
+    </view>
+  </view>
+</view>

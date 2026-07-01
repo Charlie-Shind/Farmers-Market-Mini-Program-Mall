@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>湾源农仓 - 分类板块</title>
+  <link rel="stylesheet" href="./02-商品分类页.css" />
+</head>
+<body>
+  <main class="phone-page">
+    <section class="board-head">
+      <header class="status-bar">
+        <strong>9:41</strong>
+        <div class="status-icons"><span></span><span></span><span></span></div>
+      </header>
+
+      <section class="page-title-bar">
+        <a class="back-btn" href="02-商品分类页.html">‹</a>
+        <h1 id="categoryTitle">时令果蔬</h1>
+        <span></span>
+      </section>
+
+      <div class="category-filter" aria-label="分类切换">
+        <a class="chip" data-cat="fruit" href="02-商品分类页-板块.html?cat=fruit">时令果蔬</a>
+        <a class="chip" data-cat="meat" href="02-商品分类页-板块.html?cat=meat">肉禽蛋奶</a>
+        <a class="chip" data-cat="rice" href="02-商品分类页-板块.html?cat=rice">粮油干货</a>
+        <a class="chip" data-cat="gift" href="02-商品分类页-板块.html?cat=gift">特产礼盒</a>
+        <a class="chip" data-cat="organic" href="02-商品分类页-板块.html?cat=organic">有机认证</a>
+        <a class="chip" data-cat="origin" href="02-商品分类页-板块.html?cat=origin">产地直供</a>
+        <a class="chip" data-cat="presale" href="02-商品分类页-板块.html?cat=presale">预售商品</a>
+        <a class="chip" data-cat="local" href="02-商品分类页-板块.html?cat=local">同城配送</a>
+      </div>
+    </section>
+
+    <section class="list-meta">
+      <strong id="listTitle">推荐商品</strong>
+      <span id="listCount">共 0 件</span>
+    </section>
+
+    <section class="product-list" id="productList"></section>
+    <p class="empty-hint" id="emptyHint">该分类暂无商品</p>
+
+    <nav class="tabbar">
+      <a><i>⌂</i><span>首页</span></a>
+      <a class="active"><i>▦</i><span>分类</span></a>
+      <a><i>◉</i><span>发现</span></a>
+      <a class="cart"><b>2</b><i>⌗</i><span>购物车</span></a>
+      <a><i>♙</i><span>我的</span></a>
+    </nav>
+  </main>
+
+  <script>
+    const data = {
+      fruit: {
+        name: '时令果蔬',
+        items: [
+          ['赣南脐橙 5斤装', '产地直发，果香浓郁，坏果包赔', '29.90', '热卖', 'img-orange'],
+          ['赣阳红番茄 3斤', '自然成熟，酸甜多汁，适合同城鲜配', '19.90', '同城', 'img-tomato'],
+          ['有机西蓝花组合装', '轻食优选，冷链直发，现货供应', '16.80', '有机', 'img-rice'],
+          ['红心猕猴桃 12枚', '软糯香甜，礼盒可选，产地预售', '39.90', '预售', 'img-orange']
+        ]
+      },
+      meat: {
+        name: '肉禽蛋奶',
+        items: [
+          ['土鸡蛋 30枚装', '生态散养，蛋香浓郁，家庭刚需', '35.80', '现货', 'img-egg'],
+          ['山林土猪肉 500g', '冷链配送，肥瘦适中，农户直供', '42.90', '冷链', 'img-meat'],
+          ['鲜牛奶 950ml', '低温保鲜，当日配送，适合早餐', '12.90', '同城', 'img-egg']
+        ]
+      },
+      rice: {
+        name: '粮油干货',
+        items: [
+          ['山野香米 10kg', '粒粒饱满，家庭囤货，回购率高', '88.00', '热销', 'img-rice'],
+          ['物理压榨菜籽油 1.8L', '非转基因，农家风味，厨房刚需', '49.90', '优选', 'img-gift'],
+          ['若羌红枣 500g', '肉厚核小，香甜可口，零食煲汤都适合', '25.90', '干货', 'img-gift']
+        ]
+      },
+      gift: {
+        name: '特产礼盒',
+        items: [
+          ['赣南脐橙礼盒 5kg', '送礼精选，产地直采，包装精美', '59.90', '礼盒', 'img-gift'],
+          ['农仓五谷礼盒', '米面粮油组合，适合企业团购', '128.00', '团购', 'img-rice'],
+          ['山野干货礼盒', '红枣、菌菇、笋干组合装', '99.00', '特产', 'img-gift']
+        ]
+      },
+      organic: {
+        name: '有机认证',
+        items: [
+          ['有机西蓝花组合装', '认证基地种植，健康轻食优选', '16.80', '认证', 'img-rice'],
+          ['有机小番茄 2斤', '自然成熟，酸甜多汁，可溯源', '22.90', '认证', 'img-tomato'],
+          ['有机山野香米 5kg', '产地认证，米香自然，家庭装', '68.00', '认证', 'img-rice']
+        ]
+      },
+      origin: {
+        name: '产地直供',
+        items: [
+          ['赣南脐橙 5斤装', '果园直采，源头发货，减少中转', '29.90', '直供', 'img-orange'],
+          ['井冈山红米 2.5kg', '产地直发，高复购，社区团购优选', '39.90', '直供', 'img-rice'],
+          ['山地土鸡蛋 30枚', '农户直供，现货可发', '35.80', '直供', 'img-egg']
+        ]
+      },
+      presale: {
+        name: '预售商品',
+        items: [
+          ['红心猕猴桃 12枚', '成熟后发货，预计 48h 内出库', '39.90', '预售', 'img-orange'],
+          ['早春甜玉米 8根', '基地采收排期，锁鲜发货', '24.90', '预售', 'img-rice'],
+          ['高山蜜薯 5斤', '产地预售，按批次发货', '26.80', '预售', 'img-gift']
+        ]
+      },
+      local: {
+        name: '同城配送',
+        items: [
+          ['赣阳红番茄 3斤', '同城当日达，酸甜多汁', '19.90', '同城', 'img-tomato'],
+          ['土鸡蛋 30枚装', '社区仓发货，破损包赔', '35.80', '同城', 'img-egg'],
+          ['鲜牛奶 950ml', '低温保鲜，同城即时配送', '12.90', '同城', 'img-egg']
+        ]
+      }
+    };
+
+    const params = new URLSearchParams(location.search);
+    const cat = data[params.get('cat')] ? params.get('cat') : 'fruit';
+    const current = data[cat];
+    document.title = `湾源农仓 - ${current.name}`;
+    document.getElementById('categoryTitle').textContent = current.name;
+    document.getElementById('listTitle').textContent = `${current.name}商品`;
+    document.getElementById('listCount').textContent = `共 ${current.items.length} 件`;
+    document.querySelectorAll('.chip').forEach(chip => chip.classList.toggle('active', chip.dataset.cat === cat));
+
+    const list = document.getElementById('productList');
+    list.innerHTML = current.items.map(item => `
+      <article class="product-card">
+        <div class="product-img ${item[4]}"></div>
+        <div class="product-body">
+          <div class="product-top">
+            <h3>${item[0]}</h3>
+            <span class="badge">${item[3]}</span>
+          </div>
+          <p class="product-desc">${item[1]}</p>
+          <div class="price-row">
+            <div class="price"><small>￥</small><strong>${item[2]}</strong></div>
+            <button class="add-btn" type="button">+</button>
+          </div>
+        </div>
+      </article>
+    `).join('');
+  </script>
+</body>
+</html>

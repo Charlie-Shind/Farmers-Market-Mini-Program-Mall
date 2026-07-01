@@ -1,0 +1,49 @@
+.bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 80;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  min-height: 156rpx;
+  padding: 16rpx 28rpx calc(18rpx + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: none;
+}
+
+.bottom-nav__item {
+  position: relative;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 4rpx;
+  color: #333;
+}
+
+.bottom-nav__item--active {
+  color: #2c4a39;
+  font-weight: 900;
+}
+
+.bottom-nav__label {
+  font-size: 22rpx;
+  line-height: 1.2;
+}
+
+.bottom-nav__badge {
+  position: absolute;
+  top: 4rpx;
+  right: 22rpx;
+  z-index: 1;
+  min-width: 30rpx;
+  height: 30rpx;
+  padding: 0 8rpx;
+  box-sizing: border-box;
+  background: transparent;
+  color: #fff;
+  font-size: 18rpx;
+  line-height: 30rpx;
+  text-align: center;
+}

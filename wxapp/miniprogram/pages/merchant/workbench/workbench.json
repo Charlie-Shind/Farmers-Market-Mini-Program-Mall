@@ -1,0 +1,6 @@
+{
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "t-icon": "../../../components/base/t-icon/t-icon"
+  }
+}

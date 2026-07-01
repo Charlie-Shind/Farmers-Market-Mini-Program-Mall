@@ -1,0 +1,37 @@
+:root{
+  --bg:#FAFAF7;
+  --bg-2:#F6F3EB;
+  --surface:#FFFFFF;
+  --surface-soft:#FFFDF8;
+  --green:#2C4A39;
+  --green-2:#3F6F44;
+  --green-soft:#E8EFE8;
+  --gold:#D8A978;
+  --gold-soft:#F6ECD9;
+  --orange:#C65F2D;
+  --orange-soft:#F6E2D7;
+  --red:#B85B4B;
+  --red-soft:#F5E4E0;
+  --text:#25251F;
+  --text-2:#565348;
+  --muted:#8A877F;
+  --line:rgba(44,74,57,.10);
+  --line-strong:rgba(44,74,57,.18);
+  --shadow:0 16px 40px rgba(44,74,57,.08);
+  --shadow-sm:0 8px 20px rgba(44,74,57,.06);
+  --radius-xs:8px;
+  --radius-sm:12px;
+  --radius-md:18px;
+  --radius-lg:24px;
+  --page-pad:12px;
+  --bar-h:56px;
+  --bottom-h:72px;
+  --font:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Segoe UI",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:var(--font);color:var(--text);background:var(--bg);}
+body{font-size:14px;}
+button,input,textarea,select{font:inherit;color:inherit}
+button{border:0;background:none;padding:0;margin:0}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%}

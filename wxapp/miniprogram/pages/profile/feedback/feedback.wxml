@@ -1,0 +1,71 @@
+﻿<view class="phone-page profile-feedback-page" style="{{pageStyle}}">
+  <view class="board-head">
+    <view class="page-title-bar">
+      <button class="back-btn" plain="true" bindtap="goBack" hover-class="back-btn--hover">
+        <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+      </button>
+      <text class="page-title-bar__title">意见反馈</text>
+      <text></text>
+    </view>
+  </view>
+
+  <view class="feedback-content">
+    <view class="feedback-card feedback-card--hero">
+      <text class="feedback-eyebrow">Feedback</text>
+      <text class="feedback-title">把问题直接告诉平台</text>
+      <text class="feedback-desc">功能建议、页面问题、内容问题，都可以在这里直接发给客服会话。</text>
+    </view>
+
+    <view class="feedback-card">
+      <view class="feedback-field">
+        <text class="feedback-field__label">反馈类型</text>
+        <picker mode="selector" range="{{feedbackTypes}}" value="{{typeIndex}}" bindchange="onTypeChange">
+          <view class="feedback-picker">
+            <text class="feedback-picker__value">{{feedbackTypes[typeIndex]}}</text>
+            <t-icon name="chevronRight" size="24rpx" opacity="0.36"></t-icon>
+          </view>
+        </picker>
+      </view>
+
+      <view class="feedback-field">
+        <text class="feedback-field__label">联系方式</text>
+        <input
+          class="feedback-input"
+          value="{{form.contact}}"
+          placeholder="可选，填写手机号或昵称"
+          placeholder-class="feedback-placeholder"
+          bindinput="onContactInput"
+        />
+      </view>
+
+      <view class="feedback-field feedback-field--textarea">
+        <view class="feedback-field__head">
+          <text class="feedback-field__label">反馈内容</text>
+          <text class="feedback-counter">{{form.content.length || 0}}/300</text>
+        </view>
+        <textarea
+          class="feedback-textarea"
+          value="{{form.content}}"
+          placeholder="请直接描述你想反馈的问题"
+          placeholder-class="feedback-placeholder"
+          maxlength="300"
+          bindinput="onContentInput"
+        ></textarea>
+      </view>
+    </view>
+
+    <view class="feedback-card feedback-card--note">
+      <view class="feedback-note">
+        <t-icon name="message" size="30rpx" color="brandGreen"></t-icon>
+        <text>提交后会自动发到平台客服会话。</text>
+      </view>
+    </view>
+
+    <button class="feedback-submit" plain="true" bindtap="submitFeedback" disabled="{{submitting}}">
+      {{submitting ? '提交中...' : '提交反馈'}}
+    </button>
+  </view>
+
+  <loading show="{{loading}}" text="{{loadingText}}"></loading>
+  <view class="bottom-safe"></view>
+</view>

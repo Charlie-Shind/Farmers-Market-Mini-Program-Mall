@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>我的订单</title>
+<link rel="stylesheet" href="../styles/tokens.css" />
+<link rel="stylesheet" href="../styles/components.css" />
+</head>
+<body>
+<svg style="display:none"><defs></defs></svg>
+<div class="page ">
+  <!-- 页面头部：后续转小程序时映射为 page-title-bar，保留返回按钮和右侧动作区 -->
+  <div class="topbar">
+    <button class="icon-btn" data-action="返回上一页"><svg class="icon"><use href="../assets/icons.svg#back"></use></svg></button>
+    <div class="title">我的订单</div>
+    <div class="right"></div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active">全部</div><div class="tab">待付款</div><div class="tab">待发货</div><div class="tab">待收货</div><div class="tab">已完成</div><div class="tab">售后</div>
+  </div>
+  <div class="search-line"><div class="search-pill"><svg class="icon"><use href="../assets/icons.svg#search"></use></svg><input placeholder="搜索订单、商品、店铺" /><button data-open-sheet="#filterSheet"><svg class="icon sm"><use href="../assets/icons.svg#filter"></use></svg></button></div></div>
+  <!-- 订单卡片：保持店铺、状态、商品图、金额、动态操作，不增加后端字段 -->
+  <div class="order-card">
+    <div class="order-head"><div class="store-mini"><img class="avatar" src="../assets/avatars/user1.svg"><span class="name">湾源生态农庄</span></div><span class="tag orange">待付款</span></div>
+    <div class="goods-row">
+  <img class="goods-img" src="../assets/goods/strawberry.svg" alt="丹东红颜草莓 2斤装" />
+  <div>
+    <div class="goods-title">丹东红颜草莓 2斤装</div>
+    <div class="goods-sub">规格：精品大果 · 预计明日达</div>
+    <div class="goods-meta"><span class="price">¥39.90</span><span>x1</span></div>
+
+  </div>
+</div>
+    <div class="order-total"><span class="muted">共 1 件，实付款</span><span class="price">¥39.90</span></div>
+    <div class="order-actions"><button class="btn ghost" data-action="取消订单">取消订单</button><button class="btn primary" data-action="继续支付">继续支付</button></div>
+  </div>
+  <div class="order-card">
+    <div class="order-head"><div class="store-mini"><img class="avatar" src="../assets/avatars/user2.svg"><span class="name">山野粮仓合作社</span></div><span class="tag gold">待收货</span></div>
+    <div class="goods-row">
+  <img class="goods-img" src="../assets/goods/rice.svg" alt="东北五常稻花香大米" />
+  <div>
+    <div class="goods-title">东北五常稻花香大米</div>
+    <div class="goods-sub">规格：5kg · 产地直发</div>
+    <div class="goods-meta"><span class="price">¥69.00</span><span>x1</span></div>
+
+  </div>
+</div>
+    <div class="order-total"><span class="muted">共 1 件，实付款</span><span class="price">¥69.00</span></div>
+    <div class="order-actions"><button class="btn ghost" data-action="查看物流">查看物流</button><button class="btn primary" data-action="确认收货">确认收货</button></div>
+  </div>
+  <div class="order-card">
+    <div class="order-head"><div class="store-mini"><img class="avatar" src="../assets/avatars/user3.svg"><span class="name">溪谷土鸡蛋</span></div><span class="tag green">已完成</span></div>
+    <div class="goods-row">
+  <img class="goods-img" src="../assets/goods/egg.svg" alt="散养土鸡蛋 30枚" />
+  <div>
+    <div class="goods-title">散养土鸡蛋 30枚</div>
+    <div class="goods-sub">规格：30枚装 · 破损包赔</div>
+    <div class="goods-meta"><span class="price">¥46.80</span><span>x1</span></div>
+
+  </div>
+</div>
+    <div class="order-total"><span class="muted">共 1 件，实付款</span><span class="price">¥46.80</span></div>
+    <div class="order-actions"><button class="btn ghost" data-action="申请售后">申请售后</button><button class="btn ghost" data-action="再次购买">再次购买</button><button class="btn primary" data-action="去评价">去评价</button></div>
+  </div>
+  <div id="filterSheet" class="sheet"><div class="sheet-panel"><div class="sheet-head"><div class="sheet-title">筛选订单</div><button data-close-sheet><svg class="icon"><use href="../assets/icons.svg#close"></use></svg></button></div><div class="chips"><div class="chip active">近三个月</div><div class="chip">今年</div><div class="chip">退款中</div><div class="chip">拼团订单</div></div><div class="bottom-bar" style="position:static;padding:12px 0 0"><button class="btn ghost" data-close-sheet>重置</button><button class="btn primary" data-close-sheet>确定</button></div></div></div>
+
+</div>
+<script src="../scripts/prototype.js"></script>
+</body>
+</html>

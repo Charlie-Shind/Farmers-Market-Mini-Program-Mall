@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>时令果蔬</title>
+<link rel="stylesheet" href="../styles/tokens.css" />
+<link rel="stylesheet" href="../styles/components.css" />
+</head>
+<body>
+<svg style="display:none"><defs></defs></svg>
+<div class="page ">
+  <!-- 页面头部：后续转小程序时映射为 page-title-bar，保留返回按钮和右侧动作区 -->
+  <div class="topbar">
+    <button class="icon-btn" data-action="返回上一页"><svg class="icon"><use href="../assets/icons.svg#back"></use></svg></button>
+    <div class="title">时令果蔬</div>
+    <div class="right"></div>
+  </div>
+
+  <div class="search-line"><div class="search-pill"><svg class="icon"><use href="../assets/icons.svg#search"></use></svg><input placeholder="搜索本分类商品" /><button data-open-sheet="#filterSheet"><svg class="icon sm"><use href="../assets/icons.svg#filter"></use></svg></button></div></div>
+  <div class="chips"><div class="chip active">全部</div><div class="chip">新鲜到货</div><div class="chip">有机认证</div><div class="chip">产地直发</div><div class="chip">预售</div></div>
+  <div class="section">
+    <div class="goods-row">
+  <img class="goods-img" src="../assets/goods/strawberry.svg" alt="丹东红颜草莓 2斤装" />
+  <div>
+    <div class="goods-title">丹东红颜草莓 2斤装</div>
+    <div class="goods-sub">辽宁丹东 · 冷链配送 · 今日采摘</div>
+    <div class="goods-meta"><span class="price">¥39.90</span><span>已售 238</span></div>
+
+  </div>
+</div>
+    <div class="goods-row">
+  <img class="goods-img" src="../assets/goods/orange.svg" alt="赣南脐橙 5斤装" />
+  <div>
+    <div class="goods-title">赣南脐橙 5斤装</div>
+    <div class="goods-sub">江西赣州 · 果园直发 · 包甜</div>
+    <div class="goods-meta"><span class="price">¥42.80</span><span>已售 421</span></div>
+
+  </div>
+</div>
+    <div class="goods-row">
+  <img class="goods-img" src="../assets/goods/tea.svg" alt="明前春茶尝鲜装" />
+  <div>
+    <div class="goods-title">明前春茶尝鲜装</div>
+    <div class="goods-sub">浙江安吉 · 轻发酵 · 礼盒可选</div>
+    <div class="goods-meta"><span class="price">¥88.00</span><span>已售 89</span></div>
+
+  </div>
+</div>
+  </div>
+  <div id="filterSheet" class="sheet"><div class="sheet-panel"><div class="sheet-head"><div class="sheet-title">筛选</div><button data-close-sheet><svg class="icon"><use href="../assets/icons.svg#close"></use></svg></button></div><div class="chips" style="padding:0"><div class="chip">价格从低到高</div><div class="chip">销量优先</div><div class="chip">只看现货</div></div><div class="bottom-bar" style="position:static;padding:12px 0 0"><button class="btn ghost" data-close-sheet>重置</button><button class="btn primary" data-close-sheet>确定</button></div></div></div>
+
+</div>
+<script src="../scripts/prototype.js"></script>
+</body>
+</html>

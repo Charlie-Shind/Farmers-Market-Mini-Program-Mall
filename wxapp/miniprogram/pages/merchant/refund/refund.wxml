@@ -1,0 +1,55 @@
+﻿<view class="merchant-page has-bottom-actions" style="{{pageStyle}}">
+  <view class="status-space"></view>
+
+  <view class="page-titlebar">
+    <view class="icon-box icon-btn" bindtap="goBack">
+      <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+    </view>
+    <view class="title-block">
+      <view class="page-title">退款详情</view>
+      <view class="page-subtitle">{{refundType}} · {{refundStatus}}</view>
+    </view>
+  </view>
+
+  <view class="visual-row">
+    <view class="visual-text">
+      <view class="visual-title">待处理退款 ¥{{refundAmount}}</view>
+      <view class="visual-desc">买家申请{{refundType}}，原因：{{refundReason}}。请在 24 小时内处理。</view>
+    </view>
+    <image class="visual-img" src="/assets/illustrations/trace.svg" mode="aspectFit" />
+  </view>
+
+  <view class="goods-card">
+    <image class="goods-img" src="{{goodsImg}}" mode="aspectFill" />
+    <view class="goods-main">
+      <view class="goods-name">{{goodsName}}</view>
+      <view class="goods-meta">订单 {{orderNo}} · 数量 {{goodsCount}}</view>
+    </view>
+    <view class="goods-price">¥{{goodsPrice}}</view>
+  </view>
+
+  <view class="section-line-title"><text>买家说明</text></view>
+  <view class="panel-line">
+    <view class="panel-title">{{refundReason}}</view>
+    <view class="panel-sub">{{refundDesc}}</view>
+  </view>
+
+  <view class="section-line-title"><text>凭证图片</text></view>
+  <view class="evidence-grid">
+    <image class="evidence-img" wx:for="{{evidence}}" wx:key="*this" src="{{item}}" mode="aspectFill" />
+  </view>
+
+  <view class="section-line-title"><text>处理记录</text></view>
+  <view class="timeline">
+    <view class="timeline-row" wx:for="{{timeline}}" wx:key="title">
+      <text>{{item.title}}</text>
+      <text>{{item.desc}}</text>
+    </view>
+  </view>
+
+  <view class="bottom-actions three">
+    <button class="action-btn secondary" bindtap="contactBuyer"><t-icon name="message" size="40rpx"></t-icon>联系买家</button>
+    <button class="action-btn danger" bindtap="rejectRefund"><image class="btn-icon" src="/assets/icons/close.svg" mode="aspectFit" />拒绝</button>
+    <button class="action-btn primary" bindtap="agreeRefund"><image class="btn-icon" src="/assets/icons/check.svg" mode="aspectFit" />同意退款</button>
+  </view>
+</view>

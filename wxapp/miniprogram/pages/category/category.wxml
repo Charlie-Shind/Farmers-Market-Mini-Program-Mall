@@ -1,0 +1,167 @@
+﻿<view class="phone-page category-page" style="{{pageStyle}}">
+  <view class="board-head">
+    <view class="page-title-bar">
+      <button class="back-btn" bindtap="goBack" hover-class="back-btn--hover">
+        <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+      </button>
+      <text class="page-title-bar__title">商品分类</text>
+      <text class="page-title-bar__spacer"></text>
+    </view>
+
+    <view class="search-shell" bindtap="openSearch" hover-class="search-shell--hover">
+      <view class="search-box search-box--hero">
+        <t-icon name="search" size="42rpx" opacity="0.65" color="#89b99e"></t-icon>
+        <text class="search-box__text">搜索商品名称 / 产地 / 规格</text>
+      </view>
+      <button class="search-btn" hover-class="none">
+        <text>搜索</text>
+      </button>
+    </view>
+  </view>
+
+  <view class="category-shell">
+    <scroll-view
+      class="category-nav"
+      scroll-y
+      enhanced
+      show-scrollbar="{{false}}"
+      scroll-with-animation
+      scroll-into-view="{{activeSectionId}}"
+    >
+      <view
+        wx:for="{{sections}}"
+        wx:for-item="item"
+        wx:for-index="index"
+        wx:key="id"
+        id="{{item.id}}"
+        class="category-nav__item {{index === activeSectionIndex ? 'active' : ''}}"
+        data-index="{{index}}"
+        bindtap="switchSection"
+      >
+        <text class="category-nav__label">{{item.name}}</text>
+      </view>
+    </scroll-view>
+
+    <view class="category-content">
+      <view class="category-toolbar">
+        <view class="sort-tabs">
+          <button class="sort-tab {{sortMode === 'comprehensive' ? 'active' : ''}}" data-sort="comprehensive" bindtap="toggleSort">综合</button>
+          <button class="sort-tab {{sortMode === 'sales' ? 'active' : ''}}" data-sort="sales" bindtap="toggleSort">销量</button>
+          <button class="sort-tab {{sortMode === 'priceAsc' || sortMode === 'priceDesc' ? 'active' : ''}}" data-sort="priceAsc" bindtap="toggleSort">
+            <text>价格</text>
+            <text class="sort-tab__arrow">{{sortMode === 'priceDesc' ? '↓' : '↑'}}</text>
+          </button>
+        </view>
+        <button class="filter-btn" bindtap="openFilterSheet">
+          <t-icon name="sort" size="24rpx" color="#2c4a39"></t-icon>
+          <text>筛选</text>
+        </button>
+      </view>
+
+      <view class="category-content__title">
+        <text class="category-content__name">{{activeSectionName || '分类栏目'}}</text>
+      </view>
+
+      <scroll-view class="category-list" scroll-y enhanced show-scrollbar="{{false}}">
+        <view wx:if="{{products.length}}" class="category-list__inner">
+          <view
+            wx:for="{{products}}"
+            wx:key="id"
+            class="category-card"
+            data-id="{{item.id}}"
+            bindtap="openProduct"
+          >
+            <view class="category-card__image" style="{{item.imageStyle}}"></view>
+            <view class="category-card__body">
+              <text class="category-card__title">{{item.title}}</text>
+              <text class="category-card__subtitle">{{item.subtitle}}</text>
+              <view class="category-card__tags">
+                <text wx:for="{{item.tags}}" wx:key="*this" class="category-card__tag">{{item}}</text>
+              </view>
+              <view class="category-card__foot">
+                <text class="category-card__price">{{item.price}}</text>
+                <text class="category-card__sales">销量 {{item.saleCountLabel}}</text>
+              </view>
+            </view>
+          </view>
+          <view class="category-end">没有更多啦~</view>
+        </view>
+
+        <view wx:else class="category-empty">
+          <text class="category-empty__title">{{loadingProducts ? '正在加载商品…' : '暂无商品'}}</text>
+          <text class="category-empty__desc">{{loadingProducts ? '请稍等' : '当前分类下没有商品'}}</text>
+        </view>
+      </scroll-view>
+    </view>
+  </view>
+
+  <view class="safe-bottom"></view>
+</view>
+
+<view wx:if="{{showFilterSheet}}" class="filter-mask" catchtap="closeFilterSheet">
+  <view class="filter-sheet" catchtap="stopBubble">
+    <view class="filter-sheet__head">
+      <text class="filter-sheet__title">全部筛选</text>
+      <view class="filter-sheet__close" bindtap="closeFilterSheet">
+        <t-icon name="close" size="30rpx" color="#111"></t-icon>
+      </view>
+    </view>
+
+    <view class="filter-sheet__address" bindtap="chooseAddress">
+      <t-icon name="location" size="24rpx" color="#111"></t-icon>
+      <text class="filter-sheet__address-text {{hasAddress ? '' : 'is-placeholder'}}">{{addressText}}</text>
+      <view class="filter-sheet__address-action">
+        <t-icon name="edit" size="20rpx" color="#5f6c87"></t-icon>
+        <text>{{hasAddress ? '修改' : '选择'}}</text>
+      </view>
+    </view>
+
+    <view class="filter-sheet__body">
+      <scroll-view class="filter-sheet__nav" scroll-y enhanced show-scrollbar="{{false}}">
+        <view
+          wx:for="{{filterNavItems}}"
+          wx:for-item="nav"
+          wx:for-index="navIndex"
+          wx:key="key"
+          class="filter-sheet__nav-item {{navIndex === activeFilterNavIndex ? 'filter-sheet__nav-item--active' : ''}}"
+          data-index="{{navIndex}}"
+          bindtap="switchFilterNav"
+        >
+          <text class="filter-sheet__nav-text">{{nav.label}}</text>
+        </view>
+      </scroll-view>
+
+      <scroll-view class="filter-sheet__content" scroll-y enhanced show-scrollbar="{{false}}">
+        <view
+          wx:for="{{activeFilterPanelSections}}"
+          wx:for-item="section"
+          wx:for-index="sectionIndex"
+          wx:key="key"
+          class="filter-sheet__section"
+        >
+          <text class="filter-sheet__label">{{section.title}}</text>
+          <view class="filter-chip-grid">
+            <view
+              wx:for="{{section.chips}}"
+              wx:for-item="chip"
+              wx:for-index="chipIndex"
+              wx:key="value"
+              class="filter-chip {{filterSelections[section.key] === chip.value ? 'filter-chip--active' : ''}}"
+              data-section="{{section.key}}"
+              data-chip="{{chip.value}}"
+              bindtap="toggleFilterChip"
+            >
+              <text class="filter-chip__label">{{chip.label}}</text>
+              <text wx:if="{{chip.subLabel}}" class="filter-chip__sub">{{chip.subLabel}}</text>
+            </view>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+
+    <view class="filter-sheet__footer">
+      <view class="filter-reset" bindtap="resetFilter">清空选择</view>
+      <view class="filter-confirm" bindtap="closeFilterSheet">确定</view>
+    </view>
+  </view>
+</view>

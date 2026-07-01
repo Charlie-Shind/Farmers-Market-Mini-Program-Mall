@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>湾源农仓管理后台 - 商品管理</title>
+  <link rel="stylesheet" href="./00-管理面板公共.css">
+</head>
+<body>
+<input class="drawer-check" type="checkbox" id="drawerToggle">
+<aside class="sidebar">
+  <div class="brand"><div class="brand-mark">湾</div><div><strong>湾源农仓</strong><span>运营管理后台</span></div></div>
+  <nav class="menu" aria-label="后台导航"><a class="" href="01-控制台首页.html">控制台首页</a>
+<a class="" href="02-用户管理页.html">用户管理</a>
+<a class="" href="03-商户管理页.html">商户管理</a>
+<a class="active" href="04-商品管理页.html">商品管理</a>
+<a class="" href="05-活动管理页.html">活动管理</a>
+<a class="" href="06-订单列表页.html">订单列表</a>
+<a class="" href="07-订单详情页.html">订单详情</a>
+<a class="" href="08-售后仲裁页.html">售后仲裁</a>
+<a class="" href="09-数据看板页.html">数据看板</a>
+<a class="" href="10-物流配置页.html">物流配置</a>
+<a class="" href="11-系统配置页.html">系统配置</a></nav>
+  <div class="sidebar-user"><div class="avatar">管</div><div class="user-text"><strong>平台管理员</strong><span>admin@wanyuan</span></div><button type="button">退出</button></div>
+</aside>
+<label class="drawer-mask" for="drawerToggle" aria-label="关闭菜单"></label>
+<main class="app">
+<header class="topbar">
+  <div class="top-left"><label class="menu-toggle" for="drawerToggle" aria-label="打开菜单">☰</label><div><div class="breadcrumb">后台管理 / 商品管理</div><h1>商品管理</h1></div></div>
+  <label class="global-search"><span>⌕</span><input type="text" placeholder="搜索订单号 / 商品 / 商户 / 用户手机号"></label>
+  <div class="top-actions"><button class="text-btn" type="button">导出</button><button class="primary-btn" type="button">新增商品</button><div class="admin-user"><div class="avatar small">管</div><span>平台管理员</span></div></div>
+</header>
+<section class="metric-grid"><article class="metric-card"><div class="metric-title">商品总数</div><strong>5,268</strong><p>上架 4,920</p></article><article class="metric-card"><div class="metric-title">待审核</div><strong>63</strong><p>8 个预售</p></article><article class="metric-card"><div class="metric-title">违规下架</div><strong>19</strong><p>近 30 日</p></article><article class="metric-card"><div class="metric-title">库存预警</div><strong>42</strong><p>需补货</p></article></section><section class="filter-panel"><div class="filter-grid"><div class="filter-field"><label>商品关键词</label><input placeholder="商品名 / 商户 / SKU"></div><div class="filter-field"><label>类目</label><select><option>全部</option><option>时令果蔬</option><option>肉禽蛋奶</option><option>粮油干货</option><option>特产礼盒</option></select></div><div class="filter-field"><label>审核状态</label><select><option>全部</option><option>待审核</option><option>已通过</option><option>违规</option></select></div><div class="filter-field"><label>库存状态</label><select><option>全部</option><option>正常</option><option>库存低</option><option>售罄</option></select></div><div class="filter-actions"><button class="text-btn">重置</button><button class="primary-btn">查询</button></div></div></section><section class="panel"><div class="panel-head"><div><h2>商品审核列表</h2><p>支持批量审核、下架与库存处理</p></div></div><div class="batch-toolbar"><span>已选择 <strong>2</strong> 个商品</span><div class="batch-actions"><button class="primary-btn">批量通过</button><button class="warn-btn">要求修改</button><button class="danger-btn">批量下架</button></div></div><div class="table-x"><table class="data-table"><col class="check-col"><thead><tr><th class="check-cell"><input type="checkbox" aria-label="全选"></th><th>商品</th><th>商户</th><th>价格</th><th>库存</th><th>审核状态</th><th>操作</th></tr></thead><tbody><tr><td class="check-cell" data-label="选择"><input type="checkbox" aria-label="选择" checked></td><td data-label="商品"><div class="cell-main"><div class="thumb">橙</div><div><strong>赣南脐橙 5斤装</strong><span>SKU: ORG-5001</span></div></div></td><td data-label="商户">湾源果园</td><td data-label="价格">¥29.90</td><td data-label="库存">2,860</td><td data-label="审核状态"><span class="status ok">已通过</span></td><td data-label="操作"><div class="op-links"><button>编辑</button><button>调库存</button></div></td></tr><tr><td class="check-cell" data-label="选择"><input type="checkbox" aria-label="选择" checked></td><td data-label="商品"><div class="cell-main"><div class="thumb">米</div><div><strong>山野香米 10kg</strong><span>SKU: RICE-1002</span></div></div></td><td data-label="商户">绿谷农场</td><td data-label="价格">¥88.00</td><td data-label="库存">32</td><td data-label="审核状态"><span class="status warn">库存低</span></td><td data-label="操作"><div class="op-links"><button>补库存</button><button>下架</button></div></td></tr><tr><td class="check-cell" data-label="选择"><input type="checkbox" aria-label="选择"></td><td data-label="商品"><div class="cell-main"><div class="thumb">莓</div><div><strong>预售草莓礼盒</strong><span>SKU: STR-0201</span></div></div></td><td data-label="商户">东山合作社</td><td data-label="价格">¥69.00</td><td data-label="库存">预售</td><td data-label="审核状态"><span class="status warn">待审核</span></td><td data-label="操作"><div class="op-links"><button>审核</button><button>驳回</button></div></td></tr></tbody></table></div><div class="pagination"><span>共 5,268 条</span><button>上一页</button><button>1</button><button>2</button><button>下一页</button></div></section>
+</main>
+</body>
+</html>

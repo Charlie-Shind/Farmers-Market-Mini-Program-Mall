@@ -1,0 +1,62 @@
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# dependencies
+**/node_modules/
+
+# build output
+**/dist/
+**/coverage/
+**/*.tsbuildinfo
+
+# env files
+**/.env
+**/.env.*
+!.env.example
+!**/.env.example
+
+# wxapp local runtime config (copy from env.config.example.ts)
+wxapp/miniprogram/config/env.config.ts
+
+# logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# runtime pid & local temp
+start.pid
+backend/start.pid
+start-dev.err
+backend/start-dev.err
+admin/start-admin.err
+backend/scratch/*.txt
+backend/scratch/*.json
+tmp/
+
+# legacy docs backed up locally
+docs/03-技术-架构概览-草案.md
+docs/04-技术-完整方案-草案.md
+docs/农仓开发.docx
+docs/农仓开发.md
+docs/农仓未完成清单.md
+docs/图标清单1.txt
+docs/修正.md
+docs/疑问.txt
+docs/步骤/
+docs/进度记录
+
+# local backups (merchant versions, pre-import snapshots, etc.)
+backup/
+
+# backend local upload fallback (when not using MinIO)
+backend/uploads/
+
+# Claude Code local config (per-user permissions, not for the repo)
+.claude/
+.agents/
+
+# pnpm content-addressable store
+.pnpm-store/

@@ -1,0 +1,81 @@
+﻿<view class="merchant-page has-tabbar" style="{{pageStyle}}">
+  <view class="status-space"></view>
+
+  <view class="page-titlebar">
+    <view class="icon-box icon-btn" bindtap="goBack">
+      <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+    </view>
+    <view class="title-block">
+      <view class="page-title">账号安全</view>
+      <view class="page-subtitle">登录、权限、操作保护</view>
+    </view>
+  </view>
+
+  <view class="visual-row">
+    <view class="visual-main">
+      <view class="visual-title">账号风险正常</view>
+      <view class="visual-desc">最近 7 天无异常登录，关键操作会进行二次确认。</view>
+    </view>
+    <image class="visual-illust" src="/assets/icons/shield.svg" mode="aspectFit" />
+  </view>
+
+  <view class="full-list">
+    <view class="switch-row">
+      <view class="switch-main">
+        <text class="switch-label">登录保护</text>
+        <text class="switch-desc">新设备登录时提醒</text>
+      </view>
+      <switch checked="{{loginProtect}}" bindchange="onLoginProtectChange" color="#2F4F3A" />
+    </view>
+    <view class="switch-row">
+      <view class="switch-main">
+        <text class="switch-label">提现二次确认</text>
+        <text class="switch-desc">提现前需要确认店铺身份</text>
+      </view>
+      <switch checked="{{withdrawConfirm}}" bindchange="onWithdrawConfirmChange" color="#2F4F3A" />
+    </view>
+    <view class="notice-row notice-row--disabled" bindtap="onTapDeviceManage">
+      <view class="row-main">
+        <view class="row-title">登录设备</view>
+        <view class="row-desc">设备入口暂未接入 /merchant/security</view>
+      </view>
+      <view class="row-right-chevron">
+        <text>禁用</text>
+        <t-icon name="chevronRight" size="40rpx"></t-icon>
+      </view>
+    </view>
+    <view class="notice-row notice-row--disabled" bindtap="onTapOperationLog">
+      <view class="row-main">
+        <view class="row-title">操作日志</view>
+        <view class="row-desc">日志入口暂未接入 /merchant/security</view>
+      </view>
+      <view class="row-right-chevron">
+        <text>禁用</text>
+        <t-icon name="chevronRight" size="40rpx"></t-icon>
+      </view>
+    </view>
+  </view>
+
+  <view class="bottom-nav">
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/dashboard/dashboard">
+      <t-icon name="home" size="40rpx"></t-icon>
+      <text>首页</text>
+    </view>
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/messages/messages">
+      <t-icon name="message" size="40rpx"></t-icon>
+      <text>聊天</text>
+    </view>
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/orders/orders">
+      <t-icon name="invoice" size="40rpx"></t-icon>
+      <text>订单</text>
+    </view>
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/products/products">
+      <t-icon name="package" size="40rpx"></t-icon>
+      <text>库存</text>
+    </view>
+    <view class="nav-item active">
+      <t-icon name="profile" size="40rpx"></t-icon>
+      <text>账号</text>
+    </view>
+  </view>
+</view>

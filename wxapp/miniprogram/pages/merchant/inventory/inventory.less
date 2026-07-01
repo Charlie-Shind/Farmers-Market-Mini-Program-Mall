@@ -1,0 +1,204 @@
+@import "../common.less";
+
+.inventory-list {
+  padding: 0 32rpx 32rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.inventory-item {
+  padding: 20rpx;
+  border-radius: 28rpx;
+  background: #FFFFFF;
+  border: 1rpx solid #F0E9DD;
+  display: flex;
+  gap: 18rpx;
+  align-items: flex-start;
+}
+
+.inventory-img {
+  width: 128rpx;
+  height: 128rpx;
+  min-width: 128rpx;
+  min-height: 128rpx;
+  max-width: 128rpx;
+  max-height: 128rpx;
+  border-radius: 20rpx;
+  background: #F8F6F0;
+  flex-shrink: 0;
+}
+
+.inventory-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.inventory-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12rpx;
+}
+
+.inventory-title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: var(--merchant-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.inventory-meta {
+  font-size: 24rpx;
+  color: var(--merchant-text-muted);
+}
+
+.inventory-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4rpx;
+}
+
+.inventory-status-text {
+  font-size: 24rpx;
+  color: var(--merchant-text-sub);
+}
+
+.inventory-actions {
+  display: flex;
+  gap: 12rpx;
+}
+
+.pill-btn {
+  height: 56rpx;
+  padding: 0 26rpx;
+  border-radius: 999rpx;
+  font-size: 24rpx;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  background: #F8F6F0;
+  color: var(--merchant-text-sub);
+}
+
+.pill-btn.primary {
+  background: var(--merchant-primary-soft);
+  color: var(--merchant-primary);
+}
+
+.empty-state {
+  padding: 80rpx 32rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.empty-title {
+  font-size: 28rpx;
+  color: var(--merchant-text-muted);
+}
+
+.sheet-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(31, 42, 36, 0.32);
+  z-index: 25;
+}
+
+.bottom-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 28rpx 32rpx calc(28rpx + env(safe-area-inset-bottom));
+  background: #FFFFFF;
+  border-radius: 36rpx 36rpx 0 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sheet-title {
+  font-size: 32rpx;
+  font-weight: 900;
+  color: var(--merchant-text);
+}
+
+.sheet-group {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.sheet-label {
+  font-size: 24rpx;
+  font-weight: 700;
+  color: var(--merchant-text-sub);
+}
+
+.option-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.option {
+  height: 64rpx;
+  padding: 0 28rpx;
+  border-radius: 999rpx;
+  background: #F8F6F0;
+  color: var(--merchant-text-sub);
+  font-size: 24rpx;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+}
+
+.option.active {
+  background: var(--merchant-primary-soft);
+  color: var(--merchant-primary);
+}
+
+.sheet-actions {
+  display: flex;
+  gap: 18rpx;
+  margin-top: 8rpx;
+}
+
+.sheet-actions .action-btn {
+  flex: 1;
+  height: 80rpx;
+  border-radius: 999rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  font-weight: 900;
+}
+
+.sheet-actions .action-btn.secondary {
+  background: #F8F6F0;
+  color: var(--merchant-text-sub);
+}
+
+.sheet-actions .action-btn.primary {
+  background: var(--merchant-primary);
+  color: #FFFFFF;
+}

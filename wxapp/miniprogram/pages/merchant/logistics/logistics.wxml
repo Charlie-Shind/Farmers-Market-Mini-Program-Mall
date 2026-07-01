@@ -1,0 +1,73 @@
+﻿<view class="merchant-page has-bottom-actions" style="{{pageStyle}}">
+  <view class="status-space"></view>
+
+  <view class="page-titlebar">
+    <view class="icon-box icon-btn" bindtap="goBack">
+      <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+    </view>
+    <view class="title-block">
+      <view class="page-title">物流发货</view>
+      <view class="page-subtitle">录入快递公司和运单号，支持复制与保存</view>
+    </view>
+  </view>
+
+  <view class="goods-card">
+    <view class="thumb-box">
+      <image class="fit-img" src="{{goodsImg}}" mode="aspectFill" />
+    </view>
+    <view class="goods-main">
+      <view class="goods-title">{{goodsName}}</view>
+      <view class="goods-desc">买家：{{buyerName}} · 订单 {{orderNo}}</view>
+    </view>
+    <view class="goods-price">¥{{goodsPrice}}</view>
+  </view>
+
+  <view class="section-line-title"><text>物流信息</text></view>
+  <view class="form-card">
+    <view class="form-line">
+      <label>快递公司<text class="required">必填</text></label>
+      <input value="{{expressCompany}}" bindinput="onExpressCompany" placeholder="请选择或输入快递公司" />
+    </view>
+    <view class="form-line">
+      <label>快递单号<text class="required">必填</text></label>
+      <input value="{{expressNo}}" bindinput="onExpressNo" placeholder="请输入快递单号" />
+    </view>
+    <view class="form-line">
+      <label>发货备注<text class="optional">选填</text></label>
+      <textarea value="{{remark}}" bindinput="onRemark" placeholder="选填备注信息" auto-height />
+    </view>
+  </view>
+
+  <view class="section-line-title"><text>发货检查</text></view>
+  <view class="process-list">
+    <view class="process-row done">
+      <view class="process-index">1</view>
+      <view class="process-main">
+        <view class="process-name">核对收货地址</view>
+        <view class="process-desc">{{checkAddress}}</view>
+      </view>
+      <view class="status-pill success">完成</view>
+    </view>
+    <view class="process-row done">
+      <view class="process-index">2</view>
+      <view class="process-main">
+        <view class="process-name">核对商品数量</view>
+        <view class="process-desc">{{checkGoods}}</view>
+      </view>
+      <view class="status-pill success">完成</view>
+    </view>
+    <view class="process-row">
+      <view class="process-index">3</view>
+      <view class="process-main">
+        <view class="process-name">上传物流单号</view>
+        <view class="process-desc">保存后订单进入待收货状态</view>
+      </view>
+      <view class="status-pill warning">待保存</view>
+    </view>
+  </view>
+
+  <view class="bottom-actions">
+    <button class="action-btn secondary" bindtap="copyExpressNo">复制单号</button>
+    <button class="action-btn primary" bindtap="saveLogistics">保存发货</button>
+  </view>
+</view>

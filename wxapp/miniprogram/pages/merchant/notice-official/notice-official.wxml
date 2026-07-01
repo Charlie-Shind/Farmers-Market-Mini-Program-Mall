@@ -1,0 +1,57 @@
+﻿<view class="merchant-page has-tabbar" style="{{pageStyle}}">
+  <view class="status-space"></view>
+
+  <view class="page-titlebar">
+    <view class="icon-box icon-btn" bindtap="goBack">
+      <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+    </view>
+    <view class="title-block">
+      <view class="page-title">官方通知</view>
+      <view class="page-subtitle">平台规则、活动、系统消息</view>
+    </view>
+  </view>
+
+  <view class="visual-row">
+    <view class="visual-main">
+      <view class="visual-title">平台规则与活动提醒</view>
+      <view class="visual-desc">这里展示官方通知，避免散落在首页造成干扰。</view>
+    </view>
+    <image class="visual-illust" src="/assets/illustrations/empty.svg" mode="aspectFit" />
+  </view>
+
+  <view class="full-list">
+    <view class="notice-row" wx:for="{{notices}}" wx:key="id" bindtap="openNotice" data-item="{{item}}">
+      <view class="notice-icon {{item.iconClass}}">
+        <image class="icon-sm" src="{{item.icon}}" mode="aspectFit" />
+      </view>
+      <view class="row-main">
+        <view class="row-title">{{item.title}}</view>
+        <view class="row-desc">{{item.desc}}</view>
+      </view>
+      <t-icon name="chevronRight" size="40rpx"></t-icon>
+    </view>
+  </view>
+
+  <view class="bottom-nav">
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/dashboard/dashboard">
+      <t-icon name="home" size="40rpx"></t-icon>
+      <text>首页</text>
+    </view>
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/messages/messages">
+      <t-icon name="message" size="40rpx"></t-icon>
+      <text>聊天</text>
+    </view>
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/orders/orders">
+      <t-icon name="invoice" size="40rpx"></t-icon>
+      <text>订单</text>
+    </view>
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/products/products">
+      <t-icon name="package" size="40rpx"></t-icon>
+      <text>库存</text>
+    </view>
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/shop/shop">
+      <t-icon name="profile" size="40rpx"></t-icon>
+      <text>账号</text>
+    </view>
+  </view>
+</view>

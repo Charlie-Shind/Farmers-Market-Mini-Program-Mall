@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>编辑资料</title>
+<link rel="stylesheet" href="../styles/tokens.css" />
+<link rel="stylesheet" href="../styles/components.css" />
+</head>
+<body>
+<svg style="display:none"><defs></defs></svg>
+<div class="page with-bottom">
+  <!-- 页面头部：后续转小程序时映射为 page-title-bar，保留返回按钮和右侧动作区 -->
+  <div class="topbar">
+    <button class="icon-btn" data-action="返回上一页"><svg class="icon"><use href="../assets/icons.svg#back"></use></svg></button>
+    <div class="title">编辑资料</div>
+    <div class="right"></div>
+  </div>
+
+  <form class="section"><div class="cell"><span class="label">头像</span><img class="avatar lg" src="../assets/avatars/user4.svg"></div><div class="field"><label>昵称</label><input value="X Textline" /></div><div class="picker-cell"><span class="name">所在地区</span><span class="select">上海市 <svg class="icon sm"><use href="../assets/icons.svg#chevron"></use></svg></span></div><div class="field"><label>个人简介</label><textarea>喜欢新鲜农产品和产地直发。</textarea></div></form>
+  <div class="bottom-bar"><button class="btn primary" data-action="保存资料">保存</button></div>
+
+</div>
+<script src="../scripts/prototype.js"></script>
+</body>
+</html>

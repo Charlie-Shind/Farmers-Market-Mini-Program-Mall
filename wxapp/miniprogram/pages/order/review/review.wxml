@@ -1,0 +1,59 @@
+<view class="review-page">
+  <block wx:if="{{items.length > 0}}">
+    <view class="review-page__header">
+      <text class="review-page__title">订单 {{orderNo}}</text>
+      <text class="review-page__subtitle">请对以下商品进行评价</text>
+    </view>
+
+    <view wx:for="{{items}}" wx:key="orderItemId" class="review-card">
+      <view class="review-card__goods">
+        <image class="review-card__cover" src="{{item.coverUrl}}" mode="aspectFill" lazy-load />
+        <view class="review-card__info">
+          <text class="review-card__name">{{item.title}}</text>
+          <text class="review-card__sku" wx:if="{{item.skuName}}">{{item.skuName}}</text>
+        </view>
+      </view>
+
+      <view class="review-card__stars">
+        <text class="review-card__stars-label">评分</text>
+        <view class="review-card__stars-row">
+          <view wx:for="{{[1,2,3,4,5]}}" wx:for-item="star" wx:key="*this"
+                class="review-card__star {{star <= item.rating ? 'review-card__star--active' : ''}}"
+                data-index="{{index}}" data-star="{{star}}" catchtap="onStarTap">
+            <text>{{star <= item.rating ? '★' : '☆'}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="review-card__content">
+        <textarea class="review-card__textarea"
+                  placeholder="写点评价吧（必填）"
+                  value="{{item.content}}"
+                  data-index="{{index}}"
+                  bindinput="onContentInput"
+                  maxlength="500"
+                  auto-height />
+        <text class="review-card__count">{{item.content.length || 0}}/500</text>
+      </view>
+
+      <view class="review-card__images" wx:if="{{item.images.length > 0}}">
+        <image wx:for="{{item.images}}" wx:for-item="img" wx:key="*this"
+               class="review-card__image" src="{{img}}" mode="aspectFill" lazy-load />
+      </view>
+    </view>
+
+    <view class="review-page__footer">
+      <button class="review-page__submit" bindtap="onSubmit" loading="{{submitting}}" disabled="{{submitting}}">
+        提交评价
+      </button>
+    </view>
+  </block>
+
+  <block wx:else>
+    <view class="review-page__empty">
+      <text class="review-page__empty-icon">📝</text>
+      <text class="review-page__empty-text">{{emptyText}}</text>
+      <button class="review-page__back-btn" bindtap="goBack">返回订单详情</button>
+    </view>
+  </block>
+</view>

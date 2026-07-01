@@ -1,0 +1,100 @@
+<view class="merchant-page has-tabbar shop-page" style="{{pageStyle}}">
+  <view class="status-space"></view>
+
+  <view class="page-titlebar">
+    <view class="title-block">
+      <view class="page-title">账号</view>
+      <view class="page-subtitle">店铺资料、功能入口、认证与安全</view>
+    </view>
+    <text></text>
+  </view>
+
+  <view class="top-actions">
+    <view class="icon-action" bindtap="goPage" data-url="/pages/merchant/workbench/workbench">
+      <t-icon name="package" size="40rpx"></t-icon>
+      <text>工作台</text>
+    </view>
+  </view>
+
+  <view class="store-profile">
+    <view class="store-avatar-box">
+      <t-icon name="shop" size="40rpx"></t-icon>
+    </view>
+    <view class="store-info">
+      <view class="store-name">{{shopName}}</view>
+      <view class="store-desc">资质已认证 · 经营状态正常</view>
+    </view>
+    <text class="status-pill success">正常</text>
+  </view>
+
+  <view class="metric-strip">
+    <view class="metric-item" wx:for="{{stats}}" wx:key="label">
+      <text class="metric-value">{{item.value}}</text>
+      <text class="metric-label">{{item.label}}</text>
+    </view>
+  </view>
+
+  <view class="section-line-title"><text>常用入口</text></view>
+  <view class="entry-grid-4">
+    <view class="entry-item" wx:for="{{quickEntries}}" wx:key="title" bindtap="goPage" data-url="{{item.url}}">
+      <view class="entry-icon-box">
+        <t-icon name="{{item.icon}}" size="40rpx"></t-icon>
+      </view>
+      <text class="entry-name">{{item.title}}</text>
+    </view>
+  </view>
+
+  <view class="section-line-title"><text>店铺管理</text></view>
+  <view class="full-list">
+    <view class="setting-row" wx:for="{{manageRows}}" wx:key="title" bindtap="goPage" data-url="{{item.url}}">
+      <view class="row-main">
+        <view class="row-title">{{item.title}}</view>
+        <view class="row-desc">{{item.desc}}</view>
+      </view>
+      <view wx:if="{{item.badge}}" class="row-right">
+        <text class="status-pill success">{{item.badge}}</text>
+      </view>
+      <view wx:else class="row-right-chevron">
+        <text>{{item.action}}</text>
+        <t-icon name="chevronRight" size="40rpx"></t-icon>
+      </view>
+    </view>
+  </view>
+
+  <view class="section-line-title"><text>帮助</text></view>
+  <view class="full-list">
+    <view class="setting-row" bindtap="goPage" data-url="/pages/merchant/help/help">
+      <view class="row-main">
+        <view class="row-title">商家帮助中心</view>
+        <view class="row-desc">发布、订单、活动、提现常见问题</view>
+      </view>
+      <view class="row-right-chevron">
+        <text>查看</text>
+        <t-icon name="chevronRight" size="40rpx"></t-icon>
+      </view>
+    </view>
+  </view>
+
+  <view class="bottom-nav">
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/dashboard/dashboard?tab=0" data-tab="0">
+      <t-icon name="home" size="40rpx"></t-icon>
+      <text>首页</text>
+    </view>
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/messages/messages?tab=1" data-tab="1">
+      <t-icon name="message" size="40rpx"></t-icon>
+      <text>聊天</text>
+    </view>
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/orders/orders?tab=2" data-tab="2">
+      <t-icon name="invoice" size="40rpx"></t-icon>
+      <text>订单</text>
+    </view>
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/products/products?tab=3" data-tab="3">
+      <t-icon name="package" size="40rpx"></t-icon>
+      <text>库存</text>
+    </view>
+    <view class="nav-item active" data-tab="4">
+      <t-icon name="profile" size="40rpx"></t-icon>
+      <text>账号</text>
+    </view>
+  </view>
+</view>

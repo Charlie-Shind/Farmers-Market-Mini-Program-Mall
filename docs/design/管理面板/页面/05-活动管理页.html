@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>湾源农仓管理后台 - 活动管理</title>
+  <link rel="stylesheet" href="./00-管理面板公共.css">
+</head>
+<body>
+<input class="drawer-check" type="checkbox" id="drawerToggle">
+<aside class="sidebar">
+  <div class="brand"><div class="brand-mark">湾</div><div><strong>湾源农仓</strong><span>运营管理后台</span></div></div>
+  <nav class="menu" aria-label="后台导航"><a class="" href="01-控制台首页.html">控制台首页</a>
+<a class="" href="02-用户管理页.html">用户管理</a>
+<a class="" href="03-商户管理页.html">商户管理</a>
+<a class="" href="04-商品管理页.html">商品管理</a>
+<a class="active" href="05-活动管理页.html">活动管理</a>
+<a class="" href="06-订单列表页.html">订单列表</a>
+<a class="" href="07-订单详情页.html">订单详情</a>
+<a class="" href="08-售后仲裁页.html">售后仲裁</a>
+<a class="" href="09-数据看板页.html">数据看板</a>
+<a class="" href="10-物流配置页.html">物流配置</a>
+<a class="" href="11-系统配置页.html">系统配置</a></nav>
+  <div class="sidebar-user"><div class="avatar">管</div><div class="user-text"><strong>平台管理员</strong><span>admin@wanyuan</span></div><button type="button">退出</button></div>
+</aside>
+<label class="drawer-mask" for="drawerToggle" aria-label="关闭菜单"></label>
+<main class="app">
+<header class="topbar">
+  <div class="top-left"><label class="menu-toggle" for="drawerToggle" aria-label="打开菜单">☰</label><div><div class="breadcrumb">后台管理 / 活动管理</div><h1>活动管理</h1></div></div>
+  <label class="global-search"><span>⌕</span><input type="text" placeholder="搜索订单号 / 商品 / 商户 / 用户手机号"></label>
+  <div class="top-actions"><button class="text-btn" type="button">导出</button><button class="primary-btn" type="button">新增活动</button><div class="admin-user"><div class="avatar small">管</div><span>平台管理员</span></div></div>
+</header>
+<section class="metric-grid"><article class="metric-card"><div class="metric-title">进行中活动</div><strong>8</strong><p>秒杀 / 拼团 / 预售</p></article><article class="metric-card"><div class="metric-title">待上线 Banner</div><strong>4</strong><p>需审核素材</p></article><article class="metric-card"><div class="metric-title">活动成交额</div><strong>¥86,520</strong><p>本周累计</p></article><article class="metric-card"><div class="metric-title">排期冲突</div><strong>2</strong><p>需调整时间</p></article></section><section class="filter-panel"><div class="filter-grid"><div class="filter-field"><label>活动关键词</label><input placeholder="活动名 / Banner 标题"></div><div class="filter-field"><label>活动类型</label><select><option>全部</option><option>秒杀</option><option>拼团</option><option>礼盒</option><option>预售</option></select></div><div class="filter-field"><label>活动状态</label><select><option>全部</option><option>待上线</option><option>进行中</option><option>已结束</option></select></div><div class="filter-field"><label>活动时间</label><input placeholder="开始 ~ 结束"></div><div class="filter-actions"><button class="text-btn">重置</button><button class="primary-btn">查询</button></div></div></section><section class="config-card-grid"><article class="config-card"><strong>首页 Banner 配置</strong><p>管理首页主 Banner、跳转链接、排序和投放时间。</p><button class="ghost-btn">配置 Banner</button></article><article class="config-card"><strong>秒杀活动</strong><p>配置活动商品、活动价格、活动库存与生效时间。</p><button class="ghost-btn">新增秒杀</button></article><article class="config-card"><strong>拼团活动</strong><p>支持邻里拼团、成团人数、团购价与失败退款规则。</p><button class="ghost-btn">新增拼团</button></article></section><section class="panel"><div class="panel-head"><div><h2>活动排期列表</h2><p>冲突排期需要优先处理</p></div></div><div class="batch-toolbar"><span>已选择 <strong>2</strong> 个活动</span><div class="batch-actions"><button class="primary-btn">批量上线</button><button class="warn-btn">调整排期</button><button class="danger-btn">批量下线</button></div></div><div class="table-x"><table class="data-table"><col class="check-col"><thead><tr><th class="check-cell"><input type="checkbox" aria-label="全选"></th><th>活动</th><th>类型</th><th>时间</th><th>状态</th><th>效果</th><th>操作</th></tr></thead><tbody><tr><td class="check-cell" data-label="选择"><input type="checkbox" aria-label="选择" checked></td><td data-label="活动"><div class="cell-main"><div class="thumb">礼</div><div><strong>端午礼盒专场</strong><span>首页 Banner / 礼盒专区</span></div></div></td><td data-label="类型">礼盒</td><td data-label="时间">06-08 ~ 06-18</td><td data-label="状态"><span class="status ok">进行中</span></td><td data-label="效果">成交 ¥32,600</td><td data-label="操作"><div class="op-links"><button>预览</button><button>编辑</button></div></td></tr><tr><td class="check-cell" data-label="选择"><input type="checkbox" aria-label="选择" checked></td><td data-label="活动"><div class="cell-main"><div class="thumb">秒</div><div><strong>脐橙限时秒杀</strong><span>活动位 1</span></div></div></td><td data-label="类型">秒杀</td><td data-label="时间">06-10 10:00</td><td data-label="状态"><span class="status warn">待上线</span></td><td data-label="效果">预计库存 800</td><td data-label="操作"><div class="op-links"><button>上线</button><button>编辑</button></div></td></tr><tr><td class="check-cell" data-label="选择"><input type="checkbox" aria-label="选择"></td><td data-label="活动"><div class="cell-main"><div class="thumb">团</div><div><strong>周末拼团补贴</strong><span>拼团专区</span></div></div></td><td data-label="类型">拼团</td><td data-label="时间">06-14 ~ 06-16</td><td data-label="状态"><span class="status danger">排期冲突</span></td><td data-label="效果">需调整</td><td data-label="操作"><div class="op-links"><button>调整</button></div></td></tr></tbody></table></div></section>
+</main>
+</body>
+</html>

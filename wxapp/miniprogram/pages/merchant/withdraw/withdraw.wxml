@@ -1,0 +1,89 @@
+﻿<view class="merchant-page has-bottom-actions" style="{{pageStyle}}">
+  <view class="status-space"></view>
+
+  <view class="page-titlebar">
+    <view class="icon-box icon-btn" bindtap="goBack">
+      <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+    </view>
+    <view class="title-block">
+      <view class="page-title">提现</view>
+      <view class="page-subtitle">预计 1 到 3 个工作日到账</view>
+    </view>
+  </view>
+
+  <view class="metric-strip">
+    <view class="metric-item" style="grid-column: span 3">
+      <view class="metric-value">¥{{balance}}</view>
+      <view class="metric-label">当前可提现金额</view>
+    </view>
+  </view>
+
+  <view class="form-section">
+    <view class="form-section-title">提现金额</view>
+    <view class="amount-chips">
+      <view class="chip {{amountPreset == 'all' ? 'active' : ''}}" bindtap="onAmountPreset" data-preset="all">全部提现</view>
+      <view class="chip {{amountPreset == '500' ? 'active' : ''}}" bindtap="onAmountPreset" data-preset="500">¥500</view>
+      <view class="chip {{amountPreset == '1000' ? 'active' : ''}}" bindtap="onAmountPreset" data-preset="1000">¥1000</view>
+      <view class="chip {{amountPreset == 'custom' ? 'active' : ''}}" bindtap="onAmountPreset" data-preset="custom">自定义</view>
+    </view>
+    <view class="number-cell">
+      <view class="number-label">自定义金额</view>
+      <input class="number-input" type="digit" value="{{withdrawAmount}}" bindinput="onAmountInput" placeholder="输入金额" />
+      <view class="number-unit">元</view>
+    </view>
+  </view>
+
+  <view class="form-section">
+    <view class="form-section-title">到账账户</view>
+    <view class="setting-row picker-line" bindtap="openAccountSheet">
+      <view class="row-main">
+        <view class="row-title">{{accountName}}</view>
+        <view class="row-desc">{{accountDesc}}</view>
+      </view>
+      <view class="row-right">
+        <text>切换</text>
+        <t-icon name="chevronRight" size="40rpx"></t-icon>
+      </view>
+    </view>
+  </view>
+
+  <view class="divider"></view>
+
+  <view class="section-line-title">提现记录</view>
+  <view class="full-list">
+    <view class="finance-row" wx:for="{{withdrawHistory}}" wx:key="date">
+      <view class="row-main">
+        <view class="row-title">{{item.date}}</view>
+        <view class="row-desc">{{item.status}}</view>
+      </view>
+      <view class="finance-amount income">¥{{item.amount}}</view>
+    </view>
+    <view class="list-empty" wx:if="{{withdrawHistory.length == 0}}">暂无提现记录</view>
+  </view>
+
+  <view class="bottom-actions">
+    <button class="action-btn primary" bindtap="submitWithdraw">提交提现申请</button>
+  </view>
+
+  <view class="sheet-mask {{showAccountSheet ? 'show' : ''}}" bindtap="closeAccountSheet"></view>
+  <view class="sheet {{showAccountSheet ? 'show' : ''}}">
+    <view class="sheet-head">
+      <view class="sheet-title">选择到账账户</view>
+      <view class="icon-btn" bindtap="closeAccountSheet">
+        <t-icon name="close" size="40rpx"></t-icon>
+      </view>
+    </view>
+    <view class="sheet-group">
+      <view class="sheet-label">账户</view>
+      <view class="option-grid">
+        <view class="option {{accountType == 'merchant' ? 'active' : ''}}" bindtap="selectAccount" data-type="merchant">微信商家零钱</view>
+        <view class="option {{accountType == 'corp' ? 'active' : ''}}" bindtap="selectAccount" data-type="corp">对公银行卡</view>
+        <view class="option {{accountType == 'personal' ? 'active' : ''}}" bindtap="selectAccount" data-type="personal">微信零钱</view>
+      </view>
+    </view>
+    <view class="sheet-actions">
+      <button class="action-btn secondary" bindtap="closeAccountSheet">取消</button>
+      <button class="action-btn primary" bindtap="confirmAccount">确认</button>
+    </view>
+  </view>
+</view>

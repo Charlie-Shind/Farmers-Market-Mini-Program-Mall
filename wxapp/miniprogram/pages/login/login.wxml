@@ -1,0 +1,149 @@
+﻿<view class="login-page" style="{{pageStyle}}">
+  <!-- 顶部导航 -->
+  <view class="login-header">
+    <view class="back-btn" bindtap="goBack" hover-class="back-btn--hover">
+      <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+    </view>
+    <text class="header-title">登录</text>
+    <view class="header-placeholder"></view>
+  </view>
+
+  <!-- Logo 区域 -->
+  <view class="logo-section">
+    <view class="logo-wrapper">
+      <view class="logo-icon">
+        <t-icon name="logo" size="80rpx" color="#fff"></t-icon>
+      </view>
+    </view>
+    <text class="app-name">农谷仓</text>
+    <text class="app-slogan">欢迎来到农谷仓</text>
+  </view>
+
+  <!-- 登录方式切换 -->
+  <view class="tab-section">
+    <view class="tab-wrapper">
+      <view
+        class="tab-item {{loginMode === 'wechat' ? 'is-active' : ''}}"
+        bindtap="switchLoginMode"
+        data-mode="wechat"
+      >
+        <t-icon name="wechat" size="36rpx" color="{{loginMode === 'wechat' ? '#07c160' : '#999'}}" opacity="{{loginMode === 'wechat' ? 1 : 0.6}}"></t-icon>
+        <text class="tab-text">微信登录</text>
+      </view>
+      <view
+        class="tab-item {{loginMode === 'sms' ? 'is-active' : ''}}"
+        bindtap="switchLoginMode"
+        data-mode="sms"
+      >
+        <t-icon name="phone" size="36rpx" color="{{loginMode === 'sms' ? '#07c160' : '#999'}}" opacity="{{loginMode === 'sms' ? 1 : 0.6}}"></t-icon>
+        <text class="tab-text">手机登录</text>
+      </view>
+      <view class="tab-indicator" style="transform: translateX({{loginMode === 'wechat' ? '0' : '100%'}})"></view>
+    </view>
+  </view>
+
+  <!-- 登录面板 -->
+  <view class="login-panel">
+    <!-- 微信登录 -->
+    <view wx:if="{{loginMode === 'wechat'}}" class="panel-content">
+      <view class="wechat-desc">
+        <text>点击下方按钮，使用微信快速登录</text>
+      </view>
+      <button
+        class="wechat-btn"
+        loading="{{loading}}"
+        disabled="{{!agree || loading}}"
+        open-type="getPhoneNumber"
+        bindgetphonenumber="handleWechatPhoneLogin"
+        hover-class="wechat-btn--hover"
+      >
+        <t-icon name="wechat" size="48rpx" color="#fff"></t-icon>
+        <text>微信授权登录</text>
+      </button>
+    </view>
+
+    <!-- 短信登录 -->
+    <view wx:else class="panel-content">
+      <view class="form-item">
+        <view class="form-label">手机号码</view>
+        <view class="input-wrapper">
+          <input
+            class="form-input"
+            type="number"
+            maxlength="11"
+            placeholder="请输入手机号"
+            placeholder-class="placeholder"
+            value="{{phoneNumber}}"
+            bindinput="handlePhoneNumberInput"
+          />
+        </view>
+      </view>
+
+      <view class="form-item">
+        <view class="form-label">验证码</view>
+        <view class="input-wrapper verify-row">
+          <input
+            class="form-input verify-input"
+            type="number"
+            maxlength="6"
+            placeholder="请输入验证码"
+            placeholder-class="placeholder"
+            value="{{verifyCode}}"
+            bindinput="handleVerifyCodeInput"
+          />
+          <button
+            class="send-btn"
+            open-type="sendPhoneSms"
+            phoneNumber="{{phoneNumber}}"
+            sms-type="0"
+            disabled="{{loading || !phoneNumber}}"
+            bindsendphonesms="handleSendPhoneSms"
+            hover-class="send-btn--hover"
+          >
+            {{loading ? '发送中...' : '获取验证码'}}
+          </button>
+        </view>
+      </view>
+
+      <button
+        class="login-btn"
+        loading="{{loading}}"
+        disabled="{{!agree || loading || !phoneNumber || !verifyCode}}"
+        bindtap="handleSmsLogin"
+        hover-class="login-btn--hover"
+      >
+        登录
+      </button>
+    </view>
+
+    <!-- 协议 -->
+    <view class="agree-section">
+      <view class="agree-wrapper" bindtap="toggleAgree" hover-class="agree-wrapper--hover">
+        <view class="checkbox {{agree ? 'is-checked' : ''}}">
+          <t-icon wx:if="{{agree}}" name="check" size="22rpx" color="#fff"></t-icon>
+        </view>
+        <text class="agree-text">我已阅读并同意</text>
+      </view>
+      <text class="link" bindtap="showUserProtocol" hover-class="link--hover">《用户协议》</text>
+      <text class="link" bindtap="showPrivacyProtocol" hover-class="link--hover">《隐私政策》</text>
+    </view>
+  </view>
+
+  <!-- 底部操作 -->
+  <view class="bottom-actions">
+    <text class="guest-btn" bindtap="enterGuest" hover-class="guest-btn--hover">暂不登录，先逛逛</text>
+  </view>
+
+  <confirm-dialog
+    show="{{protocolDialog.show}}"
+    title="{{protocolDialog.title}}"
+    content="{{protocolDialog.content}}"
+    cancelText="{{protocolDialog.cancelText}}"
+    confirmText="{{protocolDialog.confirmText}}"
+    bindcancel="hideProtocolDialog"
+    bindconfirm="hideProtocolDialog"
+  ></confirm-dialog>
+
+  <loading show="{{loading}}" text="{{loadingText}}"></loading>
+  <toast show="{{toastVisible}}" message="{{toastMessage}}" type="{{toastType}}" bindclose="hideToast"></toast>
+</view>

@@ -1,0 +1,127 @@
+@import "../common.less";
+
+.drafts-page {
+  background: var(--merchant-bg);
+  padding-bottom: calc(148rpx + env(safe-area-inset-bottom));
+}
+
+.marketing-topbar {
+  height: 112rpx;
+  padding: 0 32rpx;
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  background: var(--merchant-surface);
+}
+
+.search-pill {
+  flex: 1;
+  min-width: 0;
+  height: 72rpx;
+  padding: 0 24rpx;
+  border-radius: 999rpx;
+  background: var(--merchant-bg-soft);
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+}
+
+.search-pill image {
+  width: 36rpx;
+  height: 36rpx;
+  flex-shrink: 0;
+}
+
+.search-input {
+  flex: 1;
+  min-width: 0;
+  height: 72rpx;
+  color: var(--merchant-text);
+  font-size: 26rpx;
+}
+
+.full-list {
+  background: var(--merchant-surface);
+  border-bottom: 1rpx solid var(--merchant-line-soft);
+}
+
+.draft-row {
+  min-height: 128rpx;
+  padding: 22rpx 32rpx;
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  border-bottom: 1rpx solid var(--merchant-line-soft);
+}
+
+.draft-row:last-child {
+  border-bottom: 0;
+}
+
+.draft-mark {
+  width: 64rpx;
+  height: 64rpx;
+  min-width: 64rpx;
+  border-radius: 50%;
+  background: var(--merchant-bg-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14rpx;
+}
+
+.draft-mark image {
+  width: 36rpx;
+  height: 36rpx;
+}
+
+.draft-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.draft-title {
+  color: var(--merchant-text);
+  font-size: 28rpx;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.draft-desc {
+  color: var(--merchant-text-muted);
+  font-size: 24rpx;
+  line-height: 1.4;
+}
+
+.pill-btn {
+  height: 60rpx;
+  padding: 0 28rpx;
+  border-radius: 999rpx;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--merchant-bg-soft);
+  color: var(--merchant-text);
+  font-size: 24rpx;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.pill-btn.primary {
+  background: var(--merchant-primary);
+  color: #FFFFFF;
+}
+
+.empty-state {
+  padding: 80rpx 32rpx;
+  text-align: center;
+  background: var(--merchant-surface);
+}
+
+.empty-title {
+  color: var(--merchant-text-placeholder);
+  font-size: 26rpx;
+}

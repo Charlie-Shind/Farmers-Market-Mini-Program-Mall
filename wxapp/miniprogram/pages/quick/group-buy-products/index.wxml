@@ -1,0 +1,132 @@
+<view class="phone-page zone-page zone-page--group" style="{{pageStyle}}">
+  <view class="group-hero-bg">
+    <image class="group-hero-bg__img" src="/assets/images/Gemini_Generated_Image_ftx25lftx25lftx2.png" mode="widthFix"/>
+    <view class="group-hero-bg__mask"></view>
+  </view>
+  <view class="group-hero">
+    <view class="zone-head">
+      <view class="page-title-bar">
+        <button class="back-btn" bindtap="goBack" hover-class="back-btn--hover">
+          <t-icon name="back" size="40rpx" color="#ffffff"></t-icon>
+        </button>
+        <text class="page-title-bar__title">{{pageTitle}}</text>
+        <view class="head-action"></view>
+      </view>
+    </view>
+
+    <view class="group-hero-content">
+      <view class="group-hero-title">
+        <view>{{group ? '邀请好友拼团' : '立即拼团'}}</view>
+        <view>{{group ? '价格更划算' : '拼团更优惠'}}</view>
+      </view>
+      <text class="group-hero-subtitle">{{group ? '好友一起拼 价格更便宜' : '当前有优惠商品，开团后再邀请好友一起拼'}}</text>
+    </view>
+    <view class="group-hero-btn">{{group ? '邀请好友拼团' : '立即拼团'}}</view>
+  </view>
+
+  <!-- 主推拼团商品 -->
+  <view wx:if="{{product}}" class="group-product-card">
+    <view class="group-product-img-wrap">
+      <image wx:if="{{product.coverUrl}}" class="group-product-img" src="{{product.coverUrl}}" mode="aspectFill"/>
+      <view wx:else class="group-product-img {{product.imageClass}}"></view>
+    </view>
+    <view class="group-product-info">
+      <view class="group-product-title">{{product.title}}</view>
+      <view class="group-product-desc">{{product.subtitle}}</view>
+      <view class="group-product-bottom">
+        <view>
+          <text class="group-price"><text class="group-price-symbol">¥</text>{{product.groupPrice}}</text>
+          <text class="group-old-price">¥{{product.originPrice}}</text>
+        </view>
+        <button class="group-price-btn" data-product-id="{{product.productId}}" data-sku-id="{{product.skuId}}" catchtap="joinGroup">去拼团</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 拼团进度 -->
+  <view wx:if="{{group}}" class="progress-card">
+    <view class="progress-header">
+      <view class="progress-title">拼团进度<text class="progress-num"> {{group.current}}/{{group.total}}人</text></view>
+      <view class="progress-time">剩余时间<text class="progress-time-value"> {{group.leftTime}}</text></view>
+    </view>
+    <view class="member-list">
+      <view class="member-item" wx:for="{{members}}" wx:key="role">
+        <block wx:if="{{item.role !== '待邀请'}}">
+          <image wx:if="{{item.avatar}}" class="avatar-img avatar-img--round" src="{{item.avatar}}" mode="aspectFill"/>
+          <image wx:else class="avatar-img avatar-img--round" name="defaultAvatar" mode="aspectFill"/>
+        </block>
+        <view wx:else class="avatar-empty">+</view>
+        <view class="member-role">{{item.role}}</view>
+      </view>
+    </view>
+    <view class="invite-btn" bindtap="onInvite">邀请好友参团</view>
+  </view>
+
+  <!-- 邀请码入口 -->
+  <view wx:if="{{group}}" class="invite-code-entry">
+    <view class="invite-code-entry__text">
+      <text class="invite-code-entry__title">填写邀请码</text>
+      <text class="invite-code-entry__desc">输入好友分享的 6 位邀请码，快速加入拼团</text>
+    </view>
+    <button class="invite-code-entry__btn" bindtap="openInviteSheet">填写邀请码</button>
+  </view>
+
+  <!-- 更多拼团商品 -->
+  <view wx:if="{{moreGroups.length}}" class="more-group-section">
+    <view class="more-group-title">更多拼团</view>
+    <view class="group-list">
+      <view wx:for="{{moreGroups}}" wx:key="id" class="group-item" data-product-id="{{item.productId}}" data-sku-id="{{item.skuId}}" catchtap="joinGroup">
+        <view class="group-item__img-wrap">
+          <image wx:if="{{item.coverUrl}}" class="group-item__img" src="{{item.coverUrl}}" mode="aspectFill"/>
+          <view wx:else class="group-item__img {{item.imageClass}}"></view>
+        </view>
+        <view class="group-item__info">
+          <view class="group-item__title">{{item.title}}</view>
+          <view class="group-item__desc">{{item.subtitle}}</view>
+          <view class="group-item__bottom">
+            <view>
+              <text class="group-item__price">¥{{item.groupPrice}}</text>
+              <text class="group-item__old">¥{{item.originPrice}}</text>
+            </view>
+            <text class="group-item__member">{{item.needed}}人团</text>
+          </view>
+        </view>
+      </view>
+    </view>
+    <view wx:if="{{moreGroups.length}}" class="load-more-btn" bindtap="loadMore">查看更多拼团</view>
+  </view>
+
+  <!-- 底部 -->
+  <view wx:if="{{!loading}}" class="bottom-links">
+    <text bindtap="onRule">拼团规则</text>
+    <view class="bottom-divider"></view>
+    <text bindtap="onMyGroups">我的拼团</text>
+  </view>
+
+  <!-- 空态 -->
+  <view wx:if="{{!loading && !hasLoaded}}" class="empty-block">
+    <text class="empty-hint">暂无拼团活动</text>
+    <text class="empty-hint__sub">请关注平台活动公告</text>
+  </view>
+
+  <text wx:if="{{loading}}" class="empty-hint" style="margin-top: 120rpx;">加载中…</text>
+  <view class="safe-bottom"></view>
+
+  <!-- 邀请码弹窗 -->
+  <view wx:if="{{showInviteSheet}}" class="invite-sheet" bindtap="closeInviteSheet">
+    <view class="invite-sheet__panel" catchtap="noop">
+      <view class="invite-sheet__head">
+        <text class="invite-sheet__title">输入邀请码</text>
+        <text class="invite-sheet__close" bindtap="closeInviteSheet">×</text>
+      </view>
+      <text class="invite-sheet__desc">输入好友分享的 6 位邀请码，快速找到对应拼团。</text>
+      <view class="invite-sheet__field">
+        <input class="invite-sheet__input" value="{{inviteCodeInput}}" placeholder="请输入 6 位邀请码" maxlength="6" bindinput="onInviteCodeInput" bindconfirm="confirmInviteCode"/>
+      </view>
+      <view class="invite-sheet__actions">
+        <button class="invite-sheet__btn invite-sheet__btn--ghost" bindtap="closeInviteSheet">取消</button>
+        <button class="invite-sheet__btn invite-sheet__btn--primary" bindtap="confirmInviteCode">查找拼团</button>
+      </view>
+    </view>
+  </view>
+</view>

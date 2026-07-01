@@ -1,0 +1,45 @@
+<view class="phone-page zone-page zone-page--group-list" style="{{pageStyle}}">
+  <view class="zone-head">
+    <view class="page-title-bar">
+      <button class="back-btn" bindtap="goBack" hover-class="back-btn--hover">
+        <t-icon name="back" size="40rpx" color="#ffffff"></t-icon>
+      </button>
+      <text class="page-title-bar__title">{{pageTitle}}</text>
+      <view class="head-action"></view>
+    </view>
+  </view>
+
+  <view wx:if="{{products.length}}" class="product-list">
+    <view
+      wx:for="{{products}}"
+      wx:key="productId"
+      class="product-item"
+      data-product-id="{{item.productId}}"
+      data-sku-id="{{item.skuId}}"
+      catchtap="joinGroup"
+    >
+      <view class="product-item__img-wrap">
+        <image wx:if="{{item.coverUrl}}" class="product-item__img" src="{{item.coverUrl}}" mode="aspectFill"/>
+        <view wx:else class="product-item__img {{item.imageClass}}"></view>
+      </view>
+      <view class="product-item__info">
+        <view class="product-item__title">{{item.title}}</view>
+        <view class="product-item__desc">{{item.subtitle}}</view>
+        <view class="product-item__bottom">
+          <view>
+            <text class="product-item__price">¥{{item.groupPrice}}</text>
+            <text class="product-item__old">¥{{item.originPrice}}</text>
+          </view>
+          <text class="product-item__needed">{{item.needed}}人团</text>
+          <button class="product-item__btn" data-product-id="{{item.productId}}" data-sku-id="{{item.skuId}}" catchtap="joinGroup">去拼团</button>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:elif="{{!loading}}" class="empty-block">
+    <text class="empty-hint">暂无拼团商品</text>
+  </view>
+  <text wx:if="{{loading}}" class="empty-hint" style="margin-top: 120rpx;">加载中…</text>
+  <view class="safe-bottom"></view>
+</view>

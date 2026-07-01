@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>湾源农仓管理后台 - 控制台首页</title>
+  <link rel="stylesheet" href="./00-管理面板公共.css">
+</head>
+<body>
+<input class="drawer-check" type="checkbox" id="drawerToggle">
+<aside class="sidebar">
+  <div class="brand"><div class="brand-mark">湾</div><div><strong>湾源农仓</strong><span>运营管理后台</span></div></div>
+  <nav class="menu" aria-label="后台导航"><a class="active" href="01-控制台首页.html">控制台首页</a>
+<a class="" href="02-用户管理页.html">用户管理</a>
+<a class="" href="03-商户管理页.html">商户管理</a>
+<a class="" href="04-商品管理页.html">商品管理</a>
+<a class="" href="05-活动管理页.html">活动管理</a>
+<a class="" href="06-订单列表页.html">订单列表</a>
+<a class="" href="07-订单详情页.html">订单详情</a>
+<a class="" href="08-售后仲裁页.html">售后仲裁</a>
+<a class="" href="09-数据看板页.html">数据看板</a>
+<a class="" href="10-物流配置页.html">物流配置</a>
+<a class="" href="11-系统配置页.html">系统配置</a></nav>
+  <div class="sidebar-user"><div class="avatar">管</div><div class="user-text"><strong>平台管理员</strong><span>admin@wanyuan</span></div><button type="button">退出</button></div>
+</aside>
+<label class="drawer-mask" for="drawerToggle" aria-label="关闭菜单"></label>
+<main class="app">
+<header class="topbar">
+  <div class="top-left"><label class="menu-toggle" for="drawerToggle" aria-label="打开菜单">☰</label><div><div class="breadcrumb">后台管理 / 控制台首页</div><h1>控制台首页</h1></div></div>
+  <label class="global-search"><span>⌕</span><input type="text" placeholder="搜索订单号 / 商品 / 商户 / 用户手机号"></label>
+  <div class="top-actions"><button class="text-btn" type="button">导出</button><button class="primary-btn" type="button">新增待办</button><div class="admin-user"><div class="avatar small">管</div><span>平台管理员</span></div></div>
+</header>
+<section class="metric-grid"><article class="metric-card"><div class="metric-title">今日成交额</div><strong>¥151,200</strong><p>较昨日 +12.8%</p></article><article class="metric-card"><div class="metric-title">待发货订单</div><strong>248</strong><p><span class="mini-warn">32 单即将超时</span></p></article><article class="metric-card"><div class="metric-title">待售后处理</div><strong>17</strong><p><span class="mini-danger">5 单高风险</span></p></article><article class="metric-card"><div class="metric-title">待审核商品</div><strong>63</strong><p>商户提交新品</p></article></section>
+<section class="content-grid"><article class="panel"><div class="panel-head"><div><h2>近 7 日经营趋势</h2><p>柱状图可点击下钻到对应日期经营数据</p></div><div class="segmented"><button class="active">成交额</button><button>订单量</button></div></div><div class="chart-wrap"><div class="y-axis"><span>16万</span><span>12万</span><span>8万</span><span>4万</span><span>0</span></div><div class="chart-box"><span class="grid-line line-1"></span><span class="grid-line line-2"></span><span class="grid-line line-3"></span><span class="grid-line line-4"></span><a class="bar-item" href="09-数据看板页.html"><span class="bar-value">6.2万</span><i style="height:42%"></i><em>周一</em></a><a class="bar-item" href="09-数据看板页.html"><span class="bar-value">8.8万</span><i style="height:55%"></i><em>周二</em></a><a class="bar-item" href="09-数据看板页.html"><span class="bar-value">9.6万</span><i style="height:60%"></i><em>周三</em></a><a class="bar-item" href="09-数据看板页.html"><span class="bar-value">11.4万</span><i style="height:72%"></i><em>周四</em></a><a class="bar-item" href="09-数据看板页.html"><span class="bar-value">10.2万</span><i style="height:64%"></i><em>周五</em></a><a class="bar-item" href="09-数据看板页.html"><span class="bar-value">13.8万</span><i style="height:86%"></i><em>周六</em></a><a class="bar-item" href="09-数据看板页.html"><span class="bar-value">15.1万</span><i style="height:94%"></i><em>周日</em></a></div></div></article>
+<article class="panel"><div class="panel-head compact"><h2>高优先级待办</h2><a href="06-订单列表页.html">查看全部</a></div><div class="todo-list"><div class="todo-item danger"><div><strong>5 单高风险售后</strong><span>证据缺失或超 24 小时未处理</span></div><a href="08-售后仲裁页.html">去仲裁</a></div><div class="todo-item warn"><div><strong>32 单即将发货超时</strong><span>距离承诺时效不足 2 小时</span></div><a href="06-订单列表页.html">催发货</a></div><div class="todo-item"><div><strong>63 个商品待审核</strong><span>包含 8 个预售商品</span></div><a href="04-商品管理页.html">去审核</a></div></div></article></section>
+<section class="bottom-grid"><article class="panel"><div class="panel-head compact"><h2>热门商品与库存风险</h2><a href="04-商品管理页.html">商品管理</a></div><div class="table-x"><table class="data-table"><thead><tr><th>商品</th><th>销量</th><th>状态</th><th>操作</th></tr></thead><tbody><tr><td data-label="商品"><div class="cell-main"><div class="thumb">橙</div><div><strong>赣南脐橙 5斤装</strong><span>农户直营 / 时令果蔬</span></div></div></td><td data-label="销量">8,920</td><td data-label="状态"><span class="status ok">热销</span></td><td data-label="操作"><div class="op-links"><a href="04-商品管理页.html">查看</a><a href="04-商品管理页.html">调库存</a></div></td></tr><tr><td data-label="商品"><div class="cell-main"><div class="thumb">米</div><div><strong>山野香米 10kg</strong><span>绿谷农场 / 粮油干货</span></div></div></td><td data-label="销量">6,280</td><td data-label="状态"><span class="status warn">库存低</span></td><td data-label="操作"><div class="op-links"><a href="04-商品管理页.html">补库存</a></div></td></tr><tr><td data-label="商品"><div class="cell-main"><div class="thumb">蛋</div><div><strong>土鸡蛋 30枚装</strong><span>东山合作社 / 肉禽蛋奶</span></div></div></td><td data-label="销量">4,510</td><td data-label="状态"><span class="status ok">稳定</span></td><td data-label="操作"><div class="op-links"><a href="04-商品管理页.html">查看</a></div></td></tr></tbody></table></div></article>
+<article class="panel"><div class="panel-head compact"><h2>风险提示</h2><a href="09-数据看板页.html">风险明细</a></div><div class="risk-list"><div class="risk-item high"><div><strong>退款率异常升高</strong><span>肉禽蛋奶类目较上周 +3.1%</span></div><a href="09-数据看板页.html">下钻</a></div><div class="risk-item mid"><div><strong>3 家商户资质待更新</strong><span>证照 7 日内到期</span></div><a href="03-商户管理页.html">处理</a></div><div class="risk-item low"><div><strong>首页 Banner 排期正常</strong><span>本周活动已配置</span></div><a href="05-活动管理页.html">查看</a></div></div></article></section>
+</main>
+</body>
+</html>

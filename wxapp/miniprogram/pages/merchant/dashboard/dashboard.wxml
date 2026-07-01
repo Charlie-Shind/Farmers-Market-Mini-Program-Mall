@@ -1,0 +1,118 @@
+<view class="merchant-page has-tabbar dashboard-page" style="{{pageStyle}}">
+  <view class="status-space"></view>
+
+  <view class="merchant-topbar">
+    <view class="shop-line">
+      <view class="shop-main">
+        <view class="shop-badge flat">
+          <t-icon name="shop" size="40rpx"></t-icon>
+        </view>
+        <view class="shop-text">
+          <text class="shop-name-line">湾源农仓</text>
+          <text class="shop-sub-line">经营正常 · 数据更新 22:30</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="top-actions">
+    <view class="icon-action" bindtap="goNotice">
+      <t-icon name="bell" size="40rpx"></t-icon>
+      <text>通知</text>
+    </view>
+  </view>
+
+  <view class="data-grid-3">
+    <view class="data-cell" wx:for="{{dashboardMetrics}}" wx:key="label">
+      <text class="data-value">{{item.value}}</text>
+      <text class="data-label">{{item.label}} <text wx:if="{{item.trend}}" class="up">{{item.trend}}</text></text>
+    </view>
+  </view>
+
+  <view class="action-strip">
+    <view class="action-entry" wx:for="{{dashboardActions}}" wx:key="title" bindtap="goPage" data-url="{{item.url}}">
+      <view class="color-icon {{item.tone}}">
+        <t-icon name="{{item.icon}}" size="40rpx"></t-icon>
+      </view>
+      <text>{{item.title}}</text>
+    </view>
+  </view>
+
+  <view class="section-line-title">
+    <text>经营趋势</text>
+    <view class="chart-tabs">
+      <button class="mini-tab {{item.active ? 'active' : ''}}" wx:for="{{chartTabs}}" wx:key="name" bindtap="onChartTabTap" data-index="{{index}}">{{item.name}}</button>
+    </view>
+  </view>
+
+  <view class="mini-graph">
+    <view class="graph-head">
+      <text>{{chartMetricLabel}}</text>
+      <text>{{chartUnitLabel}}</text>
+    </view>
+    <view class="graph-stage">
+      <view class="graph-grid top"></view>
+      <view class="graph-grid middle"></view>
+      <view class="graph-grid bottom"></view>
+      <view class="trend-bar-item" wx:for="{{dashboardTrend}}" wx:key="name">
+        <text class="trend-value">{{item.value}}</text>
+        <view class="trend-track">
+          <view class="trend-bar" style="height: {{item.height}};"></view>
+        </view>
+        <text class="trend-label">{{item.name}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="section-line-title">
+    <text>今日待办</text>
+    <text class="status-pill warning">6项</text>
+  </view>
+  <view class="process-list">
+    <view class="process-row {{index == 2 ? 'done' : ''}} {{item.tone || ''}}" wx:for="{{todoItems}}" wx:key="title" bindtap="goPage" data-url="{{item.url}}">
+      <view class="process-index"><t-icon name="{{item.icon}}" size="40rpx"></t-icon></view>
+      <view class="process-main"><text>{{item.title}}</text></view>
+      <text class="status-pill {{item.tag}}">{{item.status}}</text>
+    </view>
+  </view>
+
+  <view class="section-line-title">
+    <text>热卖商品</text>
+    <view class="row-right" bindtap="goPage" data-url="/pages/merchant/statistics/statistics">
+      <text>更多</text>
+      <t-icon name="chevronRight" size="40rpx"></t-icon>
+    </view>
+  </view>
+  <view class="rank-list">
+    <view class="rank-row" wx:for="{{hotProducts}}" wx:key="rank">
+      <text class="rank-num">{{item.rank}}</text>
+      <image class="rank-img" src="{{item.img}}" mode="aspectFill" />
+      <view class="rank-main">
+        <text class="rank-title">{{item.title}}</text>
+        <text class="rank-desc">{{item.desc}}</text>
+      </view>
+      <text class="rank-value">{{item.value}}</text>
+    </view>
+  </view>
+
+  <view class="section-line-title">
+    <text>常用功能</text>
+    <view class="row-right" bindtap="goPage" data-url="/pages/merchant/workbench/workbench">
+      <text>全部功能</text>
+      <t-icon name="chevronRight" size="40rpx"></t-icon>
+    </view>
+  </view>
+  <view class="workbench-grid">
+    <view class="workbench-item" wx:for="{{commonFunctions}}" wx:key="title" bindtap="goPage" data-url="{{item.url}}">
+      <t-icon name="{{item.icon}}" size="40rpx"></t-icon>
+      <text>{{item.title}}</text>
+    </view>
+  </view>
+
+  <view class="bottom-nav">
+    <view class="nav-item {{item.active ? 'active' : ''}}" wx:for="{{nav}}" wx:key="name" bindtap="goPage" data-url="{{item.url}}">
+      <view class="icon-box nav-icon"><t-icon name="{{item.icon}}" size="40rpx"></t-icon></view>
+      <text>{{item.name}}</text>
+    </view>
+  </view>
+</view>

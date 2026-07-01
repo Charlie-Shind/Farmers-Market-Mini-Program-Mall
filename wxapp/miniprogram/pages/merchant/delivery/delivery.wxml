@@ -1,0 +1,209 @@
+﻿<view class="merchant-page has-bottom-actions" style="{{pageStyle}}">
+  <view class="status-space"></view>
+
+  <view class="page-titlebar">
+    <view class="icon-box icon-btn" bindtap="goBack">
+      <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+    </view>
+    <view class="title-block">
+      <view class="page-title">配送设置</view>
+    </view>
+    <text></text>
+  </view>
+
+  <view class="top-actions">
+    <view class="icon-action" bindtap="saveDelivery">
+      <t-icon name="check" size="40rpx"></t-icon>
+      <text>保存</text>
+    </view>
+  </view>
+
+  <view class="section-line-title">
+    <text>发货地址</text>
+    <view class="row-right" bindtap="openSheet" data-sheet="address">编辑<t-icon name="chevronRight" size="40rpx"></t-icon></view>
+  </view>
+  <view class="delivery-card">
+    <view class="delivery-row">
+      <view class="delivery-icon">
+        <t-icon name="shop" size="40rpx"></t-icon>
+      </view>
+      <view class="delivery-main">
+        <text class="delivery-title">{{addressName}}</text>
+        <text class="delivery-desc">{{addressDetail}}</text>
+      </view>
+      <view class="status-pill success">{{addressName !== '未配置' ? '已配置' : '待配置'}}</view>
+    </view>
+  </view>
+
+  <view class="section-line-title"><text>运费模板</text></view>
+  <view class="delivery-card">
+    <view class="delivery-row" bindtap="openSheet" data-sheet="delivery">
+      <view class="delivery-icon">
+        <image class="icon-sm" src="/assets/icons/bill.svg" mode="aspectFit" />
+      </view>
+      <view class="delivery-main">
+        <text class="delivery-title">{{freightName}}</text>
+        <text class="delivery-desc">{{freightDesc}}</text>
+      </view>
+      <view class="row-right"><text>编辑</text><t-icon name="chevronRight" size="40rpx"></t-icon></view>
+    </view>
+    <view class="delivery-row" bindtap="openSheet" data-sheet="area">
+      <view class="delivery-icon">
+        <image class="icon-sm" src="/assets/icons/truck.svg" mode="aspectFit" />
+      </view>
+      <view class="delivery-main">
+        <text class="delivery-title">配送范围</text>
+        <text class="delivery-desc">{{areaDesc}}</text>
+      </view>
+      <view class="row-right"><text>设置</text><t-icon name="chevronRight" size="40rpx"></t-icon></view>
+    </view>
+    <view class="delivery-row">
+      <view class="delivery-icon">
+        <image class="icon-sm" src="/assets/icons/shield.svg" mode="aspectFit" />
+      </view>
+      <view class="delivery-main">
+        <text class="delivery-title">冷链提示</text>
+        <text class="delivery-desc">生鲜商品详情展示冷链说明</text>
+      </view>
+      <view class="switch-pill {{coldChainOn ? 'active' : ''}}" bindtap="toggleColdChain">{{coldChainOn ? '开' : '关'}}</view>
+    </view>
+  </view>
+
+  <view class="section-line-title"><text>快递偏好</text></view>
+  <view class="delivery-card">
+    <view class="delivery-row" bindtap="openSheet" data-sheet="express">
+      <view class="delivery-icon">
+        <image class="icon-sm" src="/assets/icons/truck.svg" mode="aspectFit" />
+      </view>
+      <view class="delivery-main">
+        <text class="delivery-title">优先快递</text>
+        <text class="delivery-desc">{{expressNames}}</text>
+      </view>
+      <view class="pill-btn outline {{expressSelected.length ? 'active' : ''}}">
+        <text wx:if="{{expressSelected.length}}" class="pill-check">✓</text>
+        <text>{{expressSelected.length ? '已选择' : '选择'}}</text>
+      </view>
+    </view>
+    <view class="delivery-row">
+      <view class="delivery-icon">
+        <image class="icon-sm" src="/assets/icons/bell.svg" mode="aspectFit" />
+      </view>
+      <view class="delivery-main">
+        <text class="delivery-title">发货提醒</text>
+        <text class="delivery-desc">订单付款后 2 小时提醒</text>
+      </view>
+      <view class="switch-pill {{shipRemindOn ? 'active' : ''}}" bindtap="toggleShipRemind">{{shipRemindOn ? '开' : '关'}}</view>
+    </view>
+  </view>
+
+  <view class="bottom-actions">
+    <button class="action-btn secondary" bindtap="resetDefault">清空设置</button>
+    <button class="action-btn primary" bindtap="saveDelivery">保存设置</button>
+  </view>
+
+  <view class="sheet-mask {{showSheet ? 'show' : ''}}" bindtap="closeSheet"></view>
+
+  <view class="sheet {{showSheet && activeSheet == 'address' ? 'show' : ''}}">
+    <view class="sheet-head">
+      <view class="sheet-title">发货地址</view>
+      <view class="icon-btn" bindtap="closeSheet"><t-icon name="close" size="40rpx"></t-icon></view>
+    </view>
+    <view class="sheet-group">
+      <view class="inline-field"><label>联系人</label><input value="{{addressContact}}" bindinput="onAddressContact" /></view>
+    </view>
+    <view class="sheet-group">
+      <view class="inline-field"><label>联系电话</label><input value="{{addressPhone}}" bindinput="onAddressPhone" /></view>
+    </view>
+    <view class="sheet-group">
+      <view class="inline-field"><label>详细地址</label><input value="{{addressDetail}}" bindinput="onAddressDetail" /></view>
+    </view>
+    <view class="sheet-actions">
+      <button class="action-btn secondary" bindtap="closeSheet">取消</button>
+      <button class="action-btn primary" bindtap="saveAddress">保存</button>
+    </view>
+  </view>
+
+  <view class="sheet {{showSheet && activeSheet == 'delivery' ? 'show' : ''}}">
+    <view class="sheet-head">
+      <view class="sheet-title">运费模板</view>
+      <view class="icon-btn" bindtap="closeSheet"><t-icon name="close" size="40rpx"></t-icon></view>
+    </view>
+    <view class="sheet-group">
+      <view class="sheet-label">模板类型</view>
+      <view class="option-grid">
+        <view class="option {{freightType == 'free' ? 'active' : ''}}" bindtap="setFreightType" data-type="free"><text wx:if="{{freightType == 'free'}}" class="option-check">✓</text><text>满额包邮</text></view>
+        <view class="option {{freightType == 'fixed' ? 'active' : ''}}" bindtap="setFreightType" data-type="fixed"><text wx:if="{{freightType == 'fixed'}}" class="option-check">✓</text><text>固定运费</text></view>
+        <view class="option {{freightType == 'area' ? 'active' : ''}}" bindtap="setFreightType" data-type="area"><text wx:if="{{freightType == 'area'}}" class="option-check">✓</text><text>按地区收费</text></view>
+      </view>
+    </view>
+    <view class="sheet-group">
+      <view class="form-two">
+        <view class="inline-field"><label>包邮门槛</label><input value="{{freightThreshold}}" bindinput="onFreightThreshold" type="digit" /></view>
+        <view class="inline-field"><label>基础运费</label><input value="{{freightBase}}" bindinput="onFreightBase" type="digit" /></view>
+      </view>
+    </view>
+    <view class="sheet-actions">
+      <button class="action-btn secondary" bindtap="closeSheet">取消</button>
+      <button class="action-btn primary" bindtap="saveFreight">保存</button>
+    </view>
+  </view>
+
+  <view class="sheet {{showSheet && activeSheet == 'area' ? 'show' : ''}}">
+    <view class="sheet-head">
+      <view class="sheet-title">配送范围</view>
+      <view class="icon-btn" bindtap="closeSheet"><t-icon name="close" size="40rpx"></t-icon></view>
+    </view>
+    <view class="sheet-group">
+      <view class="sheet-label">范围</view>
+      <view class="option-grid">
+        <view class="option {{areaScope == 'nation' ? 'active' : ''}}" bindtap="setAreaScope" data-scope="nation"><text wx:if="{{areaScope == 'nation'}}" class="option-check">✓</text><text>全国</text></view>
+        <view class="option {{areaScope == 'province' ? 'active' : ''}}" bindtap="setAreaScope" data-scope="province"><text wx:if="{{areaScope == 'province'}}" class="option-check">✓</text><text>省内</text></view>
+        <view class="option {{areaScope == 'city' ? 'active' : ''}}" bindtap="setAreaScope" data-scope="city"><text wx:if="{{areaScope == 'city'}}" class="option-check">✓</text><text>同城</text></view>
+        <view class="option {{areaScope == 'custom' ? 'active' : ''}}" bindtap="setAreaScope" data-scope="custom"><text wx:if="{{areaScope == 'custom'}}" class="option-check">✓</text><text>自定义</text></view>
+      </view>
+    </view>
+    <view class="sheet-group">
+      <view class="sheet-label">限制地区</view>
+      <view class="option-grid">
+        <view class="limit-chip {{areaLimits.indexOf('cold') >= 0 ? 'active' : ''}}" bindtap="toggleAreaLimit" data-limit="cold"><text wx:if="{{areaLimits.indexOf('cold') >= 0}}" class="limit-check">✓</text><text>冷链不可达</text></view>
+        <view class="limit-chip {{areaLimits.indexOf('remote') >= 0 ? 'active' : ''}}" bindtap="toggleAreaLimit" data-limit="remote"><text wx:if="{{areaLimits.indexOf('remote') >= 0}}" class="limit-check">✓</text><text>偏远地区</text></view>
+        <view class="limit-chip {{areaLimits.indexOf('hmt') >= 0 ? 'active' : ''}}" bindtap="toggleAreaLimit" data-limit="hmt"><text wx:if="{{areaLimits.indexOf('hmt') >= 0}}" class="limit-check">✓</text><text>港澳台</text></view>
+      </view>
+    </view>
+    <view class="sheet-group" wx:if="{{areaScope == 'custom'}}">
+      <view class="sheet-label">自定义地区</view>
+      <picker mode="region" value="{{customRegion}}" bindchange="onCustomRegionChange">
+        <view class="region-picker {{customAreaText ? 'active' : ''}}">
+          <view>
+            <view class="region-title {{customAreaText ? '' : 'placeholder'}}">{{customAreaText || '请选择地区'}}</view>
+            <view class="region-desc">点这里选择省 / 市 / 区</view>
+          </view>
+          <t-icon name="chevronRight" size="40rpx"></t-icon>
+        </view>
+      </picker>
+    </view>
+    <view class="sheet-actions">
+      <button class="action-btn secondary" bindtap="closeSheet">取消</button>
+      <button class="action-btn primary" bindtap="saveArea">保存</button>
+    </view>
+  </view>
+
+  <view class="sheet {{showSheet && activeSheet == 'express' ? 'show' : ''}}">
+    <view class="sheet-head">
+      <view class="sheet-title">快递偏好</view>
+      <view class="icon-btn" bindtap="closeSheet"><t-icon name="close" size="40rpx"></t-icon></view>
+    </view>
+    <view class="sheet-group">
+      <view class="option-grid">
+        <view class="option {{expressSelected.indexOf('sf') >= 0 ? 'active' : ''}}" bindtap="toggleExpress" data-express="sf"><text wx:if="{{expressSelected.indexOf('sf') >= 0}}" class="option-check">✓</text><text>顺丰速运</text></view>
+        <view class="option {{expressSelected.indexOf('jd') >= 0 ? 'active' : ''}}" bindtap="toggleExpress" data-express="jd"><text wx:if="{{expressSelected.indexOf('jd') >= 0}}" class="option-check">✓</text><text>京东物流</text></view>
+        <view class="option {{expressSelected.indexOf('zto') >= 0 ? 'active' : ''}}" bindtap="toggleExpress" data-express="zto"><text wx:if="{{expressSelected.indexOf('zto') >= 0}}" class="option-check">✓</text><text>中通快递</text></view>
+        <view class="option {{expressSelected.indexOf('yto') >= 0 ? 'active' : ''}}" bindtap="toggleExpress" data-express="yto"><text wx:if="{{expressSelected.indexOf('yto') >= 0}}" class="option-check">✓</text><text>圆通速递</text></view>
+      </view>
+    </view>
+    <view class="sheet-actions">
+      <button class="action-btn secondary" bindtap="closeSheet">取消</button>
+      <button class="action-btn primary" bindtap="saveExpress">保存</button>
+    </view>
+  </view>
+</view>

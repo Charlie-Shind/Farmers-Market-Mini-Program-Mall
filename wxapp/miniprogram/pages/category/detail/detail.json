@@ -1,0 +1,8 @@
+{
+  "usingComponents": {
+    "product-card": "../../../components/business/product-card/product-card",
+    "sku-spec-sheet": "../../../components/business/sku-spec-sheet/sku-spec-sheet",
+    "bottom-nav": "../../../components/base/bottom-nav/bottom-nav",
+    "t-icon": "../../../components/base/t-icon/t-icon"
+  }
+}

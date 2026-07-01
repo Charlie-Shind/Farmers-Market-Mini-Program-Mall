@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>编辑地址</title>
+<link rel="stylesheet" href="../styles/tokens.css" />
+<link rel="stylesheet" href="../styles/components.css" />
+</head>
+<body>
+<svg style="display:none"><defs></defs></svg>
+<div class="page with-bottom">
+  <!-- 页面头部：后续转小程序时映射为 page-title-bar，保留返回按钮和右侧动作区 -->
+  <div class="topbar">
+    <button class="icon-btn" data-action="返回上一页"><svg class="icon"><use href="../assets/icons.svg#back"></use></svg></button>
+    <div class="title">编辑地址</div>
+    <div class="right"></div>
+  </div>
+
+  <form class="section">
+    <div class="field"><label>收货人</label><input value="李同学" /></div>
+    <div class="field"><label>手机号</label><input value="13812342846" /></div>
+    <div class="picker-cell"><span class="name">所在地区</span><span class="select">上海市 浦东新区 <svg class="icon sm"><use href="../assets/icons.svg#chevron"></use></svg></span></div>
+    <div class="field"><label>详细地址</label><textarea>张江路 88 号 3 栋 1202</textarea></div>
+    <div class="cell"><span class="label">设为默认地址</span><span class="tag green">已开启</span></div>
+  </form>
+  <div class="bottom-bar"><button class="btn ghost" data-action="删除地址">删除</button><button class="btn primary" data-action="保存地址">保存</button></div>
+
+</div>
+<script src="../scripts/prototype.js"></script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "navigationStyle": "custom",
+  "navigationBarTitleText": "佣金明细",
+  "usingComponents": {
+    "toast": "../../../components/base/toast/toast",
+    "loading": "../../../components/base/loading/loading",
+    "t-icon": "../../../components/base/t-icon/t-icon"
+  }
+}

@@ -1,0 +1,55 @@
+﻿<view class="merchant-page has-bottom-actions products-page" style="{{pageStyle}}">
+  <view class="status-space"></view>
+
+  <view class="page-titlebar">
+    <view class="icon-box icon-btn" bindtap="goBack">
+      <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+    </view>
+    <view class="title-block">
+      <view class="page-title">选择商品</view>
+    </view>
+    <text></text>
+  </view>
+
+  <view class="top-actions" style="justify-content: space-between;">
+    <view class="search-pill" style="flex:1; max-width: 420rpx;">
+      <t-icon name="search" size="32rpx"></t-icon>
+      <input class="search-input" placeholder="搜索商品名称" value="{{searchValue}}" bindinput="onSearchInput" />
+    </view>
+    <view class="icon-action" bindtap="confirmSelection">
+      <t-icon name="check" size="40rpx"></t-icon>
+      <text>完成</text>
+    </view>
+  </view>
+
+  <scroll-view scroll-x class="toolbar" enhanced show-scrollbar="{{false}}">
+    <view class="chip {{item.active ? 'active' : ''}}" wx:for="{{chips}}" wx:key="name" bindtap="onChipTap" data-index="{{index}}">{{item.name}}</view>
+  </scroll-view>
+
+  <view class="section-line-title">
+    <text>可选商品</text>
+    <text class="status-pill info">{{selectedCount}} 个已选</text>
+  </view>
+
+  <view class="full-list">
+    <view class="product-row {{item.checked ? 'checked' : ''}}" wx:for="{{products}}" wx:key="id" bindtap="toggleProduct" data-index="{{index}}">
+      <view class="check-dot {{item.checked ? 'active' : ''}}">
+        <t-icon name="check" size="40rpx"></t-icon>
+      </view>
+      <image class="product-thumb" src="{{item.cover}}" mode="aspectFill" />
+      <view class="product-info">
+        <text class="product-title">{{item.name}}</text>
+        <text class="product-sub">库存 {{item.stock}} · 原价 ¥{{item.originPrice}} · 活动价 ¥{{item.activityPrice}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{products.length === 0}}" class="empty-state">
+    <text class="empty-title">没有匹配商品</text>
+  </view>
+
+  <view class="bottom-actions">
+    <button class="action-btn secondary" bindtap="clearSelection">清空</button>
+    <button class="action-btn primary" bindtap="confirmSelection">确认</button>
+  </view>
+</view>

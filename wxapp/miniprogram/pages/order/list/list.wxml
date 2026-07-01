@@ -1,0 +1,107 @@
+﻿<view class="phone-page order-list-page" style="{{pageStyle}}">
+  <!-- Top Navigation Bar -->
+  <view class="board-head">
+    <view class="page-title-bar">
+      <button class="back-btn" bindtap="goBack" hover-class="back-btn--hover">
+        <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+      </button>
+      <text class="page-title-bar__title">我的订单</text>
+      <text></text>
+    </view>
+  </view>
+
+  <!-- Status Tabs -->
+  <view class="tabs-wrap">
+    <scroll-view scroll-x="true" class="tabs-scroll" show-scrollbar="{{false}}" enhanced="true">
+      <view class="tabs-flex">
+        <view
+          wx:for="{{tabs}}"
+          wx:key="key"
+          class="tab-item {{activeTab === item.key ? 'tab-item--active' : ''}}"
+          data-key="{{item.key}}"
+          bindtap="setTab"
+        >
+          <text class="tab-item__text">{{item.label}}</text>
+          <view class="tab-item__line"></view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- Orders Scroll List -->
+  <scroll-view scroll-y="true" class="orders-scroll" enhanced="true" show-scrollbar="{{false}}" bindscrolltolower="loadMore">
+    <view wx:if="{{orders && orders.length > 0}}" class="orders-list">
+      <view wx:for="{{orders}}" wx:for-item="order" wx:key="orderNo" class="order-card" data-order-no="{{order.orderNo}}" bindtap="goToDetail">
+        
+        <!-- Store Name and Order Status -->
+        <view class="order-card-header">
+          <view class="store-info">
+            <t-icon name="store" size="28rpx" opacity="0.8"></t-icon>
+            <text class="store-name">{{order.storeName || '湾源生态农庄'}}</text>
+          </view>
+          <text class="status-tag status-tag--{{order.normalizedStatus}}">{{order.displayStatus || order.status}}</text>
+        </view>
+
+        <!-- Order Items list -->
+        <view class="order-card-body">
+          <view wx:for="{{order.items}}" wx:for-item="goods" wx:key="orderItemId" class="goods-item">
+            <image wx:if="{{goods.coverUrl}}" class="goods-img" src="{{goods.coverUrl}}" mode="aspectFill"></image>
+            <view wx:else class="goods-img goods-img--empty">
+              <text class="goods-img__text">无封面</text>
+            </view>
+            <view class="goods-detail">
+              <text class="goods-title">{{goods.title}}</text>
+              <text class="goods-sku">{{goods.skuName || '默认规格'}}</text>
+            </view>
+            <view class="goods-price-info">
+              <text class="goods-price">¥{{goods.price}}</text>
+              <text class="goods-quantity">x{{goods.quantity}}</text>
+            </view>
+          </view>
+        </view>
+
+        <!-- Total Price summary block -->
+        <view class="order-card-footer">
+          <text class="total-desc">共 {{order.items.length}} 件商品，实付款:</text>
+          <text class="total-price">¥{{order.payAmount || order.totalAmount}}</text>
+        </view>
+
+        <!-- Dynamic Action Buttons -->
+        <view class="order-card-actions" catchtap="preventBubble" wx:if="{{order.actionButtons && order.actionButtons.length}}">
+          <button
+            wx:for="{{order.actionButtons}}"
+            wx:for-item="action"
+            wx:key="key"
+            class="action-btn {{action.type === 'primary' ? 'action-btn--primary' : 'action-btn--ghost'}}"
+            plain="true"
+            hover-class="none"
+            data-order-no="{{order.orderNo}}"
+            data-key="{{action.key}}"
+            data-pay-amount="{{order.payAmount || order.totalAmount}}"
+            catchtap="handleOrderAction"
+          >
+            {{action.label}}
+          </button>
+        </view>
+
+      </view>
+    </view>
+
+    <!-- Empty State -->
+    <view wx:else class="empty-state-box">
+      <view class="empty-icon-box">
+        <t-icon name="package" size="80rpx" opacity="0.25"></t-icon>
+      </view>
+      <text class="empty-text">暂无相关订单</text>
+      <text class="empty-sub">买点新鲜绿色农产品犒劳一下自己吧</text>
+    </view>
+
+    <view wx:if="{{orders.length}}" class="load-more-area">
+      <text wx:if="{{loadingMore}}" class="load-more-area__text">正在继续加载…</text>
+      <text wx:elif="{{noMore}}" class="load-more-area__text">已经到底了</text>
+      <view wx:else class="load-more-area__button">下滑加载更多</view>
+    </view>
+
+    <view class="scroll-spacer"></view>
+  </scroll-view>
+</view>

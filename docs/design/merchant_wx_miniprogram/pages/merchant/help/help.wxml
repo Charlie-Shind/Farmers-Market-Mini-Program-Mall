@@ -1,0 +1,169 @@
+<view class="app-page {{pageClass}}">
+  <view class="status-space"></view>
+
+  <view class="app-topbar">
+    <view wx:if="{{showBack}}" class="icon-box icon-btn" bindtap="goBack">
+      <image class="fit-icon" src="/assets/icons/back.svg" mode="aspectFit" />
+    </view>
+    <view wx:else class="top-logo">
+      <view class="icon-box logo-icon"><image class="fit-icon" src="/assets/icons/store.svg" mode="aspectFit" /></view>
+    </view>
+    <view class="topbar-main">
+      <text class="topbar-title">{{title}}</text>
+      <text class="topbar-subtitle">湾源农仓商家端</text>
+    </view>
+    <view class="icon-box icon-btn" bindtap="goNotice">
+      <image class="fit-icon" src="/assets/icons/bell.svg" mode="aspectFit" />
+    </view>
+  </view>
+
+  <view class="page-titlebar">
+    <view class="title-block">
+      <view class="page-title">{{title}}</view>
+      <view class="page-subtitle">{{subtitle}}</view>
+    </view>
+    <view wx:if="{{mode != 'chat'}}" class="icon-box icon-btn subtle" bindtap="showSearch">
+      <image class="fit-icon" src="/assets/icons/search.svg" mode="aspectFit" />
+    </view>
+  </view>
+
+  <view wx:if="{{hero}}" class="hero-card">
+    <view class="hero-main">
+      <text class="hero-title">{{hero.title}}</text>
+      <text class="hero-desc">{{hero.desc}}</text>
+    </view>
+    <view class="illust-box hero-illust">
+      <image class="fit-img" src="{{hero.img}}" mode="aspectFit" />
+    </view>
+  </view>
+
+  <view wx:if="{{stats.length}}" class="stat-grid">
+    <view class="stat-card" wx:for="{{stats}}" wx:key="label">
+      <text class="stat-value">{{item.value}}</text>
+      <text class="stat-label">{{item.label}}</text>
+      <text class="stat-trend">{{item.trend}}</text>
+    </view>
+  </view>
+
+  <view wx:if="{{quickActions.length}}" class="quick-grid">
+    <view class="quick-card" wx:for="{{quickActions}}" wx:key="title" bindtap="goPage" data-url="{{item.url}}">
+      <view class="icon-box quick-icon"><image class="fit-icon" src="{{item.icon}}" mode="aspectFit" /></view>
+      <view class="quick-main">
+        <text class="quick-title">{{item.title}}</text>
+        <text class="quick-desc">{{item.desc}}</text>
+      </view>
+    </view>
+  </view>
+
+  <scroll-view wx:if="{{tabs.length}}" scroll-x class="tabs" enhanced show-scrollbar="{{false}}">
+    <view class="tab {{item.active ? 'active' : ''}}" wx:for="{{tabs}}" wx:key="name" bindtap="onTabTap" data-index="{{index}}"><text>{{item.name}}</text></view>
+  </scroll-view>
+
+  <scroll-view wx:if="{{filters.length}}" scroll-x class="toolbar" enhanced show-scrollbar="{{false}}">
+    <view class="chip {{item.active ? 'active' : ''}}" wx:for="{{filters}}" wx:key="name" bindtap="onFilterTap" data-index="{{index}}">{{item.name}}</view>
+  </scroll-view>
+
+  <block wx:if="{{mode == 'dashboard'}}">
+    <view class="section-head"><text>待处理订单</text><text bindtap="goOrders">查看全部</text></view>
+    <view class="card-list">
+      <view class="goods-card" wx:for="{{listItems}}" wx:key="title">
+        <view class="thumb-box"><image class="fit-img" src="{{item.img}}" mode="aspectFill" /></view>
+        <view class="goods-main"><text class="goods-title">{{item.title}}</text><text class="goods-desc">{{item.desc}}</text><text class="goods-price">{{item.price}}</text></view>
+        <text class="status-pill warning">{{item.status}}</text>
+      </view>
+    </view>
+    <view class="section-head"><text>营销活动</text><text bindtap="goMarketing">管理</text></view>
+    <view class="activity-card" wx:for="{{cards}}" wx:key="title">
+      <view class="activity-head"><view><text class="activity-title">{{item.title}}</text><text class="activity-desc">{{item.desc}}</text></view><text class="status-pill success">{{item.status}}</text></view>
+      <view class="activity-body"><view class="thumb-box sm"><image class="fit-img" src="{{item.img}}" mode="aspectFill" /></view><view class="progress-wrap"><text>{{item.price}}</text><view class="progress-line"><view class="progress-inner" style="width: {{item.percent}};"></view></view></view></view>
+    </view>
+  </block>
+
+  <block wx:if="{{mode == 'list' || mode == 'productList' || mode == 'activityList' || mode == 'messageList' || mode == 'draftList' || mode == 'selectProducts' || mode == 'reviewList' || mode == 'noticeList' || mode == 'publicShop'}}">
+    <view class="card-list">
+      <view wx:for="{{listItems}}" wx:key="title" class="goods-card {{mode == 'activityList' ? 'activity-mode' : ''}}" bindtap="openItem" data-index="{{index}}">
+        <view wx:if="{{item.img}}" class="thumb-box"><image class="fit-img" src="{{item.img}}" mode="aspectFill" /></view>
+        <view wx:elif="{{item.icon}}" class="icon-box list-icon"><image class="fit-icon" src="{{item.icon}}" mode="aspectFit" /></view>
+        <view wx:else class="thumb-box"><image class="fit-img" src="/assets/goods/g1.svg" mode="aspectFill" /></view>
+        <view class="goods-main">
+          <text class="goods-title">{{item.title}}</text>
+          <text class="goods-desc">{{item.desc}}</text>
+          <text wx:if="{{item.price}}" class="goods-price">{{item.price}}</text>
+          <view wx:if="{{item.percent}}" class="progress-line"><view class="progress-inner" style="width: {{item.percent}};"></view></view>
+        </view>
+        <view class="side-meta"><text class="status-pill {{item.tag == 'danger' ? 'danger' : item.tag == 'info' ? 'info' : 'success'}}">{{item.status}}</text><text wx:if="{{item.time}}" class="time-text">{{item.time}}</text></view>
+      </view>
+    </view>
+  </block>
+
+  <block wx:if="{{mode == 'form' || mode == 'galleryForm' || mode == 'marketingForm'}}">
+    <view wx:if="{{categories.length}}" class="type-grid">
+      <view class="type-card {{item.active ? 'active' : ''}}" wx:for="{{categories}}" wx:key="title" bindtap="onTypeTap" data-index="{{index}}">
+        <view class="illust-box type-illust"><image class="fit-img" src="{{item.icon}}" mode="aspectFit" /></view>
+        <text class="type-title">{{item.title}}</text><text class="type-desc">{{item.desc}}</text>
+      </view>
+    </view>
+    <view wx:if="{{gallery.length}}" class="gallery-grid">
+      <view class="upload-box" wx:for="{{gallery}}" wx:key="*this"><image class="fit-img" src="{{item}}" mode="aspectFill" /></view>
+      <view class="upload-box add" bindtap="chooseImage"><view class="icon-box"><image class="fit-icon" src="/assets/icons/camera.svg" mode="aspectFit" /></view><text>添加图片</text></view>
+    </view>
+    <view class="form-card">
+      <view class="form-row" wx:for="{{formFields}}" wx:key="label">
+        <text class="form-label">{{item.label}}</text>
+        <input wx:if="{{item.type == 'input' || item.type == 'number'}}" class="form-input" type="{{item.type == 'number' ? 'digit' : 'text'}}" value="{{item.value}}" placeholder="{{item.placeholder}}" bindinput="onInput" data-index="{{index}}" />
+        <textarea wx:elif="{{item.type == 'textarea'}}" class="form-textarea" value="{{item.value}}" placeholder="{{item.placeholder}}" bindinput="onInput" data-index="{{index}}" auto-height />
+        <picker wx:elif="{{item.type == 'picker'}}" mode="selector" range="{{pickerOptions}}" bindchange="onPickerChange" data-index="{{index}}"><view class="picker-value">{{item.value}}<image class="chevron" src="/assets/icons/chevron.svg" mode="aspectFit" /></view></picker>
+        <picker wx:elif="{{item.type == 'date'}}" mode="date" value="{{dateValue}}" bindchange="onDateChange" data-index="{{index}}"><view class="picker-value">{{item.value}}<image class="chevron" src="/assets/icons/chevron.svg" mode="aspectFit" /></view></picker>
+        <picker wx:elif="{{item.type == 'time'}}" mode="time" value="{{timeValue}}" bindchange="onTimeChange" data-index="{{index}}"><view class="picker-value">{{item.value}}<image class="chevron" src="/assets/icons/chevron.svg" mode="aspectFit" /></view></picker>
+        <text wx:else class="readonly-value">{{item.value}}</text>
+      </view>
+    </view>
+  </block>
+
+  <block wx:if="{{mode == 'skuForm'}}">
+    <view class="sku-card" wx:for="{{skuList}}" wx:key="name">
+      <view class="sku-head"><text>{{item.name}}</text><text class="text-link" bindtap="showToast">删除</text></view>
+      <view class="sku-grid"><view><text>价格</text><input value="{{item.price}}" type="digit" /></view><view><text>库存</text><input value="{{item.stock}}" type="number" /></view><view><text>限购</text><input value="{{item.limit}}" type="number" /></view><view><text>状态</text><input value="启用" /></view></view>
+    </view>
+  </block>
+
+  <block wx:if="{{mode == 'category'}}">
+    <view class="type-grid single">
+      <view class="type-card {{item.active ? 'active' : ''}}" wx:for="{{categories}}" wx:key="title" bindtap="onTypeTap" data-index="{{index}}">
+        <view class="illust-box type-illust"><image class="fit-img" src="{{item.icon}}" mode="aspectFit" /></view><text class="type-title">{{item.title}}</text><text class="type-desc">{{item.desc}}</text>
+      </view>
+    </view>
+  </block>
+
+  <block wx:if="{{mode == 'detail'}}">
+    <view class="detail-card"><view class="detail-row" wx:for="{{detailRows}}" wx:key="label"><text>{{item.label}}</text><text>{{item.value}}</text></view></view>
+    <view class="section-head"><text>关联商品</text></view>
+    <view class="card-list"><view class="goods-card" wx:for="{{listItems}}" wx:key="title"><view class="thumb-box"><image class="fit-img" src="{{item.img}}" mode="aspectFill" /></view><view class="goods-main"><text class="goods-title">{{item.title}}</text><text class="goods-desc">{{item.desc}}</text><text class="goods-price">{{item.price}}</text></view></view></view>
+    <view class="timeline"><view class="timeline-row" wx:for="{{timeline}}" wx:key="title"><text>{{item.title}}</text><text>{{item.desc}}</text></view></view>
+  </block>
+
+  <block wx:if="{{mode == 'stats' || mode == 'finance'}}">
+    <view class="chart-card"><view class="bar" wx:for="{{chart}}" wx:key="name" style="height: {{item.height}};"><text>{{item.name}}</text></view></view>
+    <view class="section-head"><text>商品排行</text></view>
+    <view class="card-list"><view class="goods-card" wx:for="{{listItems}}" wx:key="title"><view class="thumb-box sm"><image class="fit-img" src="{{item.img}}" mode="aspectFill" /></view><view class="goods-main"><text class="goods-title">{{item.title}}</text><text class="goods-desc">{{item.desc}}</text></view><text class="goods-price">{{item.price}}</text></view></view>
+  </block>
+
+  <block wx:if="{{mode == 'shop' || mode == 'security' || mode == 'help'}}">
+    <view class="setting-list"><view class="setting-row" wx:for="{{shopRows}}" wx:key="title" bindtap="goPage" data-url="{{item.url}}"><view class="icon-box list-icon"><image class="fit-icon" src="{{item.icon}}" mode="aspectFit" /></view><view class="setting-main"><text>{{item.title}}</text><text>{{item.desc}}</text></view><image class="chevron" src="/assets/icons/chevron.svg" mode="aspectFit" /></view></view>
+  </block>
+
+  <block wx:if="{{mode == 'chat'}}">
+    <view class="chat-screen"><view class="bubble {{item.me ? 'me' : ''}}" wx:for="{{chatMessages}}" wx:key="text">{{item.text}}</view></view>
+    <view class="input-bar"><input placeholder="输入回复内容" value="{{inputMessage}}" bindinput="onMessageInput" /><button bindtap="sendMessage">发送</button></view>
+  </block>
+
+  <view wx:if="{{stickyActions.length && mode != 'chat'}}" class="bottom-actions">
+    <button class="action-btn {{item.type}}" wx:for="{{stickyActions}}" wx:key="name" bindtap="onActionTap">{{item.name}}</button>
+  </view>
+
+  <view wx:if="{{hasBottom}}" class="bottom-nav">
+    <view class="nav-item {{item.active ? 'active' : ''}}" wx:for="{{nav}}" wx:key="name" bindtap="goPage" data-url="{{item.url}}">
+      <view class="icon-box nav-icon"><image class="fit-icon" src="{{item.icon}}" mode="aspectFit" /></view><text>{{item.name}}</text>
+    </view>
+  </view>
+</view>

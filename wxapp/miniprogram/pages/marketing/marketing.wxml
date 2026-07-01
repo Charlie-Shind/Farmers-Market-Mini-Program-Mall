@@ -1,0 +1,190 @@
+﻿<view class="phone-page mkt-page" style="{{pageStyle}}">
+  <view class="page-title-bar">
+    <view class="back-btn" bindtap="goBack" hover-class="back-btn--hover">
+      <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+    </view>
+    <text class="page-title-bar__title">营销中心</text>
+    <text></text>
+  </view>
+
+  <view class="panel mkt-block">
+    <view class="section-title">
+      <view class="section-title__stack">
+        <text class="section-title__title">新人专享券</text>
+      </view>
+      <view class="section-more mkt-more" bindtap="goToGiftZone">
+        <text>更多</text>
+        <t-icon name="chevronRight" size="22rpx" opacity="0.72"></t-icon>
+      </view>
+    </view>
+
+    <view wx:if="{{loadingCoupons}}" class="coupon-row">
+      <view class="coupon coupon--skel" wx:for="{{[1,2,3]}}" wx:key="*this"></view>
+    </view>
+
+    <view wx:elif="{{coupons.length}}" class="coupon-row">
+      <view
+        wx:for="{{coupons}}"
+        wx:key="id"
+        class="coupon {{item.received ? 'coupon--received' : ''}}"
+        data-coupon-id="{{item.couponId}}"
+        catchtap="receiveCoupon"
+      >
+        <view class="coupon__top">
+          <text class="coupon__badge">{{item.tag}}</text>
+        </view>
+        <text class="coupon__amount">{{item.amount}}</text>
+        <text class="coupon__cond">{{item.condition}}</text>
+        <view class="coupon__btn {{item.received ? 'coupon__btn--done' : ''}}">
+          <text>{{item.received ? '已领取' : '新人专享'}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view wx:else class="mkt-empty">暂无优惠券</view>
+  </view>
+
+  <view class="panel mkt-block">
+    <view class="section-title">
+      <view class="section-title__stack section-title__stack--flash">
+        <text class="section-title__title">限时秒杀</text>
+        <view class="flash-clock">
+          <view class="flash-clock__seg">{{flashCountdownParts[0]}}</view>
+          <text class="flash-clock__sep">:</text>
+          <view class="flash-clock__seg">{{flashCountdownParts[1]}}</view>
+          <text class="flash-clock__sep">:</text>
+          <view class="flash-clock__seg">{{flashCountdownParts[2]}}</view>
+        </view>
+      </view>
+      <view class="section-more mkt-more" bindtap="goToFlashSale">
+        <text>更多</text>
+        <t-icon name="chevronRight" size="22rpx" opacity="0.72"></t-icon>
+      </view>
+    </view>
+
+    <view wx:if="{{loadingFlash}}" class="flash-grid">
+      <view class="flash-tile flash-tile--skel" wx:for="{{[1,2,3]}}" wx:key="*this"></view>
+    </view>
+
+    <view wx:elif="{{flashEmpty}}" class="mkt-empty">
+      <text>暂无秒杀活动</text>
+      <text class="mkt-empty__sub">记得关注下次开场</text>
+    </view>
+
+    <view wx:else class="flash-grid">
+      <view
+        wx:for="{{flashProducts}}"
+        wx:key="id"
+        class="flash-tile"
+        data-id="{{item.id}}"
+        bindtap="openProductDetail"
+        hover-class="flash-tile--hover"
+      >
+        <view class="flash-tile__cover" style="{{item.imageStyle}}">
+          <view wx:if="{{!item.imageStyle}}" class="cover-fallback">
+            <t-icon name="gift" size="48rpx" color="#9e8c6a"></t-icon>
+          </view>
+        </view>
+        <text class="flash-tile__title">{{item.title}}</text>
+        <text class="flash-tile__desc">{{item.desc}}</text>
+        <view class="flash-tile__prices">
+          <text class="flash-tile__price">{{item.price}}</text>
+          <text class="flash-tile__origin">{{item.originPrice}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="panel mkt-block">
+    <view class="section-title">
+      <view class="section-title__stack">
+        <text class="section-title__title">邻里拼团</text>
+      </view>
+      <view class="section-more mkt-more" bindtap="goToGroupBuy">
+        <text>更多</text>
+        <t-icon name="chevronRight" size="22rpx" opacity="0.72"></t-icon>
+      </view>
+    </view>
+
+    <view wx:if="{{groupNoLocation}}" class="mkt-location-tip">
+      <t-icon name="location" size="40rpx" color="#F2994A"></t-icon>
+      <text class="mkt-location-tip__title">需要定位才能查看附近拼团</text>
+      <text class="mkt-location-tip__sub">开启位置权限，发现更多周边好货</text>
+      <button class="mkt-location-btn" bindtap="goToSelectLocation">选择位置</button>
+    </view>
+
+    <view wx:elif="{{loadingGroup}}" class="group-stack">
+      <view class="group-tile group-tile--skel" wx:for="{{[1,2]}}" wx:key="*this"></view>
+    </view>
+
+    <view wx:elif="{{groupEmpty}}" class="mkt-empty">
+      <text>暂无附近拼团活动</text>
+      <text class="mkt-empty__sub">去秒杀区看看其他好货</text>
+    </view>
+
+    <view wx:else class="group-stack">
+      <view
+        wx:if="{{groupProducts.length}}"
+        class="group-tile group-tile--featured"
+        data-product-id="{{groupProducts[0].productId}}"
+        bindtap="openGroupDetail"
+        hover-class="group-tile--hover"
+      >
+        <view class="group-tile__cover" style="{{groupProducts[0].imageStyle}}">
+          <view wx:if="{{!groupProducts[0].imageStyle}}" class="cover-fallback cover-fallback--group">
+            <t-icon name="gift" size="44rpx" color="#8f7f64"></t-icon>
+          </view>
+        </view>
+        <view class="group-tile__body">
+          <text class="group-tile__title">{{groupProducts[0].title}}</text>
+          <text class="group-tile__meta">{{groupProducts[0].memberText}} · {{groupProducts[0].expireText}}</text>
+          <view class="group-tile__prices">
+            <text class="group-tile__price">拼团价 {{groupProducts[0].groupPrice}}</text>
+            <text class="group-tile__origin">{{groupProducts[0].originPrice}}</text>
+          </view>
+        </view>
+        <view class="group-tile__action">
+          <view class="group-tile__btn">去拼团</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="panel mkt-block">
+    <view class="section-title">
+      <view class="section-title__stack">
+        <text class="section-title__title">积分兑换</text>
+      </view>
+      <view class="section-more mkt-more" bindtap="goToPointsExchange">
+        <text>更多</text>
+        <t-icon name="chevronRight" size="22rpx" opacity="0.72"></t-icon>
+      </view>
+    </view>
+
+    <view wx:if="{{loadingPoints}}" class="pts-grid">
+      <view class="pts-item pts-item--skel" wx:for="{{[1,2,3,4]}}" wx:key="*this"></view>
+    </view>
+
+    <view wx:elif="{{!pointsGoods.length}}" class="mkt-empty">暂无可兑换商品</view>
+
+    <view wx:else class="pts-grid">
+      <view
+        wx:for="{{pointsGoods}}"
+        wx:key="id"
+        class="pts-item {{item.received ? 'pts-item--done' : ''}} {{item.canRedeem ? 'pts-item--avail' : ''}}"
+      >
+        <view class="pts-cover" style="{{item.imageStyle}}">
+          <view wx:if="{{!item.imageStyle}}" class="cover-fallback cover-fallback--points">
+            <t-icon name="gift" size="40rpx" color="#8f7f64"></t-icon>
+          </view>
+        </view>
+        <text class="pts-name">{{item.title}}</text>
+        <view class="pts-footer">
+          <text class="pts-cost">{{item.pointsCost}} 积分</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="safe-bottom"></view>
+</view>

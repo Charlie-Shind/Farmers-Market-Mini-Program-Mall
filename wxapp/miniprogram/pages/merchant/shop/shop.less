@@ -1,0 +1,225 @@
+@import "../common.less";
+
+.shop-page {
+  background: var(--merchant-bg);
+}
+
+.shop-page .page-titlebar {
+  align-items: center;
+  padding: 16rpx 32rpx 20rpx;
+}
+
+.shop-page .page-title {
+  font-size: 40rpx;
+}
+
+.icon-action {
+  min-width: 104rpx;
+  height: 64rpx;
+  border-radius: var(--radius-full);
+  background: var(--merchant-surface);
+  border: 1rpx solid var(--merchant-line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  padding: 0 18rpx;
+  font-size: 24rpx;
+  color: var(--merchant-text-sub);
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.icon-sm {
+  width: 28rpx;
+  height: 28rpx;
+  flex: 0 0 28rpx;
+}
+
+.store-profile {
+  margin: 0 32rpx 20rpx;
+  padding: 28rpx 24rpx;
+  border-radius: 28rpx;
+  background: var(--merchant-surface);
+  border: 1rpx solid var(--merchant-line-soft);
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  box-shadow: var(--shadow-soft);
+}
+
+.store-avatar-box {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 24rpx;
+  background: var(--merchant-primary-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.store-avatar-img {
+  width: 56rpx;
+  height: 56rpx;
+}
+
+.store-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.store-name {
+  color: var(--merchant-text);
+  font-size: 32rpx;
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+.store-desc {
+  color: var(--merchant-text-muted);
+  font-size: 24rpx;
+  line-height: 1.35;
+}
+
+.metric-strip {
+  margin: 0 32rpx 20rpx;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16rpx;
+}
+
+.metric-item {
+  padding: 24rpx 16rpx;
+  border-radius: 20rpx;
+  background: var(--merchant-surface);
+  border: 1rpx solid var(--merchant-line-soft);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6rpx;
+}
+
+.metric-value {
+  color: var(--merchant-primary-strong);
+  font-size: 34rpx;
+  font-weight: 900;
+}
+
+.metric-label {
+  color: var(--merchant-text-muted);
+  font-size: 22rpx;
+}
+
+.section-line-title {
+  padding: 16rpx 32rpx 12rpx;
+}
+
+.section-line-title text {
+  color: var(--merchant-text-sub);
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
+.entry-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16rpx;
+  padding: 0 32rpx 16rpx;
+}
+
+.entry-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10rpx;
+  padding: 20rpx 8rpx;
+  border-radius: 20rpx;
+  background: var(--merchant-surface);
+  border: 1rpx solid var(--merchant-line-soft);
+}
+
+.entry-icon-box {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 22rpx;
+  background: var(--merchant-primary-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.entry-icon-box .fit-icon {
+  width: 36rpx;
+  height: 36rpx;
+}
+
+.entry-name {
+  color: var(--merchant-text);
+  font-size: 22rpx;
+  font-weight: 800;
+  line-height: 1.2;
+  text-align: center;
+  white-space: normal;
+  word-break: keep-all;
+}
+
+.full-list {
+  background: var(--merchant-surface);
+  margin: 0 32rpx 20rpx;
+  border-radius: 20rpx;
+  border: 1rpx solid var(--merchant-line-soft);
+  overflow: hidden;
+}
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  gap: 18rpx;
+  padding: 24rpx;
+  border-bottom: 1rpx solid var(--merchant-line-soft);
+  min-height: 96rpx;
+}
+
+.setting-row:last-child {
+  border-bottom: 0;
+}
+
+.row-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.row-main .row-title {
+  color: var(--merchant-text);
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+.row-main .row-desc {
+  color: var(--merchant-text-muted);
+  font-size: 24rpx;
+}
+
+.row-right-chevron {
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
+  color: var(--merchant-text-sub);
+  font-size: 24rpx;
+  font-weight: 700;
+  flex-shrink: 0;
+  max-width: 150rpx;
+}
+
+.row-right {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}

@@ -1,0 +1,239 @@
+.cropper-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999;
+  background-color: #0c0c0e;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  opacity: 0;
+  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+
+  &.cropper-container--show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+.image-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.crop-image {
+  position: absolute;
+  will-change: transform;
+}
+
+/* Mask Panels */
+.mask-panel {
+  position: absolute;
+  background-color: rgba(10, 10, 12, 0.78);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.mask-top {
+  top: 0;
+  left: 0;
+  right: 0;
+}
+
+.mask-bottom {
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.mask-left {
+  left: 0;
+}
+
+.mask-right {
+  right: 0;
+}
+
+/* Crop Box Outline & Decoration */
+.crop-box {
+  position: absolute;
+  box-sizing: border-box;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  pointer-events: none;
+  z-index: 20;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0); /* Fallback */
+
+  /* Highlighted Corners */
+  .corner {
+    position: absolute;
+    width: 30rpx;
+    height: 30rpx;
+    border: 4rpx solid transparent;
+  }
+
+  .corner-tl {
+    top: -4rpx;
+    left: -4rpx;
+    border-top-color: #ffffff;
+    border-left-color: #ffffff;
+  }
+
+  .corner-tr {
+    top: -4rpx;
+    right: -4rpx;
+    border-top-color: #ffffff;
+    border-right-color: #ffffff;
+  }
+
+  .corner-bl {
+    bottom: -4rpx;
+    left: -4rpx;
+    border-bottom-color: #ffffff;
+    border-left-color: #ffffff;
+  }
+
+  .corner-br {
+    bottom: -4rpx;
+    right: -4rpx;
+    border-bottom-color: #ffffff;
+    border-right-color: #ffffff;
+  }
+
+  /* Rule of thirds grid lines */
+  .grid-line {
+    position: absolute;
+    background-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .line-h {
+    left: 0;
+    right: 0;
+    height: 1px;
+  }
+
+  .line-h-1 {
+    top: 33.33%;
+  }
+
+  .line-h-2 {
+    top: 66.66%;
+  }
+
+  .line-v {
+    top: 0;
+    bottom: 0;
+    width: 1px;
+  }
+
+  .line-v-1 {
+    left: 33.33%;
+  }
+
+  .line-v-2 {
+    left: 66.66%;
+  }
+}
+
+/* Bottom Toolbar styling */
+.cropper-toolbar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 180rpx;
+  padding-bottom: env(safe-area-inset-bottom);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-left: 60rpx;
+  padding-right: 60rpx;
+  z-index: 100;
+  background: linear-gradient(to top, rgba(10, 10, 12, 0.95) 60%, rgba(10, 10, 12, 0));
+  box-sizing: border-box;
+
+  .btn-cancel {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 30rpx;
+    font-weight: 500;
+    padding: 20rpx;
+    transition: color 0.2s ease;
+
+    &:active {
+      color: #ffffff;
+      opacity: 0.8;
+    }
+  }
+
+  .btn-rotate {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.8);
+    transition: opacity 0.2s ease;
+    padding: 10rpx 20rpx;
+
+    .rotate-icon-wrapper {
+      width: 64rpx;
+      height: 64rpx;
+      border-radius: 50%;
+      background-color: rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 8rpx;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .rotate-icon {
+      font-size: 36rpx;
+      line-height: 1;
+    }
+
+    .rotate-text {
+      font-size: 20rpx;
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    &:active {
+      opacity: 0.8;
+      .rotate-icon-wrapper {
+        transform: rotate(-90deg);
+        background-color: rgba(255, 255, 255, 0.15);
+      }
+    }
+  }
+
+  .btn-confirm {
+    background: linear-gradient(135deg, #10b981, #059669); /* Elegant emerald gradient */
+    color: #ffffff;
+    font-size: 28rpx;
+    font-weight: 600;
+    padding: 16rpx 48rpx;
+    border-radius: 40rpx;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    transition: all 0.2s ease;
+
+    &:active {
+      transform: scale(0.95);
+      opacity: 0.9;
+    }
+  }
+}
+
+.cropper-canvas {
+  pointer-events: none;
+}

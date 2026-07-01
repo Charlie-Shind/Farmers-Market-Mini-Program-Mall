@@ -1,0 +1,223 @@
+﻿<view class="phone-page checkout-page" style="{{pageStyle}}">
+  <!-- Top Navigation Bar -->
+  <view class="board-head">
+    <view class="page-title-bar">
+      <button class="back-btn" bindtap="goBack" hover-class="back-btn--hover">
+        <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+      </button>
+      <text class="page-title-bar__title">确认订单</text>
+      <text></text>
+    </view>
+  </view>
+
+  <scroll-view scroll-y="true" class="checkout-scroll" enhanced="true" show-scrollbar="{{false}}">
+    <!-- Shipping Address Card -->
+    <view class="panel address-card-panel" bindtap="selectAddress">
+      <t-icon name="location" size="36rpx" color="#2c4a39"></t-icon>
+      <view class="address-body" wx:if="{{address}}">
+        <view class="user-meta">
+          <text class="user-name">{{address.receiverName}}</text>
+          <text class="user-phone">{{address.receiverMobile}}</text>
+          <text class="tag default-tag" wx:if="{{address.isDefault}}">默认</text>
+        </view>
+        <text class="address-detail">{{address.province}} {{address.city}} {{address.district}} {{address.detailAddress}}</text>
+      </view>
+      <view class="address-empty-body" wx:else>
+        <text class="empty-title">请选择收货地址</text>
+        <text class="empty-sub">下单前必须指定有效的收件地址</text>
+      </view>
+      <t-icon name="chevronRight" size="28rpx" opacity="0.6"></t-icon>
+    </view>
+
+    <!-- Product List Panel -->
+    <view class="panel products-panel">
+      <view class="section-title">
+        <text class="section-title__title">商品清单</text>
+      </view>
+      <view class="product-item-row" wx:for="{{items}}" wx:key="cartId">
+        <image class="product-img" src="{{item.coverUrl}}" mode="aspectFill"></image>
+        <view class="product-info">
+          <text class="product-title">{{item.title}}</text>
+          <text class="product-sku">{{item.skuName}}</text>
+          <view class="price-qty-row">
+            <view class="price-stack">
+              <text class="product-price">¥{{item.price}}</text>
+              <text wx:if="{{item.originalPrice && item.originalPrice !== item.price}}" class="product-origin-price">¥{{item.originalPrice}}</text>
+            </view>
+            <text class="product-qty">x{{item.quantity}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- Shipping Method Picker -->
+    <view class="panel option-panel">
+      <view class="option-row">
+        <text class="option-label">配送方式</text>
+        <picker class="option-picker" mode="selector" range="{{deliveryMethods}}" range-key="name" bindchange="onDeliveryChange">
+          <view class="picker-inner">
+            <text class="picker-value">{{selectedDelivery.name}}</text>
+            <t-icon name="chevronRight" size="24rpx" opacity="0.6"></t-icon>
+          </view>
+        </picker>
+      </view>
+      <view class="option-row option-row--no-border" wx:if="{{selectedDelivery.type === 3}}" bindtap="openPickupPointSheet">
+        <text class="option-label">自提点</text>
+        <view class="option-right">
+          <view class="option-value pickup-value {{selectedPickupPoint ? 'highlight' : ''}}">
+            {{selectedPickupPoint ? selectedPickupPoint.name : '请选择自提点'}}
+          </view>
+          <t-icon name="chevronRight" size="24rpx" opacity="0.6"></t-icon>
+        </view>
+      </view>
+      <view class="pickup-detail-row" wx:if="{{selectedDelivery.type === 3 && selectedPickupPoint}}">
+        <view class="pickup-info">
+          <text class="pickup-address">{{selectedPickupPoint.address}}</text>
+          <text class="pickup-contact" wx:if="{{selectedPickupPoint.contactPhone}}">联系电话：{{selectedPickupPoint.contactPhone}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- Marketing Deductions Panel -->
+    <view class="panel option-panel">
+      <!-- Coupon Selection -->
+      <view class="option-row" bindtap="openCouponSheet">
+        <text class="option-label">优惠券</text>
+        <view class="option-right">
+          <view class="option-value coupon-value {{selectedCoupon ? 'highlight' : ''}}">
+            {{selectedCoupon ? '-¥' + summary.couponDiscount : (availableCoupons.length ? '有 ' + availableCoupons.length + ' 张可用券' : '暂无可用优惠券')}}
+          </view>
+          <t-icon name="chevronRight" size="24rpx" opacity="0.6"></t-icon>
+        </view>
+      </view>
+
+      <!-- Points Toggle -->
+      <view class="option-row option-row--no-border" wx:if="{{points.redeemEnabled && points.balance > 0}}">
+        <view class="points-label-box">
+          <text class="option-label">使用积分抵扣</text>
+          <text class="points-sub">共 {{points.balance}} 积分，本次可用 {{points.usable}} 积分抵 ¥{{points.money}}</text>
+        </view>
+        <switch checked="{{usePoints}}" color="#2c4a39" bindchange="onPointsToggle" />
+      </view>
+    </view>
+
+    <!-- Price Summary Card -->
+    <view class="panel summary-panel">
+      <view class="summary-row">
+        <text class="summary-label">商品金额</text>
+        <text class="summary-value">¥{{summary.productAmount}}</text>
+      </view>
+      <view class="summary-row">
+        <text class="summary-label">运费</text>
+        <text class="summary-value">+¥{{summary.freightAmount}}</text>
+      </view>
+      <view class="summary-row" wx:if="{{selectedCoupon}}">
+        <text class="summary-label">优惠券</text>
+        <text class="summary-value discount">-¥{{summary.couponDiscount}}</text>
+      </view>
+      <view class="summary-row" wx:if="{{usePoints}}">
+        <text class="summary-label">积分抵扣</text>
+        <text class="summary-value discount">-¥{{summary.pointsDiscount}}</text>
+      </view>
+      <view class="summary-row summary-row--total">
+        <text class="summary-label">应付合计</text>
+        <text class="summary-value total">¥{{summary.payAmount}}</text>
+      </view>
+    </view>
+
+    <view class="scroll-spacer"></view>
+  </scroll-view>
+
+  <!-- Sticky Bottom Checkout Bar -->
+  <view class="bottom-checkout-bar">
+    <view class="pay-total-box">
+      <text class="pay-label">实付金额：</text>
+      <text class="pay-symbol">¥</text>
+      <text class="pay-value">{{summary.payAmount}}</text>
+    </view>
+    <button class="submit-order-btn" bindtap="submitOrder">立即支付</button>
+  </view>
+
+  <!-- Coupon Sheet Drawer -->
+  <view class="custom-sheet-mask {{activeSheet === 'coupon' ? 'custom-sheet-mask--show' : ''}}" bindtap="closeSheet" catchtouchmove="preventTouchMove">
+    <view class="custom-sheet {{activeSheet === 'coupon' ? 'custom-sheet--show' : ''}}" catchtap="preventBubble">
+      <view class="sheet-header">
+        <text class="sheet-title">可用优惠券</text>
+        <button class="sheet-close-btn" bindtap="closeSheet">
+          <t-icon name="close" size="32rpx" opacity="0.8"></t-icon>
+        </button>
+      </view>
+
+      <scroll-view scroll-y="true" enhanced show-scrollbar="{{false}}" class="sheet-body">
+        <view class="coupon-list">
+          <!-- Option for no coupon -->
+          <view class="coupon-card coupon-card--none {{!selectedCoupon ? 'coupon-card--selected' : ''}}" data-id="none" bindtap="selectCoupon">
+            <view class="coupon-body">
+              <text class="coupon-name">不使用优惠券</text>
+            </view>
+            <view class="coupon-right">
+              <t-icon name="check" size="28rpx" color="#2c4a39" wx:if="{{!selectedCoupon}}"></t-icon>
+            </view>
+          </view>
+
+          <!-- Coupons -->
+          <view wx:for="{{availableCoupons}}" wx:key="couponId" class="coupon-card {{selectedCouponId === item.couponId ? 'coupon-card--selected' : ''}}" data-id="{{item.couponId}}" bindtap="selectCoupon">
+            <view class="coupon-left">
+              <view class="coupon-left-row">
+                <text class="coupon-symbol">¥</text>
+                <text class="coupon-amount">{{item.discountAmount}}</text>
+              </view>
+              <text class="coupon-sheet-label">优惠券</text>
+            </view>
+            <view class="coupon-body">
+              <text class="coupon-name">{{item.name}}</text>
+              <text class="coupon-desc">满 {{item.thresholdAmount}} 元可用</text>
+            </view>
+            <view class="coupon-right">
+              <t-icon name="check" size="28rpx" color="#2c4a39" wx:if="{{selectedCouponId === item.couponId}}"></t-icon>
+            </view>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+  </view>
+
+  <!-- Pickup Point Sheet Drawer -->
+  <view class="custom-sheet-mask {{activeSheet === 'pickup' ? 'custom-sheet-mask--show' : ''}}" bindtap="closeSheet" catchtouchmove="preventTouchMove">
+    <view class="custom-sheet {{activeSheet === 'pickup' ? 'custom-sheet--show' : ''}}" catchtap="preventBubble">
+      <view class="sheet-header">
+        <text class="sheet-title">选择自提点</text>
+        <button class="sheet-close-btn" bindtap="closeSheet">
+          <t-icon name="close" size="32rpx" opacity="0.8"></t-icon>
+        </button>
+      </view>
+
+      <scroll-view scroll-y="true" enhanced show-scrollbar="{{false}}" class="sheet-body">
+        <view class="pickup-point-list">
+          <view wx:if="{{pickupPoints.length === 0}}" class="pickup-empty">
+            <text>暂无可用自提点</text>
+          </view>
+          <view
+            wx:for="{{pickupPoints}}"
+            wx:key="id"
+            class="pickup-point-card {{selectedPickupPointId === item.id ? 'pickup-point-card--selected' : ''}}"
+            data-id="{{item.id}}"
+            bindtap="selectPickupPoint"
+          >
+            <view class="pickup-point-main">
+              <view class="pickup-point-head">
+                <text class="pickup-point-name">{{item.name}}</text>
+                <text class="pickup-point-distance" wx:if="{{item.distance}}">{{item.distance}}</text>
+              </view>
+              <text class="pickup-point-addr">{{item.address}}</text>
+              <text class="pickup-point-time" wx:if="{{item.businessHours}}">营业时间：{{item.businessHours}}</text>
+            </view>
+            <view class="pickup-point-right">
+              <t-icon name="check" size="28rpx" color="#2c4a39" wx:if="{{selectedPickupPointId === item.id}}"></t-icon>
+            </view>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+  </view>
+</view>

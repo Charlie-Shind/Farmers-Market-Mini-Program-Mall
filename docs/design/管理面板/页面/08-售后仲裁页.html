@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>湾源农仓管理后台 - 售后仲裁</title>
+  <link rel="stylesheet" href="./00-管理面板公共.css">
+</head>
+<body>
+<input class="drawer-check" type="checkbox" id="drawerToggle">
+<aside class="sidebar">
+  <div class="brand"><div class="brand-mark">湾</div><div><strong>湾源农仓</strong><span>运营管理后台</span></div></div>
+  <nav class="menu" aria-label="后台导航"><a class="" href="01-控制台首页.html">控制台首页</a>
+<a class="" href="02-用户管理页.html">用户管理</a>
+<a class="" href="03-商户管理页.html">商户管理</a>
+<a class="" href="04-商品管理页.html">商品管理</a>
+<a class="" href="05-活动管理页.html">活动管理</a>
+<a class="" href="06-订单列表页.html">订单列表</a>
+<a class="" href="07-订单详情页.html">订单详情</a>
+<a class="active" href="08-售后仲裁页.html">售后仲裁</a>
+<a class="" href="09-数据看板页.html">数据看板</a>
+<a class="" href="10-物流配置页.html">物流配置</a>
+<a class="" href="11-系统配置页.html">系统配置</a></nav>
+  <div class="sidebar-user"><div class="avatar">管</div><div class="user-text"><strong>平台管理员</strong><span>admin@wanyuan</span></div><button type="button">退出</button></div>
+</aside>
+<label class="drawer-mask" for="drawerToggle" aria-label="关闭菜单"></label>
+<main class="app">
+<header class="topbar">
+  <div class="top-left"><label class="menu-toggle" for="drawerToggle" aria-label="打开菜单">☰</label><div><div class="breadcrumb">后台管理 / 售后仲裁</div><h1>售后仲裁</h1></div></div>
+  <label class="global-search"><span>⌕</span><input type="text" placeholder="搜索订单号 / 商品 / 商户 / 用户手机号"></label>
+  <div class="top-actions"><button class="text-btn" type="button">导出</button><button class="primary-btn" type="button">待办队列</button><div class="admin-user"><div class="avatar small">管</div><span>平台管理员</span></div></div>
+</header>
+<section class="metric-grid"><article class="metric-card"><div class="metric-title">待仲裁</div><strong>17</strong><p>5 单高风险</p></article><article class="metric-card"><div class="metric-title">今日退款</div><strong>¥8,920</strong><p>已处理 12 单</p></article><article class="metric-card"><div class="metric-title">平均处理时长</div><strong>2.4h</strong><p>较昨日 -18%</p></article><article class="metric-card"><div class="metric-title">证据缺失</div><strong>6</strong><p>需用户补充</p></article></section><section class="filter-panel"><div class="filter-grid"><div class="filter-field"><label>售后关键词</label><input placeholder="售后单号 / 订单号 / 用户"></div><div class="filter-field"><label>售后类型</label><select><option>全部</option><option>退款</option><option>退货退款</option><option>赔付</option></select></div><div class="filter-field"><label>风险等级</label><select><option>全部</option><option>高风险</option><option>中风险</option><option>低风险</option></select></div><div class="filter-field"><label>申请时间</label><input placeholder="开始 ~ 结束"></div><div class="filter-actions"><button class="text-btn">重置</button><button class="primary-btn">查询</button></div></div></section><section class="panel"><div class="panel-head"><div><h2>售后仲裁处理</h2><p>页面只有一个终审提交入口，避免双重提交冲突</p></div><span class="status danger">高风险</span></div><div class="detail-grid"><div class="detail-list"><div class="detail-row"><span>售后单号</span><strong>AS202606070018</strong></div><div class="detail-row"><span>关联订单</span><strong>WY202606070003</strong></div><div class="detail-row"><span>申请原因</span><strong>商品破损，要求退款并赔付运费</strong></div><div class="detail-row"><span>处理建议</span><strong>核验证据后可选择部分赔付</strong></div></div><div><strong>买家 / 商家证据</strong><div class="evidence-grid" style="margin-top:10px"><div class="evidence">买家破损照片</div><div class="evidence">物流签收图</div><div class="evidence">商家发货凭证</div></div></div></div><div class="form-grid" style="margin-top:14px"><div class="filter-field"><label>平台处理意见</label><textarea placeholder="填写仲裁意见，作为最终处理记录"></textarea></div><div class="filter-field"><label>裁定结果</label><select><option>部分赔付</option><option>退款通过</option><option>驳回申请</option><option>要求补充证据</option></select></div></div><div class="submit-bar"><span>提交后将记录操作日志，并通知买家与商户。</span><button class="primary-btn">确认裁定并提交</button></div></section>
+</main>
+</body>
+</html>

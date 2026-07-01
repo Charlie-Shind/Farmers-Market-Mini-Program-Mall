@@ -1,0 +1,77 @@
+<view class="phone-page help-page" style="{{pageStyle}}">
+  <view class="help-head">
+    <view class="page-title-bar">
+      <view class="back-btn" hover-class="back-btn--hover" bindtap="goBack">‹</view>
+      <text class="page-title-bar__title">服务中心</text>
+      <view class="page-title-bar__action"></view>
+    </view>
+    <view class="help-hero">
+      <text class="help-hero__eyebrow">Support Center</text>
+      <text class="help-hero__title">问题直接找平台管理员，不绕路</text>
+      <text class="help-hero__desc">订单、物流、退款、地址和活动咨询，都可以先从这里进入对应入口。</text>
+      <view class="help-hero__support">
+        <view class="help-hero__support-icon">
+          <t-icon name="message" size="34rpx"></t-icon>
+        </view>
+        <view class="help-hero__support-body">
+          <text class="help-hero__support-title">在线客服</text>
+          <text class="help-hero__support-desc">{{supportSubtitle}}</text>
+        </view>
+        <button class="help-hero__support-btn" bindtap="goToPlatformSupport">立即咨询</button>
+      </view>
+      <view class="help-hero__chips">
+        <text class="help-chip">订单售后</text>
+        <text class="help-chip">物流查询</text>
+        <text class="help-chip">优惠券问题</text>
+        <text class="help-chip">平台配置</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="help-grid">
+    <view
+      wx:for="{{actions}}"
+      wx:key="key"
+      class="help-card"
+      data-action="{{item.key}}"
+      bindtap="handleAction"
+    >
+      <view class="help-card__icon">
+        <t-icon name="{{item.icon}}" size="40rpx"></t-icon>
+      </view>
+      <view class="help-card__body">
+        <text class="help-card__title">{{item.title}}</text>
+        <text class="help-card__desc">{{item.desc}}</text>
+      </view>
+      <t-icon name="chevronRight" size="24rpx" opacity="0.66"></t-icon>
+    </view>
+  </view>
+
+  <view class="help-strip">
+    <view class="help-strip__item">
+      <text class="help-strip__value">1 分钟</text>
+      <text class="help-strip__label">优先响应</text>
+    </view>
+    <view class="help-strip__item">
+      <text class="help-strip__value">平台</text>
+      <text class="help-strip__label">管理员接待</text>
+    </view>
+    <view class="help-strip__item">
+      <text class="help-strip__value">全场景</text>
+      <text class="help-strip__label">订单 / 活动 / 售后</text>
+    </view>
+  </view>
+
+  <view class="panel faq-panel">
+    <view class="section-title">
+      <text class="section-title__title">常见问题</text>
+      <text class="faq-panel__hint">复杂问题可直接找平台在线客服</text>
+    </view>
+    <view class="faq-list">
+      <view wx:for="{{faqs}}" wx:key="question" class="faq-item">
+        <text class="faq-item__q">{{item.question}}</text>
+        <text class="faq-item__a">{{item.answer}}</text>
+      </view>
+    </view>
+  </view>
+</view>

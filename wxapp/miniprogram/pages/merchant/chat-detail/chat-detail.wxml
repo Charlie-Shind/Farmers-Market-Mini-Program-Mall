@@ -1,0 +1,98 @@
+﻿<view class="merchant-page chat-page" style="{{pageStyle}}">
+  <view class="status-space"></view>
+
+  <view class="page-titlebar">
+    <view class="icon-box icon-btn" bindtap="goBack">
+      <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+    </view>
+    <view class="title-block">
+      <view class="page-title">{{buyerName}}</view>
+      <view class="page-subtitle">{{orderInfo}}</view>
+    </view>
+    <text></text>
+  </view>
+
+  <view class="top-actions">
+    <view class="icon-action" bindtap="openContactSheet">
+      <t-icon name="message" size="40rpx"></t-icon>
+      <text>联系</text>
+    </view>
+  </view>
+
+  <view wx:if="{{orderCard}}" class="order-link-card" bindtap="goOrderDetail">
+    <image class="order-thumb" src="{{orderCard.thumb}}" mode="aspectFill" />
+    <view class="order-link-main">
+      <view class="order-link-title">{{orderCard.title}}</view>
+      <view class="order-link-desc">{{orderCard.desc}}</view>
+    </view>
+    <view class="order-link-right">订单<t-icon name="chevronRight" size="40rpx"></t-icon></view>
+  </view>
+
+  <scroll-view class="chat-scroll" scroll-y enhanced scroll-with-animation scroll-into-view="{{scrollToId}}" bindscrolltolower="loadMore">
+    <view class="chat-flow">
+      <block wx:for="{{chatMessages}}" wx:key="id">
+        <view wx:if="{{item.showTimeNode}}" class="chat-time-node">
+          <text class="chat-time-node__text">{{item.displayTime}}</text>
+        </view>
+        <view class="message-bubble {{item.me ? 'me' : ''}}" id="msg-{{item.id}}">
+          <text class="message-text">{{item.text}}</text>
+          <text class="message-time">{{item.displayTime}}</text>
+        </view>
+      </block>
+    </view>
+  </scroll-view>
+
+  <view class="chat-input-bar">
+    <view class="input-tool" bindtap="openQuickReply">
+      <image class="icon-sm" src="/assets/icons/plus.svg" mode="aspectFit" />
+    </view>
+    <input class="chat-input" placeholder="输入回复内容" value="{{inputMessage}}" bindinput="onMessageInput" confirm-type="send" bindconfirm="sendMessage" />
+    <button class="send-btn" bindtap="sendMessage"><t-icon name="message" size="40rpx"></t-icon>发送</button>
+  </view>
+
+  <view wx:if="{{showContactSheet}}" class="sheet-mask" bindtap="closeContactSheet"></view>
+  <view wx:if="{{showContactSheet}}" class="sheet">
+    <view class="sheet-head">
+      <view class="sheet-title">联系买家</view>
+      <view class="icon-btn-close" bindtap="closeContactSheet">
+        <image class="icon-sm" src="/assets/icons/close.svg" mode="aspectFit" />
+      </view>
+    </view>
+    <view class="contact-list">
+      <view class="contact-row" bindtap="callBuyer">
+        <view class="contact-row-main">
+          <text class="contact-label">电话联系</text>
+          <text class="contact-desc">{{buyerPhone || '138****8821'}}</text>
+        </view>
+        <t-icon name="chevronRight" size="40rpx"></t-icon>
+      </view>
+      <view class="contact-row" bindtap="copyWechat">
+        <view class="contact-row-main">
+          <text class="contact-label">复制微信号</text>
+          <text class="contact-desc">{{buyerWechat || 'wanyuan_farm'}}</text>
+        </view>
+        <t-icon name="chevronRight" size="40rpx"></t-icon>
+      </view>
+      <view class="contact-row" bindtap="goOrderDetail">
+        <view class="contact-row-main">
+          <text class="contact-label">查看订单</text>
+          <text class="contact-desc">订单、地址、物流</text>
+        </view>
+        <t-icon name="chevronRight" size="40rpx"></t-icon>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{showQuickReply}}" class="sheet-mask" bindtap="closeQuickReply"></view>
+  <view wx:if="{{showQuickReply}}" class="sheet">
+    <view class="sheet-head">
+      <view class="sheet-title">快捷回复</view>
+      <view class="icon-btn-close" bindtap="closeQuickReply">
+        <image class="icon-sm" src="/assets/icons/close.svg" mode="aspectFit" />
+      </view>
+    </view>
+    <view class="quick-reply-grid">
+      <view class="quick-reply-item" wx:for="{{quickReplies}}" wx:key="*this" bindtap="insertQuickReply" data-text="{{item}}">{{item}}</view>
+    </view>
+  </view>
+</view>

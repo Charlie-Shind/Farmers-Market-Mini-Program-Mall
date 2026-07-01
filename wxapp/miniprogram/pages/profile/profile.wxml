@@ -1,0 +1,178 @@
+<view class="profile-page">
+  <!-- 顶部用户信息区 -->
+  <view class="profile-header" style="{{pageStyle}}">
+    <view class="profile-header__bg"></view>
+
+    <view class="profile-header__user">
+      <view class="profile-header__main" bindtap="openUserCenter">
+        <view class="profile-header__avatar-wrap">
+          <image class="profile-header__avatar" src="{{profile.user.avatarSrc}}" mode="aspectFill" binderror="handleProfileAvatarError"></image>
+          <view class="profile-header__vip-tag">
+            <t-icon name="member" size="22rpx" color="#72501d"></t-icon>
+            <text>会员</text>
+          </view>
+        </view>
+        <view class="profile-header__meta">
+          <text class="profile-header__name">{{profile.user.name}}</text>
+          <text class="profile-header__phone">{{profile.user.phone}}</text>
+        </view>
+      </view>
+
+      <view class="profile-header__actions">
+        <view class="profile-header__tool" catchtap="handleHeaderAction" data-action="profile" data-label="个人资料">
+          <t-icon name="profile" size="40rpx" color="#ffffff" strokeWidth="{{2.25}}"></t-icon>
+        </view>
+        <view class="profile-header__tool" catchtap="handleHeaderAction" data-action="settings" data-label="设置">
+          <t-icon name="settings" size="40rpx" color="#ffffff" strokeWidth="{{2.25}}"></t-icon>
+        </view>
+        <view class="profile-header__tool" catchtap="handleHeaderAction" data-action="message" data-label="消息">
+          <t-icon name="bell" size="40rpx" color="#ffffff" strokeWidth="{{2.25}}"></t-icon>
+          <text wx:if="{{messageBadge}}" class="profile-header__badge">{{messageBadge}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="profile-asset-bar">
+      <view
+        class="profile-asset-bar__item"
+        wx:for="{{profile.stats || []}}"
+        wx:key="key"
+        data-key="{{item.key}}"
+        bindtap="openAssetEntry"
+      >
+        <text class="profile-asset-bar__value">{{item.value}}</text>
+        <text class="profile-asset-bar__label">{{item.label}}</text>
+      </view>
+    </view>
+
+    <view class="profile-vip-card" bindtap="openUserCenter">
+      <view class="profile-vip-card__info">
+        <text class="profile-vip-card__title">会员中心</text>
+        <text class="profile-vip-card__desc">专享折扣 · 积分兑换 · 成长权益</text>
+      </view>
+      <view class="profile-vip-card__action">
+        <text>立即查看</text>
+        <t-icon name="chevronRight" size="24rpx" color="#72501d"></t-icon>
+      </view>
+    </view>
+  </view>
+
+  <view class="profile-body">
+    <!-- 我的订单 -->
+    <view class="profile-section">
+      <view class="profile-section__head">
+        <text class="profile-section__title">我的订单</text>
+        <button class="profile-section__more" data-key="orders" data-label="全部订单" bindtap="openProtectedSection">
+          <text>全部订单</text>
+          <t-icon name="chevronRight" size="24rpx" color="#9aa097"></t-icon>
+        </button>
+      </view>
+      <view class="order-shortcuts">
+        <button
+          wx:for="{{profile.orders || []}}"
+          wx:key="key"
+          class="order-shortcuts__item"
+          data-key="{{item.key}}"
+          data-label="{{item.label}}"
+          bindtap="openProtectedSection"
+        >
+          <view class="order-shortcuts__icon order-shortcuts__icon--{{item.key}}">
+            <t-icon name="{{item.icon}}" size="52rpx" color="{{item.iconColor}}" strokeWidth="{{2}}"></t-icon>
+            <text wx:if="{{item.badge}}" class="order-shortcuts__badge">{{item.badge}}</text>
+          </view>
+          <text class="order-shortcuts__label">{{item.label}}</text>
+        </button>
+      </view>
+    </view>
+
+    <!-- 我的服务 -->
+    <view class="profile-section">
+      <view class="profile-section__head">
+        <text class="profile-section__title">我的服务</text>
+      </view>
+      <view class="service-shortcuts">
+        <button
+          wx:for="{{profile.services || []}}"
+          wx:key="key"
+          class="service-shortcuts__item"
+          data-key="{{item.key}}"
+          data-label="{{item.label}}"
+          bindtap="openProtectedSection"
+        >
+          <view class="service-shortcuts__icon service-shortcuts__icon--{{item.key}}">
+            <t-icon name="{{item.icon}}" size="48rpx" color="{{item.iconColor}}" strokeWidth="{{2}}"></t-icon>
+          </view>
+          <text class="service-shortcuts__label">{{item.label}}</text>
+        </button>
+      </view>
+    </view>
+
+    <!-- 团长入口 -->
+    <view class="promo-card promo-card--leader" wx:if="{{isApprovedLeader || userRole === 'LEADER'}}">
+      <image class="promo-card__bg" src="{{cardAssets.leaderBg}}" mode="aspectFill"></image>
+      <view class="promo-card__mask promo-card__mask--leader"></view>
+      <view class="promo-card__content">
+        <view class="promo-card__tag">
+          <t-icon name="shopBag" size="24rpx" color="#ffffff"></t-icon>
+          <text>团长专属</text>
+        </view>
+        <text class="promo-card__title">团长工作台</text>
+        <text class="promo-card__desc">管理自提点订单，查看佣金收益</text>
+        <view class="promo-card__btn promo-card__btn--solid" bindtap="goLeaderDashboard">
+          <text>进入工作台</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="promo-card promo-card--leader promo-card--pending" wx:elif="{{leaderStatus === 'PENDING_AUDIT' && userRole !== 'MERCHANT' && userRole !== 'ADMIN'}}">
+      <image class="promo-card__bg" src="{{cardAssets.leaderBg}}" mode="aspectFill"></image>
+      <view class="promo-card__mask promo-card__mask--leader"></view>
+      <view class="promo-card__content">
+        <view class="promo-card__tag promo-card__tag--pending">
+          <t-icon name="clock" size="24rpx" color="#ffffff"></t-icon>
+          <text>审核中</text>
+        </view>
+        <text class="promo-card__title">团长申请审核中</text>
+        <text class="promo-card__desc">资料已提交，平台审核通过后即可使用工作台</text>
+        <view class="promo-card__btn promo-card__btn--ghost" bindtap="goLeaderApply">
+          <text>查看进度</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="promo-card promo-card--leader" wx:elif="{{userRole !== 'MERCHANT' && userRole !== 'ADMIN'}}">
+      <image class="promo-card__bg" src="{{cardAssets.leaderBg}}" mode="aspectFill"></image>
+      <view class="promo-card__mask promo-card__mask--leader"></view>
+      <view class="promo-card__content">
+        <view class="promo-card__tag">
+          <t-icon name="group" size="24rpx" color="#ffffff"></t-icon>
+          <text>社区团长</text>
+        </view>
+        <text class="promo-card__title">成为社区团长</text>
+        <text class="promo-card__desc">设立自提点，服务邻里，赚取佣金收益</text>
+        <view class="promo-card__btn promo-card__btn--ghost" bindtap="goLeaderApply">
+          <text>立即申请</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 溯源码查询 -->
+    <view class="promo-card promo-card--trace">
+      <image class="promo-card__bg" src="{{cardAssets.traceBg}}" mode="aspectFill"></image>
+      <view class="promo-card__mask promo-card__mask--trace"></view>
+      <view class="promo-card__content">
+        <view class="promo-card__tag promo-card__tag--trace">
+          <t-icon name="qrcode" size="24rpx" color="#ffffff"></t-icon>
+          <text>品质溯源</text>
+        </view>
+        <text class="promo-card__title">溯源码查询</text>
+        <text class="promo-card__desc">一物一码，从田间到餐桌全程可追溯</text>
+        <view class="promo-card__btn promo-card__btn--solid promo-card__btn--trace" bindtap="handleHeaderAction" data-action="scan">
+          <text>扫码查询</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="safe-bottom"></view>
+  </view>
+</view>

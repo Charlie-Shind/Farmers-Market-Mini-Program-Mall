@@ -1,0 +1,6 @@
+{
+  "usingComponents": {
+    "ui-icon": "../../../components/base/icon/icon"
+  },
+  "navigationBarTitleText": "评价"
+}

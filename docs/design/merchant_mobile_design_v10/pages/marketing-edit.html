@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>编辑活动</title>
+<link rel="stylesheet" href="../styles/components.css" />
+</head>
+<body>
+<main class="app-page no-bottom with-sticky">
+<div class="status-space"></div>
+
+<header class="page-titlebar">
+  <a class="back-btn" href="marketing.html"><svg class="icon" aria-hidden="true"><use href="../assets/icons.svg#back"></use></svg></a>
+  <div class="title-block"><div class="page-title">编辑活动</div></div>
+  <a class="icon-action" href="marketing-detail.html"><svg class="icon" aria-hidden="true"><use href="../assets/icons.svg#eye"></use></svg><span>详情</span></a>
+</header>
+
+<nav class="segment" data-pane-tabs>
+  <button class="active" data-show-pane="basic">基础</button>
+  <button data-show-pane="rule">规则</button>
+  <button data-show-pane="goods">选品</button>
+  <button data-show-pane="preview">预览</button>
+</nav>
+
+<section data-pane="basic">
+  <!-- 活动类型编辑：此处保留可切换能力，切换后规则页配置同步变化 -->
+  <div class="section-line-title"><span>活动类型</span><span class="status-pill info" data-type-result>限时秒杀</span></div>
+  <section class="activity-type-grid compact">
+    <button class="activity-type-card active" data-activity-type="秒杀" data-activity-type-value="seckill"><img src="../assets/illustrations/activity.svg" alt="活动图标" /><strong>限时秒杀</strong><em>价格、库存、限购</em></button>
+    <button class="activity-type-card" data-activity-type="拼团" data-activity-type-value="group"><img src="../assets/illustrations/store.svg" alt="活动图标" /><strong>拼团活动</strong><em>人数、团时、团价</em></button>
+    <button class="activity-type-card" data-activity-type="满减券" data-activity-type-value="coupon"><img src="../assets/illustrations/finance.svg" alt="活动图标" /><strong>满减优惠券</strong><em>门槛、金额、库存</em></button>
+    <button class="activity-type-card" data-activity-type="预售" data-activity-type-value="presell"><img src="../assets/illustrations/delivery.svg" alt="活动图标" /><strong>预售活动</strong><em>定金、尾款、发货</em></button>
+  </section>
+  <div class="section-line-title"><span>基础信息</span></div>
+  <section class="full-list">
+    <div class="form-line"><label>活动名称<span>必填</span></label><input value="蓝莓礼盒限时秒杀" /></div>
+    <div class="picker-line"><div class="picker-main"><label>开始时间</label><input type="datetime-local" value="2026-06-18T20:00" /></div><svg class="icon-sm"><use href="../assets/icons.svg#clock"></use></svg></div>
+    <div class="picker-line"><div class="picker-main"><label>结束时间</label><input type="datetime-local" value="2026-06-19T20:00" /></div><svg class="icon-sm"><use href="../assets/icons.svg#clock"></use></svg></div>
+    <div class="picker-line"><div class="picker-main"><label>预热设置</label><select><option>开始前 2 小时展示</option><option>开始前 6 小时展示</option><option>不预热</option></select></div><svg class="icon-sm"><use href="../assets/icons.svg#chevron"></use></svg></div>
+    <div class="switch-row"><span class="switch-main"><strong>活动启用</strong><span>关闭后前端不再展示，数据保留</span></span><button class="fake-switch active" data-switch></button></div>
+  </section>
+</section>
+
+<section class="hidden" data-pane="rule">
+  <!-- 规则配置：不同活动类型只展示对应数值字段，避免页面堆叠 -->
+  <section class="activity-config" data-activity-config="seckill">
+    <div class="section-line-title"><span>秒杀规则</span></div>
+    <div class="rule-form-grid">
+      <label class="number-cell"><span>秒杀价</span><div><b>¥</b><input type="number" value="238" /></div></label>
+      <label class="number-cell"><span>活动库存</span><div><input type="number" value="168" /><b>件</b></div></label>
+      <label class="number-cell"><span>每人限购</span><div><input type="number" value="2" /><b>件</b></div></label>
+      <label class="number-cell"><span>库存预警</span><div><input type="number" value="30" /><b>件</b></div></label>
+    </div>
+    <section class="full-list"><div class="picker-line"><div class="picker-main"><label>秒杀时段</label><select><option>晚间场 20:00-23:00</option><option>全天场</option><option>上午场 09:00-12:00</option></select></div><svg class="icon-sm"><use href="../assets/icons.svg#chevron"></use></svg></div><div class="switch-row"><span class="switch-main"><strong>售罄自动结束</strong><span>活动库存为 0 后自动结束</span></span><button class="fake-switch active" data-switch></button></div></section>
+  </section>
+  <section class="activity-config hidden" data-activity-config="group">
+    <div class="section-line-title"><span>拼团规则</span></div>
+    <div class="rule-form-grid">
+      <label class="number-cell"><span>拼团价</span><div><b>¥</b><input type="number" value="59" /></div></label>
+      <label class="number-cell"><span>成团人数</span><div><input type="number" value="3" /><b>人</b></div></label>
+      <label class="number-cell"><span>团有效期</span><div><input type="number" value="24" /><b>小时</b></div></label>
+      <label class="number-cell"><span>限购</span><div><input type="number" value="2" /><b>件</b></div></label>
+    </div>
+    <section class="full-list"><div class="picker-line"><div class="picker-main"><label>成团方式</label><select><option>满员成团</option><option>到时自动成团</option></select></div><svg class="icon-sm"><use href="../assets/icons.svg#chevron"></use></svg></div><div class="picker-line"><div class="picker-main"><label>开团时间</label><input type="datetime-local" value="2026-06-20T10:00" /></div><svg class="icon-sm"><use href="../assets/icons.svg#clock"></use></svg></div></section>
+  </section>
+  <section class="activity-config hidden" data-activity-config="coupon">
+    <div class="section-line-title"><span>满减券规则</span></div>
+    <div class="rule-form-grid">
+      <label class="number-cell"><span>使用门槛</span><div><b>¥</b><input type="number" value="100" /></div></label>
+      <label class="number-cell"><span>优惠金额</span><div><b>¥</b><input type="number" value="10" /></div></label>
+      <label class="number-cell"><span>券库存</span><div><input type="number" value="300" /><b>张</b></div></label>
+      <label class="number-cell"><span>每人限领</span><div><input type="number" value="1" /><b>张</b></div></label>
+    </div>
+    <section class="full-list"><div class="picker-line"><div class="picker-main"><label>领取开始</label><input type="datetime-local" value="2026-06-20T08:00" /></div><svg class="icon-sm"><use href="../assets/icons.svg#clock"></use></svg></div><div class="picker-line"><div class="picker-main"><label>使用有效期</label><select><option>领取后 7 天内</option><option>领取后 3 天内</option><option>活动结束前</option></select></div><svg class="icon-sm"><use href="../assets/icons.svg#chevron"></use></svg></div></section>
+  </section>
+  <section class="activity-config hidden" data-activity-config="presell">
+    <div class="section-line-title"><span>预售规则</span></div>
+    <div class="rule-form-grid">
+      <label class="number-cell"><span>预售价</span><div><b>¥</b><input type="number" value="128" /></div></label>
+      <label class="number-cell"><span>定金</span><div><b>¥</b><input type="number" value="20" /></div></label>
+      <label class="number-cell"><span>预售库存</span><div><input type="number" value="200" /><b>件</b></div></label>
+      <label class="number-cell"><span>限购</span><div><input type="number" value="2" /><b>件</b></div></label>
+    </div>
+    <section class="full-list"><div class="picker-line"><div class="picker-main"><label>尾款开始</label><input type="datetime-local" value="2026-06-24T10:00" /></div><svg class="icon-sm"><use href="../assets/icons.svg#clock"></use></svg></div><div class="picker-line"><div class="picker-main"><label>预计发货</label><input type="date" value="2026-06-28" /></div><svg class="icon-sm"><use href="../assets/icons.svg#truck"></use></svg></div></section>
+  </section>
+</section>
+
+<section class="hidden" data-pane="goods" id="editGoods">
+  <div class="section-line-title"><span>已选商品</span><a class="row-right" href="marketing-products.html">管理商品<svg class="icon-sm"><use href="../assets/icons.svg#chevron"></use></svg></a></div>
+  <div class="goods-select-row selected" data-toggle-check><span class="check-dot active"><svg class="icon-sm"><use href="../assets/icons.svg#check"></use></svg></span><img class="goods-img sm" src="../assets/goods/g2.svg" alt="商品"/><div><div class="product-title">高山蓝莓礼盒</div><div class="product-sub">库存 168 · 活动价 ¥238</div></div></div>
+  <div class="goods-select-row selected" data-toggle-check><span class="check-dot active"><svg class="icon-sm"><use href="../assets/icons.svg#check"></use></svg></span><img class="goods-img sm" src="../assets/goods/g4.svg" alt="商品"/><div><div class="product-title">周末果蔬拼团包</div><div class="product-sub">库存 95 · 拼团价 ¥59</div></div></div>
+  <div class="goods-select-row" data-toggle-check><span class="check-dot"><svg class="icon-sm"><use href="../assets/icons.svg#check"></use></svg></span><img class="goods-img sm" src="../assets/goods/g6.svg" alt="商品"/><div><div class="product-title">山货干货礼盒</div><div class="product-sub">库存 72 · 可加入满减</div></div></div>
+</section>
+
+<section class="hidden" data-pane="preview">
+  <div class="preview-phone"><div class="preview-phone-head">活动预览</div><div class="preview-phone-body"><img src="../assets/goods/g2.svg" alt="商品"/><div><div class="preview-title">高山蓝莓礼盒限时秒杀</div><div class="preview-price">¥238</div><div class="preview-meta">原价 ¥298 · 每人限购 2 件 · 剩余 64 件</div></div></div></div>
+</section>
+
+<div class="bottom-actions three"><button class="action-btn secondary" data-toast="已保存草稿">保存草稿</button><a class="action-btn secondary" href="marketing-detail.html">详情</a><button class="action-btn" data-toast="已保存活动">保存活动</button></div>
+</main>
+<script src="../scripts/prototype.js"></script>
+</body>
+</html>

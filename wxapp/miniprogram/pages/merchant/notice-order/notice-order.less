@@ -1,0 +1,50 @@
+@import "../common.less";
+
+.process-list {
+  padding: 12rpx 32rpx 24rpx;
+}
+
+.process-row {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 24rpx;
+  margin-bottom: 12rpx;
+  border-radius: 20rpx;
+  background: var(--merchant-surface);
+  border: 1rpx solid var(--merchant-line-soft);
+}
+
+.process-index {
+  width: 52rpx;
+  height: 52rpx;
+  border-radius: 999rpx;
+  background: var(--merchant-primary);
+  color: #FFFFFF;
+  font-size: 26rpx;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.process-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.process-title {
+  color: var(--merchant-text);
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+.process-desc {
+  color: var(--merchant-text-muted);
+  font-size: 24rpx;
+  line-height: 1.4;
+}

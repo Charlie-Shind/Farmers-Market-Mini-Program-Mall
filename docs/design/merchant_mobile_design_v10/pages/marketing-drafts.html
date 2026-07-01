@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>活动草稿箱</title>
+<link rel="stylesheet" href="../styles/components.css" />
+</head>
+<body>
+<main class="app-page no-bottom with-sticky">
+<div class="status-space"></div>
+
+<header class="app-topbar">
+  <a class="back-btn" href="javascript:history.back()"><svg class="icon" aria-hidden="true"><use href="../assets/icons.svg#back"></use></svg></a>
+  <label class="search-pill"><svg class="icon-sm" aria-hidden="true"><use href="../assets/icons.svg#search"></use></svg><input data-search-input placeholder="搜索活动草稿" /></label>
+
+</header>
+<nav class="tabs" data-filter-tabs><button class="tab active" data-filter="all"><span>全部</span></button><button class="tab " data-filter="time"><span>缺时间</span></button><button class="tab " data-filter="goods"><span>缺商品</span></button><button class="tab " data-filter="rule"><span>缺规则</span></button><button class="tab " data-filter="ready"><span>可发布</span></button></nav>
+<section class="full-list" data-filter-list>
+  <article class="draft-row" data-status="time" data-search="端午礼盒满减 缺时间 满减"><div class="draft-mark"><svg class="icon" aria-hidden="true"><use href="../assets/icons.svg#clock"></use></svg></div><div class="draft-main"><div class="draft-title">端午礼盒满减活动</div><div class="draft-desc">缺少结束时间 · 30 分钟前保存</div></div><a class="pill-btn" href="marketing-edit.html">继续编辑</a></article>
+  <article class="draft-row" data-status="goods" data-search="蔬菜礼盒拼团 缺商品 拼团"><div class="draft-mark"><svg class="icon" aria-hidden="true"><use href="../assets/icons.svg#box"></use></svg></div><div class="draft-main"><div class="draft-title">蔬菜礼盒拼团</div><div class="draft-desc">还未选择商品 · 昨天 19:40 保存</div></div><a class="pill-btn" href="marketing-products.html">选商品</a></article>
+  <article class="draft-row" data-status="ready" data-search="蓝莓秒杀复制草稿 可发布"><div class="draft-mark"><svg class="icon" aria-hidden="true"><use href="../assets/icons.svg#check"></use></svg></div><div class="draft-main"><div class="draft-title">蓝莓秒杀复制草稿</div><div class="draft-desc">已完成配置 · 可以发布</div></div><button class="pill-btn primary" data-toast="已发布活动">发布</button></article>
+  <div class="list-empty">没有匹配草稿</div>
+</section>
+<div class="bottom-actions"><button class="action-btn secondary" data-toast="已清理过期草稿">清理过期</button><a class="action-btn" href="marketing-edit.html" style="display:flex;align-items:center;justify-content:center">新建活动</a></div>
+
+
+</main>
+<script src="../scripts/prototype.js"></script>
+</body>
+</html>

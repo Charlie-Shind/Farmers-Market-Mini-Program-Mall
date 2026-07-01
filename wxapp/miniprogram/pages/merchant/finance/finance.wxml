@@ -1,0 +1,140 @@
+﻿<view class="merchant-page has-tabbar" style="{{pageStyle}}">
+  <view class="status-space"></view>
+
+  <view class="page-titlebar">
+    <view class="icon-box icon-btn" bindtap="goBack">
+      <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+    </view>
+    <view class="title-block">
+      <view class="page-title">财务</view>
+      <view class="page-subtitle">可提现与资金流水</view>
+    </view>
+    <text></text>
+  </view>
+
+  <view class="top-actions">
+    <view class="icon-action" bindtap="goWithdraw">
+      <t-icon name="wallet" size="40rpx"></t-icon>
+      <text>提现</text>
+    </view>
+  </view>
+
+  <view class="metric-strip">
+    <view class="metric-item">
+      <view class="metric-value">¥{{balance}}</view>
+      <view class="metric-label">可提现</view>
+    </view>
+    <view class="metric-item">
+      <view class="metric-value">¥{{frozen}}</view>
+      <view class="metric-label">冻结中</view>
+    </view>
+    <view class="metric-item">
+      <view class="metric-value">¥{{weekIncome}}</view>
+      <view class="metric-label">本周收入</view>
+    </view>
+  </view>
+
+  <view class="entry-grid">
+    <view class="entry-item" bindtap="goWithdraw">
+      <image class="entry-icon" src="/assets/icons/wallet.svg" mode="aspectFit" />
+      <text>申请提现</text>
+    </view>
+    <view class="entry-item" bindtap="goStatistics">
+      <image class="entry-icon" src="/assets/icons/chart.svg" mode="aspectFit" />
+      <text>数据统计</text>
+    </view>
+    <view class="entry-item" bindtap="openFilter">
+      <image class="entry-icon" src="/assets/icons/filter.svg" mode="aspectFit" />
+      <text>筛选流水</text>
+    </view>
+    <view class="entry-item" bindtap="exportBill">
+      <image class="entry-icon" src="/assets/icons/bill.svg" mode="aspectFit" />
+      <text>导出账单</text>
+    </view>
+  </view>
+
+  <scroll-view scroll-x class="toolbar" enhanced show-scrollbar="{{false}}">
+    <view class="chip {{activeChip == 'all' ? 'active' : ''}}" bindtap="onChipTap" data-chip="all">全部</view>
+    <view class="chip {{activeChip == 'income' ? 'active' : ''}}" bindtap="onChipTap" data-chip="income">收入</view>
+    <view class="chip {{activeChip == 'withdraw' ? 'active' : ''}}" bindtap="onChipTap" data-chip="withdraw">提现</view>
+    <view class="chip {{activeChip == 'refund' ? 'active' : ''}}" bindtap="onChipTap" data-chip="refund">退款</view>
+  </scroll-view>
+
+  <view class="full-list">
+    <block wx:for="{{filteredList}}" wx:key="orderNo">
+      <view class="finance-row">
+        <view class="row-main">
+          <view class="row-title">{{item.typeName}}</view>
+          <view class="row-desc">{{item.orderNo}}</view>
+        </view>
+        <view class="finance-amount {{item.amount > 0 ? 'income' : 'outgo'}}">{{item.amount > 0 ? '+' : ''}}{{item.amountText}}</view>
+      </view>
+    </block>
+    <view class="list-empty" wx:if="{{filteredList.length == 0}}">没有匹配流水</view>
+  </view>
+
+  <view class="sheet-mask {{showFilter ? 'show' : ''}}" bindtap="closeFilter"></view>
+  <view class="sheet {{showFilter ? 'show' : ''}}">
+    <view class="sheet-head">
+      <view class="sheet-title">流水筛选</view>
+      <view class="icon-btn" bindtap="closeFilter">
+        <t-icon name="close" size="40rpx"></t-icon>
+      </view>
+    </view>
+    <view class="sheet-group">
+      <view class="sheet-label">交易类型</view>
+      <view class="option-grid">
+        <view class="option {{filterType == 'all' ? 'active' : ''}}" bindtap="setFilterType" data-type="all">全部</view>
+        <view class="option {{filterType == 'income' ? 'active' : ''}}" bindtap="setFilterType" data-type="income">收入</view>
+        <view class="option {{filterType == 'withdraw' ? 'active' : ''}}" bindtap="setFilterType" data-type="withdraw">提现</view>
+        <view class="option {{filterType == 'refund' ? 'active' : ''}}" bindtap="setFilterType" data-type="refund">退款</view>
+        <view class="option {{filterType == 'fee' ? 'active' : ''}}" bindtap="setFilterType" data-type="fee">服务费</view>
+      </view>
+    </view>
+    <view class="sheet-group">
+      <view class="sheet-label">时间</view>
+      <view class="option-grid">
+        <view class="option {{filterTime == 'today' ? 'active' : ''}}" bindtap="setFilterTime" data-time="today">今天</view>
+        <view class="option {{filterTime == '7days' ? 'active' : ''}}" bindtap="setFilterTime" data-time="7days">近7天</view>
+        <view class="option {{filterTime == '30days' ? 'active' : ''}}" bindtap="setFilterTime" data-time="30days">近30天</view>
+        <view class="option {{filterTime == 'custom' ? 'active' : ''}}" bindtap="setFilterTime" data-time="custom">自定义</view>
+      </view>
+    </view>
+    <view class="sheet-group">
+      <view class="sheet-label">金额</view>
+      <view class="option-grid">
+        <view class="option {{filterAmount == 'all' ? 'active' : ''}}" bindtap="setFilterAmount" data-amount="all">全部</view>
+        <view class="option {{filterAmount == 'lt100' ? 'active' : ''}}" bindtap="setFilterAmount" data-amount="lt100">100元以下</view>
+        <view class="option {{filterAmount == '100to500' ? 'active' : ''}}" bindtap="setFilterAmount" data-amount="100to500">100到500元</view>
+        <view class="option {{filterAmount == 'gt500' ? 'active' : ''}}" bindtap="setFilterAmount" data-amount="gt500">500元以上</view>
+      </view>
+    </view>
+    <view class="sheet-actions">
+      <button class="action-btn secondary" bindtap="resetFilter">重置</button>
+      <button class="action-btn primary" bindtap="applyFilter">应用筛选</button>
+    </view>
+  </view>
+
+  <view class="bottom-nav">
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/dashboard/dashboard?tab=0" data-tab="0">
+      <t-icon name="home" size="40rpx"></t-icon>
+      <text>首页</text>
+    </view>
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/messages/messages?tab=1" data-tab="1">
+      <t-icon name="message" size="40rpx"></t-icon>
+      <text>聊天</text>
+    </view>
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/orders/orders?tab=2" data-tab="2">
+      <t-icon name="invoice" size="40rpx"></t-icon>
+      <text>订单</text>
+    </view>
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/products/products?tab=3" data-tab="3">
+      <t-icon name="package" size="40rpx"></t-icon>
+      <text>库存</text>
+    </view>
+    <view class="nav-item active" data-tab="4">
+      <t-icon name="profile" size="40rpx"></t-icon>
+      <text>账号</text>
+    </view>
+  </view>
+</view>

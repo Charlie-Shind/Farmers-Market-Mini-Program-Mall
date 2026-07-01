@@ -1,0 +1,15 @@
+{
+  "description": "湾源农仓商家端小程序原生重构版",
+  "setting": {
+    "urlCheck": false,
+    "es6": true,
+    "postcss": true,
+    "minified": false,
+    "enhance": true
+  },
+  "compileType": "miniprogram",
+  "libVersion": "latest",
+  "appid": "touristappid",
+  "projectname": "merchant-wx-miniprogram-full-rebuild",
+  "miniprogramRoot": "./"
+}

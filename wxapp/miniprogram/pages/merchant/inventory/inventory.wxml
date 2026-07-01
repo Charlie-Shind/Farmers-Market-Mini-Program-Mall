@@ -1,0 +1,83 @@
+﻿<view class="merchant-page" style="{{pageStyle}}">
+  <view class="status-space"></view>
+
+  <view class="page-titlebar">
+    <view class="icon-box icon-btn" bindtap="goBack">
+      <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+    </view>
+    <view class="title-block">
+      <view class="page-title">库存调整</view>
+    </view>
+    <text></text>
+  </view>
+
+  <view class="top-actions">
+    <view class="icon-btn" bindtap="openFilter">
+      <t-icon name="filter" size="40rpx"></t-icon>
+    </view>
+  </view>
+
+  <scroll-view scroll-x class="toolbar" enhanced show-scrollbar="{{false}}">
+    <view class="chip {{stockFilter === 'all' ? 'active' : ''}}" bindtap="onStockFilterTap" data-filter="all">全部</view>
+    <view class="chip {{stockFilter === 'low' ? 'active' : ''}}" bindtap="onStockFilterTap" data-filter="low">低库存</view>
+    <view class="chip {{stockFilter === 'zero' ? 'active' : ''}}" bindtap="onStockFilterTap" data-filter="zero">无库存</view>
+    <view class="chip {{stockFilter === 'normal' ? 'active' : ''}}" bindtap="onStockFilterTap" data-filter="normal">正常</view>
+  </scroll-view>
+
+  <view class="inventory-list" wx:if="{{filteredProducts.length}}">
+    <view class="inventory-item" wx:for="{{filteredProducts}}" wx:key="id">
+      <image class="inventory-img" src="{{item.img}}" mode="aspectFill" />
+      <view class="inventory-body">
+        <view class="inventory-head">
+          <text class="inventory-title">{{item.title}}</text>
+          <text class="status-pill {{item.stock <= 0 ? 'danger' : item.stock < 10 ? 'warning' : 'success'}}">库存 {{item.stock}}</text>
+        </view>
+        <text class="inventory-meta">{{item.meta}}</text>
+        <view class="inventory-bottom">
+          <text class="inventory-status-text">{{item.listed ? '已上架' : '已下架'}}</text>
+          <view class="inventory-actions">
+            <view class="pill-btn" bindtap="decreaseStock" data-id="{{item.id}}" data-skuid="{{item.skuId}}" data-stock="{{item.stock}}">减少</view>
+            <view class="pill-btn primary" bindtap="increaseStock" data-id="{{item.id}}" data-skuid="{{item.skuId}}" data-stock="{{item.stock}}">增加</view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty-state" wx:else>
+    <image class="fit-img" src="/assets/illustrations/empty.svg" mode="aspectFit" style="width:128rpx;height:128rpx" />
+    <text class="empty-title">没有匹配商品</text>
+  </view>
+
+  <view class="sheet-mask" wx:if="{{showFilter}}" bindtap="closeFilter"></view>
+  <view class="bottom-sheet" wx:if="{{showFilter}}">
+    <view class="sheet-head">
+      <text class="sheet-title">库存筛选</text>
+      <view class="icon-box icon-btn" bindtap="closeFilter">
+        <t-icon name="close" size="40rpx"></t-icon>
+      </view>
+    </view>
+    <view class="sheet-group">
+      <text class="sheet-label">库存情况</text>
+      <view class="option-grid">
+        <view class="option {{sheetStock === 'all' ? 'active' : ''}}" bindtap="setSheetStock" data-val="all">全部</view>
+        <view class="option {{sheetStock === 'low' ? 'active' : ''}}" bindtap="setSheetStock" data-val="low">低库存</view>
+        <view class="option {{sheetStock === 'zero' ? 'active' : ''}}" bindtap="setSheetStock" data-val="zero">无库存</view>
+        <view class="option {{sheetStock === 'normal' ? 'active' : ''}}" bindtap="setSheetStock" data-val="normal">正常</view>
+      </view>
+    </view>
+    <view class="sheet-group">
+      <text class="sheet-label">商品分类</text>
+      <view class="option-grid">
+        <view class="option {{sheetCategory === 'all' ? 'active' : ''}}" bindtap="setSheetCategory" data-val="all">全部</view>
+        <view class="option {{sheetCategory === 'fruit' ? 'active' : ''}}" bindtap="setSheetCategory" data-val="fruit">时令果蔬</view>
+        <view class="option {{sheetCategory === 'gift' ? 'active' : ''}}" bindtap="setSheetCategory" data-val="gift">特产礼盒</view>
+        <view class="option {{sheetCategory === 'grain' ? 'active' : ''}}" bindtap="setSheetCategory" data-val="grain">粮油干货</view>
+      </view>
+    </view>
+    <view class="sheet-actions">
+      <view class="action-btn secondary" bindtap="resetSheetFilter">重置</view>
+      <view class="action-btn primary" bindtap="applySheetFilter">应用筛选</view>
+    </view>
+  </view>
+</view>

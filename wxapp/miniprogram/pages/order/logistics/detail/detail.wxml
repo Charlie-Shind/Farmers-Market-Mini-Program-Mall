@@ -1,0 +1,64 @@
+﻿<view class="phone-page logistics-page" style="{{pageStyle}}">
+  <view class="board-head">
+    <view class="page-title-bar">
+      <button class="back-btn" bindtap="goBack" hover-class="back-btn--hover">
+        <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+      </button>
+      <text class="page-title-bar__title">物流详情</text>
+      <text></text>
+    </view>
+  </view>
+
+  <scroll-view scroll-y="true" class="logistics-scroll" enhanced="true" show-scrollbar="{{false}}">
+    <view wx:if="{{loading}}" class="loading-box">
+      <text class="loading-text">正在加载物流信息…</text>
+    </view>
+
+    <view wx:if="{{order}}" class="panel summary-card">
+      <view class="summary-head">
+        <view>
+          <text class="summary-title">{{order.logisticsCompany || '物流查询'}}</text>
+          <text class="summary-subtitle">{{statusLabel}}</text>
+        </view>
+        <view class="summary-badge">{{statusLabel}}</view>
+      </view>
+      <text class="summary-desc">{{statusSubLabel}}</text>
+      <view class="summary-meta">
+        <text class="summary-meta__text">订单号：{{order.orderNo}}</text>
+        <button class="summary-meta__action" bindtap="copyOrderNumber">复制单号</button>
+      </view>
+      <view class="summary-meta">
+        <text class="summary-meta__text">物流单号：{{order.trackingNo || '暂无单号'}}</text>
+        <button class="summary-meta__action" wx:if="{{order.trackingNo}}" data-express-no="{{order.trackingNo}}" bindtap="copyTrackingNumber">复制物流单号</button>
+      </view>
+    </view>
+
+    <view wx:if="{{order}}" class="panel timeline-card">
+      <view class="section-title">
+        <text class="section-title__title">物流轨迹</text>
+        <text class="section-title__meta">订单状态流转</text>
+      </view>
+      <view class="timeline-list">
+        <view wx:for="{{timeline}}" wx:key="key" class="timeline-item {{item.active ? 'timeline-item--active' : ''}}">
+          <view class="timeline-dot"></view>
+          <view class="timeline-body">
+            <text class="timeline-title">{{item.title}}</text>
+            <text class="timeline-desc">{{item.desc}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{order && !order.trackingNo && !loading}}" class="trace-empty">
+      <text class="trace-empty__title">暂无配送信息</text>
+      <text class="trace-empty__desc">该订单可能还未发货，或商家尚未回传物流单据。</text>
+    </view>
+
+    <view class="safe-bottom"></view>
+  </scroll-view>
+
+  <view class="bottom-action-bar" wx:if="{{order}}">
+    <button class="toolbar-btn toolbar-btn--ghost" bindtap="openOrderDetail">查看订单详情</button>
+    <button class="toolbar-btn" bindtap="copyOrderNumber">复制订单号</button>
+  </view>
+</view>

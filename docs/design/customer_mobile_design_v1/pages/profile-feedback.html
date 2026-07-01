@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>意见反馈</title>
+<link rel="stylesheet" href="../styles/tokens.css" />
+<link rel="stylesheet" href="../styles/components.css" />
+</head>
+<body>
+<svg style="display:none"><defs></defs></svg>
+<div class="page with-bottom">
+  <!-- 页面头部：后续转小程序时映射为 page-title-bar，保留返回按钮和右侧动作区 -->
+  <div class="topbar">
+    <button class="icon-btn" data-action="返回上一页"><svg class="icon"><use href="../assets/icons.svg#back"></use></svg></button>
+    <div class="title">意见反馈</div>
+    <div class="right"></div>
+  </div>
+
+  <form class="section"><div class="picker-cell"><span class="name">反馈类型</span><span class="select">功能建议 <svg class="icon sm"><use href="../assets/icons.svg#chevron"></use></svg></span></div><div class="field"><label>反馈内容</label><textarea placeholder="请描述你遇到的问题或建议"></textarea></div><div class="field"><label>联系方式</label><input placeholder="选填，便于我们联系你" /></div></form><div class="bottom-bar"><button class="btn primary" data-action="提交反馈">提交反馈</button></div>
+
+</div>
+<script src="../scripts/prototype.js"></script>
+</body>
+</html>

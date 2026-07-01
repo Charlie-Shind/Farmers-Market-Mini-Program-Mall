@@ -1,0 +1,62 @@
+/* 团长模块统一页面壳：custom 导航 + 安全区 */
+.leader-page-shell {
+  min-height: 100vh;
+  height: 100vh;
+  background: #f5f7f6;
+  display: flex;
+  flex-direction: column;
+  padding-top: var(--page-top, 88rpx);
+  box-sizing: border-box;
+}
+
+.leader-page-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 88rpx;
+  padding: 4rpx 28rpx 12rpx;
+  padding-right: calc(28rpx + var(--header-safe-right, 112rpx));
+  background: #ffffff;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.leader-page-header--plain {
+  background: #fafbfc;
+}
+
+.leader-header-back {
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  background: #f5f7f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.leader-header-back--hover {
+  background: #e8ebe9;
+}
+
+.leader-header-title {
+  text-align: center;
+  font-size: 34rpx;
+  font-weight: 800;
+  color: #25372d;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.leader-page-scroll {
+  flex: 1;
+  min-height: 0;
+}
+
+.leader-bottom-safe {
+  height: calc(48rpx + env(safe-area-inset-bottom));
+}

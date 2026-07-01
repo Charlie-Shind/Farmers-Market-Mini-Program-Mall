@@ -1,0 +1,282 @@
+﻿<view class="phone-page order-detail-page" style="{{pageStyle}}">
+  <!-- Top Navigation Bar -->
+  <view class="board-head">
+    <view class="page-title-bar">
+      <button class="back-btn" bindtap="goBack" hover-class="back-btn--hover">
+        <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+      </button>
+      <text class="page-title-bar__title">订单详情</text>
+      <text></text>
+    </view>
+  </view>
+
+  <scroll-view scroll-y="true" class="detail-scroll" enhanced="true" show-scrollbar="{{false}}">
+    <!-- Status Card -->
+    <view class="status-card {{statusColorClass}}">
+      <view class="status-card__bg-deco"></view>
+      <view class="status-card__head">
+        <view class="status-card__icon-wrap">
+          <view class="status-card__icon-ring">
+            <t-icon name="{{statusIcon}}" size="48rpx" color="{{statusIconColor}}"></t-icon>
+          </view>
+        </view>
+        <view class="status-card__info">
+          <text class="status-card__title">{{statusLabel}}</text>
+          <text class="status-card__sub" wx:if="{{statusSubLabel}}">{{statusSubLabel}}</text>
+        </view>
+      </view>
+      <view class="status-card__steps" wx:if="{{statusSteps.length}}">
+        <view class="status-card__step-list">
+          <view
+            class="status-card__step {{item.done ? 'status-card__step--done' : ''}} {{item.current ? 'status-card__step--current' : ''}}"
+            wx:for="{{statusSteps}}"
+            wx:key="label"
+            wx:for-index="stepIdx"
+          >
+            <view class="status-card__node-row">
+              <view class="status-card__dot">
+                <text class="status-card__check" wx:if="{{item.done && !item.current}}">✓</text>
+              </view>
+              <view
+                class="status-card__connector {{item.done ? 'status-card__connector--done' : ''}}"
+                wx:if="{{stepIdx < statusSteps.length - 1}}"
+              ></view>
+            </view>
+            <text class="status-card__step-label">{{item.label}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- Group Buy Progress Card -->
+    <view class="panel group-buy-panel" wx:if="{{order.groupBuy}}">
+      <view class="group-buy-panel__head">
+        <text class="group-buy-panel__eyebrow">邻里拼团</text>
+        <text wx:if="{{order.groupBuy.status === 'OPEN'}}" class="group-buy-panel__countdown">剩余 {{groupBuyCountdown || '--:--:--'}} 自动成团</text>
+        <text wx:elif="{{order.groupBuy.status === 'COMPLETED'}}" class="group-buy-panel__countdown group-buy-panel__countdown--ok">已成团</text>
+        <text wx:elif="{{order.groupBuy.status === 'FAILED'}}" class="group-buy-panel__countdown group-buy-panel__countdown--fail">拼团失败</text>
+      </view>
+      <view class="group-buy-panel__progress">
+        <view class="group-buy-panel__bar">
+          <view class="group-buy-panel__fill" style="width: {{groupBuyProgress.percent * 100}}%;"></view>
+        </view>
+        <text class="group-buy-panel__text">{{groupBuyProgress.memberCount}}/{{groupBuyProgress.needed}}人 已参团</text>
+      </view>
+      <view class="group-buy-panel__invite" wx:if="{{groupInviteCode}}">
+        <text class="group-buy-panel__invite-label">邀请码</text>
+        <view class="group-buy-panel__invite-code" bindtap="copyGroupInviteCode" hover-class="group-buy-panel__invite-code--hover">
+          <text class="group-buy-panel__invite-value">{{groupInviteCode}}</text>
+          <text class="group-buy-panel__invite-tip">点我复制</text>
+        </view>
+      </view>
+      <view class="group-buy-panel__members" wx:if="{{order.groupBuy.members && order.groupBuy.members.length}}">
+        <view class="group-buy-member" wx:for="{{order.groupBuy.members}}" wx:key="memberId">
+          <view class="group-buy-member__avatar {{item.isInitiator ? 'group-buy-member__avatar--init' : ''}}">
+            <text>{{item.isInitiator ? '团' : '友'}}</text>
+          </view>
+          <text class="group-buy-member__role">{{item.isInitiator ? '团长' : '团员'}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- Logistics Delivery Card (if shipped or completed) -->
+    <view class="panel logistics-panel" wx:if="{{order.deliveries && order.deliveries.length}}">
+      <t-icon name="truck" size="36rpx" color="#2c4a39"></t-icon>
+      <view class="logistics-body">
+        <text class="logistics-title">物流信息：{{order.deliveries[0].expressCompany}}</text>
+        <text class="logistics-code" bindtap="copyTrackingNumber">快递单号: {{order.deliveries[0].expressNo}} (点击复制)</text>
+        <text class="logistics-time" wx:if="{{order.deliveries[0].shippedAt}}">发货时间: {{order.deliveries[0].shippedAt}}</text>
+      </view>
+      <button class="logistics-entry-btn" bindtap="onViewLogistics">查看物流详情</button>
+    </view>
+
+    <!-- Shipping Address Snapshot Card -->
+    <view class="panel address-panel" wx:if="{{order.addressSnapshot}}">
+      <view class="address-body">
+        <text class="address-panel__eyebrow">收货地址</text>
+        <view class="user-meta">
+          <text class="user-name">{{order.addressSnapshot.receiverName}}</text>
+          <text class="user-phone">{{order.addressSnapshot.receiverMobile}}</text>
+        </view>
+        <view class="address-detail-box">
+          <text class="address-detail">
+            {{order.addressSnapshot.province}} {{order.addressSnapshot.city}} {{order.addressSnapshot.district}} {{order.addressSnapshot.detailAddress}}
+          </text>
+        </view>
+      </view>
+    </view>
+
+    <!-- Products List Panel -->
+    <view class="panel products-panel">
+      <view class="store-row" wx:if="{{order.merchant}}">
+        <t-icon name="home" size="28rpx" color="#2c4a39"></t-icon>
+        <text class="store-name">{{order.merchant.storeName}}</text>
+        <button class="store-chat-btn" plain="true" hover-class="none" bindtap="contactMerchant">官方客服</button>
+      </view>
+      <view class="product-item-row" wx:for="{{order.items}}" wx:key="id">
+        <image class="product-img" src="{{item.productImage}}" mode="aspectFill"></image>
+        <view class="product-info">
+          <text class="product-title">{{item.productTitle}}</text>
+          <text class="product-sku">{{item.skuName}}</text>
+          <view class="price-qty-row">
+            <text class="product-price">¥{{item.unitPrice}}</text>
+            <text class="product-qty">x{{item.quantity}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- Price Summary Card -->
+    <view class="panel summary-panel">
+      <view class="summary-row">
+        <text class="summary-label">商品金额</text>
+        <text class="summary-value">¥{{order.goodsAmount}}</text>
+      </view>
+      <view class="summary-row">
+        <text class="summary-label">运费</text>
+        <text class="summary-value">+¥{{order.freightAmount}}</text>
+      </view>
+      <view class="summary-row" wx:if="{{order.discountAmount && order.discountAmount !== '0.00'}}">
+        <text class="summary-label">优惠抵扣</text>
+        <text class="summary-value discount">-¥{{order.discountAmount}}</text>
+      </view>
+      <view class="summary-row summary-row--total">
+        <text class="summary-label">实付合计</text>
+        <text class="summary-value total">¥{{order.payAmount}}</text>
+      </view>
+    </view>
+
+    <!-- Transaction Logs Panel -->
+    <view class="panel logs-panel">
+      <view class="log-item">
+        <text class="log-label">订单编号</text>
+        <text class="log-value" bindtap="copyOrderNumber">{{order.orderNo}} (点击复制)</text>
+      </view>
+      <view class="log-item">
+        <text class="log-label">创建时间</text>
+        <text class="log-value">{{order.createdAt}}</text>
+      </view>
+      <view class="log-item" wx:if="{{order.paidAt}}">
+        <text class="log-label">付款时间</text>
+        <text class="log-value">{{order.paidAt}}</text>
+      </view>
+      <view class="log-item" wx:if="{{order.deliveredAt}}">
+        <text class="log-label">发货时间</text>
+        <text class="log-value">{{order.deliveredAt}}</text>
+      </view>
+      <view class="log-item" wx:if="{{order.completedAt}}">
+        <text class="log-label">成交时间</text>
+        <text class="log-value">{{order.completedAt}}</text>
+      </view>
+    </view>
+
+    <view class="scroll-spacer"></view>
+  </scroll-view>
+
+  <!-- Sticky Bottom Actions Bar (If status allows actions) -->
+  <view class="bottom-actions-bar" wx:if="{{hasActionButtons}}">
+    <block wx:if="{{actionButtons && actionButtons.length}}">
+      <button
+        wx:for="{{actionButtons}}"
+        wx:key="key"
+        class="action-pill action-pill--{{item.type === 'primary' ? 'primary' : 'secondary'}}"
+        plain="true"
+        bindtap="handleActionButton"
+        data-key="{{item.key}}"
+      >
+        {{item.label}}
+      </button>
+    </block>
+    <block wx:else>
+      <!-- 兜底：后端未返回 actionButtons 时保留原有按钮 -->
+      <block wx:if="{{order.orderStatus === 1 && order.payStatus === 0}}">
+        <button class="cancel-btn" plain="true" bindtap="onCancelOrder">取消订单</button>
+        <button class="pay-btn" bindtap="onPayOrder">继续支付</button>
+      </block>
+
+      <block wx:if="{{order.payStatus === 1 && order.deliveryStatus === 0}}">
+        <text class="hint-text">等待商家接单</text>
+        <button class="refund-btn" plain="true" bindtap="onApplyRefund">申请退款</button>
+      </block>
+
+      <block wx:if="{{order.payStatus === 1 && order.orderStatus === 2 && order.deliveryStatus === 1}}">
+        <text class="hint-text">商家已接单，等待发货</text>
+        <button class="refund-btn" plain="true" bindtap="onApplyRefund">申请退款</button>
+      </block>
+
+      <block wx:if="{{order.payStatus === 1 && order.orderStatus === 2 && order.deliveryStatus === 2}}">
+        <button class="refund-btn" plain="true" bindtap="onApplyRefund">申请退款</button>
+        <button class="confirm-btn" bindtap="onConfirmReceipt">确认收货</button>
+      </block>
+
+      <block wx:if="{{order.orderStatus === 3 && order.refundStatus !== 3}}">
+        <button class="refund-btn" plain="true" bindtap="onApplyRefund">申请售后退款</button>
+        <button class="confirm-btn" bindtap="onGoReview">去评价</button>
+      </block>
+
+      <block wx:if="{{order.groupBuy && order.groupBuy.status === 'OPEN' && order.payStatus === 1}}">
+        <button class="invite-btn" open-type="share" bindtap="onInviteGroupBuy">邀请好友参团</button>
+      </block>
+
+      <block wx:if="{{statusLabel === '售后中' || statusLabel === '退款申请中'}}">
+        <button class="refund-btn" plain="true" bindtap="onCancelAfterSale">取消售后</button>
+      </block>
+    </block>
+  </view>
+
+  <!-- Bottom Refund Sheet -->
+  <view class="custom-sheet-mask {{activeSheet === 'refund' ? 'custom-sheet-mask--show' : ''}}" bindtap="closeSheet" catchtouchmove="preventTouchMove">
+    <view class="custom-sheet {{activeSheet === 'refund' ? 'custom-sheet--show' : ''}}" catchtap="preventBubble">
+      <view class="sheet-header">
+        <text class="sheet-title">申请售后退款</text>
+        <button class="sheet-close-btn" bindtap="closeSheet">
+          <t-icon name="close" size="32rpx" opacity="0.8"></t-icon>
+        </button>
+      </view>
+
+      <scroll-view scroll-y="true" enhanced show-scrollbar="{{false}}" class="sheet-body">
+        <view class="form-section">
+          <text class="form-label">退款商品</text>
+          <view class="refund-product-list" wx:if="{{order.items && order.items.length}}">
+            <view class="refund-product-item {{refundForm.selectedRefundItemIndex === index ? 'refund-product-item--active' : ''}}"
+              wx:for="{{order.items}}" wx:key="orderItemId" wx:for-index="index"
+              bindtap="selectRefundItem" data-index="{{index}}">
+              <image class="refund-prod-img" src="{{item.productImage}}" mode="aspectFill"></image>
+              <view class="refund-prod-info">
+                <text class="refund-prod-title">{{item.productTitle}}</text>
+                <text class="refund-prod-sku">{{item.skuName}} x {{item.quantity}}</text>
+              </view>
+              <view class="refund-prod-check {{refundForm.selectedRefundItemIndex === index ? 'refund-prod-check--on' : ''}}"></view>
+            </view>
+          </view>
+        </view>
+
+        <view class="form-section">
+          <text class="form-label">退款类型</text>
+          <view class="type-picker">
+            <button class="type-btn {{refundForm.applyType === 1 ? 'type-btn--active' : ''}}" data-type="1" bindtap="selectRefundType">仅退款</button>
+            <button class="type-btn {{refundForm.applyType === 2 ? 'type-btn--active' : ''}}" data-type="2" bindtap="selectRefundType">退货退款</button>
+          </view>
+        </view>
+
+        <view class="form-section">
+          <text class="form-label">退款金额</text>
+          <view class="amount-input-box">
+            <text class="currency-symbol">¥</text>
+            <input class="amount-input" type="digit" value="{{refundForm.refundAmount}}" bindinput="onAmountInput" placeholder="请输入退款金额" />
+          </view>
+          <text class="amount-hint" wx:if="{{order.items && order.items.length}}">最多可退 ¥{{order.items[refundForm.selectedRefundItemIndex || 0].lineAmount}}</text>
+        </view>
+
+        <view class="form-section">
+          <text class="form-label">退款原因说明</text>
+          <textarea class="reason-textarea" value="{{refundForm.applyReason}}" bindinput="onReasonInput" placeholder="请详细描述您的退款原因，以便商家快速处理..." maxlength="200" />
+        </view>
+      </scroll-view>
+
+      <view class="sheet-footer">
+        <button class="sheet-confirm-btn" bindtap="submitRefund">提交申请</button>
+      </view>
+    </view>
+  </view>
+</view>

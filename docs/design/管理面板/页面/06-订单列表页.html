@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>湾源农仓管理后台 - 订单列表</title>
+  <link rel="stylesheet" href="./00-管理面板公共.css">
+</head>
+<body>
+<input class="drawer-check" type="checkbox" id="drawerToggle">
+<aside class="sidebar">
+  <div class="brand"><div class="brand-mark">湾</div><div><strong>湾源农仓</strong><span>运营管理后台</span></div></div>
+  <nav class="menu" aria-label="后台导航"><a class="" href="01-控制台首页.html">控制台首页</a>
+<a class="" href="02-用户管理页.html">用户管理</a>
+<a class="" href="03-商户管理页.html">商户管理</a>
+<a class="" href="04-商品管理页.html">商品管理</a>
+<a class="" href="05-活动管理页.html">活动管理</a>
+<a class="active" href="06-订单列表页.html">订单列表</a>
+<a class="" href="07-订单详情页.html">订单详情</a>
+<a class="" href="08-售后仲裁页.html">售后仲裁</a>
+<a class="" href="09-数据看板页.html">数据看板</a>
+<a class="" href="10-物流配置页.html">物流配置</a>
+<a class="" href="11-系统配置页.html">系统配置</a></nav>
+  <div class="sidebar-user"><div class="avatar">管</div><div class="user-text"><strong>平台管理员</strong><span>admin@wanyuan</span></div><button type="button">退出</button></div>
+</aside>
+<label class="drawer-mask" for="drawerToggle" aria-label="关闭菜单"></label>
+<main class="app">
+<header class="topbar">
+  <div class="top-left"><label class="menu-toggle" for="drawerToggle" aria-label="打开菜单">☰</label><div><div class="breadcrumb">后台管理 / 订单列表</div><h1>订单列表</h1></div></div>
+  <label class="global-search"><span>⌕</span><input type="text" placeholder="搜索订单号 / 商品 / 商户 / 用户手机号"></label>
+  <div class="top-actions"><button class="text-btn" type="button">导出</button><button class="primary-btn" type="button">导入物流</button><div class="admin-user"><div class="avatar small">管</div><span>平台管理员</span></div></div>
+</header>
+<section class="metric-grid"><article class="metric-card"><div class="metric-title">今日订单</div><strong>1,286</strong><p>成交 ¥151,200</p></article><article class="metric-card"><div class="metric-title">待付款</div><strong>96</strong><p>30 分钟内关闭</p></article><article class="metric-card"><div class="metric-title">待发货</div><strong>248</strong><p>32 单即将超时</p></article><article class="metric-card"><div class="metric-title">售后中</div><strong>17</strong><p>5 单高风险</p></article></section><section class="filter-panel"><div class="filter-grid"><div class="filter-field"><label>订单关键词</label><input placeholder="订单号 / 用户 / 商户"></div><div class="filter-field"><label>订单状态</label><select><option>全部</option><option>待付款</option><option>待发货</option><option>待收货</option><option>已完成</option><option>售后中</option></select></div><div class="filter-field"><label>支付状态</label><select><option>全部</option><option>已支付</option><option>未支付</option><option>已退款</option></select></div><div class="filter-field"><label>下单时间</label><input placeholder="开始 ~ 结束"></div><div class="filter-actions"><button class="text-btn">重置</button><button class="primary-btn">查询</button></div></div></section><section class="panel"><div class="panel-head"><div><h2>订单列表</h2><p>批量导出、催发货和异常订单处理</p></div></div><div class="batch-toolbar"><span>已选择 <strong>2</strong> 个订单</span><div class="batch-actions"><button class="primary-btn">批量导出</button><button class="warn-btn">催发货</button><button class="danger-btn">标记异常</button></div></div><div class="table-x"><table class="data-table"><col class="check-col"><thead><tr><th class="check-cell"><input type="checkbox" aria-label="全选"></th><th>订单</th><th>用户</th><th>商户</th><th>金额</th><th>状态</th><th>操作</th></tr></thead><tbody><tr><td class="check-cell" data-label="选择"><input type="checkbox" aria-label="选择" checked></td><td data-label="订单"><div class="cell-main"><div class="thumb">单</div><div><strong>WY202606070001</strong><span>赣南脐橙 5斤装 等2件</span></div></div></td><td data-label="用户">林小雨</td><td data-label="商户">湾源果园</td><td data-label="金额">¥66.70</td><td data-label="状态"><span class="status warn">待发货</span></td><td data-label="操作"><div class="op-links"><a href="07-订单详情页.html">详情</a><button>催发货</button></div></td></tr><tr><td class="check-cell" data-label="选择"><input type="checkbox" aria-label="选择" checked></td><td data-label="订单"><div class="cell-main"><div class="thumb">单</div><div><strong>WY202606070002</strong><span>山野香米 10kg</span></div></div></td><td data-label="用户">张先生</td><td data-label="商户">绿谷农场</td><td data-label="金额">¥88.00</td><td data-label="状态"><span class="status ok">已完成</span></td><td data-label="操作"><div class="op-links"><a href="07-订单详情页.html">详情</a></div></td></tr><tr><td class="check-cell" data-label="选择"><input type="checkbox" aria-label="选择"></td><td data-label="订单"><div class="cell-main"><div class="thumb">单</div><div><strong>WY202606070003</strong><span>土鸡蛋 30枚装</span></div></div></td><td data-label="用户">王女士</td><td data-label="商户">东山合作社</td><td data-label="金额">¥35.80</td><td data-label="状态"><span class="status danger">售后中</span></td><td data-label="操作"><div class="op-links"><a href="08-售后仲裁页.html">仲裁</a></div></td></tr></tbody></table></div><div class="pagination"><span>共 1,286 条</span><button>上一页</button><button>1</button><button>2</button><button>下一页</button></div></section>
+</main>
+</body>
+</html>

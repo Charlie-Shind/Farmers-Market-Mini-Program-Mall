@@ -1,0 +1,100 @@
+<view class="pickup-detail-page leader-page-shell" style="{{pageStyle}}">
+  <view class="leader-page-header">
+    <view class="leader-header-back" bindtap="goBack" hover-class="leader-header-back--hover">
+      <t-icon name="chevronLeft" size="36rpx"></t-icon>
+    </view>
+    <text class="leader-header-title">{{fromLeader ? '我的自提点' : '自提点详情'}}</text>
+    
+  </view>
+
+  <scroll-view scroll-y="true" class="detail-scroll leader-page-scroll" enhanced="true" show-scrollbar="{{false}}">
+    <view class="detail-content" wx:if="{{point}}">
+      <view class="store-hero">
+        <image wx:if="{{point.storePhoto}}" class="store-img" src="{{point.storePhoto}}" mode="aspectFill"></image>
+        <view wx:else class="store-img store-img--placeholder">
+          <t-icon name="shop" size="80rpx" opacity="0.4"></t-icon>
+        </view>
+      </view>
+
+      <view class="info-card">
+        <view class="store-main">
+          <text class="store-name">{{point.storeName}}</text>
+          <view class="status-badge {{point.status === 1 ? 'active' : 'inactive'}}">
+            {{point.status === 1 ? '营业中' : '暂未营业'}}
+          </view>
+        </view>
+
+        <view class="info-row" bindtap="openLocation">
+          <view class="info-icon">
+            <t-icon name="location" size="32rpx" color="#2c4a39"></t-icon>
+          </view>
+          <view class="info-content">
+            <text class="info-label">自提点地址</text>
+            <text class="info-value">{{point.storeAddress}}</text>
+          </view>
+          <t-icon name="chevronRight" size="28rpx" opacity="0.4"></t-icon>
+        </view>
+
+        <view class="info-divider"></view>
+
+        <view class="info-row" bindtap="callPhone">
+          <view class="info-icon">
+            <t-icon name="phone" size="32rpx" color="#2c4a39"></t-icon>
+          </view>
+          <view class="info-content">
+            <text class="info-label">联系电话</text>
+            <text class="info-value">{{point.leaderPhone}}</text>
+          </view>
+          <t-icon name="chevronRight" size="28rpx" opacity="0.4"></t-icon>
+        </view>
+
+        <view class="info-divider"></view>
+
+        <view class="info-row">
+          <view class="info-icon">
+            <t-icon name="avatar" size="32rpx" color="#2c4a39"></t-icon>
+          </view>
+          <view class="info-content">
+            <text class="info-label">团长姓名</text>
+            <text class="info-value">{{point.leaderName}}</text>
+          </view>
+        </view>
+
+        <view class="info-divider" wx:if="{{point.businessHours}}"></view>
+
+        <view class="info-row" wx:if="{{point.businessHours}}">
+          <view class="info-icon">
+            <t-icon name="clock" size="32rpx" color="#2c4a39"></t-icon>
+          </view>
+          <view class="info-content">
+            <text class="info-label">营业时间</text>
+            <text class="info-value">{{point.businessHours}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="desc-card" wx:if="{{point.description}}">
+        <text class="card-title">自提点介绍</text>
+        <text class="desc-text">{{point.description}}</text>
+      </view>
+
+      <view class="action-bar" wx:if="{{fromLeader}}">
+        <button class="edit-btn" plain="true" bindtap="goEdit">
+          <t-icon name="edit" size="28rpx" color="#2c4a39"></t-icon>
+          <text>修改资料</text>
+        </button>
+      </view>
+    </view>
+
+    <view class="empty-state" wx:else>
+      <t-icon name="shop" size="120rpx" opacity="0.3"></t-icon>
+      <text class="empty-text">{{fromLeader ? '您还未设置自提点' : '暂无自提点信息'}}</text>
+      <button wx:if="{{fromLeader}}" class="empty-action" plain="true" bindtap="goSetupPickup">立即设置自提点</button>
+    </view>
+
+    <view class="leader-bottom-safe"></view>
+  </scroll-view>
+
+  <loading show="{{loading}}" text="加载中..."></loading>
+  <toast show="{{toastVisible}}" message="{{toastMessage}}" type="{{toastType}}" bindclose="hideToast"></toast>
+</view>

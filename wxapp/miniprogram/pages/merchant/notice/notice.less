@@ -1,0 +1,248 @@
+@import "../common.less";
+
+.notice-page {
+  background: var(--merchant-bg);
+}
+
+/* ===== Tabs ===== */
+.tabs-wrap {
+  margin: 0 32rpx 20rpx;
+}
+
+.tabs-scroll {
+  white-space: nowrap;
+  width: 100%;
+}
+
+.tabs-flex {
+  display: flex;
+  gap: 36rpx;
+}
+
+.tab-item {
+  display: flex;
+  align-items: center;
+  padding: 12rpx 8rpx;
+  position: relative;
+  gap: 10rpx;
+}
+
+.tab-item::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 4rpx;
+  height: 6rpx;
+  border-radius: 999rpx;
+  background: transparent;
+  transition: background-color 0.2s ease;
+}
+
+.tab-item--active::after {
+  background: var(--merchant-primary);
+}
+
+.tab-item__text {
+  font-size: 28rpx;
+  color: var(--merchant-text-muted);
+  font-weight: 700;
+}
+
+.tab-item--active .tab-item__text {
+  color: var(--merchant-text);
+  font-size: 30rpx;
+  font-weight: 900;
+}
+
+.tab-item__badge {
+  min-width: 36rpx;
+  height: 36rpx;
+  padding: 0 10rpx;
+  border-radius: 999rpx;
+  background: var(--merchant-accent);
+  color: #fff;
+  font-size: 20rpx;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tab-item__line {
+  display: none;
+}
+
+/* ===== Notice Cards ===== */
+.notice-scroll {
+  flex: 1;
+  min-height: 0;
+}
+
+.notice-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18rpx;
+  padding: 0 32rpx 24rpx;
+}
+
+.notice-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 20rpx;
+  padding: 28rpx 28rpx 24rpx;
+  background: var(--merchant-surface);
+  border: 1rpx solid var(--merchant-line-soft);
+  border-radius: 24rpx;
+}
+
+.notice-card--unread {
+  background: var(--merchant-surface-warm);
+  border-color: var(--merchant-line);
+}
+
+.notice-card__icon {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 22rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: var(--merchant-bg-soft);
+}
+
+.notice-card__icon .icon-sm {
+  width: 36rpx;
+  height: 36rpx;
+}
+
+.notice-card__icon.ok {
+  background: var(--merchant-primary-soft);
+}
+
+.notice-card__icon.warn {
+  background: var(--merchant-warning-soft);
+}
+
+.notice-card__icon.bad {
+  background: var(--merchant-danger-soft);
+}
+
+.notice-card__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.notice-card__top {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.notice-card__title {
+  flex: 1;
+  min-width: 0;
+  font-size: 28rpx;
+  font-weight: 800;
+  color: var(--merchant-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.notice-card--unread .notice-card__title {
+  font-weight: 900;
+}
+
+.notice-card__dot {
+  width: 14rpx;
+  height: 14rpx;
+  border-radius: 50%;
+  background: #d95b43;
+  flex-shrink: 0;
+}
+
+.notice-card__desc {
+  font-size: 24rpx;
+  color: var(--merchant-text-muted);
+  line-height: 1.5;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.notice-card__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12rpx;
+}
+
+.notice-card__type {
+  font-size: 22rpx;
+  color: var(--merchant-text-placeholder);
+}
+
+.notice-card__time {
+  font-size: 22rpx;
+  color: var(--merchant-text-placeholder);
+  white-space: nowrap;
+}
+
+.notice-card__chevron {
+  width: 28rpx;
+  height: 28rpx;
+  flex-shrink: 0;
+  margin-top: 20rpx;
+}
+
+/* ===== Empty ===== */
+.empty-state-box {
+  padding: 80rpx 32rpx 0;
+  text-align: center;
+}
+
+.empty-icon-box {
+  width: 120rpx;
+  height: 120rpx;
+  margin: 0 auto 18rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-text {
+  display: block;
+  color: var(--merchant-text);
+  font-size: 30rpx;
+  font-weight: 800;
+}
+
+.empty-sub {
+  display: block;
+  margin-top: 10rpx;
+  color: var(--merchant-text-muted);
+  font-size: 24rpx;
+  line-height: 1.6;
+}
+
+.scroll-spacer {
+  height: 100rpx;
+}
+
+.load-more-area {
+  display: flex;
+  justify-content: center;
+  padding: 24rpx 0 8rpx;
+}
+
+.load-more-area__text {
+  color: var(--merchant-text-muted);
+  font-size: 22rpx;
+}

@@ -1,0 +1,210 @@
+﻿<view class="merchant-page has-bottom-actions" style="{{pageStyle}}">
+  <view class="status-space"></view>
+
+  <view class="page-titlebar">
+    <view class="icon-box icon-btn" bindtap="goBack">
+      <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+    </view>
+    <view class="title-block">
+      <view class="page-title">编辑商品</view>
+    </view>
+    <text></text>
+  </view>
+
+  <view class="top-actions">
+    <view class="icon-btn" bindtap="goDrafts">
+      <t-icon name="clock" size="40rpx"></t-icon>
+    </view>
+  </view>
+
+  <scroll-view scroll-x class="tabs" enhanced show-scrollbar="{{false}}">
+    <view class="tab active" bindtap="scrollTo" data-target="basic">基础</view>
+    <view class="tab" bindtap="goImages">图片</view>
+    <view class="tab" bindtap="goSku">规格</view>
+    <view class="tab" bindtap="scrollTo" data-target="extra">更多</view>
+  </scroll-view>
+
+  <view class="section-head">
+    <text>商品图片</text>
+    <text>最多 9 张</text>
+  </view>
+  <view class="photo-grid">
+    <view class="photo-box" wx:for="{{gallery}}" wx:key="*this">
+      <image class="fit-img" src="{{item}}" mode="aspectFill" />
+      <view wx:if="{{index === 0}}" class="photo-tag">主图</view>
+    </view>
+    <view class="photo-box photo-add" bindtap="chooseImage">
+      <view class="icon-box" style="width:40rpx;height:40rpx">
+        <t-icon name="camera" size="40rpx"></t-icon>
+      </view>
+    </view>
+  </view>
+
+  <view class="section-head">
+    <text>商品视频</text>
+    <text>可选</text>
+  </view>
+  <view class="media-row">
+    <view wx:if="{{video.cover}}" class="video-thumb">
+      <image class="fit-img" src="{{video.cover}}" mode="aspectFill" />
+    </view>
+    <view wx:else class="video-thumb video-empty"></view>
+    <view class="media-main">
+      <text class="media-title">产地介绍视频</text>
+      <text class="media-meta">已上传 {{video.duration}} 秒，可重新上传或删除</text>
+    </view>
+    <view class="media-actions">
+      <view class="pill-btn outline" bindtap="reuploadVideo">重传</view>
+      <view class="pill-btn danger" bindtap="deleteVideo">删除</view>
+    </view>
+  </view>
+
+  <view class="section-head" id="basic">
+    <text>商品信息</text>
+  </view>
+  <view class="form-card">
+    <picker mode="selector" range="{{categoryOptions}}" bindchange="onCategoryChange">
+      <view class="form-row picker-row">
+        <view class="form-label-row">
+          <text class="form-label">商品分类</text>
+          <text class="form-hint">可重选</text>
+        </view>
+        <view class="picker-value">{{categoryName || '请选择'}}<t-icon name="chevronRight" size="40rpx"></t-icon></view>
+      </view>
+    </picker>
+    <view class="form-row">
+      <view class="form-label-row">
+        <text class="form-label">商品标题</text>
+        <text class="form-hint">必填</text>
+      </view>
+      <input class="form-input" value="{{title}}" placeholder="请输入商品标题" bindinput="onTitleInput" />
+    </view>
+    <view class="form-row">
+      <view class="form-label-row">
+        <text class="form-label">商品副标题</text>
+        <text class="form-hint">选填</text>
+      </view>
+      <input class="form-input" value="{{subtitle}}" placeholder="请输入商品副标题" bindinput="onSubtitleInput" />
+    </view>
+  </view>
+
+  <view class="section-head">
+    <text>价格与库存</text>
+    <text class="section-link" bindtap="goSku">管理规格<t-icon name="chevronRight" size="40rpx"></t-icon></text>
+  </view>
+  <view class="form-card">
+    <view class="form-row">
+      <view class="form-label-row">
+        <text class="form-label">销售价</text>
+        <text class="form-hint">{{specMode == 'multi' ? '取自SKU' : '必填'}}</text>
+      </view>
+      <view class="number-cell" wx:if="{{specMode == 'single'}}">
+        <text class="number-prefix">¥</text>
+        <input class="number-input" type="digit" value="{{price}}" placeholder="0.00" bindinput="onPriceInput" />
+      </view>
+      <view class="readonly-value" wx:else>¥{{price || '未设置'}}</view>
+    </view>
+    <view class="form-row">
+      <view class="form-label-row">
+        <text class="form-label">划线价</text>
+        <text class="form-hint">{{specMode == 'multi' ? '取自SKU' : '选填'}}</text>
+      </view>
+      <view class="number-cell" wx:if="{{specMode == 'single'}}">
+        <text class="number-prefix">¥</text>
+        <input class="number-input" type="digit" value="{{crossedPrice}}" placeholder="0.00" bindinput="onCrossedPriceInput" />
+      </view>
+      <view class="readonly-value" wx:else>¥{{crossedPrice || '未设置'}}</view>
+    </view>
+    <view class="form-row">
+      <view class="form-label-row">
+        <text class="form-label">总库存</text>
+        <text class="form-hint">{{specMode == 'multi' ? 'SKU汇总' : '必填'}}</text>
+      </view>
+      <view class="readonly-value">{{totalStock}}<text class="readonly-unit">件</text></view>
+    </view>
+  </view>
+
+  <view class="section-head">
+    <text>规格设置</text>
+    <text class="section-link" bindtap="goSku">进入规格库存<t-icon name="chevronRight" size="40rpx"></t-icon></text>
+  </view>
+  <view class="spec-card">
+    <view class="spec-head">
+      <text>当前模式</text>
+      <text class="status-pill {{specMode == 'multi' ? 'success' : 'info'}}">{{specMode == 'multi' ? '多规格' : '单规格'}}</text>
+    </view>
+    <view class="spec-options" wx:if="{{activeSkus.length}}">
+      <view class="spec-option active" wx:for="{{activeSkus}}" wx:key="*this">{{item}}</view>
+    </view>
+    <text wx:else class="spec-empty">暂无规格数据，点击"进入规格库存"进行设置</text>
+  </view>
+
+  <view class="section-head">
+    <text>服务标签</text>
+    <text>可多选</text>
+  </view>
+  <view class="form-card">
+    <view class="form-row">
+      <view class="chip-row">
+        <view class="chip {{item.active ? 'active' : ''}}" wx:for="{{serviceTags}}" wx:key="name" bindtap="onServiceTagTap" data-index="{{index}}">{{item.name}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="section-head">
+    <text>商品详情</text>
+  </view>
+  <view class="form-card">
+    <view class="form-row">
+      <view class="form-label-row">
+        <text class="form-label">详情描述</text>
+        <text class="form-hint">买家可见</text>
+      </view>
+      <textarea class="form-textarea" value="{{description}}" placeholder="请输入商品详情描述" bindinput="onDescInput" auto-height />
+    </view>
+  </view>
+
+  <view class="section-head" id="extra">
+    <text>更多信息</text>
+    <text>已填 {{extraFilled}} 项</text>
+  </view>
+  <view class="form-card">
+    <view class="form-row">
+      <view class="form-label-row">
+        <text class="form-label">产地</text>
+        <text class="form-hint">必填</text>
+      </view>
+      <input class="form-input" value="{{origin}}" placeholder="请输入产地" bindinput="onOriginInput" />
+    </view>
+    <view class="form-row">
+      <view class="form-label-row">
+        <text class="form-label">溯源码</text>
+        <text class="form-hint">选填</text>
+      </view>
+      <input class="form-input" value="{{traceCode}}" placeholder="请输入溯源码" bindinput="onTraceCodeInput" />
+    </view>
+    <view class="form-row">
+      <view class="form-label-row">
+        <text class="form-label">溯源说明</text>
+        <text class="form-hint">买家可见</text>
+      </view>
+      <textarea class="form-textarea" value="{{traceDesc}}" placeholder="请输入溯源说明" bindinput="onTraceDescInput" auto-height />
+    </view>
+    <view class="form-row">
+      <view class="form-label-row">
+        <text class="form-label">预售模式</text>
+        <text class="form-hint">可切换</text>
+      </view>
+      <view class="chip-row">
+        <view class="chip {{presaleMode === 'spot' ? 'active' : ''}}" bindtap="onPresaleChange" data-mode="spot">现货</view>
+        <view class="chip {{presaleMode === 'presale' ? 'active' : ''}}" bindtap="onPresaleChange" data-mode="presale">开启预售</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="bottom-actions">
+    <view class="action-btn secondary" bindtap="goDrafts"><image class="btn-icon" src="/assets/icons/clock.svg" mode="aspectFit" />草稿箱</view>
+    <view class="action-btn secondary" bindtap="saveDraft"><image class="btn-icon" src="/assets/icons/edit.svg" mode="aspectFit" />保存草稿</view>
+    <view class="action-btn primary" bindtap="submitPublish"><image class="btn-icon" src="/assets/icons/check.svg" mode="aspectFit" />保存并上架</view>
+  </view>
+</view>

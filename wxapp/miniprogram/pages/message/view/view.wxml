@@ -1,0 +1,57 @@
+﻿<view class="phone-page message-view-page" style="{{pageStyle}}">
+  <view class="board-head">
+    <view class="page-title-bar">
+      <button class="back-btn" bindtap="goBack" hover-class="back-btn--hover">
+        <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+      </button>
+      <text class="page-title-bar__title">详情</text>
+      <text class="page-title-bar__spacer"></text>
+    </view>
+  </view>
+
+  <view wx:if="{{message}}" class="detail-card">
+    <view class="publisher-row">
+      <view class="publisher-row__avatar">
+        <image
+          wx:if="{{showSenderAvatarImage}}"
+          class="publisher-row__avatar-img"
+          src="{{senderAvatarSrc}}"
+          mode="aspectFill"
+          binderror="handleAvatarError"
+        ></image>
+        <t-icon wx:else name="{{senderFallbackIconName}}" size="36rpx" opacity="0.9"></t-icon>
+      </view>
+      <view class="publisher-row__meta">
+        <text class="publisher-row__name">{{publisherName}}</text>
+        <text wx:if="{{publishTimeText}}" class="publisher-row__date">{{publishTimeText}}</text>
+      </view>
+    </view>
+
+    <view class="detail-body">
+      <text wx:if="{{displayTitle}}" class="detail-title">{{displayTitle}}</text>
+      <text wx:if="{{summaryText && summaryText !== displayTitle}}" class="detail-summary">{{summaryText}}</text>
+
+      <view wx:for="{{blocks}}" wx:key="index" class="detail-block">
+        <text wx:if="{{item.type === 'text' && item.value}}" class="detail-text">{{item.value}}</text>
+        <view
+          wx:elif="{{item.type === 'image' && item.url}}"
+          class="detail-image-wrap"
+          bindtap="previewImage"
+          data-url="{{item.url}}"
+        >
+          <image class="detail-image" src="{{item.url}}" mode="widthFix"></image>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:elif="{{loading}}" class="empty-state">
+    <text class="empty-state__text">加载中</text>
+  </view>
+
+  <view wx:else class="empty-state">
+    <text class="empty-state__text">暂无公告</text>
+  </view>
+
+  <view class="safe-bottom"></view>
+</view>

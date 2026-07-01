@@ -1,0 +1,96 @@
+<view class="merchant-page has-tabbar products-page" style="{{pageStyle}}">
+  <view class="page-titlebar">
+    <view class="title-block">
+      <view class="page-title">库存管理</view>
+    </view>
+    <text></text>
+  </view>
+
+  <view class="top-actions" style="justify-content: space-between;">
+    <view class="search-pill" style="flex:1; max-width: 420rpx; height: 64rpx; border-radius: 999rpx; background: var(--merchant-bg); display: flex; align-items: center; gap: 12rpx; padding: 0 20rpx;" bindtap="showSearch">
+      <image src="/assets/icons/search.svg" mode="aspectFit" style="width:32rpx;height:32rpx" />
+      <text style="font-size:26rpx;color:var(--merchant-text-placeholder)">搜索商品标题、编号</text>
+    </view>
+    <view style="display:flex;gap:16rpx;">
+      <view class="icon-action" bindtap="goPublish">
+        <t-icon name="plus" size="40rpx"></t-icon>
+        <text>发布</text>
+      </view>
+      <view class="icon-action" bindtap="showFilter">
+        <t-icon name="filter" size="40rpx"></t-icon>
+        <text>筛选</text>
+      </view>
+    </view>
+  </view>
+
+  <scroll-view scroll-x class="product-tabs" enhanced show-scrollbar="{{false}}">
+    <view
+      class="product-tab {{item.active ? 'active' : ''}}"
+      wx:for="{{tabs}}"
+      wx:key="name"
+      bindtap="onTabTap"
+      data-index="{{index}}"
+    >
+      <text>{{item.name}}</text>
+    </view>
+  </scroll-view>
+
+  <scroll-view scroll-x class="product-chips" enhanced show-scrollbar="{{false}}">
+    <view
+      class="product-chip {{item.active ? 'active' : ''}}"
+      wx:for="{{filters}}"
+      wx:key="name"
+      bindtap="onFilterTap"
+      data-index="{{index}}"
+    >
+      {{item.name}}
+    </view>
+  </scroll-view>
+
+  <view class="draft-entry" bindtap="goDrafts">
+    <view class="draft-main">
+      <text class="draft-title">商品草稿箱</text>
+      <text class="draft-desc">{{draftCount}} 个未提交草稿</text>
+    </view>
+    <view class="draft-right">
+      <text>进入</text>
+      <t-icon name="chevronRight" size="40rpx"></t-icon>
+    </view>
+  </view>
+
+  <view class="product-list">
+    <view class="product-card" wx:for="{{products}}" wx:key="id">
+      <image class="goods-image" src="{{item.image}}" mode="aspectFill" />
+      <view class="product-main">
+        <view class="product-head">
+          <text class="product-title">{{item.title}}</text>
+          <text class="status-pill {{item.statusType}}">{{item.status}}</text>
+        </view>
+        <text class="product-meta">{{item.meta}}</text>
+        <view class="product-stats">
+          <text>{{item.inventory}}</text>
+          <text>{{item.sales}}</text>
+          <text>{{item.extra}}</text>
+        </view>
+        <view class="product-bottom">
+          <text class="product-price">{{item.price}}</text>
+          <view class="product-actions">
+            <button class="pill-btn secondary" bindtap="editProduct" data-product-id="{{item.productId}}">编辑</button>
+            <button class="pill-btn {{item.actionType}}" bindtap="toggleProduct" data-product-id="{{item.productId}}" data-action="{{item.action}}">{{item.actionText}}</button>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="load-more">下滑加载更多</view>
+
+  <view class="bottom-nav">
+    <view class="nav-item {{item.active ? 'active' : ''}}" wx:for="{{nav}}" wx:key="name" bindtap="goPage" data-url="{{item.url}}">
+      <view class="icon-box nav-icon">
+        <t-icon name="{{item.icon}}" size="40rpx"></t-icon>
+      </view>
+      <text>{{item.name}}</text>
+    </view>
+  </view>
+</view>

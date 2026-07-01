@@ -1,0 +1,117 @@
+<view class="pickup-edit-page leader-page-shell" style="{{pageStyle}}">
+  <view class="leader-page-header">
+    <view class="leader-header-back" bindtap="goBack" hover-class="leader-header-back--hover">
+      <t-icon name="chevronLeft" size="36rpx"></t-icon>
+    </view>
+    <text class="leader-header-title">{{isEdit ? '修改自提点' : '设置自提点'}}</text>
+    
+  </view>
+
+  <scroll-view scroll-y="true" class="edit-scroll leader-page-scroll" enhanced="true" show-scrollbar="{{false}}">
+    <view class="edit-content">
+      <view class="tip-card">
+        <text class="tip-card__title">每个团长仅可设置一个自提点</text>
+        <text class="tip-card__meta">请填写真实门店信息，方便用户到店自提。</text>
+      </view>
+
+      <view class="form-panel">
+        <view class="form-item">
+          <text class="form-label">自提点名称</text>
+          <input
+            class="form-input"
+            value="{{form.storeName}}"
+            placeholder="如：东山社区自提点"
+            placeholder-class="form-placeholder"
+            data-field="storeName"
+            bindinput="onInput"
+          />
+        </view>
+
+        <view class="form-item">
+          <text class="form-label">所在地区</text>
+          <picker mode="region" value="{{regionValue}}" bindchange="onRegionChange">
+            <view class="form-picker">
+              <text wx:if="{{regionValue.length}}" class="picker-value">{{regionValue[0]}} {{regionValue[1]}} {{regionValue[2]}}</text>
+              <text wx:else class="form-placeholder">请选择省、市、区</text>
+              <t-icon name="chevronRight" size="24rpx" opacity="0.5"></t-icon>
+            </view>
+          </picker>
+        </view>
+
+        <view class="form-item form-item--textarea">
+          <text class="form-label">详细地址</text>
+          <textarea
+            class="form-textarea"
+            value="{{form.detailAddress}}"
+            placeholder="街道、门牌号等"
+            placeholder-class="form-placeholder"
+            data-field="detailAddress"
+            bindinput="onInput"
+            maxlength="150"
+            auto-height
+          />
+        </view>
+
+        <view class="form-item form-item--action" bindtap="chooseLocation">
+          <view class="location-action">
+            <t-icon name="location" size="32rpx" color="#2c4a39"></t-icon>
+            <view class="location-action__text">
+              <text class="location-action__title">地图选点</text>
+              <text class="location-action__desc">{{locationLabel}}</text>
+            </view>
+          </view>
+          <t-icon name="chevronRight" size="24rpx" opacity="0.5"></t-icon>
+        </view>
+
+        <view class="form-item">
+          <text class="form-label">营业时间</text>
+          <input
+            class="form-input"
+            value="{{form.businessHours}}"
+            placeholder="如：09:00-21:00"
+            placeholder-class="form-placeholder"
+            data-field="businessHours"
+            bindinput="onInput"
+          />
+        </view>
+
+        <view class="form-item form-item--textarea">
+          <text class="form-label">自提点介绍</text>
+          <textarea
+            class="form-textarea"
+            value="{{form.description}}"
+            placeholder="可选，介绍门店位置或注意事项"
+            placeholder-class="form-placeholder"
+            data-field="description"
+            bindinput="onInput"
+            maxlength="200"
+            auto-height
+          />
+        </view>
+      </view>
+
+      <view class="photo-panel">
+        <text class="section-title">门店照片</text>
+        <view class="photo-uploader" bindtap="choosePhoto" hover-class="photo-uploader--hover">
+          <image wx:if="{{form.storePhoto}}" class="photo-uploader__image" src="{{form.storePhoto}}" mode="aspectFill"></image>
+          <view wx:else class="photo-uploader__placeholder">
+            <t-icon name="camera" size="48rpx" color="#2c4a39"></t-icon>
+            <text>上传门店照片</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="submit-bar">
+        <button class="ghost" plain="true" disabled="{{submitting}}" bindtap="goBack">取消</button>
+        <button class="primary" plain="true" disabled="{{submitting}}" bindtap="submitForm">
+          {{submitting ? '保存中...' : '保存自提点'}}
+        </button>
+      </view>
+
+      <view class="leader-bottom-safe"></view>
+    </view>
+  </scroll-view>
+
+  <loading show="{{loading}}" text="{{loadingText}}"></loading>
+  <toast show="{{toastVisible}}" message="{{toastMessage}}" type="{{toastType}}" bindclose="hideToast"></toast>
+</view>

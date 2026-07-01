@@ -1,0 +1,10 @@
+<view class="app-page no-bottom with-sticky">
+<view class="status-space"></view>
+<view class="page-titlebar"><navigator class="back-btn" url="/pages/merchant-design/order-detail/order-detail"><image class="icon" mode="aspectFit" src="/assets/icons/back.svg" /></navigator><view class="title-block"><view class="page-title">物流发货</view><view class="page-subtitle">录入快递公司和运单号，支持复制与保存</view></view></view>
+<view class="demo-card-list"><navigator class="demo-card" url="/pages/merchant-design/order-detail/order-detail"><image mode="aspectFill" src="/assets/goods/g2.svg" /><view><view class="demo-title">高山蓝莓礼盒 4盒装</view><view class="demo-desc">买家：李女士 · 订单 WY20260618001</view></view><view class="demo-right">¥268</view></navigator></view>
+<view class="section-line-title"><text>物流信息</text></view><view class="full-list"><view class="form-line"><view>快递公司<text>必填</text></view><input value="顺丰速运" /></view><view class="form-line"><view>快递单号<text>必填</text></view><input value="SF938276451002" /></view><view class="form-line"><view>发货备注<text>选填</text></view><textarea>冷链发货，外箱已加固，预计 48 小时送达。</textarea></view></view>
+<view class="section-line-title"><text>发货检查</text></view><view class="process-list"><view class="process-row done"><text class="process-index">1</text><text class="process-main"><text>核对收货地址</text><text>上海市浦东新区，手机号尾号 6321</text></text><text class="status-pill success">完成</text></view><view class="process-row done"><text class="process-index">2</text><text class="process-main"><text>核对商品数量</text><text>蓝莓礼盒 1 件，冰袋 2 个</text></text><text class="status-pill success">完成</text></view><view class="process-row"><text class="process-index">3</text><text class="process-main"><text>上传物流单号</text><text>保存后订单进入待收货状态</text></text><text class="status-pill warning">待保存</text></view></view>
+<view class="bottom-actions"><button class="action-btn secondary" data-toast="已复制单号" bindtap="handleToast">复制单号</button><button class="action-btn" data-toast="已保存物流信息" bindtap="handleToast">保存发货</button></view>
+</view>
+
+<view class="toast {{toastText ? 'show' : ''}}">{{toastText}}</view>

@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>定位选择页</title>
+  <link rel="stylesheet" href="./23-定位选择页.css">
+</head>
+<body>
+  <main class="page">
+    <header class="nav">
+      <button class="back">返回</button>
+      <h1>定位选择</h1>
+      <span class="ghost"></span>
+    </header>
+
+    <section class="card">
+      <div class="summary">
+        <strong>湾源县东山社区</strong>
+        <p>云南省昭通市 · 东山农仓配送区域</p>
+        <span>26.123456, 104.123456</span>
+      </div>
+      <div class="map">地图预览</div>
+    </section>
+
+    <section class="segmented">
+      <button class="active">自动定位</button>
+      <button>手动选点</button>
+    </section>
+
+    <section class="actions">
+      <button class="primary">使用当前位置</button>
+      <button class="secondary">确认并返回</button>
+    </section>
+
+    <p class="tip">自动定位会获取当前坐标，手动选点会返回位置名称和地址。</p>
+  </main>
+</body>
+</html>

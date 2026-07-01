@@ -1,0 +1,88 @@
+<view class="merchant-page has-bottom-actions order-detail-page" style="{{pageStyle}}">
+  <view class="detail-titlebar">
+    <view class="titlebar-back" bindtap="goBack">
+      <image class="titlebar-icon" src="/assets/icons/back.svg" mode="aspectFit" />
+    </view>
+    <view class="titlebar-main">
+      <text class="titlebar-title">订单详情</text>
+      <text class="titlebar-subtitle">{{order.orderNo}}</text>
+    </view>
+    <text class="status-pill {{order.statusType}}">{{order.status}}</text>
+  </view>
+
+  <view class="notice-card" wx:if="{{canAccept || canShip}}">
+    <view class="notice-main">
+      <text class="notice-title">{{order.noticeTitle}}</text>
+      <text class="notice-desc">{{order.noticeDesc}}</text>
+    </view>
+    <button class="notice-btn" wx:if="{{canAccept}}" bindtap="handleAccept">接单</button>
+    <button class="notice-btn" wx:if="{{canShip}}" bindtap="goLogistics">去发货</button>
+  </view>
+
+  <view class="section-title">买家信息</view>
+  <view class="full-section">
+    <view class="buyer-row" bindtap="goChat">
+      <view class="buyer-info">
+        <image class="buyer-avatar" src="{{buyer.avatar}}" mode="aspectFill" />
+        <view class="buyer-main">
+          <text class="row-title">{{buyer.name}}</text>
+          <text class="row-desc">{{buyer.summary}}</text>
+        </view>
+      </view>
+      <view class="row-right">
+        <text>聊天</text>
+        <t-icon name="chevronRight" size="40rpx"></t-icon>
+      </view>
+    </view>
+    <view class="address-row">
+      <view class="address-main">
+        <text class="row-title">{{buyer.address}}</text>
+        <text class="row-desc">{{buyer.contact}}</text>
+      </view>
+      <button class="small-btn" bindtap="copyAddress">复制</button>
+    </view>
+  </view>
+
+  <view class="section-title">商品</view>
+  <view class="full-section">
+    <view class="product-row" bindtap="goProduct">
+      <image class="goods-image" src="{{goods.image}}" mode="aspectFill" />
+      <view class="goods-main">
+        <view class="goods-head">
+          <text class="goods-title">{{goods.title}}</text>
+          <text class="status-pill success">{{goods.countText}}</text>
+        </view>
+        <text class="goods-meta">{{goods.meta}}</text>
+        <view class="goods-bottom">
+          <text class="goods-price">{{goods.price}}</text>
+          <text class="goods-note">{{goods.note}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="section-title">金额明细</view>
+  <view class="full-section">
+    <view class="finance-row" wx:for="{{amountRows}}" wx:key="label">
+      <text>{{item.label}}</text>
+      <text class="{{item.strong ? 'finance-strong' : ''}}">{{item.value}}</text>
+    </view>
+  </view>
+
+  <view class="section-title">物流信息</view>
+  <view class="full-section">
+    <view class="timeline-row" wx:for="{{timeline}}" wx:key="title">
+      <view class="timeline-dot"></view>
+      <view class="timeline-main">
+        <text class="row-title">{{item.title}}</text>
+        <text class="row-desc">{{item.desc}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="bottom-actions">
+    <button class="action-btn secondary" bindtap="contactBuyer"><t-icon name="message" size="40rpx"></t-icon>联系买家</button>
+    <button class="action-btn primary" wx:if="{{canAccept}}" bindtap="handleAccept"><image class="btn-icon" src="/assets/icons/check.svg" mode="aspectFit" />确认接单</button>
+    <button class="action-btn primary" wx:if="{{canShip}}" bindtap="goLogistics"><image class="btn-icon" src="/assets/icons/truck.svg" mode="aspectFit" />录入物流</button>
+  </view>
+</view>

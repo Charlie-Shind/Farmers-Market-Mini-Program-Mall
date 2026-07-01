@@ -1,0 +1,73 @@
+﻿<view class="phone-page favorite-list-page" style="{{pageStyle}}">
+  <view class="board-head">
+    <view class="page-title-bar">
+      <button class="back-btn" bindtap="goBack" hover-class="back-btn--hover">
+        <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+      </button>
+      <text class="page-title-bar__title">我的收藏</text>
+      <text></text>
+    </view>
+  </view>
+
+  <view class="list-meta">
+    <text class="list-meta__title">收藏商品</text>
+    <text class="list-meta__count">
+      {{loading ? '加载中' : loadingMore ? '加载更多中' : '共 ' + total + ' 件'}}
+    </text>
+  </view>
+
+  <scroll-view class="favorite-scroll" scroll-y="true" enhanced="true" show-scrollbar="{{false}}" bindscrolltolower="loadMore">
+    <view wx:if="{{favorites.length}}" class="favorite-list">
+      <view wx:for="{{favorites}}" wx:key="favoriteId" class="favorite-card">
+        <image
+          wx:if="{{item.coverUrl}}"
+          class="favorite-img"
+          src="{{item.coverUrl}}"
+          mode="aspectFill"
+          data-product-id="{{item.productId}}"
+          bindtap="openProductDetail"
+        ></image>
+        <view
+          wx:else
+          class="favorite-img favorite-img--empty"
+          data-product-id="{{item.productId}}"
+          bindtap="openProductDetail"
+        >
+          暂无封面
+        </view>
+        <view class="favorite-body">
+          <view class="favorite-top">
+            <text class="favorite-title">{{item.title}}</text>
+            <text wx:if="{{item.isPreSale}}" class="favorite-badge">预售</text>
+          </view>
+          <text class="favorite-subtitle">{{item.subtitle || item.originPlace || '已收藏的优选好货'}}</text>
+          <text class="favorite-store">{{item.storeName}}</text>
+          <text class="favorite-time">收藏于 {{item.createdAtLabel}}</text>
+          <view class="favorite-footer">
+            <text class="favorite-price">¥{{item.minPrice}}</text>
+            <view class="favorite-actions">
+              <button class="favorite-action favorite-action--ghost" plain="true" data-product-id="{{item.productId}}" catchtap="removeFavoriteItem">取消收藏</button>
+              <button class="favorite-action favorite-action--solid" data-product-id="{{item.productId}}" catchtap="openProductDetail">查看商品</button>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view wx:else class="empty-state-box">
+      <view class="empty-icon-box">
+        <t-icon name="favorite" size="88rpx" opacity="0.25"></t-icon>
+      </view>
+      <text class="empty-text">还没有收藏商品</text>
+      <text class="empty-sub">遇到喜欢的农产品，先收藏起来更方便回看</text>
+    </view>
+
+    <view wx:if="{{favorites.length}}" class="load-more-area">
+      <text wx:if="{{loadingMore}}" class="load-more-area__text">正在继续加载…</text>
+      <text wx:elif="{{noMore}}" class="load-more-area__text">已经到底了</text>
+      <view wx:else class="load-more-area__button">下滑加载更多</view>
+    </view>
+
+    <view class="safe-bottom"></view>
+  </scroll-view>
+</view>

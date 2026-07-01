@@ -1,0 +1,92 @@
+<view class="leader-orders-page leader-page-shell" style="{{pageStyle}}">
+  <view class="leader-page-header">
+    <view class="leader-header-back" bindtap="goBack" hover-class="leader-header-back--hover">
+      <t-icon name="chevronLeft" size="36rpx"></t-icon>
+    </view>
+    <text class="leader-header-title">订单管理</text>
+  </view>
+
+  <view class="tabs-bar">
+    <view
+      class="tab-item {{item.active ? 'active' : ''}}"
+      wx:for="{{tabs}}"
+      wx:key="key"
+      data-key="{{item.key}}"
+      bindtap="switchTab"
+    >
+      {{item.label}}
+    </view>
+  </view>
+
+  <scroll-view
+    scroll-y="true"
+    class="orders-scroll leader-page-scroll"
+    enhanced="true"
+    show-scrollbar="{{false}}"
+    bindscrolltolower="onReachBottom"
+  >
+    <view class="orders-list" wx:if="{{orders.length > 0}}">
+      <view class="order-card" wx:for="{{orders}}" wx:key="orderNo">
+        <view class="order-card__header">
+          <view class="order-buyer">
+            <text class="buyer-name">{{item.buyerName}}</text>
+            <text class="buyer-phone">{{item.buyerPhone}}</text>
+          </view>
+          <view class="order-status {{item.pickupStatus === 'PENDING' ? 'pending' : 'picked'}}">
+            {{item.pickupStatus === 'PENDING' ? '待提货' : '已提货'}}
+          </view>
+        </view>
+
+        <view class="order-card__goods">
+          <view class="goods-item" wx:for="{{item.items}}" wx:for-item="goods" wx:key="orderItemId">
+            <image class="goods-img" src="{{goods.coverUrl}}" mode="aspectFill"></image>
+            <view class="goods-info">
+              <text class="goods-title">{{goods.title}}</text>
+              <text class="goods-sku">{{goods.skuName}}</text>
+            </view>
+            <view class="goods-right">
+              <text class="goods-price">¥{{goods.price}}</text>
+              <text class="goods-qty">x{{goods.quantity}}</text>
+            </view>
+          </view>
+        </view>
+
+        <view class="order-card__footer">
+          <view class="order-meta">
+            <text class="order-time">{{item.timeText}}</text>
+            <text class="order-no" wx:if="{{item.pickupCode}}">取货码：{{item.pickupCode}}</text>
+          </view>
+          <view class="order-amount">
+            <text class="amount-label">实付</text>
+            <text class="amount-value">¥{{item.totalAmount}}</text>
+          </view>
+        </view>
+
+        <view class="order-card__commission">
+          <text class="commission-text">本单佣金：¥{{item.commission}}</text>
+        </view>
+
+        <view class="order-card__actions" wx:if="{{item.canPickup}}">
+          <button class="pickup-btn" plain="true" data-order-no="{{item.orderNo}}" bindtap="handleConfirmPickup">
+            确认提货
+          </button>
+        </view>
+      </view>
+
+      <view class="load-more">
+        <text wx:if="{{hasMore}}">加载更多...</text>
+        <text wx:else>没有更多了</text>
+      </view>
+    </view>
+
+    <view class="empty-state" wx:else>
+      <t-icon name="package" size="120rpx" opacity="0.3"></t-icon>
+      <text class="empty-text">暂无订单</text>
+    </view>
+
+    <view class="leader-bottom-safe"></view>
+  </scroll-view>
+
+  <loading show="{{loading}}" text="加载中..."></loading>
+  <toast show="{{toastVisible}}" message="{{toastMessage}}" type="{{toastType}}" bindclose="hideToast"></toast>
+</view>

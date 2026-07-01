@@ -1,0 +1,309 @@
+@import "../common.less";
+// Re-compile trigger for watch less compilation.
+
+.orders-page {
+  background: var(--merchant-bg);
+}
+
+.orders-topbar {
+  display: grid;
+  grid-template-columns: 1fr 84rpx 84rpx;
+  gap: var(--space-2);
+  align-items: center;
+  padding: var(--space-2) var(--space-3) var(--space-3);
+}
+
+.search-pill {
+  height: 72rpx;
+  min-width: 0;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-full);
+  background: var(--merchant-surface);
+  border: 1rpx solid var(--merchant-line);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.search-icon {
+  width: 32rpx;
+  height: 32rpx;
+  flex: 0 0 32rpx;
+}
+
+.search-placeholder {
+  color: var(--merchant-text-muted);
+  font-size: 26rpx;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.top-action {
+  height: 72rpx;
+  border-radius: var(--radius-md);
+  background: var(--merchant-surface);
+  border: 1rpx solid var(--merchant-line);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rpx;
+  color: var(--merchant-text-sub);
+  font-size: 20rpx;
+  font-weight: 700;
+}
+
+.top-action-icon {
+  width: 30rpx;
+  height: 30rpx;
+}
+
+.order-tabs,
+.order-chips {
+  white-space: nowrap;
+  background: var(--merchant-surface);
+}
+
+.order-tabs {
+  height: 88rpx;
+  border-top: 1rpx solid var(--merchant-line-soft);
+  border-bottom: 1rpx solid var(--merchant-line-soft);
+}
+
+.order-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 88rpx;
+  margin-left: var(--space-3);
+  color: var(--merchant-text-sub);
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+.order-tab.active {
+  color: var(--merchant-primary-strong);
+  font-weight: 900;
+}
+
+.order-tab.active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 10rpx;
+  height: 6rpx;
+  border-radius: var(--radius-full);
+  background: var(--merchant-accent);
+}
+
+.order-chips {
+  height: 82rpx;
+  padding-left: var(--space-3);
+  border-bottom: 1rpx solid var(--merchant-line-soft);
+}
+
+.order-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 52rpx;
+  padding: 0 24rpx;
+  margin: 15rpx 14rpx 15rpx 0;
+  border-radius: var(--radius-full);
+  background: var(--merchant-bg-soft);
+  color: var(--merchant-text-sub);
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
+.order-chip.active {
+  background: var(--merchant-primary-soft);
+  color: var(--merchant-primary-strong);
+}
+
+.order-list {
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.order-card {
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  background: var(--merchant-surface);
+  border: 1rpx solid var(--merchant-line);
+  box-shadow: var(--shadow-soft);
+}
+
+.order-head,
+.buyer-info,
+.goods-row,
+.order-summary,
+.order-actions {
+  display: flex;
+  align-items: center;
+}
+
+.order-head {
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding-bottom: var(--space-2);
+}
+
+.buyer-info {
+  min-width: 0;
+  flex: 1;
+  gap: var(--space-2);
+}
+
+.buyer-avatar {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: var(--radius-full);
+  background: var(--merchant-primary-soft);
+  flex: 0 0 64rpx;
+}
+
+.buyer-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.buyer-name {
+  color: var(--merchant-text);
+  font-size: 28rpx;
+  font-weight: 800;
+}
+
+.order-time,
+.order-no,
+.goods-meta,
+.goods-count {
+  color: var(--merchant-text-muted);
+  font-size: 22rpx;
+}
+
+.status-pill.success {
+  background: var(--merchant-primary-soft);
+  color: var(--merchant-primary);
+}
+
+.status-pill.muted {
+  background: var(--merchant-bg-soft);
+  color: var(--merchant-text-muted);
+}
+
+.goods-row {
+  min-height: 148rpx;
+  padding: var(--space-3) 0;
+  gap: var(--space-2);
+  border-top: 1rpx solid var(--merchant-line-soft);
+  border-bottom: 1rpx solid var(--merchant-line-soft);
+}
+
+.goods-image {
+  width: 128rpx;
+  height: 128rpx;
+  border-radius: var(--radius-md);
+  background: var(--merchant-bg-soft);
+  flex: 0 0 128rpx;
+}
+
+.goods-main {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.goods-title {
+  color: var(--merchant-text);
+  font-size: 28rpx;
+  font-weight: 800;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.goods-meta,
+.order-no {
+  line-height: 1.35;
+}
+
+.goods-side {
+  align-self: stretch;
+  flex: 0 0 96rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.goods-price {
+  color: var(--merchant-accent);
+  font-size: 26rpx;
+  font-weight: 900;
+}
+
+.order-summary {
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  color: var(--merchant-text-sub);
+  font-size: 24rpx;
+}
+
+.summary-amount {
+  color: var(--merchant-primary-strong);
+  font-weight: 800;
+}
+
+.order-actions {
+  justify-content: flex-end;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.pill-btn {
+  min-width: 128rpx;
+  height: 56rpx;
+  padding: 0 22rpx;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+  font-weight: 800;
+}
+
+.pill-btn.ghost {
+  color: var(--merchant-text-sub);
+  background: var(--merchant-surface);
+  border: 1rpx solid var(--merchant-line);
+}
+
+.pill-btn.secondary {
+  color: var(--merchant-primary-strong);
+  background: var(--merchant-primary-soft);
+}
+
+.pill-btn.primary {
+  color: var(--merchant-surface);
+  background: var(--merchant-primary);
+}
+
+.load-more {
+  padding: 6rpx var(--space-3) 28rpx;
+  color: var(--merchant-text-muted);
+  font-size: 24rpx;
+  text-align: center;
+}

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>湾源农仓管理后台 - 订单详情</title>
+  <link rel="stylesheet" href="./00-管理面板公共.css">
+</head>
+<body>
+<input class="drawer-check" type="checkbox" id="drawerToggle">
+<aside class="sidebar">
+  <div class="brand"><div class="brand-mark">湾</div><div><strong>湾源农仓</strong><span>运营管理后台</span></div></div>
+  <nav class="menu" aria-label="后台导航"><a class="" href="01-控制台首页.html">控制台首页</a>
+<a class="" href="02-用户管理页.html">用户管理</a>
+<a class="" href="03-商户管理页.html">商户管理</a>
+<a class="" href="04-商品管理页.html">商品管理</a>
+<a class="" href="05-活动管理页.html">活动管理</a>
+<a class="" href="06-订单列表页.html">订单列表</a>
+<a class="active" href="07-订单详情页.html">订单详情</a>
+<a class="" href="08-售后仲裁页.html">售后仲裁</a>
+<a class="" href="09-数据看板页.html">数据看板</a>
+<a class="" href="10-物流配置页.html">物流配置</a>
+<a class="" href="11-系统配置页.html">系统配置</a></nav>
+  <div class="sidebar-user"><div class="avatar">管</div><div class="user-text"><strong>平台管理员</strong><span>admin@wanyuan</span></div><button type="button">退出</button></div>
+</aside>
+<label class="drawer-mask" for="drawerToggle" aria-label="关闭菜单"></label>
+<main class="app">
+<header class="topbar">
+  <div class="top-left"><label class="menu-toggle" for="drawerToggle" aria-label="打开菜单">☰</label><div><div class="breadcrumb">后台管理 / 订单详情</div><h1>订单详情</h1></div></div>
+  <label class="global-search"><span>⌕</span><input type="text" placeholder="搜索订单号 / 商品 / 商户 / 用户手机号"></label>
+  <div class="top-actions"><button class="text-btn" type="button">导出</button><button class="primary-btn" type="button">录入物流</button><div class="admin-user"><div class="avatar small">管</div><span>平台管理员</span></div></div>
+</header>
+<section class="metric-grid"><article class="metric-card"><div class="metric-title">订单状态</div><strong>待发货</strong><p>距离超时 1h 42m</p></article><article class="metric-card"><div class="metric-title">实付金额</div><strong>¥66.70</strong><p>微信支付</p></article><article class="metric-card"><div class="metric-title">商品数量</div><strong>2</strong><p>1 个商户</p></article><article class="metric-card"><div class="metric-title">售后状态</div><strong>无</strong><p>当前无售后</p></article></section><section class="panel"><div class="panel-head"><div><h2>订单详情 WY202606070001</h2><p>订单状态、支付、配送与操作流转记录</p></div><div class="batch-actions"><button class="warn-btn">催发货</button><button class="primary-btn">录入物流</button></div></div><div class="detail-grid"><div class="detail-list"><div class="detail-row"><span>买家信息</span><strong>林小雨 / 138****8899</strong></div><div class="detail-row"><span>收货地址</span><strong>湾源县东山社区 18 号 2 单元 601</strong></div><div class="detail-row"><span>支付流水</span><strong>WX2026060714208899</strong></div><div class="detail-row"><span>下单时间</span><strong>2026-06-07 14:20:18</strong></div></div><div class="detail-list"><div class="detail-row"><span>商户</span><strong>湾源果园</strong></div><div class="detail-row"><span>配送方式</span><strong>同城配送 / 冷链直发</strong></div><div class="detail-row"><span>优惠金额</span><strong>¥5.00</strong></div><div class="detail-row"><span>平台备注</span><strong>用户要求傍晚配送</strong></div></div></div></section><section class="panel"><div class="panel-head compact"><h2>商品明细</h2><a href="08-售后仲裁页.html">跳转售后</a></div><div class="table-x"><table class="data-table"><thead><tr><th>商品</th><th>单价</th><th>数量</th><th>小计</th></tr></thead><tbody><tr><td data-label="商品"><div class="cell-main"><div class="thumb">橙</div><div><strong>赣南脐橙 5斤装</strong><span>SKU: ORG-5001</span></div></div></td><td data-label="单价">¥29.90</td><td data-label="数量">2</td><td data-label="小计">¥59.80</td></tr><tr><td data-label="商品"><div class="cell-main"><div class="thumb">包</div><div><strong>冷链包装服务</strong><span>服务项</span></div></div></td><td data-label="单价">¥6.90</td><td data-label="数量">1</td><td data-label="小计">¥6.90</td></tr></tbody></table></div></section><section class="panel"><div class="panel-head compact"><h2>流转记录</h2></div><div class="todo-list"><div class="todo-item"><div><strong>买家下单并完成支付</strong><span>2026-06-07 14:20:18</span></div></div><div class="todo-item warn"><div><strong>订单待商户发货</strong><span>距离承诺时效不足 2 小时</span></div><a>催发货</a></div></div></section>
+</main>
+</body>
+</html>

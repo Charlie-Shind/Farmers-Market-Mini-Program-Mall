@@ -1,0 +1,155 @@
+﻿<view class="merchant-page has-bottom-actions" style="{{pageStyle}}">
+  <view class="status-space"></view>
+
+  <view class="page-titlebar">
+    <view class="icon-box icon-btn" bindtap="goBack">
+      <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+    </view>
+    <view class="title-block">
+      <view class="page-title">规格库存</view>
+    </view>
+  </view>
+
+  <view class="section-head">
+    <text>规格模式</text>
+  </view>
+  <view class="spec-mode-bar">
+    <view class="mode-chip {{specMode == 'multi' ? 'active' : ''}}" bindtap="onSpecModeChange" data-mode="multi">
+      <text class="mode-check">✓</text>
+      <text>多规格</text>
+    </view>
+    <view class="mode-chip {{specMode == 'single' ? 'active' : ''}}" bindtap="onSpecModeChange" data-mode="single">
+      <text class="mode-check">✓</text>
+      <text>单规格</text>
+    </view>
+    <view class="chip" bindtap="batchFill" wx:if="{{specMode == 'multi'}}">批量填充</view>
+  </view>
+
+  <!-- 单规格模式 -->
+  <block wx:if="{{specMode == 'single'}}">
+    <view class="section-head"><text>价格与库存</text></view>
+    <view class="form-card">
+      <view class="form-row">
+        <view class="form-label-row">
+          <text class="form-label">商品价格</text>
+          <text class="form-hint">必填</text>
+        </view>
+        <view class="number-cell">
+          <text class="number-prefix">¥</text>
+          <input class="number-input" type="digit" value="{{singleSku.price}}" placeholder="0.00" bindinput="onSingleSkuInput" data-field="price" />
+        </view>
+      </view>
+      <view class="form-row">
+        <view class="form-label-row">
+          <text class="form-label">划线价</text>
+          <text class="form-hint">选填</text>
+        </view>
+        <view class="number-cell">
+          <text class="number-prefix">¥</text>
+          <input class="number-input" type="digit" value="{{singleSku.originalPrice}}" placeholder="0.00" bindinput="onSingleSkuInput" data-field="originalPrice" />
+        </view>
+      </view>
+      <view class="form-row">
+        <view class="form-label-row">
+          <text class="form-label">库存数量</text>
+          <text class="form-hint">必填</text>
+        </view>
+        <input class="form-input" type="number" value="{{singleSku.stock}}" placeholder="0" bindinput="onSingleSkuInput" data-field="stock" />
+      </view>
+      <view class="form-row">
+        <view class="form-label-row">
+          <text class="form-label">预警库存</text>
+          <text class="form-hint">选填</text>
+        </view>
+        <input class="form-input" type="number" value="{{singleSku.safetyStock}}" placeholder="0" bindinput="onSingleSkuInput" data-field="safetyStock" />
+      </view>
+      <view class="form-row">
+        <view class="form-label-row">
+          <text class="form-label">每人限购</text>
+          <text class="form-hint">选填</text>
+        </view>
+        <input class="form-input" type="number" value="{{singleSku.limit}}" placeholder="不限" bindinput="onSingleSkuInput" data-field="limit" />
+      </view>
+      <view class="form-row">
+        <view class="form-label-row">
+          <text class="form-label">商品编码</text>
+          <text class="form-hint">选填</text>
+        </view>
+        <input class="form-input" value="{{singleSku.code}}" placeholder="如：BB-LM-001" bindinput="onSingleSkuInput" data-field="code" />
+      </view>
+    </view>
+  </block>
+
+  <!-- 多规格模式 -->
+  <block wx:if="{{specMode == 'multi'}}">
+    <view class="section-head">
+      <text>规格组</text>
+      <text class="section-link" bindtap="addSpecGroup">+ 新增规格组</text>
+    </view>
+    <view class="spec-block" wx:for="{{specGroups}}" wx:key="name">
+      <view class="spec-block-head">
+        <view class="spec-block-title" bindtap="renameSpecGroup" data-group-index="{{index}}">
+          规格组：{{item.name}}
+          <t-icon name="edit" size="22rpx" opacity="0.55"></t-icon>
+        </view>
+        <view class="spec-block-actions">
+          <view class="pill-btn outline" bindtap="addSpecOption" data-group-index="{{index}}">+ 选项</view>
+          <view class="pill-btn danger" bindtap="deleteSpecGroup" data-group-index="{{index}}">删除组</view>
+        </view>
+      </view>
+      <view class="spec-options">
+        <view class="spec-option active" wx:for="{{item.options}}" wx:key="*this" wx:for-item="opt" wx:for-index="oi">
+          <text class="option-check">✓</text>
+          <text class="option-name" bindtap="renameSpecOption" data-group-index="{{index}}" data-opt-index="{{oi}}">{{opt}}</text>
+          <view class="mini-x" catchtap="deleteSpecOption" data-group-index="{{index}}" data-opt-index="{{oi}}">×</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="section-head">
+      <text>规格组合</text>
+      <text class="section-link" bindtap="syncPrice">同步价格</text>
+    </view>
+    <view class="sku-list" wx:if="{{skuList.length}}">
+      <view class="sku-card" wx:for="{{skuList}}" wx:key="id">
+        <view class="sku-head">
+          <view class="sku-name-row">
+            <text class="sku-name">{{item.name}}</text>
+            <text class="sku-code" wx:if="{{item.code}}">编码：{{item.code}}</text>
+          </view>
+          <view class="sku-tools">
+            <view class="pill-btn outline" bindtap="toggleSku" data-id="{{item.id}}">{{item.enabled ? '停用' : '启用'}}</view>
+            <view class="pill-btn danger" bindtap="deleteSku" data-id="{{item.id}}">删除</view>
+          </view>
+        </view>
+        <view class="sku-grid">
+          <view class="sku-field">
+            <text class="sku-label">价格（元）</text>
+            <input class="sku-input" type="digit" value="{{item.price}}" bindinput="onSkuInput" data-id="{{item.id}}" data-field="price" />
+          </view>
+          <view class="sku-field">
+            <text class="sku-label">库存</text>
+            <input class="sku-input" type="number" value="{{item.stock}}" bindinput="onSkuInput" data-id="{{item.id}}" data-field="stock" />
+          </view>
+          <view class="sku-field">
+            <text class="sku-label">活动价（元）</text>
+            <input class="sku-input" type="digit" value="{{item.activityPrice}}" bindinput="onSkuInput" data-id="{{item.id}}" data-field="activityPrice" />
+          </view>
+          <view class="sku-field">
+            <text class="sku-label">限购</text>
+            <input class="sku-input" type="number" value="{{item.limit}}" bindinput="onSkuInput" data-id="{{item.id}}" data-field="limit" />
+          </view>
+        </view>
+      </view>
+    </view>
+    <view class="empty-state" wx:else>
+      <text class="empty-title">暂无规格组合</text>
+      <text class="empty-desc">请先添加规格组和选项，系统将自动生成 SKU 组合</text>
+    </view>
+  </block>
+
+  <view class="bottom-actions">
+    <view class="action-btn secondary" bindtap="saveDraft">保存草稿</view>
+    <view class="action-btn primary" bindtap="saveAndBack">保存并返回</view>
+  </view>
+</view>

@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 750 480" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="750" y2="480" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#6B1A12"/>
+      <stop offset="45%" stop-color="#C43D22"/>
+      <stop offset="100%" stop-color="#E8883A"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="120" y1="40" x2="620" y2="320" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFD966" stop-opacity="0.28"/>
+      <stop offset="100%" stop-color="#FFD966" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="glow1" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(620 80) rotate(90) scale(180)">
+      <stop stop-color="#FFE08A" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#FFE08A" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(90 120) rotate(90) scale(140)">
+      <stop stop-color="#FF9A5C" stop-opacity="0.25"/>
+      <stop offset="1" stop-color="#FF9A5C" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="fade" x1="375" y1="280" x2="375" y2="480" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F6F3EB" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#F6F3EB" stop-opacity="1"/>
+    </linearGradient>
+  </defs>
+  <rect width="750" height="480" fill="url(#bg)"/>
+  <rect width="750" height="480" fill="url(#shine)"/>
+  <circle cx="620" cy="80" r="180" fill="url(#glow1)"/>
+  <circle cx="90" cy="120" r="140" fill="url(#glow2)"/>
+  <path d="M520 60 L680 180" stroke="#FFD966" stroke-opacity="0.18" stroke-width="3" stroke-linecap="round"/>
+  <path d="M560 40 L720 160" stroke="#FFFFFF" stroke-opacity="0.08" stroke-width="2" stroke-linecap="round"/>
+  <path d="M480 90 L640 210" stroke="#FFD966" stroke-opacity="0.12" stroke-width="2" stroke-linecap="round"/>
+  <ellipse cx="580" cy="200" rx="90" ry="36" fill="#FFFFFF" fill-opacity="0.06" transform="rotate(-18 580 200)"/>
+  <ellipse cx="200" cy="260" rx="70" ry="28" fill="#FFFFFF" fill-opacity="0.05" transform="rotate(12 200 260)"/>
+  <rect width="750" height="480" fill="url(#fade)"/>
+</svg>

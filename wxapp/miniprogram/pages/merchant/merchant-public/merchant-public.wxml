@@ -1,0 +1,67 @@
+﻿<view class="merchant-page" style="{{pageStyle}}">
+  <view class="status-space"></view>
+
+  <view class="page-titlebar">
+    <view class="icon-box icon-btn" bindtap="goBack">
+      <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+    </view>
+    <view class="title-block">
+      <view class="page-title">店铺主页预览</view>
+      <view class="page-subtitle">消费者看到的店铺效果</view>
+    </view>
+  </view>
+
+  <view class="shop-header">
+    <view class="shop-avatar-box">
+      <t-icon name="shop" size="40rpx"></t-icon>
+    </view>
+    <view class="shop-header-info">
+      <view class="shop-header-name">湾源农仓旗舰店</view>
+      <view class="shop-header-desc">产地直供 · 48小时发货 · 评分 4.9</view>
+    </view>
+    <button class="shop-follow-btn" bindtap="onFollowTap">关注</button>
+  </view>
+
+  <view class="shop-tags">
+    <view class="shop-tag">
+      <image class="tag-icon" src="/assets/icons/star.svg" mode="aspectFit" />
+      <text>评分4.9</text>
+    </view>
+    <view class="shop-tag">
+      <image class="tag-icon" src="/assets/icons/truck.svg" mode="aspectFit" />
+      <text>及时发货</text>
+    </view>
+    <view class="shop-tag">
+      <image class="tag-icon" src="/assets/icons/shield.svg" mode="aspectFit" />
+      <text>资质认证</text>
+    </view>
+    <view class="shop-tag">
+      <image class="tag-icon" src="/assets/icons/map.svg" mode="aspectFit" />
+      <text>产地云南</text>
+    </view>
+  </view>
+
+  <view class="divider"></view>
+
+  <view class="section-line-title">
+    <text>店铺商品</text>
+    <text class="section-line-count">共{{products.length}}件</text>
+  </view>
+
+  <view class="full-list">
+    <view class="public-product-row" wx:for="{{products}}" wx:key="id">
+      <image class="public-product-img" src="{{item.thumb}}" mode="aspectFill" />
+      <view class="public-product-body">
+        <view class="public-product-head">
+          <view class="public-product-title">{{item.title}}</view>
+          <text wx:if="{{item.tag}}" class="status-pill {{item.tagClass}}">{{item.tag}}</text>
+        </view>
+        <view class="public-product-meta">{{item.meta}}</view>
+        <view class="public-product-bottom">
+          <text class="product-price">{{item.price}}</text>
+          <text class="product-sold">已售{{item.sold}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

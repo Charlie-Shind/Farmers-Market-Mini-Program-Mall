@@ -1,0 +1,242 @@
+@import '../../quick/shared.less';
+
+.help-page {
+  padding-bottom: 48rpx;
+}
+
+.help-head {
+  margin: 0 -32rpx 28rpx;
+  padding: 0 32rpx 28rpx;
+  background: linear-gradient(180deg, rgba(251, 248, 239, 0.98), rgba(251, 248, 239, 0.92));
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.page-title-bar__action {
+  justify-self: end;
+}
+
+.help-hero {
+  margin-top: 12rpx;
+  padding: 28rpx;
+  border-radius: 34rpx;
+  color: #fff;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(255, 224, 173, 0.18), transparent 30%),
+    linear-gradient(135deg, #234a39, #41724f 70%, #6ca76b);
+  box-shadow: 0 22rpx 50rpx rgba(35, 74, 57, 0.16);
+}
+
+.help-hero__eyebrow {
+  display: block;
+  font-size: 22rpx;
+  letter-spacing: 2rpx;
+  font-weight: 800;
+  opacity: 0.8;
+}
+
+.help-hero__title {
+  display: block;
+  margin-top: 10rpx;
+  font-size: 36rpx;
+  line-height: 1.4;
+  font-weight: 900;
+}
+
+.help-hero__desc {
+  display: block;
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.help-hero__support {
+  margin-top: 18rpx;
+  padding: 18rpx 18rpx 16rpx;
+  border-radius: 26rpx;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1rpx solid rgba(255, 255, 255, 0.16);
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+}
+
+.help-hero__support-icon {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 20rpx;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.18);
+  flex: 0 0 72rpx;
+}
+
+.help-hero__support-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.help-hero__support-title {
+  display: block;
+  font-size: 26rpx;
+  font-weight: 900;
+  color: #fff;
+}
+
+.help-hero__support-desc {
+  display: block;
+  margin-top: 4rpx;
+  font-size: 22rpx;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.84);
+}
+
+.help-hero__support-btn {
+  flex-shrink: 0;
+  height: 64rpx;
+  line-height: 64rpx;
+  padding: 0 24rpx;
+  border-radius: 999rpx;
+  background: #fff7eb;
+  color: #264633;
+  font-size: 24rpx;
+  font-weight: 800;
+}
+
+.help-hero__support-btn::after {
+  border: 0;
+}
+
+.help-hero__chips {
+  margin-top: 16rpx;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+}
+
+.help-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 44rpx;
+  padding: 0 16rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 20rpx;
+}
+
+.help-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16rpx;
+}
+
+.help-card {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  padding: 20rpx;
+  border-radius: 28rpx;
+  background: #fff;
+  box-shadow: 0 14rpx 32rpx rgba(37, 68, 44, 0.08);
+}
+
+.help-card__icon {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(37, 68, 44, 0.08);
+  color: var(--green);
+  flex: 0 0 72rpx;
+}
+
+.help-card__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.help-card__title {
+  display: block;
+  font-size: 26rpx;
+  font-weight: 900;
+  color: #1f2f27;
+}
+
+.help-card__desc {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 20rpx;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.help-strip {
+  margin-top: 22rpx;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12rpx;
+}
+
+.help-strip__item {
+  padding: 18rpx 12rpx;
+  border-radius: 22rpx;
+  background: linear-gradient(180deg, rgba(44, 74, 57, 0.06), rgba(44, 74, 57, 0.02));
+  border: 1rpx solid rgba(44, 74, 57, 0.08);
+  text-align: center;
+}
+
+.help-strip__value {
+  display: block;
+  color: #24362c;
+  font-size: 28rpx;
+  font-weight: 900;
+}
+
+.help-strip__label {
+  display: block;
+  margin-top: 4rpx;
+  color: #6d7d74;
+  font-size: 20rpx;
+  line-height: 1.35;
+}
+
+.faq-panel {
+  margin-top: 24rpx;
+}
+
+.faq-panel__hint {
+  font-size: 22rpx;
+  color: var(--muted);
+}
+
+.faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18rpx;
+}
+
+.faq-item {
+  padding: 20rpx 18rpx;
+  border-radius: 24rpx;
+  background: #fbfcfa;
+  border: 1rpx solid rgba(41, 73, 54, 0.08);
+}
+
+.faq-item__q {
+  display: block;
+  font-size: 26rpx;
+  font-weight: 900;
+  color: #1f2f27;
+}
+
+.faq-item__a {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 22rpx;
+  line-height: 1.6;
+  color: var(--muted);
+}

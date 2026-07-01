@@ -1,0 +1,9 @@
+<view class="t-icon" style="{{wrapStyle}}">
+  <image
+    wx:if="{{dataUri}}"
+    class="t-icon__image"
+    src="{{dataUri}}"
+    mode="aspectFit"
+    aria-label="{{name}}"
+  />
+</view>

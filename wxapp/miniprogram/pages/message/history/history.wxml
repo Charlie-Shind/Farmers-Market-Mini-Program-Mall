@@ -1,0 +1,94 @@
+﻿<view class="phone-page history-page" style="{{pageStyle}}">
+  <view class="board-head">
+    <view class="page-title-bar">
+      <button class="back-btn" bindtap="goBack" hover-class="back-btn--hover">
+        <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+      </button>
+      <text class="page-title-bar__title">{{typeLabel}}</text>
+      <text class="page-title-bar__spacer"></text>
+    </view>
+  </view>
+
+  <scroll-view
+    scroll-y="true"
+    class="history-scroll"
+    enhanced="true"
+    show-scrollbar="{{false}}"
+    bindscrolltolower="loadMore"
+  >
+    <view wx:if="{{messages.length > 0}}" class="history-list">
+      <view
+        wx:for="{{messages}}"
+        wx:key="receiptId"
+        wx:for-index="cardIndex"
+        class="history-item"
+      >
+        <text class="history-item__time">{{item.timeText}}</text>
+
+        <view class="notice-card" data-receipt-id="{{item.receiptId}}" bindtap="openMessage">
+          <view class="notice-card__header">
+            <view class="notice-avatar">
+              <image
+                wx:if="{{item.showPublisherAvatar}}"
+                class="notice-avatar__img"
+                src="{{item.publisherAvatar}}"
+                mode="aspectFill"
+                data-index="{{cardIndex}}"
+                binderror="handleAvatarError"
+              ></image>
+              <t-icon wx:else name="{{item.fallbackIconName}}" size="32rpx" opacity="0.9"></t-icon>
+            </view>
+            <text class="notice-name">{{publisherName}}</text>
+            <view class="notice-more">
+              <text></text>
+              <text></text>
+              <text></text>
+            </view>
+          </view>
+
+          <view class="notice-card__body">
+            <text class="notice-title">{{item.title}}</text>
+            <text wx:if="{{item.showSummary}}" class="notice-summary">{{item.summary}}</text>
+            <text wx:if="{{item.showContent}}" class="notice-content">{{item.content}}</text>
+
+            <view
+              wx:if="{{item.showImage}}"
+              class="notice-cover-wrap"
+              catchtap="previewImage"
+              data-url="{{item.imageUrl}}"
+            >
+              <image
+                class="notice-cover"
+                src="{{item.imageUrl}}"
+                mode="widthFix"
+                data-index="{{cardIndex}}"
+                binderror="handleImageError"
+              ></image>
+            </view>
+          </view>
+
+          <view class="notice-card__footer">
+            <view class="notice-footer-left">
+              <text class="notice-footer-name">{{footerName}}</text>
+            </view>
+            <view class="notice-footer-right">
+              <text class="notice-footer-type">{{footerType}}</text>
+              <t-icon name="chevronRight" size="22rpx" opacity="0.45"></t-icon>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view wx:else class="empty-state">
+      <text class="empty-state__text">{{loading ? '加载中' : emptyText}}</text>
+    </view>
+
+    <view wx:if="{{messages.length}}" class="load-more">
+      <text wx:if="{{loadingMore}}">加载中</text>
+      <text wx:elif="{{noMore}}">已到底</text>
+    </view>
+
+    <view class="scroll-spacer"></view>
+  </scroll-view>
+</view>

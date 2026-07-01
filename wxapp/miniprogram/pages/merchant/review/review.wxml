@@ -1,0 +1,88 @@
+﻿<view class="merchant-page has-tabbar" style="{{pageStyle}}">
+  <view class="status-space"></view>
+
+  <view class="page-titlebar">
+    <view class="icon-box icon-btn" bindtap="goBack">
+      <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+    </view>
+    <view class="title-block">
+      <view class="page-title">评价管理</view>
+      <view class="page-subtitle">查看买家评价并回复</view>
+    </view>
+  </view>
+
+  <view class="data-grid-3">
+    <view class="data-cell">
+      <view class="data-num">{{shopScore}}</view>
+      <view class="data-label">店铺评分</view>
+    </view>
+    <view class="data-cell">
+      <view class="data-num">{{goodRate}}</view>
+      <view class="data-label">好评率</view>
+    </view>
+    <view class="data-cell">
+      <view class="data-num">{{pendingReply}}</view>
+      <view class="data-label">待回复</view>
+    </view>
+  </view>
+
+  <scroll-view scroll-x class="toolbar" enhanced show-scrollbar="{{false}}">
+    <view class="chip {{activeChip == 'all' ? 'active' : ''}}" bindtap="onChipTap" data-chip="all">全部</view>
+    <view class="chip {{activeChip == 'good' ? 'active' : ''}}" bindtap="onChipTap" data-chip="good">好评</view>
+    <view class="chip {{activeChip == 'normal' ? 'active' : ''}}" bindtap="onChipTap" data-chip="normal">中评</view>
+    <view class="chip {{activeChip == 'bad' ? 'active' : ''}}" bindtap="onChipTap" data-chip="bad">差评</view>
+    <view class="chip {{activeChip == 'todo' ? 'active' : ''}}" bindtap="onChipTap" data-chip="todo">待回复</view>
+  </scroll-view>
+
+  <view class="review-list">
+    <block wx:for="{{filteredList}}" wx:key="id">
+      <view class="review-item">
+        <view class="buyer-row">
+          <view class="buyer-info">
+            <image class="avatar-box" src="{{item.avatar}}" mode="aspectFill" />
+            <view class="buyer-name">{{item.buyer}}</view>
+          </view>
+          <view class="status-pill {{item.replyStatus == 'todo' ? 'warning' : 'info'}}">{{item.replyText}}</view>
+        </view>
+        <view class="goods-row" bindtap="goOrderDetail" data-order-no="{{item.orderNo}}">
+          <image class="goods-img" src="{{item.goodsImg}}" mode="aspectFill" />
+          <view class="goods-main">
+            <view class="goods-title">{{item.content}}</view>
+            <view class="goods-sub">评分 {{item.score}} · {{item.goodsName}}</view>
+          </view>
+          <view class="star-text">{{item.starText}}</view>
+        </view>
+        <view class="item-actions">
+          <view class="pill-btn" bindtap="copyReview" data-id="{{item.id}}">复制</view>
+          <view class="btn-row">
+            <view class="pill-btn primary" wx:if="{{item.replyStatus == 'todo'}}" bindtap="replyReview" data-id="{{item.id}}">回复评价</view>
+          </view>
+        </view>
+      </view>
+    </block>
+    <view class="list-empty" wx:if="{{filteredList.length == 0}}">没有匹配评价</view>
+  </view>
+
+  <view class="bottom-nav">
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/dashboard/dashboard">
+      <t-icon name="home" size="40rpx"></t-icon>
+      <text>首页</text>
+    </view>
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/messages/messages">
+      <t-icon name="message" size="40rpx"></t-icon>
+      <text>聊天</text>
+    </view>
+    <view class="nav-item active">
+      <t-icon name="invoice" size="40rpx"></t-icon>
+      <text>订单</text>
+    </view>
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/products/products">
+      <t-icon name="package" size="40rpx"></t-icon>
+      <text>库存</text>
+    </view>
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/shop/shop">
+      <t-icon name="profile" size="40rpx"></t-icon>
+      <text>账号</text>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,134 @@
+<scroll-view scroll-y="true" enhanced show-scrollbar="{{false}}" class="home-scroll" style="height: 100vh;">
+<view class="phone-page home-page" style="{{pageStyle}}">
+  <view class="home-hero">
+    <view class="hero-top" style="{{topSearchStyle}}">
+      <button class="location-btn" data-label="定位" bindtap="openSection">
+        <view class="location-icon">
+          <t-icon name="location" size="40rpx" color="brandGreen"></t-icon>
+        </view>
+        <text class="location-text">{{home.locationDisplay}}</text>
+        <t-icon name="chevronDown" size="22rpx" opacity="0.7" color="brandGreen"></t-icon>
+      </button>
+    </view>
+
+    <view class="search-shell" bindtap="openSearch" hover-class="search-shell--hover">
+      <view class="search-box search-box--hero">
+        <t-icon name="search" size="42rpx" opacity="0.65" color="#89b99e"></t-icon>
+        <text class="search-box__text">{{home.searchPlaceholder}}</text>
+      </view>
+      <view class="search-btn">
+        <text>搜索</text>
+      </view>
+    </view>
+
+    <view wx:if="{{home.banners.length}}" class="hero-banner-shell">
+      <view class="hero-banner-frame">
+        <swiper
+          class="hero-banner-swiper"
+          circular="{{home.banners.length > 1}}"
+          autoplay="{{home.banners.length > 1}}"
+          interval="5000"
+          duration="520"
+          current="{{activeBannerIndex}}"
+          bindchange="onBannerChange"
+        >
+          <swiper-item wx:for="{{home.banners}}" wx:for-item="banner" wx:for-index="index" wx:key="id">
+            <image class="hero-banner-image" src="{{banner.imageUrl}}" mode="aspectFill" />
+          </swiper-item>
+        </swiper>
+        <view class="banner-dots">
+          <text
+            wx:for="{{home.banners}}"
+            wx:for-item="dot"
+            wx:for-index="dotIndex"
+            wx:key="id"
+            class="{{dotIndex === activeBannerIndex ? 'active' : ''}}"
+          ></text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="quick-card">
+    <view
+      wx:for="{{home.quickEntries}}"
+      wx:key="key"
+      class="quick-entry"
+      data-link-type="{{item.linkType}}"
+      data-link-id="{{item.linkId}}"
+      bindtap="openHomeEntry"
+    >
+      <view class="quick-icon">
+        <image class="quick-icon__image" src="{{item.icon}}" mode="scaleToFill"></image>
+      </view>
+      <text class="quick-label">{{item.label}}</text>
+    </view>
+  </view>
+
+  <view class="panel recommend-panel">
+    <view class="section-title">
+      <text class="section-title__title">智能推荐</text>
+      <button class="section-more" data-scene="recommend" data-label="智能推荐" data-target="product-list" bindtap="openSection">
+        <text>查看更多</text>
+        <t-icon name="chevronRight" size="24rpx" opacity="0.72" color="brandMuted"></t-icon>
+      </button>
+    </view>
+    <view class="goods-grid">
+      <product-card
+        wx:for="{{home.recommendations}}"
+        wx:key="id"
+        product="{{item}}"
+        layout="vertical"
+        bind:addtocart="addHomeProductToCart"
+      ></product-card>
+    </view>
+  </view>
+
+  <view class="panel rank-panel">
+    <view class="section-title rank-panel__header">
+      <view class="rank-panel__title-group">
+        <view class="rank-panel__title-row">
+          <t-icon name="star" size="36rpx" color="brandOrange"></t-icon>
+          <text class="section-title__title">热销榜单</text>
+        </view>
+        <text class="rank-panel__subtitle">每日精选 · 口碑好货</text>
+      </view>
+      <button class="section-more" data-scene="hot" data-label="热销榜单" data-target="product-list" bindtap="openSection">
+        <text>查看更多</text>
+        <t-icon name="chevronRight" size="24rpx" opacity="0.72" color="brandMuted"></t-icon>
+      </button>
+    </view>
+    <view class="rank-board">
+      <view class="rank-tabs">
+        <view
+          wx:for="{{home.rankTabs}}"
+          wx:key="key"
+          class="rank-tab {{item.key === home.activeRankTab ? 'active' : ''}}"
+          data-key="{{item.key}}"
+          bindtap="switchRankTab"
+        >
+          <text class="rank-tab__label">{{item.label}}</text>
+        </view>
+      </view>
+      <view class="rank-list">
+        <product-card
+          wx:for="{{home.hotList}}"
+          wx:key="id"
+          product="{{item}}"
+          layout="rank"
+          bind:addtocart="addHomeProductToCart"
+        ></product-card>
+      </view>
+    </view>
+  </view>
+
+  <sku-spec-sheet
+    show="{{showSpecSheet}}"
+    product="{{activeSpecProduct}}"
+    bind:close="onCloseSpecSheet"
+    bind:confirm="onConfirmSpecSheet"
+  ></sku-spec-sheet>
+
+  <view class="safe-bottom" style="height: 50rpx;"></view>
+</view>
+</scroll-view>

@@ -1,0 +1,509 @@
+﻿<view class="merchant-page has-bottom-actions" style="{{pageStyle}}">
+  <view class="status-space"></view>
+
+  <view class="page-titlebar">
+    <view class="icon-box icon-btn" bindtap="goBack">
+      <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+    </view>
+    <view class="title-block">
+      <view class="page-title">{{productId ? '编辑商品' : '创建商品'}}</view>
+    </view>
+  </view>
+
+  <!-- 1. 商品轮播图 -->
+  <view class="merchant-panel" id="product-section-banner">
+    <view class="merchant-section-head">
+      <text class="merchant-section-head__title">商品轮播图</text>
+      <text class="merchant-section-head__hint">最多 9 张 · 第 1 张为主图</text>
+    </view>
+    <scroll-view class="banner-strip" scroll-x="true" show-scrollbar="false" enable-flex="true">
+      <view
+        wx:for="{{form.images}}"
+        wx:for-item="image"
+        wx:for-index="imageIndex"
+        wx:key="*this"
+        class="banner-strip__item"
+      >
+        <image class="banner-strip__img" src="{{image}}" mode="aspectFill"></image>
+        <text wx:if="{{imageIndex === 0}}" class="banner-strip__badge">主图</text>
+        <view
+          class="banner-strip__remove"
+          data-index="{{imageIndex}}"
+          bindtap="onRemoveBannerImage"
+        >×</view>
+      </view>
+      <view
+        wx:if="{{form.images.length < 9}}"
+        class="banner-strip__add"
+        bindtap="onAddBannerImage"
+      >
+        <t-icon name="plus" size="40rpx" color="#8b8f8a"></t-icon>
+        <text class="banner-strip__add-text">添加图片</text>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 2. 分类 + 标题 + 副标题 -->
+  <view class="merchant-panel" id="product-section-basic">
+    <view class="merchant-section-head">
+      <text class="merchant-section-head__title">商品信息</text>
+    </view>
+
+    <view class="merchant-field">
+      <text class="merchant-label">商品分类 <text class="required">*</text></text>
+      <picker
+        wx:if="{{!selectedCategory && !pendingCategoryParent}}"
+        mode="selector"
+        range="{{categories}}"
+        range-key="name"
+        bindchange="onCategoryParentChange"
+      >
+        <view class="picker-value-box">
+          <text class="picker-value-text picker-value-text--placeholder">请选择一级分类</text>
+          <t-icon name="chevronRight" size="24rpx" opacity="0.6"></t-icon>
+        </view>
+      </picker>
+
+      <view wx:else class="picker-value-box" bindtap="onReselectCategoryParent">
+        <text class="picker-value-text">{{pendingCategoryParent.name}}</text>
+        <text class="picker-reselect">重选</text>
+        <t-icon name="chevronRight" size="24rpx" opacity="0.6"></t-icon>
+      </view>
+
+      <picker
+        wx:if="{{pendingCategoryParent && !selectedCategory}}"
+        class="category-sub-picker"
+        mode="selector"
+        range="{{pendingCategoryParent.children}}"
+        range-key="name"
+        bindchange="onCategoryChildChange"
+      >
+        <view class="picker-value-box picker-value-box--sub">
+          <text class="picker-value-text picker-value-text--placeholder">请选择二级分类</text>
+          <t-icon name="chevronRight" size="24rpx" opacity="0.6"></t-icon>
+        </view>
+      </picker>
+    </view>
+
+    <view class="merchant-field">
+      <text class="merchant-label">商品标题 <text class="required">*</text></text>
+      <input
+        class="merchant-input"
+        value="{{form.title}}"
+        data-field="title"
+        bindinput="onFieldInput"
+        placeholder="请输入商品标题（建议 15 字以内）"
+        placeholder-class="merchant-input__placeholder"
+        maxlength="60"
+      />
+    </view>
+
+    <view class="merchant-field">
+      <text class="merchant-label">商品副标题</text>
+      <input
+        class="merchant-input"
+        value="{{form.subtitle}}"
+        data-field="subtitle"
+        bindinput="onFieldInput"
+        placeholder="选填，营销卖点 / 简短描述"
+        placeholder-class="merchant-input__placeholder"
+        maxlength="80"
+      />
+    </view>
+  </view>
+
+  <!-- 3. 价格 + 库存 -->
+  <view class="merchant-panel" id="product-section-price">
+    <view class="merchant-section-head">
+      <text class="merchant-section-head__title">价格与库存</text>
+    </view>
+
+    <view class="merchant-grid-2">
+      <view class="merchant-field">
+        <text class="merchant-label">销售价 <text class="required">*</text></text>
+        <input
+          class="merchant-input"
+          type="digit"
+          value="{{form.price}}"
+          data-field="price"
+          bindinput="onFieldInput"
+          placeholder="0.00"
+          placeholder-class="merchant-input__placeholder"
+        />
+      </view>
+      <view class="merchant-field">
+        <text class="merchant-label">划线价</text>
+        <input
+          class="merchant-input"
+          type="digit"
+          value="{{form.originalPrice}}"
+          data-field="originalPrice"
+          bindinput="onFieldInput"
+          placeholder="0.00"
+          placeholder-class="merchant-input__placeholder"
+        />
+      </view>
+    </view>
+
+    <view class="merchant-grid-2">
+      <view class="merchant-field">
+        <text class="merchant-label">库存 <text class="required">*</text></text>
+        <input
+          class="merchant-input"
+          type="number"
+          value="{{form.stock}}"
+          data-field="stock"
+          bindinput="onFieldInput"
+          placeholder="0"
+          placeholder-class="merchant-input__placeholder"
+        />
+      </view>
+      <view class="merchant-field" wx:if="{{productId}}">
+        <text class="merchant-label">总销量</text>
+        <text class="merchant-static">{{form.soldCountText || '—'}}</text>
+        <!-- TODO(后端字段兼容): 后端 MerchantProductDetail 暂无 soldCount 字段；
+             等后端补字段后，将 soldCountText 改为 soldCount（数字），并去掉 '—' 兜底。 -->
+      </view>
+      <view class="merchant-field" wx:elif="{{form.isPreSale}}">
+        <text class="merchant-label">预售模式</text>
+        <text class="merchant-static merchant-static--active">已开启</text>
+      </view>
+      <view class="merchant-field" wx:else>
+        <text class="merchant-label">销售模式</text>
+        <text class="merchant-static">现货</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 4. 规格设置 -->
+  <view class="merchant-panel" id="product-section-sku">
+    <view class="merchant-section-head">
+      <text class="merchant-section-head__title">规格设置</text>
+    </view>
+
+    <view class="merchant-field">
+      <view class="switch-row">
+        <text class="switch-row__label">{{isMultiSpec ? '多规格模式 · 开启后可添加多个规格组' : '单规格模式 · 仅 1 个 SKU'}}</text>
+        <switch checked="{{isMultiSpec}}" bindchange="toggleMultiSpec" color="#2c4a39" />
+      </view>
+    </view>
+
+    <view wx:if="{{!isMultiSpec}}" class="merchant-field">
+      <text class="merchant-label">默认 SKU 名称</text>
+      <input
+        class="merchant-input"
+        value="{{form.skuName}}"
+        data-field="skuName"
+        bindinput="onFieldInput"
+        placeholder="如：规格项"
+        placeholder-class="merchant-input__placeholder"
+      />
+    </view>
+
+    <view wx:if="{{isMultiSpec}}">
+      <view class="merchant-row" style="margin-bottom: 12rpx; align-items: center; justify-content: space-between;">
+        <text class="merchant-label">规格组</text>
+        <button class="merchant-btn merchant-btn--ghost" plain="true" hover-class="none" bindtap="addSpecGroup">+ 添加规格组</button>
+      </view>
+
+      <view class="spec-group-list">
+        <view
+          wx:for="{{specGroups}}"
+          wx:for-item="group"
+          wx:for-index="groupIndex"
+          wx:key="id"
+          class="spec-group-card"
+        >
+          <view class="merchant-row" style="gap: 12rpx; align-items: center;">
+            <input
+              class="merchant-input merchant-input--compact"
+              value="{{group.name}}"
+              data-index="{{groupIndex}}"
+              bindinput="onSpecGroupNameInput"
+              placeholder="如：规格"
+              placeholder-class="merchant-input__placeholder"
+            />
+            <button
+              class="merchant-btn merchant-btn--ghost merchant-btn--small"
+              plain="true"
+              hover-class="none"
+              bindtap="toggleSpecGroup"
+              data-index="{{groupIndex}}"
+            >{{group.collapsed ? '展开' : '收起'}}</button>
+          </view>
+
+          <view wx:if="{{!group.collapsed}}" class="spec-option-list">
+            <view
+              wx:for="{{group.options}}"
+              wx:for-item="option"
+              wx:for-index="optionIndex"
+              wx:key="id"
+              class="merchant-row spec-option-row"
+            >
+              <input
+                class="merchant-input merchant-input--compact"
+                value="{{option.label}}"
+                data-group-index="{{groupIndex}}"
+                data-option-index="{{optionIndex}}"
+                bindinput="onSpecOptionInput"
+                placeholder="如：红色 / 大份"
+                placeholder-class="merchant-input__placeholder"
+              />
+              <button
+                class="merchant-btn merchant-btn--ghost merchant-btn--small"
+                plain="true"
+                hover-class="none"
+                bindtap="removeSpecOption"
+                data-group-index="{{groupIndex}}"
+                data-option-index="{{optionIndex}}"
+              >删除</button>
+            </view>
+            <button
+              class="merchant-btn merchant-btn--ghost"
+              plain="true"
+              hover-class="none"
+              bindtap="addSpecOption"
+              data-index="{{groupIndex}}"
+            >+ 添加选项</button>
+          </view>
+        </view>
+      </view>
+
+      <view class="merchant-field" style="margin-top: 16rpx;">
+        <text class="merchant-label">SKU 列表 · 共 {{generatedSkuRows.length}} 个组合</text>
+        <view class="sku-row-list">
+          <view
+            wx:for="{{generatedSkuRows}}"
+            wx:for-item="sku"
+            wx:for-index="skuIndex"
+            wx:key="key"
+            class="sku-row-card"
+          >
+            <view class="merchant-row" style="justify-content: space-between; align-items: center;">
+              <text class="merchant-item__title">{{sku.label || '规格项'}}</text>
+              <text class="merchant-tag">组合 {{skuIndex + 1}}</text>
+            </view>
+
+            <view class="merchant-grid-2">
+              <view class="merchant-field merchant-field--compact">
+                <text class="merchant-label">SKU 名称</text>
+                <input
+                  class="merchant-input merchant-input--compact"
+                  value="{{sku.skuName}}"
+                  data-row-index="{{skuIndex}}"
+                  data-field="skuName"
+                  bindinput="onGeneratedSkuInput"
+                  placeholder="组合名称"
+                  placeholder-class="merchant-input__placeholder"
+                />
+              </view>
+              <view class="merchant-field merchant-field--compact">
+                <text class="merchant-label">销售价</text>
+                <input
+                  class="merchant-input merchant-input--compact"
+                  type="digit"
+                  value="{{sku.price}}"
+                  data-row-index="{{skuIndex}}"
+                  data-field="price"
+                  bindinput="onGeneratedSkuInput"
+                  placeholder="0.00"
+                  placeholder-class="merchant-input__placeholder"
+                />
+              </view>
+            </view>
+
+            <view class="merchant-grid-2">
+              <view class="merchant-field merchant-field--compact">
+                <text class="merchant-label">划线价</text>
+                <input
+                  class="merchant-input merchant-input--compact"
+                  type="digit"
+                  value="{{sku.originalPrice}}"
+                  data-row-index="{{skuIndex}}"
+                  data-field="originalPrice"
+                  bindinput="onGeneratedSkuInput"
+                  placeholder="0.00"
+                  placeholder-class="merchant-input__placeholder"
+                />
+              </view>
+              <view class="merchant-field merchant-field--compact">
+                <text class="merchant-label">库存</text>
+                <input
+                  class="merchant-input merchant-input--compact"
+                  type="number"
+                  value="{{sku.stock}}"
+                  data-row-index="{{skuIndex}}"
+                  data-field="stock"
+                  bindinput="onGeneratedSkuInput"
+                  placeholder="0"
+                  placeholder-class="merchant-input__placeholder"
+                />
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 5. 商品详情 -->
+  <view class="merchant-panel" id="product-section-detail">
+    <view class="merchant-section-head">
+      <text class="merchant-section-head__title">商品详情</text>
+    </view>
+
+    <view class="merchant-field">
+      <text class="merchant-label">详情描述</text>
+      <textarea
+        class="merchant-textarea"
+        value="{{form.detailDesc}}"
+        data-field="detailDesc"
+        bindinput="onFieldInput"
+        placeholder="请输入商品详情介绍，支持文字描述（富文本编辑器待接入）"
+        placeholder-class="merchant-input__placeholder"
+        maxlength="2000"
+        auto-height="true"
+      ></textarea>
+    </view>
+  </view>
+
+  <!-- 6. 更多信息（折叠） -->
+  <view class="merchant-panel" id="product-section-extra">
+    <view class="merchant-section-head merchant-section-head--clickable" bindtap="toggleMoreInfo">
+      <text class="merchant-section-head__title">更多信息</text>
+      <view class="merchant-row" style="align-items: center; gap: 8rpx;">
+        <text wx:if="{{moreInfoFilledCount > 0}}" class="merchant-section-head__badge">{{moreInfoFilledCount}}</text>
+        <text wx:if="{{moreInfoFilledCount > 0}}" class="merchant-section-head__hint">项已填写</text>
+        <t-icon
+          src="{{showMoreInfo ? icons.chevronUp : icons.chevronDown}}"
+          size="24rpx"
+          color="#8b8f8a"
+        ></t-icon>
+      </view>
+    </view>
+
+    <view wx:if="{{showMoreInfo}}" class="more-info-body">
+      <!-- 6.1 服务标签 -->
+      <view class="merchant-field">
+        <text class="merchant-label">服务标签</text>
+        <view class="service-chips">
+          <view
+            wx:for="{{serviceOptions}}"
+            wx:for-item="opt"
+            wx:key="key"
+            class="service-chip {{isServiceSelected(opt.key) ? 'service-chip--active' : ''}}"
+            data-key="{{opt.key}}"
+            bindtap="toggleServiceTag"
+          >
+            <text class="service-chip__title">{{opt.title}}</text>
+            <text class="service-chip__desc">{{opt.desc}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 6.2 产地 -->
+      <view class="merchant-field">
+        <text class="merchant-label">产地</text>
+        <input
+          class="merchant-input"
+          value="{{form.originPlace}}"
+          data-field="originPlace"
+          bindinput="onFieldInput"
+          placeholder="如：云南·楚雄"
+          placeholder-class="merchant-input__placeholder"
+        />
+      </view>
+
+      <!-- 6.3 溯源 -->
+      <view class="merchant-field">
+        <text class="merchant-label">溯源码</text>
+        <input
+          class="merchant-input"
+          value="{{form.traceCode}}"
+          data-field="traceCode"
+          bindinput="onFieldInput"
+          placeholder="选填，溯源批次 / 编号"
+          placeholder-class="merchant-input__placeholder"
+        />
+      </view>
+      <view class="merchant-field">
+        <text class="merchant-label">溯源说明</text>
+        <textarea
+          class="merchant-textarea merchant-textarea--short"
+          value="{{form.traceDesc}}"
+          data-field="traceDesc"
+          bindinput="onFieldInput"
+          placeholder="如：全程冷链配送，支持农药残留抽检合格验证"
+          placeholder-class="merchant-input__placeholder"
+          maxlength="200"
+          auto-height="true"
+        ></textarea>
+      </view>
+
+      <!-- 6.4 视频上传 -->
+      <view class="merchant-field">
+        <text class="merchant-label">商品视频</text>
+        <view wx:if="{{form.videoUrl}}" class="video-preview">
+          <video
+            class="video-preview__player"
+            src="{{form.videoUrl}}"
+            object-fit="cover"
+            show-center-play-btn="true"
+          ></video>
+          <view class="video-preview__remove" bindtap="onRemoveVideo">×</view>
+        </view>
+        <button
+          wx:else
+          class="merchant-btn merchant-btn--ghost"
+          plain="true"
+          hover-class="none"
+          bindtap="onUploadVideo"
+        >上传视频（最多 60s）</button>
+      </view>
+
+      <!-- 6.5 预售开关 -->
+      <view class="merchant-field">
+        <view class="switch-row">
+          <view style="display: flex; flex-direction: column; gap: 4rpx;">
+            <text class="merchant-label--inline">开启预售</text>
+            <text class="switch-row__hint">开启后买家可先下单，商家备货后再发货</text>
+          </view>
+          <switch checked="{{form.isPreSale}}" bindchange="onPreSaleChange" color="#2c4a39" />
+        </view>
+      </view>
+
+      <view wx:if="{{form.isPreSale}}" class="merchant-grid-2">
+        <view class="merchant-field">
+          <text class="merchant-label">线下价</text>
+          <input
+            class="merchant-input"
+            type="digit"
+            value="{{form.offlinePrice}}"
+            data-field="offlinePrice"
+            bindinput="onFieldInput"
+            placeholder="0.00"
+            placeholder-class="merchant-input__placeholder"
+          />
+        </view>
+        <view class="merchant-field">
+          <text class="merchant-label">安全库存</text>
+          <input
+            class="merchant-input"
+            type="number"
+            value="{{form.safetyStock}}"
+            data-field="safetyStock"
+            bindinput="onFieldInput"
+            placeholder="0"
+            placeholder-class="merchant-input__placeholder"
+          />
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部 sticky -->
+  <view class="bottom-actions">
+    <view class="action-btn secondary" bindtap="saveDraft"><image class="btn-icon" src="/assets/icons/edit.svg" mode="aspectFit" />保存草稿</view>
+    <view class="action-btn primary" bindtap="submitAndPublish"><image class="btn-icon" src="/assets/icons/check.svg" mode="aspectFit" />{{productId ? '保存并上架' : '提交并上架'}}</view>
+  </view>
+</view>

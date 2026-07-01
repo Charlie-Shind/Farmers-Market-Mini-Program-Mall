@@ -1,0 +1,264 @@
+﻿<view class="merchant-page has-bottom-actions publish-page" style="{{pageStyle}}">
+  <view class="status-space"></view>
+
+  <view class="page-titlebar">
+    <view class="icon-box icon-btn" bindtap="goBack">
+      <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+    </view>
+    <view class="title-block">
+      <view class="page-title">发布活动</view>
+    </view>
+    <text></text>
+  </view>
+
+  <view class="top-actions">
+    <view class="icon-action" bindtap="goDrafts">
+      <t-icon name="edit" size="40rpx"></t-icon>
+      <text>草稿</text>
+    </view>
+  </view>
+
+  <view class="section-line-title">
+    <text>选择活动类型</text>
+    <text class="status-pill info">{{typeName}}</text>
+  </view>
+
+  <view class="type-grid">
+    <view class="type-card {{currentType === 'seckill' ? 'active' : ''}}" bindtap="onTypeChange" data-type="seckill">
+      <image class="fit-icon" src="/assets/illustrations/activity.svg" mode="aspectFit" />
+      <text class="type-title">限时秒杀</text>
+      <text class="type-desc">价格、库存、限购</text>
+    </view>
+    <view class="type-card {{currentType === 'group' ? 'active' : ''}}" bindtap="onTypeChange" data-type="group">
+      <image class="fit-icon" src="/assets/illustrations/store.svg" mode="aspectFit" />
+      <text class="type-title">拼团活动</text>
+      <text class="type-desc">人数、团时、团价</text>
+    </view>
+    <view class="type-card {{currentType === 'coupon' ? 'active' : ''}}" bindtap="onTypeChange" data-type="coupon">
+      <image class="fit-icon" src="/assets/illustrations/finance.svg" mode="aspectFit" />
+      <text class="type-title">满减优惠券</text>
+      <text class="type-desc">门槛、金额、库存</text>
+    </view>
+    <view class="type-card {{currentType === 'presell' ? 'active' : ''}}" bindtap="onTypeChange" data-type="presell">
+      <image class="fit-icon" src="/assets/illustrations/delivery.svg" mode="aspectFit" />
+      <text class="type-title">预售活动</text>
+      <text class="type-desc">定金、尾款、发货</text>
+    </view>
+  </view>
+
+  <view class="section-line-title"><text>基础信息</text></view>
+  <view class="form-card">
+    <view class="form-row">
+      <text class="form-label">活动名称<text class="required">*</text></text>
+      <input class="form-input" value="{{activityName}}" placeholder="请输入活动名称" bindinput="onNameInput" />
+    </view>
+    <view class="form-row">
+      <text class="form-label">开始时间</text>
+      <picker mode="multiSelector" range="{{startTimeRange}}" bindchange="onStartTimeChange">
+        <view class="picker-value">{{startTimeText}}<t-icon name="chevronRight" size="40rpx"></t-icon></view>
+      </picker>
+    </view>
+    <view class="form-row">
+      <text class="form-label">结束时间</text>
+      <picker mode="multiSelector" range="{{endTimeRange}}" bindchange="onEndTimeChange">
+        <view class="picker-value">{{endTimeText}}<t-icon name="chevronRight" size="40rpx"></t-icon></view>
+      </picker>
+    </view>
+    <view class="form-row">
+      <text class="form-label">活动预热</text>
+      <picker mode="selector" range="{{warmupOptions}}" bindchange="onWarmupChange">
+        <view class="picker-value">{{warmupText}}<t-icon name="chevronRight" size="40rpx"></t-icon></view>
+      </picker>
+    </view>
+  </view>
+
+  <!-- 秒杀配置 -->
+  <view wx:if="{{currentType === 'seckill'}}" class="config-section">
+    <view class="section-line-title"><text>秒杀配置</text></view>
+    <view class="number-grid">
+      <view class="number-cell">
+        <text class="number-label">秒杀价</text>
+        <view class="number-row"><text class="number-prefix">¥</text><input class="number-input" type="digit" value="{{seckill.price}}" bindinput="onSeckillInput" data-field="price" /></view>
+      </view>
+      <view class="number-cell">
+        <text class="number-label">活动库存</text>
+        <view class="number-row"><input class="number-input" type="number" value="{{seckill.stock}}" bindinput="onSeckillInput" data-field="stock" /><text class="number-suffix">件</text></view>
+      </view>
+      <view class="number-cell">
+        <text class="number-label">每人限购</text>
+        <view class="number-row"><input class="number-input" type="number" value="{{seckill.limit}}" bindinput="onSeckillInput" data-field="limit" /><text class="number-suffix">件</text></view>
+      </view>
+      <view class="number-cell">
+        <text class="number-label">库存预警</text>
+        <view class="number-row"><input class="number-input" type="number" value="{{seckill.alert}}" bindinput="onSeckillInput" data-field="alert" /><text class="number-suffix">件</text></view>
+      </view>
+    </view>
+    <view class="form-card">
+      <view class="form-row">
+        <text class="form-label">秒杀时段</text>
+        <picker mode="selector" range="{{seckillTimeSlots}}" bindchange="onSeckillSlotChange">
+          <view class="picker-value">{{seckill.timeSlot}}<t-icon name="chevronRight" size="40rpx"></t-icon></view>
+        </picker>
+      </view>
+      <view class="form-row">
+        <text class="form-label">扣减库存</text>
+        <picker mode="selector" range="{{stockDeductOptions}}" bindchange="onStockDeductChange">
+          <view class="picker-value">{{stockDeductText}}<t-icon name="chevronRight" size="40rpx"></t-icon></view>
+        </picker>
+      </view>
+      <view class="switch-row">
+        <view class="switch-main">
+          <text class="switch-title">售罄自动结束</text>
+          <text class="switch-desc">库存为 0 时活动自动关闭</text>
+        </view>
+        <switch checked="{{seckill.autoEnd}}" bindchange="onSeckillAutoEnd" color="#2F4F3A" />
+      </view>
+    </view>
+  </view>
+
+  <!-- 拼团配置 -->
+  <view wx:if="{{currentType === 'group'}}" class="config-section">
+    <view class="section-line-title"><text>拼团配置</text></view>
+    <view class="number-grid">
+      <view class="number-cell">
+        <text class="number-label">拼团价</text>
+        <view class="number-row"><text class="number-prefix">¥</text><input class="number-input" type="digit" value="{{group.price}}" bindinput="onGroupInput" data-field="price" /></view>
+      </view>
+      <view class="number-cell">
+        <text class="number-label">成团人数</text>
+        <view class="number-row"><input class="number-input" type="number" value="{{group.size}}" bindinput="onGroupInput" data-field="size" /><text class="number-suffix">人</text></view>
+      </view>
+      <view class="number-cell">
+        <text class="number-label">团有效期</text>
+        <view class="number-row"><input class="number-input" type="number" value="{{group.duration}}" bindinput="onGroupInput" data-field="duration" /><text class="number-suffix">小时</text></view>
+      </view>
+      <view class="number-cell">
+        <text class="number-label">每人限购</text>
+        <view class="number-row"><input class="number-input" type="number" value="{{group.limit}}" bindinput="onGroupInput" data-field="limit" /><text class="number-suffix">件</text></view>
+      </view>
+    </view>
+    <view class="form-card">
+      <view class="form-row">
+        <text class="form-label">成团方式</text>
+        <picker mode="selector" range="{{groupModes}}" bindchange="onGroupModeChange">
+          <view class="picker-value">{{group.mode}}<t-icon name="chevronRight" size="40rpx"></t-icon></view>
+        </picker>
+      </view>
+      <view class="switch-row">
+        <view class="switch-main">
+          <text class="switch-title">允许拼团分享</text>
+          <text class="switch-desc">买家可转发邀请好友参团</text>
+        </view>
+        <switch checked="{{group.allowShare}}" bindchange="onGroupShare" color="#2F4F3A" />
+      </view>
+    </view>
+  </view>
+
+  <!-- 满减券配置 -->
+  <view wx:if="{{currentType === 'coupon'}}" class="config-section">
+    <view class="section-line-title"><text>满减券配置</text></view>
+    <view class="number-grid">
+      <view class="number-cell">
+        <text class="number-label">使用门槛</text>
+        <view class="number-row"><text class="number-prefix">¥</text><input class="number-input" type="digit" value="{{coupon.threshold}}" bindinput="onCouponInput" data-field="threshold" /></view>
+      </view>
+      <view class="number-cell">
+        <text class="number-label">优惠金额</text>
+        <view class="number-row"><text class="number-prefix">¥</text><input class="number-input" type="digit" value="{{coupon.amount}}" bindinput="onCouponInput" data-field="amount" /></view>
+      </view>
+      <view class="number-cell">
+        <text class="number-label">券库存</text>
+        <view class="number-row"><input class="number-input" type="number" value="{{coupon.stock}}" bindinput="onCouponInput" data-field="stock" /><text class="number-suffix">张</text></view>
+      </view>
+      <view class="number-cell">
+        <text class="number-label">每人限领</text>
+        <view class="number-row"><input class="number-input" type="number" value="{{coupon.limit}}" bindinput="onCouponInput" data-field="limit" /><text class="number-suffix">张</text></view>
+      </view>
+    </view>
+    <view class="form-card">
+      <view class="form-row">
+        <text class="form-label">使用有效期</text>
+        <picker mode="selector" range="{{validityOptions}}" bindchange="onValidityChange">
+          <view class="picker-value">{{coupon.validity}}<t-icon name="chevronRight" size="40rpx"></t-icon></view>
+        </picker>
+      </view>
+      <view class="form-row">
+        <text class="form-label">适用范围</text>
+        <picker mode="selector" range="{{scopeOptions}}" bindchange="onScopeChange">
+          <view class="picker-value">{{coupon.scope}}<t-icon name="chevronRight" size="40rpx"></t-icon></view>
+        </picker>
+      </view>
+    </view>
+  </view>
+
+  <!-- 预售配置 -->
+  <view wx:if="{{currentType === 'presell'}}" class="config-section">
+    <view class="section-line-title"><text>预售配置</text></view>
+    <view class="number-grid">
+      <view class="number-cell">
+        <text class="number-label">预售价</text>
+        <view class="number-row"><text class="number-prefix">¥</text><input class="number-input" type="digit" value="{{presell.price}}" bindinput="onPresellInput" data-field="price" /></view>
+      </view>
+      <view class="number-cell">
+        <text class="number-label">定金</text>
+        <view class="number-row"><text class="number-prefix">¥</text><input class="number-input" type="digit" value="{{presell.deposit}}" bindinput="onPresellInput" data-field="deposit" /></view>
+      </view>
+      <view class="number-cell">
+        <text class="number-label">预售库存</text>
+        <view class="number-row"><input class="number-input" type="number" value="{{presell.stock}}" bindinput="onPresellInput" data-field="stock" /><text class="number-suffix">件</text></view>
+      </view>
+      <view class="number-cell">
+        <text class="number-label">限购</text>
+        <view class="number-row"><input class="number-input" type="number" value="{{presell.limit}}" bindinput="onPresellInput" data-field="limit" /><text class="number-suffix">件</text></view>
+      </view>
+    </view>
+    <view class="form-card">
+      <view class="form-row">
+        <text class="form-label">尾款开始</text>
+        <picker mode="date" bindchange="onPresellFinalStart">
+          <view class="picker-value">{{presell.finalStart}}<t-icon name="chevronRight" size="40rpx"></t-icon></view>
+        </picker>
+      </view>
+      <view class="form-row">
+        <text class="form-label">尾款结束</text>
+        <picker mode="date" bindchange="onPresellFinalEnd">
+          <view class="picker-value">{{presell.finalEnd}}<t-icon name="chevronRight" size="40rpx"></t-icon></view>
+        </picker>
+      </view>
+      <view class="form-row">
+        <text class="form-label">预计发货</text>
+        <picker mode="date" bindchange="onPresellShip">
+          <view class="picker-value">{{presell.shipDate}}<t-icon name="chevronRight" size="40rpx"></t-icon></view>
+        </picker>
+      </view>
+    </view>
+  </view>
+
+  <view class="section-line-title">
+    <text>参与商品（仅 1 个）</text>
+    <text class="row-right" bindtap="goSelectProducts">选择商品<t-icon name="chevronRight" size="40rpx"></t-icon></text>
+  </view>
+
+  <view wx:if="{{selectedProducts.length}}" class="product-list">
+    <view class="product-row" wx:for="{{selectedProducts}}" wx:key="id">
+      <view class="check-dot active">
+        <t-icon name="check" size="40rpx"></t-icon>
+      </view>
+      <image class="product-thumb" src="{{item.cover}}" mode="aspectFill" />
+      <view class="product-info">
+        <text class="product-title">{{item.name}}</text>
+        <text class="product-sub">库存 {{item.stock}} · 原价 ¥{{item.originPrice}} · 活动价 ¥{{item.activityPrice}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view wx:else class="empty-products">
+    <text class="empty-hint">暂未选择商品，点击上方"选择商品"添加</text>
+  </view>
+
+  <view class="bottom-actions">
+    <button class="action-btn secondary" bindtap="saveDraft"><image class="btn-icon" src="/assets/icons/edit.svg" mode="aspectFit" />保存草稿</button>
+    <button class="action-btn secondary" bindtap="goBack"><image class="btn-icon" src="/assets/icons/close.svg" mode="aspectFit" />取消</button>
+    <button class="action-btn primary" bindtap="publishActivity"><image class="btn-icon" src="/assets/icons/check.svg" mode="aspectFit" />发布活动</button>
+  </view>
+</view>

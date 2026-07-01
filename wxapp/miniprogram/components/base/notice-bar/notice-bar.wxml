@@ -1,0 +1,4 @@
+<view wx:if="{{visible}}" class="notice-bar notice-bar--{{type}}">
+  <text class="notice-bar__text">{{text}}</text>
+  <view wx:if="{{closable}}" class="notice-bar__close" bindtap="handleClose">关闭</view>
+</view>

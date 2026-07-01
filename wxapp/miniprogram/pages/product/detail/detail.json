@@ -1,0 +1,6 @@
+{
+  "usingComponents": {
+    "image-adaptive-nav": "../../../components/base/image-adaptive-nav/image-adaptive-nav",
+    "t-icon": "../../../components/base/t-icon/t-icon"
+  }
+}

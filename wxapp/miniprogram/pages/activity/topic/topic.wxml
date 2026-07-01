@@ -1,0 +1,78 @@
+<view class="phone-page zone-page topic-page" style="{{pageStyle}}">
+  <view class="zone-head">
+    <view class="page-title-bar">
+      <view class="back-btn" hover-class="back-btn--hover" bindtap="goBack">‹</view>
+      <text class="page-title-bar__title">{{pageTitle}}</text>
+      <view class="page-title-bar__action"></view>
+    </view>
+
+    <view class="zone-hero zone-hero--origin">
+      <text class="zone-hero__eyebrow">Activity Topic</text>
+      <text class="zone-hero__title">{{pageTitle}}</text>
+      <text class="zone-hero__desc">{{pageDesc}}</text>
+      <view class="zone-metrics">
+        <view class="zone-metric">
+          <text class="zone-metric__label">专题商品</text>
+          <text class="zone-metric__value">{{products.length}}</text>
+        </view>
+        <view class="zone-metric">
+          <text class="zone-metric__label">推荐标签</text>
+          <text class="zone-metric__value">{{activeFilter}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="topic-filter-row">
+      <view
+        wx:for="{{filters}}"
+        wx:key="*this"
+        class="topic-filter {{activeFilter === item ? 'topic-filter--active' : ''}}"
+        data-filter="{{item}}"
+        bindtap="changeFilter"
+      >
+        {{item}}
+      </view>
+    </view>
+    <view class="topic-more-row">
+      <button class="topic-more-btn" bindtap="openProductList">查看全部商品</button>
+    </view>
+  </view>
+
+  <view wx:if="{{products.length}}" class="product-grid">
+    <view
+      wx:for="{{products}}"
+      wx:key="id"
+      class="product-card"
+      data-product-id="{{item.id}}"
+      bindtap="openProductDetail"
+    >
+      <view class="product-img {{item.imageClass}}" style="{{item.imageStyle}}"></view>
+      <view class="product-body">
+        <view class="product-top">
+          <text class="product-title">{{item.title}}</text>
+          <text class="badge">专题</text>
+        </view>
+        <text class="product-desc">{{item.desc}}</text>
+        <view class="topic-tags">
+          <text wx:for="{{item.tags}}" wx:key="*this" class="topic-tag">{{item}}</text>
+        </view>
+        <view class="price-row">
+          <view class="price">
+            <text>¥</text>
+            <text class="price__num">{{item.price}}</text>
+          </view>
+          <view
+            class="add-btn"
+            data-product-id="{{item.id}}"
+            data-sku-id="{{item.skuId}}"
+            catchtap="quickAdd"
+          >
+            <t-icon name="cart" size="30rpx" color="brandWhite"></t-icon>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:else class="empty-hint">暂无专题商品，后台配置后会在这里展示。</view>
+</view>

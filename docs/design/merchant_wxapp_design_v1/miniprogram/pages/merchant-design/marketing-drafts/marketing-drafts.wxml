@@ -1,0 +1,17 @@
+<view class="app-page no-bottom with-sticky">
+<view class="status-space"></view>
+<view class="app-topbar">
+<view class="back-btn" bindtap="goBack"><image class="icon" mode="aspectFit" src="/assets/icons/back.svg" /></view>
+<view class="search-pill"><image class="icon-sm" mode="aspectFit" src="/assets/icons/search.svg" /><input data-search-input="1" placeholder="搜索活动草稿" /></view>
+</view>
+<view class="tabs" data-filter-tabs="1"><button class="tab active" data-filter="all"><text>全部</text></button><button class="tab" data-filter="time"><text>缺时间</text></button><button class="tab" data-filter="goods"><text>缺商品</text></button><button class="tab" data-filter="rule"><text>缺规则</text></button><button class="tab" data-filter="ready"><text>可发布</text></button></view>
+<view class="full-list" data-filter-list="1">
+<view class="draft-row" data-status="time" data-search="端午礼盒满减 缺时间 满减"><view class="draft-mark"><image class="icon" mode="aspectFit" src="/assets/icons/clock.svg" /></view><view class="draft-main"><view class="draft-title">端午礼盒满减活动</view><view class="draft-desc">缺少结束时间 · 30 分钟前保存</view></view><navigator class="pill-btn" url="/pages/merchant-design/marketing-edit/marketing-edit">继续编辑</navigator></view>
+<view class="draft-row" data-status="goods" data-search="蔬菜礼盒拼团 缺商品 拼团"><view class="draft-mark"><image class="icon" mode="aspectFit" src="/assets/icons/box.svg" /></view><view class="draft-main"><view class="draft-title">蔬菜礼盒拼团</view><view class="draft-desc">还未选择商品 · 昨天 19:40 保存</view></view><navigator class="pill-btn" url="/pages/merchant-design/marketing-products/marketing-products">选商品</navigator></view>
+<view class="draft-row" data-status="ready" data-search="蓝莓秒杀复制草稿 可发布"><view class="draft-mark"><image class="icon" mode="aspectFit" src="/assets/icons/check.svg" /></view><view class="draft-main"><view class="draft-title">蓝莓秒杀复制草稿</view><view class="draft-desc">已完成配置 · 可以发布</view></view><button class="pill-btn primary" data-toast="已发布活动" bindtap="handleToast">发布</button></view>
+<view class="list-empty">没有匹配草稿</view>
+</view>
+<view class="bottom-actions"><button class="action-btn secondary" data-toast="已清理过期草稿" bindtap="handleToast">清理过期</button><navigator class="action-btn" style="display:flex;align-items:center;justify-content:center" url="/pages/merchant-design/marketing-edit/marketing-edit">新建活动</navigator></view>
+</view>
+
+<view class="toast {{toastText ? 'show' : ''}}">{{toastText}}</view>

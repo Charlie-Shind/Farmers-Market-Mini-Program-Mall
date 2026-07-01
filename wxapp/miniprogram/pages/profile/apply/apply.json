@@ -1,0 +1,9 @@
+{
+  "navigationBarTitleText": "商家资质入驻申请",
+  "usingComponents": {
+    "toast": "../../../components/base/toast/toast",
+    "loading": "../../../components/base/loading/loading",
+    "image-cropper": "../../../components/image-cropper/image-cropper",
+    "t-icon": "../../../components/base/t-icon/t-icon"
+  }
+}

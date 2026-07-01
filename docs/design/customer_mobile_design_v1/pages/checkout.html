@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>确认订单</title>
+<link rel="stylesheet" href="../styles/tokens.css" />
+<link rel="stylesheet" href="../styles/components.css" />
+</head>
+<body>
+<svg style="display:none"><defs></defs></svg>
+<div class="page with-bottom">
+  <!-- 页面头部：后续转小程序时映射为 page-title-bar，保留返回按钮和右侧动作区 -->
+  <div class="topbar">
+    <button class="icon-btn" data-action="返回上一页"><svg class="icon"><use href="../assets/icons.svg#back"></use></svg></button>
+    <div class="title">确认订单</div>
+    <div class="right"></div>
+  </div>
+
+  <div class="section"><div class="cell"><div class="row" style="gap:8px"><svg class="icon"><use href="../assets/icons.svg#location"></use></svg><div><b>李同学　138****2846</b><div class="small muted">上海市浦东新区 张江路 88 号</div></div></div><svg class="icon sm"><use href="../assets/icons.svg#chevron"></use></svg></div></div>
+  <div class="section"><div class="section-head"><span class="section-title">湾源生态农庄</span></div><div class="goods-row">
+  <img class="goods-img" src="../assets/goods/orange.svg" alt="赣南脐橙 5斤装" />
+  <div>
+    <div class="goods-title">赣南脐橙 5斤装</div>
+    <div class="goods-sub">规格：中果 · 新鲜采摘</div>
+    <div class="goods-meta"><span class="price">¥42.80</span><span>x1</span></div>
+
+  </div>
+</div><div class="cell"><span class="label">配送方式</span><span class="value">快递配送 <svg class="icon sm"><use href="../assets/icons.svg#chevron"></use></svg></span></div><div class="field"><label>订单备注</label><input placeholder="选填，给商家留言" /></div></div>
+  <div class="cell-list"><div class="cell"><span class="label">商品金额</span><span class="value">¥42.80</span></div><div class="cell"><span class="label">运费</span><span class="value">¥0.00</span></div><div class="cell"><span class="label">优惠券</span><span class="value">满 40 减 5 <svg class="icon sm"><use href="../assets/icons.svg#chevron"></use></svg></span></div></div>
+  <div class="bottom-bar"><div style="flex:1"><div class="small muted">合计</div><div class="price" style="font-size:20px">¥37.80</div></div><button class="btn primary" style="flex:.9" data-action="提交订单">提交订单</button></div>
+
+</div>
+<script src="../scripts/prototype.js"></script>
+</body>
+</html>

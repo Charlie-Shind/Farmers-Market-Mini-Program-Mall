@@ -1,0 +1,80 @@
+page {
+  /* 湾源农仓 Merchant Mobile Palette: 基于原项目深松绿 #2C4A39、米白 #F5F2EA、陶土橙 #D95B43 收敛 */
+  --color-primary: #2C4A39;
+  --color-primary-strong: #1F3328;
+  --color-primary-soft: #EAF1E7;
+  --color-primary-tint: #F4F8F2;
+  --color-secondary: #2D5A88;
+  --color-secondary-soft: #EAF1F8;
+  --color-accent: #D95B43;
+  --color-accent-strong: #B8432F;
+  --color-accent-soft: #FFF0EC;
+  --color-warning: #E9964D;
+  --color-warning-soft: #FFF5EA;
+  --color-danger: #B54444;
+  --color-danger-soft: #FFF0F0;
+  --color-success: #2C6B45;
+  --color-success-soft: #EAF4ED;
+  --color-info: #2D5A88;
+  --color-info-soft: #EAF1F8;
+  --color-bg: #FFFFFF;
+  --color-bg-warm: #F5F2EA;
+  --color-bg-subtle: #FBF8F1;
+  --color-surface: #FFFFFF;
+  --color-surface-soft: #F8F6F0;
+  --color-line: #E8E0D4;
+  --color-line-soft: #F0E9DD;
+  --color-text: #24352B;
+  --color-text-2: #4A6655;
+  --color-muted: #7B817C;
+  --color-placeholder: #A4ACA7;
+  --color-white: #FFFFFF;
+  --color-mask: rgba(36, 53, 43, 0.36);
+  --color-shadow-soft: rgba(36, 53, 43, 0.05);
+  --color-shadow-float: rgba(36, 53, 43, 0.12);
+
+  --mobile-width: 860rpx;
+  --safe-top: 36rpx;
+  --page-x: 36rpx;
+  --topbar-height: 128rpx;
+  --tab-height: 104rpx;
+  --bottom-nav-height: 128rpx;
+  --thumb-size: 172rpx;
+  --thumb-sm: 116rpx;
+  --avatar-size: 68rpx;
+  --avatar-lg: 112rpx;
+  --icon-size: 48rpx;
+  --button-height: 84rpx;
+  --button-height-sm: 72rpx;
+  --input-height: 96rpx;
+
+  --space-1: 8rpx;
+  --space-2: 16rpx;
+  --space-3: 24rpx;
+  --space-4: 32rpx;
+  --space-5: 40rpx;
+  --space-6: 48rpx;
+  --space-7: 64rpx;
+
+  --radius-sm: 12rpx;
+  --radius-md: 24rpx;
+  --radius-lg: 32rpx;
+  --radius-xl: 48rpx;
+  --radius-full: 1998rpx;
+
+  --font-body: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+  --font-size-xs: 22rpx;
+  --font-size-sm: 26rpx;
+  --font-size-md: 30rpx;
+  --font-size-base: 32rpx;
+  --font-size-lg: 36rpx;
+  --font-size-xl: 44rpx;
+  --font-size-2xl: 52rpx;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-bold: 700;
+  --font-weight-black: 800;
+
+  --shadow-soft: 0 4rpx 16rpx var(--color-shadow-soft);
+  --shadow-float: 0 16rpx 56rpx var(--color-shadow-float);
+}

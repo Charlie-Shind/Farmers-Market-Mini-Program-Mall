@@ -1,0 +1,64 @@
+﻿<view class="phone-page profile-coupons-page" style="{{pageStyle}}">
+  <view class="board-head">
+    <view class="page-title-bar">
+      <button class="back-btn" plain="true" bindtap="goBack" hover-class="back-btn--hover">
+        <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+      </button>
+      <text class="page-title-bar__title">卡券包</text>
+      <text></text>
+    </view>
+  </view>
+
+  <view class="coupon-content">
+    <scroll-view scroll-x="true" class="coupon-tabs" show-scrollbar="{{false}}">
+      <view class="coupon-tabs__row">
+        <button
+          plain="true"
+          wx:for="{{filterTabs}}"
+          wx:key="key"
+          class="coupon-tab {{activeFilter === item.key ? 'coupon-tab--active' : ''}}"
+          data-key="{{item.key}}"
+          bindtap="switchFilter"
+        >
+          {{item.label}}<text class="coupon-tab__count">({{item.count}})</text>
+        </button>
+      </view>
+    </scroll-view>
+
+    <view wx:if="{{visibleCoupons.length}}" class="coupon-list">
+      <view
+        wx:for="{{visibleCoupons}}"
+        wx:key="userCouponId"
+        class="coupon-card"
+        bindtap="showCouponDetail"
+        data-index="{{index}}"
+      >
+        <view class="coupon-card__left">
+          <view class="coupon-card__amount-row">
+            <text class="coupon-card__currency">¥</text>
+            <text class="coupon-card__amount">{{item.discountAmount}}</text>
+          </view>
+          <text class="coupon-card__label">优惠券</text>
+        </view>
+        <view class="coupon-card__body">
+          <view class="coupon-card__head">
+            <text class="coupon-card__title">{{item.name}}</text>
+            <text class="coupon-status {{item.statusTone}}">{{item.statusLabel}}</text>
+          </view>
+          <text class="coupon-card__desc">满 {{item.thresholdAmount}} 元可用</text>
+          <text class="coupon-card__meta">{{item.periodText}}</text>
+          <text class="coupon-card__hint">{{item.usableHint}}</text>
+        </view>
+        <t-icon name="chevronRight" size="24rpx" opacity="0.48"></t-icon>
+      </view>
+    </view>
+
+    <view wx:else class="coupon-empty">
+      <text class="coupon-empty__title">暂无卡券</text>
+      <text class="coupon-empty__desc">当前筛选条件下没有可展示的卡券。</text>
+    </view>
+  </view>
+
+  <loading show="{{loading}}" text="{{loadingText}}"></loading>
+  <view class="bottom-safe"></view>
+</view>

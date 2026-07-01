@@ -1,0 +1,58 @@
+﻿<view class="phone-page points-page" style="{{pageStyle}}">
+  <view class="page-title-bar">
+    <view class="back-btn" bindtap="goBack" hover-class="back-btn--hover">
+      <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+    </view>
+    <text class="page-title-bar__title">积分兑换</text>
+    <text></text>
+  </view>
+
+  <view class="points-summary panel">
+    <view class="points-summary__left">
+      <text class="points-summary__label">当前积分</text>
+      <text class="points-summary__value">{{pointsBalance}}</text>
+    </view>
+  </view>
+
+  <view wx:if="{{loading}}" class="points-loading">
+    <text class="points-loading__title">{{loadingText}}</text>
+    <text class="points-loading__desc">请稍等，正在同步可兑换的内容。</text>
+  </view>
+
+  <view wx:elif="{{!pointsGoods.length}}" class="points-empty">
+    <text class="points-empty__title">暂无可兑换商品</text>
+    <text class="points-empty__desc">平台还在补充积分权益，过一会再来看看。</text>
+  </view>
+
+  <view wx:else class="points-list">
+    <view wx:for="{{pointsGoods}}" wx:key="id" class="points-card {{item.received ? 'points-card--done' : ''}} {{item.canRedeem ? 'points-card--avail' : ''}}">
+      <view class="points-card__cover" style="{{item.imageStyle}}">
+        <view wx:if="{{!item.imageStyle}}" class="points-card__cover-fallback">
+          <t-icon name="gift" size="42rpx" color="#8f7f64"></t-icon>
+        </view>
+      </view>
+      <view class="points-card__body">
+        <view class="points-card__top">
+          <view class="points-card__title-box">
+            <text class="points-card__title">{{item.title}}</text>
+            <text class="points-card__desc">{{item.desc}}</text>
+          </view>
+          <text class="points-card__tag">{{item.received ? '已兑换' : item.canRedeem ? '可兑换' : '积分不足'}}</text>
+        </view>
+        <view class="points-card__footer">
+          <view class="points-card__cost-box">
+            <text class="points-card__cost-label">所需积分</text>
+            <text class="points-card__cost">{{item.pointsCost}}</text>
+          </view>
+          <button
+            class="points-card__btn {{item.received || !item.canRedeem ? 'points-card__btn--disabled' : ''}}"
+            data-coupon-id="{{item.couponId}}"
+            bindtap="redeemPoints"
+          >
+            <text>{{item.received ? '已兑换' : item.canRedeem ? '立即兑换' : '积分不足'}}</text>
+          </button>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

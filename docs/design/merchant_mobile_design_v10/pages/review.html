@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" /><title>评价管理</title><link rel="stylesheet" href="../styles/components.css" /></head>
+<body>
+<main class="app-page">
+
+<div class="status-space"></div>
+<header class="page-titlebar"><a class="back-btn" href="orders.html"><svg class="icon" aria-hidden="true"><use href="../assets/icons.svg#back"></use></svg></a><div class="title-block"><div class="page-title">评价管理</div><div class="page-subtitle">查看买家评价并回复</div></div></header>
+<section class="data-grid-3"><div class="data-cell"><strong>4.8</strong><span>店铺评分</span></div><div class="data-cell"><strong>96%</strong><span>好评率</span></div><div class="data-cell"><strong>12</strong><span>待回复</span></div></section>
+<nav class="toolbar" data-chip-group="chips"><button class="chip active" data-chip="all">全部</button><button class="chip" data-chip="good">好评</button><button class="chip" data-chip="normal">中评</button><button class="chip" data-chip="bad">差评</button><button class="chip" data-chip="todo">待回复</button></nav>
+<section data-filter-list><article class="order-item" data-status="good" data-tags="good,todo" data-search="李女士 蓝莓 好评"><div class="buyer-row"><div class="buyer-info"><img class="avatar" src="../assets/avatars/a1.svg"/><div class="buyer-name">李女士</div></div><span class="status-pill warning">待回复</span></div><a class="product-row" href="order-detail.html"><img class="goods-img" src="../assets/goods/g2.svg"/><div class="product-main"><div class="product-title">果子很新鲜，包装也好，送礼很合适。</div><div class="product-sub">评分 5.0 · 高山蓝莓礼盒</div></div><div class="product-必填">5星</div></a><div class="item-actions"><button class="pill-btn" data-toast="已复制评价">复制</button><div class="btn-row"><button class="pill-btn primary" data-toast="已回复评价">回复评价</button></div></div></article><article class="order-item" data-status="normal" data-tags="normal" data-search="王女士 蔬菜 中评"><div class="buyer-row"><div class="buyer-info"><img class="avatar" src="../assets/avatars/a2.svg"/><div class="buyer-name">王女士</div></div><span class="status-pill info">已回复</span></div><a class="product-row" href="order-detail.html"><img class="goods-img" src="../assets/goods/g8.svg"/><div class="product-main"><div class="product-title">蔬菜还可以，但是配送稍慢。</div><div class="product-sub">评分 3.0 · 家庭蔬菜礼盒</div></div><div class="product-必填">3星</div></a></article><div class="list-empty">没有匹配评价</div></section>
+
+<nav class="bottom-nav" aria-label="商家端底部导航"><a class="" href="dashboard.html"><svg class="icon" aria-hidden="true"><use href="../assets/icons.svg#home"></use></svg><span>首页</span></a><a class="" href="messages.html"><svg class="icon" aria-hidden="true"><use href="../assets/icons.svg#message"></use></svg><span>聊天</span></a><a class="active" href="orders.html"><svg class="icon" aria-hidden="true"><use href="../assets/icons.svg#order"></use></svg><span>订单</span></a><a class="" href="products.html"><svg class="icon" aria-hidden="true"><use href="../assets/icons.svg#box"></use></svg><span>库存</span></a><a class="" href="shop.html"><svg class="icon" aria-hidden="true"><use href="../assets/icons.svg#user"></use></svg><span>账号</span></a></nav>
+</main>
+<script src="../scripts/prototype.js"></script>
+</body></html>

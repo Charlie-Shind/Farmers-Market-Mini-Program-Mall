@@ -1,0 +1,107 @@
+﻿<view class="merchant-page has-tabbar" style="{{pageStyle}}">
+  <view class="status-space"></view>
+
+  <view class="page-titlebar">
+    <view class="icon-box icon-btn" bindtap="goBack">
+      <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+    </view>
+    <view class="title-block">
+      <view class="page-title">售后管理</view>
+    </view>
+    <text></text>
+  </view>
+
+  <view class="top-actions" style="justify-content: space-between;">
+    <view class="search-pill" style="flex:1; max-width: 420rpx; height: 64rpx; border-radius: 999rpx; background: var(--merchant-bg); display: flex; align-items: center; gap: 12rpx; padding: 0 20rpx;">
+      <image src="/assets/icons/search.svg" mode="aspectFit" style="width:32rpx;height:32rpx" />
+      <input style="flex:1;min-width:0;height:100%;font-size:26rpx;color:var(--merchant-text)" placeholder="搜索买家 / 订单号 / 商品" value="{{keyword}}" bindinput="onSearch" />
+    </view>
+    <view class="icon-action" bindtap="openFilter">
+      <t-icon name="filter" size="40rpx"></t-icon>
+      <text>筛选</text>
+    </view>
+  </view>
+
+  <scroll-view scroll-x class="tabs" enhanced show-scrollbar="{{false}}">
+    <view class="tab {{activeTab == 'all' ? 'active' : ''}}" bindtap="onTabTap" data-tab="all">全部</view>
+    <view class="tab {{activeTab == 'pending' ? 'active' : ''}}" bindtap="onTabTap" data-tab="pending">待处理</view>
+    <view class="tab {{activeTab == 'return' ? 'active' : ''}}" bindtap="onTabTap" data-tab="return">退货中</view>
+    <view class="tab {{activeTab == 'done' ? 'active' : ''}}" bindtap="onTabTap" data-tab="done">已完成</view>
+  </scroll-view>
+
+  <view class="aftersale-list">
+    <block wx:for="{{filteredList}}" wx:key="id">
+      <view class="aftersale-item">
+        <view class="buyer-row">
+          <view class="buyer-info">
+            <image class="avatar-box" src="{{item.avatar}}" mode="aspectFill" />
+            <view class="buyer-name">{{item.buyer}}</view>
+          </view>
+          <view class="status-pill {{item.statusType}}">{{item.statusText}}</view>
+        </view>
+        <view class="goods-row" bindtap="goRefund" data-id="{{item.id}}">
+          <image class="goods-img" src="{{item.goodsImg}}" mode="aspectFill" />
+          <view class="goods-main">
+            <view class="goods-title">{{item.goodsName}}</view>
+            <view class="goods-sub">{{item.reason}}</view>
+          </view>
+          <view class="goods-price">¥{{item.amount}}</view>
+        </view>
+        <view class="item-actions">
+          <view class="more-link" bindtap="goRefund" data-id="{{item.id}}">详情</view>
+          <view class="btn-row">
+            <view class="pill-btn" wx:if="{{item.canContact}}" bindtap="contactBuyer" data-id="{{item.id}}">联系买家</view>
+            <view class="pill-btn primary" wx:if="{{item.canHandle}}" bindtap="goRefund" data-id="{{item.id}}">处理</view>
+            <view class="pill-btn" wx:if="{{item.canUrge}}" bindtap="urgeReturn" data-id="{{item.id}}">催寄回</view>
+          </view>
+        </view>
+      </view>
+    </block>
+    <view class="list-empty" wx:if="{{filteredList.length == 0}}">没有匹配售后</view>
+  </view>
+
+  <view class="sheet-mask {{showFilter ? 'show' : ''}}" bindtap="closeFilter"></view>
+  <view class="sheet {{showFilter ? 'show' : ''}}">
+    <view class="sheet-head">
+      <view class="sheet-title">售后筛选</view>
+      <view class="icon-btn" bindtap="closeFilter">
+        <t-icon name="close" size="40rpx"></t-icon>
+      </view>
+    </view>
+    <view class="sheet-group">
+      <view class="sheet-label">售后类型</view>
+      <view class="option-grid">
+        <view class="option {{filterType == 'all' ? 'active' : ''}}" bindtap="setFilterType" data-type="all">全部</view>
+        <view class="option {{filterType == 'refund' ? 'active' : ''}}" bindtap="setFilterType" data-type="refund">仅退款</view>
+        <view class="option {{filterType == 'return' ? 'active' : ''}}" bindtap="setFilterType" data-type="return">退货退款</view>
+        <view class="option {{filterType == 'compensate' ? 'active' : ''}}" bindtap="setFilterType" data-type="compensate">补偿</view>
+      </view>
+    </view>
+    <view class="sheet-actions">
+      <button class="action-btn primary" bindtap="applyFilter">应用</button>
+    </view>
+  </view>
+
+  <view class="bottom-nav">
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/dashboard/dashboard?tab=0" data-tab="0">
+      <t-icon name="home" size="40rpx"></t-icon>
+      <text>首页</text>
+    </view>
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/messages/messages?tab=1" data-tab="1">
+      <t-icon name="message" size="40rpx"></t-icon>
+      <text>聊天</text>
+    </view>
+    <view class="nav-item active" data-tab="2">
+      <t-icon name="invoice" size="40rpx"></t-icon>
+      <text>订单</text>
+    </view>
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/products/products?tab=3" data-tab="3">
+      <t-icon name="package" size="40rpx"></t-icon>
+      <text>库存</text>
+    </view>
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/shop/shop?tab=4" data-tab="4">
+      <t-icon name="profile" size="40rpx"></t-icon>
+      <text>账号</text>
+    </view>
+  </view>
+</view>

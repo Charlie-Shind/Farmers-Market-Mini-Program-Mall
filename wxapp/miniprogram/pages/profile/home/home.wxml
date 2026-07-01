@@ -1,0 +1,188 @@
+<view class="profile-home-page" style="{{pageStyle}}">
+  <!-- 顶部状态背景遮罩 -->
+  <view class="profile-cover">
+    <view class="cover-glow-1"></view>
+    <view class="cover-glow-2"></view>
+  </view>
+
+  <!-- 自定义导航栏 -->
+  <view class="custom-nav-bar">
+    <button class="back-btn" plain="true" bindtap="goBack" hover-class="back-btn--hover">
+      <t-icon name="back" size="48rpx" color="#ffffff" />
+    </button>
+    <text class="nav-title">个人主页</text>
+    <button class="back-btn" plain="true" bindtap="shareProfile" hover-class="back-btn--hover">
+      <t-icon name="more" size="24px" color="#ffffff" />
+    </button>
+  </view>
+
+  <!-- 个人主页悬浮面板 -->
+  <view class="profile-container">
+    <!-- 头像与主操作区 -->
+    <view class="profile-header-main">
+      <view class="avatar-wrapper">
+        <image class="avatar" src="{{profile.avatarUrl}}" mode="aspectFill" binderror="handleProfileAvatarError"></image>
+        <view class="online-dot"></view>
+      </view>
+      <view class="header-actions">
+        <button class="primary-btn-pill" bindtap="handlePrimaryAction">
+          {{primaryActionLabel}}
+        </button>
+        <button class="icon-btn-pill" plain="true" bindtap="shareProfile">
+          <t-icon name="share" size="20px" color="#2c4a39" />
+        </button>
+      </view>
+    </view>
+
+    <!-- 昵称、身份和简介 -->
+    <view class="profile-meta-info">
+      <view class="name-row-new">
+        <text class="display-name">{{profile.displayName}}</text>
+        <text class="role-pill {{profile.roleBadgeClass}}">{{profile.roleBadge}}</text>
+      </view>
+      <text class="subtitle-text">{{profile.subtitle}}</text>
+
+      <!-- 实名、资质认证等信任标签 -->
+      <view class="trust-pills-row" wx:if="{{profile.trustTags.length > 0}}">
+        <view class="trust-tag-item" wx:for="{{profile.trustTags}}" wx:for-item="tag" wx:key="*this">
+          <t-icon name="shield" size="12px" color="#d6a665" />
+          <text class="trust-tag-txt">{{tag}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 社交/业务统计指标 (仿小红书扁平化指标行) -->
+    <view class="stats-inline-row">
+      <view class="stat-inline-item" wx:for="{{metrics}}" wx:key="key" bindtap="onMetricTap" data-key="{{item.key}}" hover-class="stat-inline-item--hover">
+        <text class="stat-val">{{item.value}}</text>
+        <text class="stat-lbl">{{item.label}}</text>
+      </view>
+    </view>
+
+    <!-- 互动 Tab 标签页 -->
+    <view class="profile-tabs-section">
+      <view class="tabs-bar-new">
+        <view class="tab-btn-item {{activeTab === 'main' ? 'tab-btn-item--active' : ''}}" data-tab="main" bindtap="switchTab">
+          <text>{{profile.roleBadge === '商户' ? '在售宝贝' : '卡券包'}}</text>
+          <view class="tab-slider-line" wx:if="{{activeTab === 'main'}}"></view>
+        </view>
+        <view class="tab-btn-item {{activeTab === 'info' ? 'tab-btn-item--active' : ''}}" data-tab="info" bindtap="switchTab">
+          <text>档案资料</text>
+          <view class="tab-slider-line" wx:if="{{activeTab === 'info'}}"></view>
+        </view>
+        <view class="tab-btn-item {{activeTab === 'action' ? 'tab-btn-item--active' : ''}}" data-tab="action" bindtap="switchTab">
+          <text>常用功能</text>
+          <view class="tab-slider-line" wx:if="{{activeTab === 'action'}}"></view>
+        </view>
+      </view>
+
+      <!-- Tab内容区 -->
+      <view class="tab-content-container">
+        <!-- 1. 在售宝贝/卡券包 Tab -->
+        <view class="tab-panel-item" wx:if="{{activeTab === 'main'}}">
+          <!-- 商户宝贝网格 -->
+          <block wx:if="{{profile.roleBadge === '商户'}}">
+            <view class="merchant-products-grid" wx:if="{{merchantProducts && merchantProducts.length > 0}}">
+              <view class="product-grid-card" wx:for="{{merchantProducts}}" wx:key="productId">
+                <view class="prod-image-box">
+                  <image class="prod-img" src="{{item.coverUrl}}" mode="aspectFill"></image>
+                  <view class="prod-status-pill {{item.status === 'ON_SHELF' ? 'status-active' : 'status-inactive'}}">
+                    {{item.status === 'ON_SHELF' ? '在售' : '已下架'}}
+                  </view>
+                </view>
+                <view class="prod-detail-box">
+                  <text class="prod-name-title">{{item.title}}</text>
+                  <text class="prod-subtitle">{{item.subtitle}}</text>
+                  <view class="prod-meta-price-row">
+                    <text class="prod-price-text">¥{{item.price}}</text>
+                    <text class="prod-stock-text">库: {{item.stock}}</text>
+                  </view>
+                </view>
+              </view>
+            </view>
+            <view class="profile-empty-state" wx:else>
+              <t-icon name="shop" size="48px" color="#c1c9c1" />
+              <text class="empty-state-text">未发布任何商品</text>
+            </view>
+          </block>
+
+          <!-- 普通用户卡券列表 -->
+          <block wx:else>
+            <view class="user-coupons-list" wx:if="{{userCoupons && userCoupons.length > 0}}">
+              <view class="coupon-fancy-ticket" wx:for="{{userCoupons}}" wx:key="userCouponId">
+                <view class="coupon-val-side">
+                  <text class="coupon-currency">¥</text>
+                  <text class="coupon-value-num">{{item.discountAmount}}</text>
+                </view>
+                <view class="coupon-info-side">
+                  <text class="coupon-title-name">{{item.name}}</text>
+                  <text class="coupon-limit-desc">满{{item.thresholdAmount}}元可用</text>
+                  <view class="coupon-status-btn {{item.status === 'USED' || item.status === 'EXPIRED' ? 'status-used' : 'status-ready'}}">
+                    {{item.status === 'USED' ? '已使用' : item.status === 'EXPIRED' ? '已过期' : '可使用'}}
+                  </view>
+                </view>
+              </view>
+            </view>
+            <view class="profile-empty-state" wx:else>
+              <t-icon name="coupon" size="48px" color="#c1c9c1" />
+              <text class="empty-state-text">暂无可用卡券</text>
+            </view>
+          </block>
+        </view>
+
+        <!-- 2. 档案资料 Tab -->
+        <view class="tab-panel-item" wx:if="{{activeTab === 'info'}}">
+          <view class="details-profile-card">
+            <view class="details-section-head">
+              <t-icon name="member" size="20px" color="#2c4a39" />
+              <text class="details-section-title">基础档案</text>
+            </view>
+            <view class="details-info-table">
+              <view class="details-info-row" wx:for="{{baseInfo}}" wx:key="label">
+                <text class="details-row-label">{{item.label}}</text>
+                <text class="details-row-value">{{item.value}}</text>
+              </view>
+            </view>
+            <view class="details-bio-box">
+              <text class="details-bio-title">个性签名</text>
+              <text class="details-bio-content">{{bioText}}</text>
+            </view>
+          </view>
+        </view>
+
+        <!-- 3. 常用功能 Tab -->
+        <view class="tab-panel-item" wx:if="{{activeTab === 'action'}}">
+          <view class="quick-tools-grid">
+            <button class="quick-tool-card" plain="true" data-key="nickname" data-label="修改昵称" bindtap="openAction">
+              <view class="tool-icon-circle bg-light-green">
+                <t-icon name="edit" size="22px" color="#2c4a39" />
+              </view>
+              <text class="tool-label-text">修改昵称</text>
+            </button>
+            <button class="quick-tool-card" plain="true" data-key="avatar" data-label="修改头像" bindtap="openAction">
+              <view class="tool-icon-circle bg-light-gold">
+                <t-icon name="camera" size="22px" color="#8b5e22" />
+              </view>
+              <text class="tool-label-text">修改头像</text>
+            </button>
+            <button class="quick-tool-card" plain="true" data-key="info" data-label="修改资料" bindtap="openAction">
+              <view class="tool-icon-circle bg-light-blue">
+                <t-icon name="settings" size="22px" color="#2c4a39" />
+              </view>
+              <text class="tool-label-text">修改资料</text>
+            </button>
+            <button class="quick-tool-card" plain="true" data-key="share" data-label="分享资料" bindtap="openAction">
+              <view class="tool-icon-circle bg-light-red">
+                <t-icon name="share" size="22px" color="#c94b4b" />
+              </view>
+              <text class="tool-label-text">分享资料</text>
+            </button>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <loading show="{{loading}}" text="{{loadingText}}"></loading>
+  <view class="bottom-safe"></view>
+</view>

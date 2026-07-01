@@ -1,0 +1,69 @@
+<view class="phone-page settings-page" style="{{pageStyle}}">
+  <!-- Top Navigation Title Bar -->
+  <view class="board-head">
+    <view class="page-title-bar">
+      <button class="back-btn" bindtap="goBack" hover-class="back-btn--hover">
+        <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+      </button>
+      <text class="page-title-bar__title">设置</text>
+      <view class="page-title-bar__spacer"></view>
+    </view>
+  </view>
+
+  <view class="settings-content">
+    <!-- Main Settings List -->
+    <view class="panel settings-list">
+      <!-- 个人资料修改 -->
+      <view class="settings-item" bindtap="goToEdit" hover-class="settings-item--hover">
+        <view class="settings-item__left">
+          <view class="settings-item__icon-wrap">
+            <t-icon name="avatar" size="32rpx" color="brandGreen"></t-icon>
+          </view>
+          <text class="settings-item__title">修改个人资料</text>
+        </view>
+        <t-icon name="chevronRight" size="24rpx" opacity="0.6"></t-icon>
+      </view>
+
+      <!-- 申请成为商家/农户 暂时关闭
+      <view wx:if="{{userRole === 'USER'}}" class="settings-item" bindtap="goToApply" hover-class="settings-item--hover">
+        <view class="settings-item__left">
+          <view class="settings-item__icon-wrap">
+            <t-icon name="shop" size="32rpx" color="brandGreen"></t-icon>
+          </view>
+          <text class="settings-item__title">申请成为商家/农户</text>
+        </view>
+        <t-icon name="chevronRight" size="24rpx" opacity="0.6"></t-icon>
+      </view>
+      -->
+
+      <!-- 账户安全 (Placeholder/Action) -->
+      <view class="settings-item" hover-class="settings-item--hover">
+        <view class="settings-item__left">
+          <view class="settings-item__icon-wrap">
+            <t-icon name="shield" size="32rpx" color="brandGreen"></t-icon>
+          </view>
+          <text class="settings-item__title">账户安全</text>
+        </view>
+        <t-icon name="chevronRight" size="24rpx" opacity="0.6"></t-icon>
+      </view>
+
+      <!-- 关于我们 -->
+      <view class="settings-item" hover-class="settings-item--hover">
+        <view class="settings-item__left">
+          <view class="settings-item__icon-wrap">
+            <t-icon name="support" size="32rpx" color="brandGreen"></t-icon>
+          </view>
+          <text class="settings-item__title">关于我们 & 隐私协议</text>
+        </view>
+        <t-icon name="chevronRight" size="24rpx" opacity="0.6"></t-icon>
+      </view>
+    </view>
+
+    <!-- Logout Action Card -->
+    <view wx:if="{{isLoggedIn}}" class="logout-section">
+      <button class="logout-btn" plain="true" bindtap="handleLogout">退出当前账号</button>
+    </view>
+  </view>
+
+  <view class="safe-bottom"></view>
+</view>

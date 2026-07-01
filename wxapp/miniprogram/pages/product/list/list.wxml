@@ -1,0 +1,100 @@
+﻿<view class="phone-page search-page" style="{{pageStyle}}">
+  <view class="board-head">
+    <view class="page-title-bar">
+      <button class="back-btn" bindtap="goBack" hover-class="back-btn--hover">
+        <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+      </button>
+      <text class="page-title-bar__title">{{pageTitle}}</text>
+      <text></text>
+    </view>
+  </view>
+
+  <view class="search-landing">
+    <view class="panel search-panel">
+      <view class="section-title">
+        <text class="section-title__title">{{pageDesc}}</text>
+        <text class="section-title__meta">
+          {{loading ? '加载中' : loadingMore ? '加载更多中' : '共 ' + products.length + ' 件'}}
+        </text>
+      </view>
+      <view class="chip-row">
+        <view
+          wx:for="{{filters}}"
+          wx:key="value"
+          class="chip {{activeFilter === item.value ? 'chip--active' : ''}}"
+          data-filter="{{item.value}}"
+          bindtap="changeFilter"
+        >
+          {{item.label}}
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{activeFilter === 'origin' && originPlaces.length > 0}}" class="panel origin-panel">
+      <view class="section-title">
+        <text class="section-title__title">产地筛选</text>
+        <text class="section-title__meta">选择具体产地继续缩小范围</text>
+      </view>
+      <view class="chip-row">
+        <view
+          class="chip {{selectedOrigin === '' ? 'chip--active' : ''}}"
+          data-origin=""
+          bindtap="selectOrigin"
+        >
+          全部产地
+        </view>
+        <view
+          wx:for="{{originPlaces}}"
+          wx:key="*this"
+          class="chip {{selectedOrigin === item ? 'chip--active' : ''}}"
+          data-origin="{{item}}"
+          bindtap="selectOrigin"
+        >
+          {{item}}
+        </view>
+      </view>
+    </view>
+
+    <scroll-view
+      class="product-scroll"
+      scroll-y="true"
+      enhanced="true"
+      show-scrollbar="{{false}}"
+      bindscrolltolower="loadMore"
+    >
+      <view wx:if="{{products.length}}" class="search-grid">
+        <view
+          wx:for="{{products}}"
+          wx:key="id"
+          class="search-card"
+          data-product-id="{{item.id}}"
+          bindtap="openProductDetail"
+        >
+          <view class="search-card__img {{item.imageClass}}" style="{{item.imageStyle}}"></view>
+          <view class="search-card__body">
+            <text class="search-card__title">{{item.title}}</text>
+            <text class="search-card__desc">{{item.desc}}</text>
+            <view class="search-card__tags">
+              <text wx:for="{{item.tags}}" wx:key="*this" class="search-card__tag">{{item}}</text>
+            </view>
+            <view class="search-card__foot">
+              <text class="search-card__price">{{item.price}}</text>
+              <view class="search-card__action">去看看</view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view wx:else class="empty-hint">
+        {{loading ? '正在加载商品…' : '暂无商品数据，后台配置后会展示在这里'}}
+      </view>
+
+      <view wx:if="{{products.length}}" class="load-more-area">
+        <text wx:if="{{loadingMore}}" class="load-more-area__text">正在继续加载…</text>
+        <text wx:elif="{{noMore}}" class="load-more-area__text">已经到底了</text>
+        <view wx:else class="load-more-area__button">下滑加载更多</view>
+      </view>
+      <view class="safe-bottom"></view>
+    </scroll-view>
+  </view>
+</view>

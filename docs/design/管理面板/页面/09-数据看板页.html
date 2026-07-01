@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>湾源农仓管理后台 - 数据看板</title>
+  <link rel="stylesheet" href="./00-管理面板公共.css">
+</head>
+<body>
+<input class="drawer-check" type="checkbox" id="drawerToggle">
+<aside class="sidebar">
+  <div class="brand"><div class="brand-mark">湾</div><div><strong>湾源农仓</strong><span>运营管理后台</span></div></div>
+  <nav class="menu" aria-label="后台导航"><a class="" href="01-控制台首页.html">控制台首页</a>
+<a class="" href="02-用户管理页.html">用户管理</a>
+<a class="" href="03-商户管理页.html">商户管理</a>
+<a class="" href="04-商品管理页.html">商品管理</a>
+<a class="" href="05-活动管理页.html">活动管理</a>
+<a class="" href="06-订单列表页.html">订单列表</a>
+<a class="" href="07-订单详情页.html">订单详情</a>
+<a class="" href="08-售后仲裁页.html">售后仲裁</a>
+<a class="active" href="09-数据看板页.html">数据看板</a>
+<a class="" href="10-物流配置页.html">物流配置</a>
+<a class="" href="11-系统配置页.html">系统配置</a></nav>
+  <div class="sidebar-user"><div class="avatar">管</div><div class="user-text"><strong>平台管理员</strong><span>admin@wanyuan</span></div><button type="button">退出</button></div>
+</aside>
+<label class="drawer-mask" for="drawerToggle" aria-label="关闭菜单"></label>
+<main class="app">
+<header class="topbar">
+  <div class="top-left"><label class="menu-toggle" for="drawerToggle" aria-label="打开菜单">☰</label><div><div class="breadcrumb">后台管理 / 数据看板</div><h1>数据看板</h1></div></div>
+  <label class="global-search"><span>⌕</span><input type="text" placeholder="搜索订单号 / 商品 / 商户 / 用户手机号"></label>
+  <div class="top-actions"><button class="text-btn" type="button">导出</button><button class="primary-btn" type="button">导出报表</button><div class="admin-user"><div class="avatar small">管</div><span>平台管理员</span></div></div>
+</header>
+<section class="metric-grid"><article class="metric-card"><div class="metric-title">成交额</div><strong>¥862,400</strong><p>本周累计</p></article><article class="metric-card"><div class="metric-title">订单量</div><strong>7,820</strong><p>较上周 +8.6%</p></article><article class="metric-card"><div class="metric-title">转化率</div><strong>12.8%</strong><p>小程序访问转化</p></article><article class="metric-card"><div class="metric-title">退款率</div><strong>2.3%</strong><p>肉禽类偏高</p></article></section><section class="panel"><div class="panel-head"><div><h2>经营趋势下钻</h2><p>点击柱子可进入当天订单和类目明细</p></div><div class="segmented"><button class="active">7日</button><button>30日</button><button>90日</button></div></div><div class="chart-wrap"><div class="y-axis"><span>16万</span><span>12万</span><span>8万</span><span>4万</span><span>0</span></div><div class="chart-box"><span class="grid-line line-1"></span><span class="grid-line line-2"></span><span class="grid-line line-3"></span><span class="grid-line line-4"></span><a class="bar-item" href="06-订单列表页.html"><span class="bar-value">6.2万</span><i style="height:42%"></i><em>周一</em></a><a class="bar-item" href="06-订单列表页.html"><span class="bar-value">8.8万</span><i style="height:55%"></i><em>周二</em></a><a class="bar-item" href="06-订单列表页.html"><span class="bar-value">9.6万</span><i style="height:60%"></i><em>周三</em></a><a class="bar-item" href="06-订单列表页.html"><span class="bar-value">11.4万</span><i style="height:72%"></i><em>周四</em></a><a class="bar-item" href="06-订单列表页.html"><span class="bar-value">10.2万</span><i style="height:64%"></i><em>周五</em></a><a class="bar-item" href="06-订单列表页.html"><span class="bar-value">13.8万</span><i style="height:86%"></i><em>周六</em></a><a class="bar-item" href="06-订单列表页.html"><span class="bar-value">15.1万</span><i style="height:94%"></i><em>周日</em></a></div></div></section><section class="content-grid"><article class="panel"><div class="panel-head compact"><h2>类目贡献排行</h2><a href="04-商品管理页.html">查看商品</a></div><div class="table-x"><table class="data-table"><thead><tr><th>类目</th><th>成交额</th><th>订单量</th><th>趋势</th><th>操作</th></tr></thead><tbody><tr><td data-label="类目"><div class="cell-main"><div class="thumb">果</div><div><strong>时令果蔬</strong><span>脐橙、番茄、草莓</span></div></div></td><td data-label="成交额">¥326,000</td><td data-label="订单量">3,820</td><td data-label="趋势"><span class="status ok">上升</span></td><td data-label="操作"><div class="op-links"><button>下钻</button></div></td></tr><tr><td data-label="类目"><div class="cell-main"><div class="thumb">粮</div><div><strong>粮油干货</strong><span>香米、红米、菜籽油</span></div></div></td><td data-label="成交额">¥218,000</td><td data-label="订单量">1,960</td><td data-label="趋势"><span class="status ok">稳定</span></td><td data-label="操作"><div class="op-links"><button>下钻</button></div></td></tr><tr><td data-label="类目"><div class="cell-main"><div class="thumb">蛋</div><div><strong>肉禽蛋奶</strong><span>鸡蛋、牛奶、土鸡</span></div></div></td><td data-label="成交额">¥148,000</td><td data-label="订单量">1,280</td><td data-label="趋势"><span class="status warn">退款偏高</span></td><td data-label="操作"><div class="op-links"><button>排查</button></div></td></tr></tbody></table></div></article><article class="panel"><div class="panel-head compact"><h2>问题焦点</h2></div><div class="risk-list"><div class="risk-item high"><div><strong>肉禽蛋奶退款率异常</strong><span>主要集中在东山合作社 2 个 SKU</span></div><a href="04-商品管理页.html">定位 SKU</a></div><div class="risk-item mid"><div><strong>周三流量下降</strong><span>首页 Banner 点击率 -18%</span></div><a href="05-活动管理页.html">查看排期</a></div></div></article></section>
+</main>
+</body>
+</html>

@@ -1,0 +1,277 @@
+@import "../common.less";
+
+.metric-strip {
+  padding: 0 32rpx 20rpx;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16rpx;
+}
+
+.metric-item {
+  padding: 24rpx 16rpx;
+  border-radius: 24rpx;
+  background: var(--merchant-surface-warm);
+  border: 1rpx solid var(--merchant-line-soft);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.metric-value {
+  font-size: 34rpx;
+  font-weight: 900;
+  color: var(--merchant-primary-strong);
+}
+
+.metric-label {
+  font-size: 22rpx;
+  color: var(--merchant-text-muted);
+}
+
+.form-section {
+  margin: 0 32rpx 24rpx;
+}
+
+.form-section-title {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: var(--merchant-text-sub);
+  margin-bottom: 16rpx;
+}
+
+.amount-chips {
+  display: flex;
+  gap: 14rpx;
+  margin-bottom: 20rpx;
+}
+
+.amount-chips .chip {
+  flex: 1;
+  height: 64rpx;
+  border-radius: 999rpx;
+  background: var(--merchant-bg-soft);
+  color: var(--merchant-text-sub);
+  font-size: 24rpx;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.amount-chips .chip.active {
+  background: var(--merchant-primary-soft);
+  color: var(--merchant-primary);
+}
+
+.number-cell {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 20rpx 24rpx;
+  border-radius: 20rpx;
+  background: var(--merchant-bg-soft);
+}
+
+.number-label {
+  font-size: 26rpx;
+  color: var(--merchant-text-sub);
+  white-space: nowrap;
+}
+
+.number-input {
+  flex: 1;
+  height: 64rpx;
+  font-size: 30rpx;
+  font-weight: 800;
+  color: var(--merchant-text);
+}
+
+.number-unit {
+  font-size: 24rpx;
+  color: var(--merchant-text-muted);
+}
+
+.picker-line {
+  width: 100%;
+}
+
+.row-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.row-title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: var(--merchant-text);
+}
+
+.row-desc {
+  font-size: 24rpx;
+  color: var(--merchant-text-muted);
+}
+
+.row-right {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  font-size: 24rpx;
+  color: var(--merchant-primary);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.icon-sm {
+  width: 28rpx;
+  height: 28rpx;
+}
+
+.divider {
+  height: 16rpx;
+  background: var(--merchant-bg-soft);
+}
+
+.section-line-title {
+  padding: 28rpx 32rpx 16rpx;
+  font-size: 28rpx;
+  font-weight: 800;
+  color: var(--merchant-text);
+}
+
+.full-list {
+  padding: 0 32rpx 32rpx;
+}
+
+.finance-row {
+  min-height: 96rpx;
+  padding: 22rpx 0;
+  border-bottom: 1rpx solid var(--merchant-line-soft);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
+}
+
+.finance-row:last-child {
+  border-bottom: 0;
+}
+
+.finance-amount {
+  font-size: 28rpx;
+  font-weight: 800;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.finance-amount.income {
+  color: var(--merchant-primary);
+}
+
+.list-empty {
+  padding: 80rpx 32rpx;
+  text-align: center;
+  font-size: 26rpx;
+  color: var(--merchant-text-placeholder);
+}
+
+.sheet-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(31, 42, 36, 0.4);
+  z-index: 40;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.24s;
+}
+
+.sheet-mask.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--merchant-surface);
+  border-radius: 36rpx 36rpx 0 0;
+  padding: 28rpx 32rpx calc(28rpx + env(safe-area-inset-bottom));
+  z-index: 41;
+  transform: translateY(100%);
+  transition: transform 0.24s;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.sheet.show {
+  transform: translateY(0);
+}
+
+.sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24rpx;
+}
+
+.sheet-title {
+  font-size: 32rpx;
+  font-weight: 900;
+  color: var(--merchant-primary-strong);
+}
+
+.sheet-group {
+  margin-bottom: 24rpx;
+}
+
+.sheet-label {
+  font-size: 24rpx;
+  font-weight: 700;
+  color: var(--merchant-text-sub);
+  margin-bottom: 16rpx;
+}
+
+.option-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14rpx;
+}
+
+.option {
+  height: 64rpx;
+  padding: 0 28rpx;
+  border-radius: 999rpx;
+  background: var(--merchant-bg-soft);
+  color: var(--merchant-text-sub);
+  font-size: 24rpx;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.option.active {
+  background: var(--merchant-primary-soft);
+  color: var(--merchant-primary);
+}
+
+.sheet-actions {
+  display: flex;
+  gap: 18rpx;
+  padding-top: 8rpx;
+}
+
+.setting-row {
+  min-height: 96rpx;
+  padding: 20rpx 24rpx;
+  border-radius: 20rpx;
+  background: var(--merchant-bg-soft);
+  display: flex;
+  align-items: center;
+  gap: 18rpx;
+}

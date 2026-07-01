@@ -1,0 +1,108 @@
+<view class="merchant-page has-tabbar" style="{{pageStyle}}">
+  <view class="status-space"></view>
+
+  <view class="page-titlebar">
+    <view class="title-block">
+      <view class="page-title">消息</view>
+    </view>
+    <text></text>
+  </view>
+
+  <view class="top-actions" style="justify-content: space-between;">
+    <view class="search-pill" style="flex:1; max-width: 420rpx; height: 64rpx; border-radius: 999rpx; background: var(--merchant-bg); display: flex; align-items: center; gap: 12rpx; padding: 0 20rpx;">
+      <image src="/assets/icons/search.svg" mode="aspectFit" style="width:32rpx;height:32rpx" />
+      <input style="flex:1;min-width:0;height:100%;font-size:26rpx;color:var(--merchant-text)" placeholder="搜索买家、订单、系统消息" value="{{searchKeyword}}" bindinput="onSearchInput" />
+    </view>
+    <view class="icon-action" bindtap="openFilterSheet">
+      <t-icon name="filter" size="40rpx"></t-icon>
+      <text>筛选</text>
+    </view>
+  </view>
+
+  <scroll-view scroll-x class="tabs" enhanced show-scrollbar="{{false}}">
+    <view class="tab {{item.active ? 'active' : ''}}" wx:for="{{tabs}}" wx:key="key" bindtap="onTabTap" data-key="{{item.key}}">{{item.name}}</view>
+  </scroll-view>
+
+  <view class="full-list">
+    <block wx:for="{{filteredMessages}}" wx:key="id">
+      <view class="message-row" bindtap="openMessage" data-item="{{item}}">
+        <view class="message-avatar">
+          <image class="avatar-img" src="{{item.avatar}}" mode="aspectFill" />
+        </view>
+        <view class="row-main">
+          <view class="row-title">{{item.title}}</view>
+          <view class="row-desc">{{item.desc}}</view>
+          <view class="row-desc">{{item.subdesc}}</view>
+        </view>
+        <view wx:if="{{item.unread > 0}}" class="unread-badge">{{item.unread}}</view>
+        <t-icon name="chevronRight" size="40rpx"></t-icon>
+      </view>
+    </block>
+    <view wx:if="{{filteredMessages.length === 0}}" class="list-empty">
+      <image class="empty-illust" src="/assets/illustrations/empty.svg" mode="aspectFit" />
+      <text>暂无匹配消息</text>
+    </view>
+  </view>
+
+  <view wx:if="{{showFilterSheet}}" class="sheet-mask" bindtap="closeFilterSheet"></view>
+  <view wx:if="{{showFilterSheet}}" class="sheet">
+    <view class="sheet-head">
+      <view class="sheet-title">消息筛选</view>
+      <view class="icon-btn-close" bindtap="closeFilterSheet">
+        <image class="icon-sm" src="/assets/icons/close.svg" mode="aspectFit" />
+      </view>
+    </view>
+    <view class="sheet-group">
+      <view class="sheet-label">消息类型</view>
+      <view class="option-grid">
+        <view class="sheet-option {{filterType === 'all' ? 'active' : ''}}" bindtap="setFilterType" data-type="all">全部</view>
+        <view class="sheet-option {{filterType === 'buyer' ? 'active' : ''}}" bindtap="setFilterType" data-type="buyer">买家消息</view>
+        <view class="sheet-option {{filterType === 'order' ? 'active' : ''}}" bindtap="setFilterType" data-type="order">订单通知</view>
+        <view class="sheet-option {{filterType === 'system' ? 'active' : ''}}" bindtap="setFilterType" data-type="system">官方通知</view>
+      </view>
+    </view>
+    <view class="sheet-group">
+      <view class="sheet-label">状态</view>
+      <view class="option-grid">
+        <view class="sheet-option {{filterStatus === 'all' ? 'active' : ''}}" bindtap="setFilterStatus" data-status="all">全部</view>
+        <view class="sheet-option {{filterStatus === 'unread' ? 'active' : ''}}" bindtap="setFilterStatus" data-status="unread">未读</view>
+        <view class="sheet-option {{filterStatus === 'read' ? 'active' : ''}}" bindtap="setFilterStatus" data-status="read">已读</view>
+      </view>
+    </view>
+    <view class="sheet-group">
+      <view class="sheet-label">时间</view>
+      <view class="option-grid">
+        <view class="sheet-option {{filterTime === 'today' ? 'active' : ''}}" bindtap="setFilterTime" data-time="today">今天</view>
+        <view class="sheet-option {{filterTime === 'week' ? 'active' : ''}}" bindtap="setFilterTime" data-time="week">近7天</view>
+        <view class="sheet-option {{filterTime === 'month' ? 'active' : ''}}" bindtap="setFilterTime" data-time="month">近30天</view>
+      </view>
+    </view>
+    <view class="sheet-actions">
+      <button class="action-btn secondary" bindtap="resetFilter">重置</button>
+      <button class="action-btn primary" bindtap="applyFilter">应用筛选</button>
+    </view>
+  </view>
+
+  <view class="bottom-nav">
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/dashboard/dashboard?tab=0" data-tab="0">
+      <t-icon name="home" size="40rpx"></t-icon>
+      <text>首页</text>
+    </view>
+    <view class="nav-item active" data-tab="1">
+      <t-icon name="message" size="40rpx"></t-icon>
+      <text>聊天</text>
+    </view>
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/orders/orders?tab=2" data-tab="2">
+      <t-icon name="invoice" size="40rpx"></t-icon>
+      <text>订单</text>
+    </view>
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/products/products?tab=3" data-tab="3">
+      <t-icon name="package" size="40rpx"></t-icon>
+      <text>库存</text>
+    </view>
+    <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/shop/shop?tab=4" data-tab="4">
+      <t-icon name="profile" size="40rpx"></t-icon>
+      <text>账号</text>
+    </view>
+  </view>
+</view>

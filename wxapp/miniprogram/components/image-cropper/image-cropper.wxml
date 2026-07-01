@@ -1,0 +1,55 @@
+<view class="cropper-container {{show ? 'cropper-container--show' : ''}}" wx:if="{{show}}" catchtouchmove="preventTouchMove">
+  <!-- Image Layer: handles gestures -->
+  <view class="image-wrapper" bindtouchstart="onTouchStart" bindtouchmove="onTouchMove" bindtouchend="onTouchEnd">
+    <image
+      wx:if="{{imageUrl}}"
+      src="{{imageUrl}}"
+      class="crop-image"
+      style="width: {{imgWidth}}px; height: {{imgHeight}}px; transform: translate({{imgX}}px, {{imgY}}px) rotate({{imgRotate}}deg) scale({{imgScale}}); transform-origin: center center;"
+    />
+  </view>
+
+  <!-- Cutout Mask Overlay (semi-transparent black) -->
+  <view class="mask-panel mask-top" style="height: {{cropBoxTop}}px;"></view>
+  <view class="mask-panel mask-bottom" style="top: {{cropBoxTop + cropBoxH}}px;"></view>
+  <view class="mask-panel mask-left" style="top: {{cropBoxTop}}px; width: {{cropBoxLeft}}px; height: {{cropBoxH}}px;"></view>
+  <view class="mask-panel mask-right" style="top: {{cropBoxTop}}px; left: {{cropBoxLeft + cropBoxW}}px; height: {{cropBoxH}}px;"></view>
+
+  <!-- Crop Box Focus Area (Rule of thirds grid lines & corners) -->
+  <view class="crop-box" style="top: {{cropBoxTop}}px; left: {{cropBoxLeft}}px; width: {{cropBoxW}}px; height: {{cropBoxH}}px;">
+    <!-- Corner decoration guides -->
+    <view class="corner corner-tl"></view>
+    <view class="corner corner-tr"></view>
+    <view class="corner corner-bl"></view>
+    <view class="corner corner-br"></view>
+
+    <!-- Grid lines (Rule of Thirds) -->
+    <view class="grid-line line-h line-h-1"></view>
+    <view class="grid-line line-h line-h-2"></view>
+    <view class="grid-line line-v line-v-1"></view>
+    <view class="grid-line line-v line-v-2"></view>
+  </view>
+
+  <!-- Bottom Toolbar Controls -->
+  <view class="cropper-toolbar">
+    <view class="btn-cancel" bindtap="onCancel">取消</view>
+    <view class="btn-rotate" bindtap="onRotate">
+      <view class="rotate-icon-wrapper">
+        <text class="rotate-icon">↺</text>
+      </view>
+      <text class="rotate-text">旋转90°</text>
+    </view>
+    <view class="btn-confirm" bindtap="onConfirm">
+      <text wx:if="{{processing}}">处理中...</text>
+      <text wx:else>确定</text>
+    </view>
+  </view>
+
+  <!-- Hidden Canvas 2D for Rendering the Cropped Image -->
+  <canvas 
+    type="2d" 
+    id="cropper-canvas" 
+    class="cropper-canvas" 
+    style="width: {{exportWidth}}px; height: {{exportHeight}}px; position: absolute; left: -9999px; top: -9999px;"
+  ></canvas>
+</view>

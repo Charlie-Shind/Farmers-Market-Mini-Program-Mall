@@ -1,0 +1,59 @@
+﻿<view class="merchant-page has-bottom-actions" style="{{pageStyle}}">
+  <view class="status-space"></view>
+
+  <view class="page-titlebar">
+    <view class="icon-box icon-btn" bindtap="goBack">
+      <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
+    </view>
+    <view class="title-block">
+      <view class="page-title">商品图片</view>
+      <view class="page-subtitle">主图、详情图、产地图，统一用于商品发布</view>
+    </view>
+  </view>
+
+  <view class="section-head">
+    <text>商品图片</text>
+    <text>{{gallery.length}}/9</text>
+  </view>
+  <view class="photo-strip">
+    <view class="photo-thumb" wx:for="{{gallery}}" wx:key="*this" bindtap="onPhotoTap" data-index="{{index}}">
+      <image class="fit-img" src="{{item}}" mode="aspectFill" />
+      <view wx:if="{{index === 0}}" class="mini-label">主图</view>
+      <view class="photo-delete" wx:if="{{index !== 0}}" catchtap="deletePhoto" data-index="{{index}}">
+        <t-icon name="close" size="20rpx"></t-icon>
+      </view>
+    </view>
+    <view class="photo-add" bindtap="chooseImage" wx:if="{{gallery.length < 9}}">
+      <view class="icon-box" style="width:40rpx;height:40rpx">
+        <t-icon name="camera" size="40rpx"></t-icon>
+      </view>
+    </view>
+  </view>
+
+  <view class="section-head">
+    <text>图片要求</text>
+  </view>
+  <view class="form-card">
+    <view class="process-row">
+      <view class="process-index done">1</view>
+      <view class="process-main">
+        <text class="process-title">主图清晰</text>
+        <text class="process-desc">建议 1:1 正方形，主体居中，避免文字过多</text>
+      </view>
+      <text class="status-pill success">已符合</text>
+    </view>
+    <view class="process-row">
+      <view class="process-index">2</view>
+      <view class="process-main">
+        <text class="process-title">详情图补充</text>
+        <text class="process-desc">可展示产地、包装、规格、质检信息</text>
+      </view>
+      <text class="status-pill info">建议</text>
+    </view>
+  </view>
+
+  <view class="bottom-actions">
+    <view class="action-btn secondary" bindtap="setAsMain">设为主图</view>
+    <view class="action-btn primary" bindtap="saveImages">保存图片</view>
+  </view>
+</view>

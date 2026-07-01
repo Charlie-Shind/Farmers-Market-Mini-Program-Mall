@@ -1,0 +1,49 @@
+<view class="phone-page history-page" style="{{pageStyle}}">
+  <view class="history-head">
+    <view class="page-title-bar">
+      <view class="back-btn" hover-class="back-btn--hover" bindtap="goBack">‹</view>
+      <text class="page-title-bar__title">浏览历史</text>
+      <view class="page-title-bar__action" hover-class="page-title-bar__action--hover" bindtap="openClearSheet">清空</view>
+    </view>
+    <view class="history-summary">
+      <text class="history-summary__title">今天浏览</text>
+      <text class="history-summary__desc">{{history.items.length}} 条记录</text>
+    </view>
+  </view>
+
+  <view wx:if="{{history.items.length}}" class="history-list">
+    <view
+      wx:for="{{history.items}}"
+      wx:key="productId"
+      class="history-item"
+      data-product-id="{{item.productId}}"
+      bindtap="openProductDetail"
+    >
+      <view class="history-item__cover {{item.coverUrl ? '' : 'history-item__cover--empty'}}" style="{{item.coverStyle}}"></view>
+      <view class="history-item__body">
+        <text class="history-item__title">{{item.title}}</text>
+        <text class="history-item__desc">{{item.subtitle}}</text>
+        <text class="history-item__meta">浏览于 {{item.visitedAtText}}</text>
+      </view>
+      <text class="history-item__price">{{item.priceLabel}}</text>
+    </view>
+  </view>
+
+  <view wx:else class="empty-state">
+    <view class="empty-state__icon">⌁</view>
+    <text class="empty-state__title">暂无浏览历史</text>
+    <text class="empty-state__desc">浏览过的商品会自动记录在这里，方便你继续回看。</text>
+    <button class="empty-state__action" bindtap="goBack">去首页看看</button>
+  </view>
+
+  <view wx:if="{{showClearSheet}}" class="sheet-mask" bindtap="closeClearSheet">
+    <view class="clear-sheet" catchtap="stopBubble">
+      <text class="clear-sheet__title">清空浏览历史？</text>
+      <text class="clear-sheet__desc">该操作会删除当前账号的全部浏览记录，清空后无法恢复。</text>
+      <view class="clear-sheet__actions">
+        <button class="clear-sheet__cancel" bindtap="closeClearSheet">取消</button>
+        <button class="clear-sheet__confirm" bindtap="clearHistory">确认清空</button>
+      </view>
+    </view>
+  </view>
+</view>
