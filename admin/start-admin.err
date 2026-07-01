@@ -1,0 +1,174 @@
+[2m21:09:55[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/admin/users?page=1&pageSize=8&keyword=18[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:10:15[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/admin/users?page=1&pageSize=8[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:10:18[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/admin/users?page=1&pageSize=8[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:10:20[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/admin/users?page=1&pageSize=8[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:11:29[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/admin/refunds?page=1&pageSize=200&status=PENDING_ARBITRATION[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:11:29[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/admin/products?page=1&pageSize=200&auditStatus=PENDING_AUDIT[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:11:29[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/admin/messages?page=1&pageSize=100[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:11:50[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/admin/refunds?page=1&pageSize=200&status=PENDING_ARBITRATION[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:11:50[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/admin/products?page=1&pageSize=200&auditStatus=PENDING_AUDIT[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:11:50[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/admin/banners[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:11:50[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/admin/refunds?page=1&pageSize=200&status=PENDING_ARBITRATION[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:11:50[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/admin/products?page=1&pageSize=200&auditStatus=PENDING_AUDIT[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:11:50[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/app/categories[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:11:50[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/admin/activities?page=1&pageSize=100[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:11:53[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/admin/refunds?page=1&pageSize=200&status=PENDING_ARBITRATION[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:11:53[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/admin/products?page=1&pageSize=200&auditStatus=PENDING_AUDIT[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:11:53[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/app/categories[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:11:53[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/admin/logistics[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:11:53[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/admin/refunds?page=1&pageSize=200&status=PENDING_ARBITRATION[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:11:53[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/admin/products?page=1&pageSize=200&auditStatus=PENDING_AUDIT[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:11:53[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/app/categories[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:11:53[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/admin/refunds?page=1&pageSize=100[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:11:54[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/admin/refunds?page=1&pageSize=200&status=PENDING_ARBITRATION[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:11:54[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/admin/products?page=1&pageSize=200&auditStatus=PENDING_AUDIT[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:11:54[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/app/categories[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:11:54[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/admin/products?page=1&pageSize=100[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:48:56[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/admin/refunds?page=1&pageSize=200&status=PENDING_ARBITRATION[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:48:56[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/admin/products?page=1&pageSize=200&auditStatus=PENDING_AUDIT[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:48:56[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/app/categories[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:48:56[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/admin/products?page=1&pageSize=100[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:51:57[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/admin/refunds?page=1&pageSize=200&status=PENDING_ARBITRATION[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:51:57[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/admin/products?page=1&pageSize=200&auditStatus=PENDING_AUDIT[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:51:57[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/app/categories[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:51:57[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/admin/merchants?page=1&pageSize=100[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:51:59[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/admin/refunds?page=1&pageSize=200&status=PENDING_ARBITRATION[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:51:59[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/admin/products?page=1&pageSize=200&auditStatus=PENDING_AUDIT[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:51:59[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/app/categories[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:51:59[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/admin/products?page=1&pageSize=100[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:52:00[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/admin/refunds?page=1&pageSize=200&status=PENDING_ARBITRATION[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:52:00[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/admin/products?page=1&pageSize=200&auditStatus=PENDING_AUDIT[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:52:00[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/app/categories[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:52:00[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/admin/merchants?page=1&pageSize=100[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:52:01[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/admin/refunds?page=1&pageSize=200&status=PENDING_ARBITRATION[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:52:01[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/admin/products?page=1&pageSize=200&auditStatus=PENDING_AUDIT[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:52:01[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/app/categories[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:52:01[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/admin/orders?page=1&pageSize=100[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:52:02[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/admin/refunds?page=1&pageSize=200&status=PENDING_ARBITRATION[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:52:02[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/admin/products?page=1&pageSize=200&auditStatus=PENDING_AUDIT[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:52:02[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/app/categories[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:52:02[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/admin/logistics[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:52:02[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/admin/refunds?page=1&pageSize=200&status=PENDING_ARBITRATION[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:52:02[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/admin/products?page=1&pageSize=200&auditStatus=PENDING_AUDIT[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:52:02[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/app/categories[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:52:02[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/admin/refunds?page=1&pageSize=100[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:52:04[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/admin/refunds?page=1&pageSize=200&status=PENDING_ARBITRATION[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:52:04[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/admin/products?page=1&pageSize=200&auditStatus=PENDING_AUDIT[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:52:04[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/app/categories[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
+[2m21:52:04[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/admin/refunds?page=1&pageSize=100[39m
+Error: connect ECONNREFUSED 127.0.0.1:6002
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)

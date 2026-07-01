@@ -1,0 +1,188 @@
+/* ——— 登录表单 ——— */
+.login-card {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.login-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 0;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.login-brand strong {
+  font-size: 22px;
+  line-height: 1.2;
+}
+
+.login-brand span {
+  display: block;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.login-card .form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.login-card .form-field span {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.login-card .form-field input {
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  color: var(--text-primary);
+}
+
+.login-card .form-field input:focus {
+  outline: none;
+  border-color: var(--brand-500);
+  box-shadow: 0 0 0 2px rgba(44, 74, 57, 0.12);
+}
+
+.login-submit {
+  margin-top: 4px;
+}
+
+.login-message {
+  margin-top: 0;
+}
+
+/* ——— 抽屉内商品/优惠券表单 ——— */
+.product-create-form,
+.coupon-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.drawer-body .form-section {
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+  margin-bottom: 0;
+}
+
+.drawer-body .section-title {
+  margin: 0 0 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.drawer-body .section-title svg {
+  color: var(--brand-600);
+  flex-shrink: 0;
+}
+
+.account-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 16px;
+}
+
+.form-field--full {
+  grid-column: 1 / -1;
+}
+
+.drawer-body .form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.drawer-body .form-field span,
+.drawer-body .field-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.drawer-body .form-field input,
+.drawer-body .form-field select,
+.drawer-body .form-field textarea {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.product-media-grid {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.product-media-left {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.product-switch-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 16px;
+}
+
+.switch-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  font-size: 13px;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.switch-field input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--brand-600);
+}
+
+.form-help {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+
+.product-create-form .action-card__foot,
+.product-create-form > footer.action-card__foot {
+  margin-top: 8px;
+  margin-left: -18px;
+  margin-right: -18px;
+  margin-bottom: -18px;
+  padding: 12px 18px;
+  border-top: 1px solid var(--border-light);
+  background: var(--surface-muted);
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+@media (max-width: 768px) {
+  .account-form-grid,
+  .product-media-grid,
+  .product-switch-grid {
+    grid-template-columns: 1fr;
+  }
+}
