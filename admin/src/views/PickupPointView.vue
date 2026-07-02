@@ -9,9 +9,7 @@
           <p>管理平台自提点信息、绑定团长、启停状态与新增维护。</p>
         </div>
         <div class="top-actions">
-          <button type="button" class="ghost-btn compact" :disabled="loading" @click="loadData">
-            {{ loading ? '刷新中...' : '刷新数据' }}
-          </button>
+          <RefreshDataButton :loading="loading" compact @refresh="handleRefreshData" />
           <button type="button" class="primary-btn compact" @click="openCreate">新增自提点</button>
         </div>
       </div>
@@ -204,6 +202,8 @@ import {
   updatePickupPointStatus,
 } from '@/api/admin';
 import StatGrid from '@/components/StatGrid.vue';
+import RefreshDataButton from '@/components/RefreshDataButton.vue';
+import { refreshWithFeedback } from '@/utils/refresh-feedback';
 
 function decodeDisplayText(value: string | null | undefined): string {
   if (!value) return '';
@@ -313,7 +313,7 @@ onMounted(() => {
   }
 });
 
-async function loadData() {
+async function loadData(): Promise<boolean> {
   loading.value = true;
   try {
     const res = await getPickupPoints({
@@ -327,11 +327,17 @@ async function loadData() {
     pickupPoints.value = res.items ?? [];
     total.value = res.total ?? 0;
     pageInput.value = page.value;
+    return true;
   } catch (error: any) {
     ElMessage.error(error.message || '加载自提点列表失败');
+    return false;
   } finally {
     loading.value = false;
   }
+}
+
+function handleRefreshData() {
+  void refreshWithFeedback(() => loadData());
 }
 
 function applyFilters() {
@@ -502,7 +508,7 @@ function formatLngLat(longitude: number | null, latitude: number | null) {
 .primary-btn.compact,
 .ghost-btn.compact {
   height: 32px;
-  padding: 0 12px;
+  padding: 0 10px;
   font-size: 13px;
   border-radius: 8px;
 }
@@ -518,7 +524,7 @@ function formatLngLat(longitude: number | null, latitude: number | null) {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  max-width: 200px;
+  max-width: 210px;
 }
 .danger-text {
   color: var(--danger);

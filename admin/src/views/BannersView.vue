@@ -90,7 +90,12 @@
           <div class="banner-uploader-wrap">
             <el-input v-model="form.imageUrl" placeholder="请输入配图 URL 或在下方上传" style="margin-bottom: 8px" />
             <div class="uploader-action">
-              <el-button type="primary" plain :loading="imageUploading" @click="triggerFileInput">
+              <el-button
+                class="banner-upload-btn"
+                type="primary"
+                :loading="imageUploading"
+                @click="triggerFileInput"
+              >
                 选择并上传本地图片
               </el-button>
               <input
@@ -377,10 +382,12 @@ async function onDragEnd() {
   margin-left: auto;
 }
 
-.banner-create-btn {
+.banner-create-btn,
+.banner-upload-btn {
   --el-button-bg-color: #111111;
   --el-button-border-color: #111111;
   --el-button-text-color: #ffffff;
+  --el-button-hover-text-color: #ffffff;
   --el-button-hover-bg-color: #2f2f2f;
   --el-button-hover-border-color: #2f2f2f;
   --el-button-active-bg-color: #22382b;
@@ -392,7 +399,9 @@ async function onDragEnd() {
 }
 
 .banner-create-btn:hover,
-.banner-create-btn:focus {
+.banner-create-btn:focus,
+.banner-upload-btn:hover,
+.banner-upload-btn:focus {
   color: #ffffff !important;
   background: linear-gradient(135deg, #2f2f2f, #111111) !important;
   border-color: #2f2f2f !important;

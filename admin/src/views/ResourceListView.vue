@@ -19,7 +19,7 @@
           <span>当前筛选：{{ searchSummary }}</span>
         </div>
         <div class="batch-actions">
-          <button type="button" class="ghost-btn" @click="reload">刷新数据</button>
+          <RefreshDataButton :loading="loading" @refresh="handleReload" />
         </div>
       </div>
 
@@ -590,83 +590,103 @@
       :open="refundDrawer.open"
       :title="refundDrawer.title"
       :subtitle="refundDrawer.subtitle"
-      :width="860"
+      :width="960"
       @close="refundDrawer.open = false"
     >
-      <div class="refund-three-col">
-        <div class="refund-col">
-          <h4 class="refund-col__title">用户举证</h4>
-          <div class="refund-col__body">
-            <div class="detail-row" v-for="f in refundDrawer.userFields" :key="f.label">
-              <span>{{ f.label }}</span>
-              <strong>{{ f.value }}</strong>
+      <div class="refund-drawer">
+        <div class="refund-drawer__grid">
+          <section class="refund-panel">
+            <header class="refund-panel__head">
+              <h4>用户举证</h4>
+            </header>
+            <div class="refund-panel__body">
+              <dl class="refund-kv-list">
+                <div v-for="f in refundDrawer.userFields" :key="f.label" class="refund-kv">
+                  <dt>{{ f.label }}</dt>
+                  <dd>{{ f.value }}</dd>
+                </div>
+              </dl>
+              <div v-if="refundDrawer.userEvidence.length" class="refund-evidence">
+                <p class="refund-evidence__label">举证图片</p>
+                <div class="refund-evidence__grid">
+                  <img
+                    v-for="(img, idx) in refundDrawer.userEvidence"
+                    :key="idx"
+                    :src="img"
+                    class="refund-evidence__img"
+                    @click="previewImage(img)"
+                  />
+                </div>
+              </div>
+              <p v-else class="refund-empty-tip">用户暂未上传举证图片</p>
             </div>
-            <div v-if="refundDrawer.userEvidence.length" class="evidence-grid">
-              <img
-                v-for="(img, idx) in refundDrawer.userEvidence"
-                :key="idx"
-                :src="img"
-                class="evidence-img"
-                @click="previewImage(img)"
-              />
-            </div>
-            <p v-if="!refundDrawer.userEvidence.length" class="form-help">用户暂未上传举证图片</p>
-          </div>
-        </div>
+          </section>
 
-        <div class="refund-col">
-          <h4 class="refund-col__title">商家申诉</h4>
-          <div class="refund-col__body">
-            <div class="detail-row" v-for="f in refundDrawer.merchantFields" :key="f.label">
-              <span>{{ f.label }}</span>
-              <strong>{{ f.value }}</strong>
+          <section class="refund-panel">
+            <header class="refund-panel__head">
+              <h4>商家申诉</h4>
+            </header>
+            <div class="refund-panel__body">
+              <dl class="refund-kv-list">
+                <div v-for="f in refundDrawer.merchantFields" :key="f.label" class="refund-kv">
+                  <dt>{{ f.label }}</dt>
+                  <dd>{{ f.value }}</dd>
+                </div>
+              </dl>
+              <div v-if="refundDrawer.merchantEvidence.length" class="refund-evidence">
+                <p class="refund-evidence__label">申诉凭证</p>
+                <div class="refund-evidence__grid">
+                  <img
+                    v-for="(img, idx) in refundDrawer.merchantEvidence"
+                    :key="idx"
+                    :src="img"
+                    class="refund-evidence__img"
+                    @click="previewImage(img)"
+                  />
+                </div>
+              </div>
+              <p v-else class="refund-empty-tip">商家暂未回复举证信息</p>
             </div>
-            <div v-if="refundDrawer.merchantEvidence.length" class="evidence-grid">
-              <img
-                v-for="(img, idx) in refundDrawer.merchantEvidence"
-                :key="idx"
-                :src="img"
-                class="evidence-img"
-                @click="previewImage(img)"
-              />
-            </div>
-            <p v-if="!refundDrawer.merchantEvidence.length" class="form-help">商家暂未回复举证信息</p>
-          </div>
-        </div>
+          </section>
 
-        <div class="refund-col refund-col--action">
-          <h4 class="refund-col__title">仲裁操作</h4>
-          <div class="refund-col__body">
-            <div class="detail-row" v-for="f in refundDrawer.orderFields" :key="f.label">
-              <span>{{ f.label }}</span>
-              <strong>{{ f.value }}</strong>
-            </div>
-            <div class="refund-action-box">
-              <p class="form-help">确认双方举证后，作出最终仲裁判定：</p>
-              <textarea
-                v-model="rejectReason"
-                rows="3"
-                placeholder="填写仲裁判定原因..."
-                class="refund-remark-input"
-              ></textarea>
-              <div class="refund-action-btns">
-                <button
-                  type="button"
-                  class="primary-btn"
-                  @click="arbitrateFromDrawer('approve')"
-                >
-                  同意退款
-                </button>
-                <button
-                  type="button"
-                  class="primary-btn danger-btn"
-                  @click="arbitrateFromDrawer('reject')"
-                >
-                  驳回申请
-                </button>
+          <section class="refund-panel refund-panel--action">
+            <header class="refund-panel__head">
+              <h4>仲裁操作</h4>
+            </header>
+            <div class="refund-panel__body">
+              <dl class="refund-kv-list">
+                <div v-for="f in refundDrawer.orderFields" :key="f.label" class="refund-kv">
+                  <dt>{{ f.label }}</dt>
+                  <dd>{{ f.value }}</dd>
+                </div>
+              </dl>
+              <div class="refund-action-box">
+                <p class="refund-action-box__hint">确认双方举证后，作出最终仲裁判定：</p>
+                <textarea
+                  v-model="rejectReason"
+                  rows="4"
+                  placeholder="填写仲裁判定原因..."
+                  class="refund-remark-input"
+                ></textarea>
+                <div class="refund-action-btns">
+                  <button
+                    type="button"
+                    class="primary-btn"
+                    @click="arbitrateFromDrawer('approve')"
+                  >
+                    同意退款
+                  </button>
+                  <button
+                    type="button"
+                    class="primary-btn danger-btn"
+                    @click="arbitrateFromDrawer('reject')"
+                  >
+                    驳回申请
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
+          </section>
         </div>
       </div>
     </AdminDrawer>
@@ -1537,6 +1557,8 @@ import {
 import AdminDrawer from '@/components/AdminDrawer.vue';
 import DateTimeField from '@/components/DateTimeField.vue';
 import StatGrid from '@/components/StatGrid.vue';
+import RefreshDataButton from '@/components/RefreshDataButton.vue';
+import { refreshWithFeedback } from '@/utils/refresh-feedback';
 import type { ResourceKey } from '@/data/admin';
 import { resourceConfigs } from '@/data/admin';
 
@@ -2325,9 +2347,8 @@ function openRefundDrawer(row: any) {
   ];
   refundDrawer.merchantEvidence = row.merchantEvidence ?? [];
   refundDrawer.orderFields = [
-    { label: '订单号', value: row.orderNo },
-    { label: '支付金额', value: `¥${Number(row.amount).toFixed(2)}` },
     { label: '仲裁进度', value: statusLabel(String(row.status)) },
+    { label: '处理建议', value: String(row.status) === 'PENDING_ARBITRATION' ? '请核对双方举证后裁定' : '可查看历史处理结果' },
   ];
   rejectReason.value = '';
 }
@@ -2574,7 +2595,7 @@ async function loadMerchantOptions() {
   }
 }
 
-async function loadRows() {
+async function loadRows(): Promise<boolean> {
   loading.value = true;
   actionError.value = '';
 
@@ -2646,18 +2667,20 @@ async function loadRows() {
       const lastPage = Math.max(1, Math.ceil(total.value / pageSize.value));
       if (currentPage.value > lastPage) {
         setPage(lastPage);
-        return;
+        return true;
       }
     }
+    return true;
   } catch (error) {
     actionError.value = error instanceof Error ? error.message : '数据加载异常';
+    return false;
   } finally {
     loading.value = false;
   }
 }
 
-function reload() {
-  void loadRows();
+function handleReload() {
+  void refreshWithFeedback(() => loadRows());
 }
 
 function resetFilters() {

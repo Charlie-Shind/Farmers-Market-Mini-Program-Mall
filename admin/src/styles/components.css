@@ -73,6 +73,94 @@
 .metric-card .positive { color: var(--success) !important; }
 .metric-card .mini-danger { color: var(--danger) !important; }
 
+/* ——— 数据看板次级指标 ——— */
+.deep-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.deep-metric-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 110px;
+  padding: 16px 18px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface-card);
+  box-shadow: var(--shadow-sm);
+  box-sizing: border-box;
+}
+
+.deep-metric__label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  line-height: 1.2;
+}
+
+.deep-metric__value {
+  margin-top: 8px;
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+
+.deep-metric__note {
+  margin-top: auto;
+  padding-top: 6px;
+  font-size: 12px;
+  color: var(--text-tertiary);
+  line-height: 1.3;
+}
+
+.deep-metric-card--export .deep-metric__action {
+  margin-top: 8px;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.deep-metric-card--export .el-button {
+  width: 100%;
+}
+
+/* ——— 刷新数据按钮 ——— */
+.refresh-data-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 96px;
+  transition: opacity 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.refresh-data-btn:disabled {
+  cursor: wait;
+  opacity: 0.82;
+}
+
+.refresh-data-btn__spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(44, 74, 57, 0.18);
+  border-top-color: var(--brand-600);
+  border-radius: 50%;
+  animation: refresh-spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+.refresh-data-btn__label {
+  line-height: 1;
+}
+
+@keyframes refresh-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* ——— 面板 / 表格 ——— */
 .panel,
 .filter-panel,
@@ -186,7 +274,7 @@
 }
 
 .table-x {
-  padding: 0 18px 16px;
+  /* padding: 0 18px 16px; */
   overflow: auto;
 }
 
@@ -403,7 +491,8 @@
 }
 
 @media (max-width: 1080px) {
-  .metric-grid {
+  .metric-grid,
+  .deep-metrics-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 
@@ -414,7 +503,8 @@
 }
 
 @media (max-width: 640px) {
-  .metric-grid {
+  .metric-grid,
+  .deep-metrics-grid {
     grid-template-columns: 1fr;
   }
 }

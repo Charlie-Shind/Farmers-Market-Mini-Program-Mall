@@ -292,6 +292,11 @@
   justify-content: center;
 }
 
+.sidebar-user__avatar.brand-avatar--sm {
+  width: 36px;
+  height: 36px;
+}
+
 .sidebar--collapsed .sidebar-user {
   padding: 10px 8px;
   align-items: center;

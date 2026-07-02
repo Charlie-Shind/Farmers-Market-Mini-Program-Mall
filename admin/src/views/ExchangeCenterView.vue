@@ -10,7 +10,7 @@
             <p>{{ pageSubtitle }}</p>
           </div>
           <div class="top-actions">
-            <el-button @click="reload">刷新</el-button>
+            <RefreshDataButton :loading="loading" label="刷新" @refresh="handleRefreshData" />
             <el-button type="primary" @click="openCreateDialog">{{ createButtonLabel }}</el-button>
           </div>
         </div>
@@ -204,7 +204,9 @@ import {
   updateExchangeCouponStatus,
 } from '@/api/admin';
 import StatGrid from '@/components/StatGrid.vue';
+import RefreshDataButton from '@/components/RefreshDataButton.vue';
 import DateTimeField from '@/components/DateTimeField.vue';
+import { refreshWithFeedback } from '@/utils/refresh-feedback';
 
 type ExchangeKind = 'COUPON' | 'PRODUCT';
 type ExchangeScope = 'ALL' | 'CATEGORY' | 'SHOP' | 'CATEGORY_SHOP';
@@ -361,16 +363,22 @@ watch(
   },
 );
 
-async function loadData() {
+async function loadData(): Promise<boolean> {
   loading.value = true;
   try {
     const data = await getExchangeCoupons({ page: 1, pageSize: 100 });
     rows.value = (data.items ?? []).filter((item) => String(item.type ?? '').toUpperCase() === 'CASHBACK');
+    return true;
   } catch (error: any) {
     ElMessage.error(error.message || '加载兑换中心失败');
+    return false;
   } finally {
     loading.value = false;
   }
+}
+
+function handleRefreshData() {
+  void refreshWithFeedback(() => loadData());
 }
 
 async function loadSettings() {
@@ -597,10 +605,6 @@ function resetFilters() {
 
 function applyKeyword() {
   // template binding only
-}
-
-function reload() {
-  void loadData();
 }
 </script>
 

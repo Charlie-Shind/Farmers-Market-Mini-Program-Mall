@@ -10,9 +10,7 @@
         </div>
         <div class="top-actions">
           <button class="ghost-btn" type="button" @click="router.push('/settings')">前往系统配置</button>
-          <button class="ghost-btn" type="button" @click="loadSystemData" :disabled="loading">
-            {{ loading ? '刷新中...' : '刷新数据' }}
-          </button>
+          <RefreshDataButton :loading="loading" @refresh="handleRefreshData" />
         </div>
       </div>
     </section>
@@ -385,6 +383,8 @@ import {
 } from '@/api/admin';
 import { navGroups } from '@/data/admin';
 import StatGrid from '@/components/StatGrid.vue';
+import RefreshDataButton from '@/components/RefreshDataButton.vue';
+import { refreshWithFeedback } from '@/utils/refresh-feedback';
 import { ADMIN_PERMISSION_KEYS, normalizeAdminPermissionKeys } from '@/utils/admin-permissions';
 
 type AdminAccount = {
@@ -522,7 +522,7 @@ onBeforeUnmount(() => {
   unregisterRefresh = null;
 });
 
-async function loadSystemData() {
+async function loadSystemData(): Promise<boolean> {
   loading.value = true;
   try {
     const [logData, settingsData, accountData, roleData] = await Promise.all([
@@ -543,9 +543,17 @@ async function loadSystemData() {
         permissionCount: role.permissionCount ?? permissionKeys.length,
       };
     });
+    return true;
+  } catch (error) {
+    ElMessage.error(error instanceof Error ? error.message : '刷新数据失败');
+    return false;
   } finally {
     loading.value = false;
   }
+}
+
+function handleRefreshData() {
+  void refreshWithFeedback(() => loadSystemData());
 }
 
 function isGroupFullySelected(permissionKeys: string[]) {

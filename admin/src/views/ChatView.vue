@@ -18,7 +18,7 @@
               <option value="ORDER">订单</option>
               <option value="OFFICIAL">官方客服</option>
             </select>
-            <button class="ghost-btn" type="button" @click="loadConversations" :disabled="loadingConversations">刷新</button>
+            <RefreshDataButton :loading="loadingConversations" label="刷新" @refresh="handleRefreshConversations" />
           </div>
         </div>
 
@@ -157,6 +157,9 @@ import {
   sendChatConversationMessage,
 } from '@/api/admin';
 import StatGrid from '@/components/StatGrid.vue';
+import RefreshDataButton from '@/components/RefreshDataButton.vue';
+import { refreshWithFeedback } from '@/utils/refresh-feedback';
+import { ElMessage } from 'element-plus';
 
 const route = useRoute();
 const router = useRouter();
@@ -214,7 +217,7 @@ function normalizeConversation(item: any) {
   };
 }
 
-async function loadConversations() {
+async function loadConversations(): Promise<boolean> {
   loadingConversations.value = true;
   try {
     if (!supportTarget.value) {
@@ -231,7 +234,7 @@ async function loadConversations() {
 
     if (!activeConversationId.value && conversations.value.length) {
       await openConversation(conversations.value[0].conversationId);
-      return;
+      return true;
     }
 
     if (activeConversationId.value) {
@@ -240,9 +243,17 @@ async function loadConversations() {
         await openConversation(conversations.value[0].conversationId);
       }
     }
+    return true;
+  } catch (error) {
+    ElMessage.error(error instanceof Error ? error.message : '刷新会话失败');
+    return false;
   } finally {
     loadingConversations.value = false;
   }
+}
+
+function handleRefreshConversations() {
+  void refreshWithFeedback(() => loadConversations());
 }
 
 async function openConversation(conversationId: number) {

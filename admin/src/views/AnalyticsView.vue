@@ -4,42 +4,32 @@
     <StatGrid :cards="metricCards" />
 
     <!-- Deep Metrics Row -->
-    <el-row :gutter="16" class="deep-metrics-container">
-      <el-col :span="6">
-        <el-card shadow="hover" class="deep-metrics-card">
-          <div class="deep-metric-item">
-            <span class="deep-metric__label">客单价</span>
-            <strong class="deep-metric__value">{{ avgOrderValue }}</strong>
-            <span class="deep-metric__note">近7日平均</span>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :span="6">
-        <el-card shadow="hover" class="deep-metrics-card">
-          <div class="deep-metric-item">
-            <span class="deep-metric__label">复购率</span>
-            <strong class="deep-metric__value">{{ repurchaseRate }}</strong>
-            <span class="deep-metric__note">30日内复购用户占比</span>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :span="6">
-        <el-card shadow="hover" class="deep-metrics-card">
-          <div class="deep-metric-item">
-            <span class="deep-metric__label">商户动销率</span>
-            <strong class="deep-metric__value">{{ merchantActivationRate }}</strong>
-            <span class="deep-metric__note">有订单商户占比</span>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :span="6">
-        <el-card shadow="hover" class="deep-metrics-card" style="display: flex; align-items: center; justify-content: center; height: 110px;">
+    <section class="deep-metrics-grid">
+      <article class="deep-metric-card">
+        <span class="deep-metric__label">客单价</span>
+        <strong class="deep-metric__value">{{ avgOrderValue }}</strong>
+        <span class="deep-metric__note">近7日平均</span>
+      </article>
+      <article class="deep-metric-card">
+        <span class="deep-metric__label">复购率</span>
+        <strong class="deep-metric__value">{{ repurchaseRate }}</strong>
+        <span class="deep-metric__note">30日内复购用户占比</span>
+      </article>
+      <article class="deep-metric-card">
+        <span class="deep-metric__label">商户动销率</span>
+        <strong class="deep-metric__value">{{ merchantActivationRate }}</strong>
+        <span class="deep-metric__note">有订单商户占比</span>
+      </article>
+      <article class="deep-metric-card deep-metric-card--export">
+        <span class="deep-metric__label">数据导出</span>
+        <div class="deep-metric__action">
           <el-button type="primary" :loading="exporting" @click="exportToCsv">
             导出 Excel (CSV)
           </el-button>
-        </el-card>
-      </el-col>
-    </el-row>
+        </div>
+        <span class="deep-metric__note">导出当前看板汇总数据</span>
+      </article>
+    </section>
 
     <!-- Chart Panels Grid: Trends vs. Place of Origin -->
     <section class="content-grid">

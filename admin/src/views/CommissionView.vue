@@ -9,9 +9,7 @@
           <p>管理团长佣金记录，支持按团长/状态筛选与批量结算。</p>
         </div>
         <div class="top-actions">
-          <button type="button" class="ghost-btn compact" :disabled="loading" @click="loadData">
-            {{ loading ? '刷新中...' : '刷新数据' }}
-          </button>
+          <RefreshDataButton :loading="loading" compact @refresh="handleRefreshData" />
           <button
             type="button"
             class="primary-btn compact"
@@ -216,6 +214,8 @@ import {
   settleLeaderCommission,
 } from '@/api/admin';
 import StatGrid from '@/components/StatGrid.vue';
+import RefreshDataButton from '@/components/RefreshDataButton.vue';
+import { refreshWithFeedback } from '@/utils/refresh-feedback';
 
 const refreshApi = inject<{
   register: (handler: () => void | Promise<void>) => () => void;
@@ -304,7 +304,7 @@ onMounted(() => {
   }
 });
 
-async function loadData() {
+async function loadData(): Promise<boolean> {
   loading.value = true;
   try {
     const res = await getLeaderCommissions({
@@ -317,11 +317,17 @@ async function loadData() {
     total.value = res.total ?? 0;
     pageInput.value = page.value;
     selectedIds.value = [];
+    return true;
   } catch (error: any) {
     ElMessage.error(error.message || '加载佣金列表失败');
+    return false;
   } finally {
     loading.value = false;
   }
+}
+
+function handleRefreshData() {
+  void refreshWithFeedback(() => loadData());
 }
 
 function applyFilters() {
@@ -472,7 +478,7 @@ async function batchSettle() {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  max-width: 140px;
+  max-width: 260px;
 }
 
 .commission-detail-dialog :deep(.el-dialog__body) {

@@ -39,9 +39,7 @@
           </label>
         </div>
         <div class="config-form-actions">
-          <button class="ghost-btn" type="button" @click="loadSystemData" :disabled="savingSettings">
-            刷新配置
-          </button>
+          <RefreshDataButton :loading="refreshing" :disabled="savingSettings" label="刷新配置" @refresh="handleRefreshData('系统配置')" />
           <button class="primary-btn" type="button" @click="handleSaveSettings" :disabled="savingSettings">
             {{ savingSettings ? '保存中...' : '保存配置' }}
           </button>
@@ -74,9 +72,7 @@
           </label>
         </div>
         <div class="config-card-actions">
-          <button class="ghost-btn" type="button" @click="loadSystemData" :disabled="savingSettings">
-            刷新规则
-          </button>
+          <RefreshDataButton :loading="refreshing" :disabled="savingSettings" label="刷新规则" @refresh="handleRefreshData('积分规则')" />
           <button class="primary-btn" type="button" @click="handleSaveSettings" :disabled="savingSettings">
             {{ savingSettings ? '保存中...' : '保存规则' }}
           </button>
@@ -87,7 +83,7 @@
         <strong>平台客服绑定</strong>
         <p>这里绑定的是小程序“官方客服”默认打开的商户会话。配置后会优先按这个商户创建/打开客服对话。</p>
         <div class="config-card-actions">
-          <button class="ghost-btn" type="button" @click="loadSystemData" :disabled="savingSettings">刷新绑定</button>
+          <RefreshDataButton :loading="refreshing" :disabled="savingSettings" label="刷新绑定" @refresh="handleRefreshData('客服绑定')" />
         </div>
         <div v-if="supportTarget" class="support-target-box">
           <div class="support-target-box__main">
@@ -123,7 +119,6 @@
     <section class="panel">
       <div class="panel-head compact">
         <h2>操作日志</h2>
-        <a href="javascript:void(0)">查看更多</a>
       </div>
 
       <div class="table-x">
@@ -183,6 +178,8 @@ import {
   saveSettings,
 } from '@/api/admin';
 import StatGrid from '@/components/StatGrid.vue';
+import RefreshDataButton from '@/components/RefreshDataButton.vue';
+import { refreshWithFeedback } from '@/utils/refresh-feedback';
 
 const router = useRouter();
 
@@ -203,6 +200,7 @@ const logs = ref<
   }>
 >([]);
 const savingSettings = ref(false);
+const refreshing = ref(false);
 const saveMessage = ref('');
 const saveError = ref('');
 const settings = ref({
@@ -278,44 +276,58 @@ onBeforeUnmount(() => {
   unregisterRefresh = null;
 });
 
-async function loadSystemData() {
-  const [logData, settingsData, accountData, roleData] = await Promise.all([
-    getLogs(),
-    getSettings(),
-    getAdminAccounts(),
-    getAdminRoles(),
-  ]);
-  const [targetData, merchantData] = await Promise.all([
-    getChatSupportTarget().catch(() => null),
-    getMerchants({ page: 1, pageSize: 100 }).catch(() => ({ items: [] })),
-  ]);
+async function loadSystemData(): Promise<boolean> {
+  refreshing.value = true;
+  try {
+    const [logData, settingsData, accountData, roleData] = await Promise.all([
+      getLogs(),
+      getSettings(),
+      getAdminAccounts(),
+      getAdminRoles(),
+    ]);
+    const [targetData, merchantData] = await Promise.all([
+      getChatSupportTarget().catch(() => null),
+      getMerchants({ page: 1, pageSize: 100 }).catch(() => ({ items: [] })),
+    ]);
 
-  logs.value = logData.items;
-  merchantOptions.value = (merchantData.items ?? []).map((item: any) => ({
-    id: Number(item.id),
-    storeName: String(item.storeName ?? item.name ?? `商户 ${item.id}`),
-  }));
-  settings.value = {
-    ...settings.value,
-    ...settingsData,
-    pointsRedeemEnabled: settingsData.pointsRedeemEnabled ?? true,
-    pointsEarnRate: settingsData.pointsEarnRate || '1',
-    pointsRedeemRate: settingsData.pointsRedeemRate || '100',
-  };
-  settingForm.siteName = settingsData.siteName || '';
-  settingForm.customerServiceHotline = settingsData.customerServiceHotline || '';
-  settingForm.platformOfficialMerchantName = settingsData.platformOfficialMerchantName || '浔源农仓';
-  settingForm.platformSupportMerchantId = settingsData.platformSupportMerchantId || '';
-  settingForm.auditMode = settingsData.auditMode || 'STRICT';
-  settingForm.pointsRedeemEnabled = settingsData.pointsRedeemEnabled ?? true;
-  settingForm.pointsEarnRate = settingsData.pointsEarnRate || '1';
-  settingForm.pointsRedeemRate = settingsData.pointsRedeemRate || '100';
-  supportTarget.value = targetData;
+    logs.value = logData.items;
+    merchantOptions.value = (merchantData.items ?? []).map((item: any) => ({
+      id: Number(item.id),
+      storeName: String(item.storeName ?? item.name ?? `商户 ${item.id}`),
+    }));
+    settings.value = {
+      ...settings.value,
+      ...settingsData,
+      pointsRedeemEnabled: settingsData.pointsRedeemEnabled ?? true,
+      pointsEarnRate: settingsData.pointsEarnRate || '1',
+      pointsRedeemRate: settingsData.pointsRedeemRate || '100',
+    };
+    settingForm.siteName = settingsData.siteName || '';
+    settingForm.customerServiceHotline = settingsData.customerServiceHotline || '';
+    settingForm.platformOfficialMerchantName = settingsData.platformOfficialMerchantName || '浔源农仓';
+    settingForm.platformSupportMerchantId = settingsData.platformSupportMerchantId || '';
+    settingForm.auditMode = settingsData.auditMode || 'STRICT';
+    settingForm.pointsRedeemEnabled = settingsData.pointsRedeemEnabled ?? true;
+    settingForm.pointsEarnRate = settingsData.pointsEarnRate || '1';
+    settingForm.pointsRedeemRate = settingsData.pointsRedeemRate || '100';
+    supportTarget.value = targetData;
 
-  settings.value.adminCount = accountData.items.length;
-  settings.value.permissionNodeCount = settingsData.permissionNodeCount || new Set(
-    roleData.items.flatMap((role: any) => Array.isArray(role.permissionKeys) ? role.permissionKeys : []),
-  ).size;
+    settings.value.adminCount = accountData.items.length;
+    settings.value.permissionNodeCount = settingsData.permissionNodeCount || new Set(
+      roleData.items.flatMap((role: any) => Array.isArray(role.permissionKeys) ? role.permissionKeys : []),
+    ).size;
+    return true;
+  } catch (error) {
+    saveError.value = error instanceof Error ? error.message : '刷新失败';
+    return false;
+  } finally {
+    refreshing.value = false;
+  }
+}
+
+function handleRefreshData(scope = '数据') {
+  saveError.value = '';
+  void refreshWithFeedback(() => loadSystemData(), `${scope}已刷新`);
 }
 
 const LOG_ACTION_MAP: Record<string, string> = {

@@ -9,9 +9,7 @@
           <p>管理平台团长申请、审核、状态变更与基础信息维护。</p>
         </div>
         <div class="top-actions">
-          <button type="button" class="ghost-btn compact" :disabled="loading" @click="loadData">
-            {{ loading ? '刷新中...' : '刷新数据' }}
-          </button>
+          <RefreshDataButton :loading="loading" compact @refresh="handleRefreshData" />
         </div>
       </div>
 
@@ -299,6 +297,8 @@ import {
   updateLeader,
 } from '@/api/admin';
 import StatGrid from '@/components/StatGrid.vue';
+import RefreshDataButton from '@/components/RefreshDataButton.vue';
+import { refreshWithFeedback } from '@/utils/refresh-feedback';
 
 const refreshApi = inject<{
   register: (handler: () => void | Promise<void>) => () => void;
@@ -405,7 +405,7 @@ onMounted(() => {
   }
 });
 
-async function loadData() {
+async function loadData(): Promise<boolean> {
   loading.value = true;
   try {
     const res = await getLeaders({
@@ -417,11 +417,17 @@ async function loadData() {
     leaders.value = res.items ?? [];
     total.value = res.total ?? 0;
     pageInput.value = page.value;
+    return true;
   } catch (error: any) {
     ElMessage.error(error.message || '加载团长列表失败');
+    return false;
   } finally {
     loading.value = false;
   }
+}
+
+function handleRefreshData() {
+  void refreshWithFeedback(() => loadData());
 }
 
 function applyFilters() {

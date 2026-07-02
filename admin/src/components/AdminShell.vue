@@ -55,7 +55,7 @@
 
       <div class="sidebar-user">
         <div v-if="!isCollapse" class="sidebar-user__card">
-          <div class="avatar">{{ userTag }}</div>
+          <BrandAvatar size="sm" class="sidebar-user__avatar" />
           <div class="sidebar-user__meta">
             <strong>{{ userName }}</strong>
             <span>{{ userAccount }}</span>
@@ -63,7 +63,7 @@
           </div>
         </div>
         <div v-else class="sidebar-user__avatar-only">
-          <div class="avatar">{{ userTag }}</div>
+          <BrandAvatar size="sm" class="sidebar-user__avatar" />
         </div>
         <button type="button" class="logout-btn" @click="askLogout">
           <AppIcon name="logout" :size="16" />
@@ -86,7 +86,7 @@
 
         <div class="top-actions">
           <el-button type="primary" :loading="refreshing" @click="refreshPage">
-            <span>刷新</span>
+            {{ refreshing ? '刷新中...' : '刷新' }}
           </el-button>
         </div>
       </el-header>
@@ -114,6 +114,7 @@ import { RouterView, useRoute, useRouter } from 'vue-router';
 
 import { getProducts, getRefunds, logout } from '@/api/admin';
 import { filterNavGroupsByPermissions, readStoredPermissionKeys } from '@/utils/admin-permissions';
+import { notifyDataRefreshed } from '@/utils/refresh-feedback';
 import AppIcon from '@/components/AppIcon.vue';
 import BrandAvatar from '@/components/BrandAvatar.vue';
 
@@ -133,7 +134,6 @@ const breadcrumb = computed(() => String(route.meta.breadcrumb ?? '后台管理'
 const userName = computed(() => localStorage.getItem('farm-admin-name') ?? '平台管理员');
 const userAccount = computed(() => localStorage.getItem('farm-admin-account') ?? '未登录');
 const userRole = computed(() => localStorage.getItem('farm-admin-role') ?? '');
-const userTag = computed(() => userName.value.slice(0, 1) || '管');
 const roleTier = computed(() => {
   const rawCodes = localStorage.getItem('farm-admin-role-codes') || '[]';
   const roleCodes = (() => {
@@ -224,6 +224,7 @@ async function refreshPage() {
     const promises = Array.from(refreshHandlers).map((h) => Promise.resolve(h()));
     await Promise.all(promises);
     await refreshBadges();
+    notifyDataRefreshed();
   } finally {
     refreshing.value = false;
   }
