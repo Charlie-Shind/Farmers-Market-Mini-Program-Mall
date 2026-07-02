@@ -166,8 +166,8 @@ function getStatusIcon(statusLabel: string): string {
 }
 
 function getStatusIconColor(colorClass: string): string {
-  if (colorClass === 'banner--gold') return '#b8894c';
-  if (colorClass === 'banner--gray') return '#888888';
+  if (colorClass === 'banner--gray') return '#ffffff';
+  if (colorClass === 'banner--green' || colorClass === 'banner--gold') return '#ffffff';
   return '#2c4a39';
 }
 
