@@ -62,7 +62,7 @@
       </button>
     </view>
 
-    <!-- 短信登录 -->
+    <!-- 手机号登录 -->
     <view wx:else class="panel-content">
       <view class="form-item">
         <view class="form-label">手机号码</view>
@@ -93,11 +93,8 @@
           />
           <button
             class="send-btn"
-            open-type="sendPhoneSms"
-            phoneNumber="{{phoneNumber}}"
-            sms-type="0"
             disabled="{{loading || !phoneNumber}}"
-            bindsendphonesms="handleSendPhoneSms"
+            bindtap="handleSendPhoneSms"
             hover-class="send-btn--hover"
           >
             {{loading ? '发送中...' : '获取验证码'}}

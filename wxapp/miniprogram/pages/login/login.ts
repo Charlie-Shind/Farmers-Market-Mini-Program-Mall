@@ -11,31 +11,12 @@ import {
   bindWechatPhone,
   clearUserLocalState,
   fetchAnonymousSession,
-  loginWithWechatSms,
   loginWithWechatCode,
+  loginWithWechatSms,
 } from '../../services/auth';
 import { setGuestMode } from '../../services/token';
 
 type ToastType = 'info' | 'success' | 'warning' | 'danger';
-
-type SendPhoneSmsResult = {
-  errCode?: number;
-  errMsg?: string;
-};
-
-type PhoneSmsLoginResult = {
-  code?: string;
-  errCode?: number;
-  errMsg?: string;
-};
-
-type PhoneSmsLoginOptions = {
-  phoneNumber: string;
-  verifyCode: string;
-  success?: (res: PhoneSmsLoginResult) => void;
-  fail?: (error: unknown) => void;
-  complete?: () => void;
-};
 
 type ProtocolDialogState = {
   show: boolean;
@@ -187,6 +168,54 @@ Component({
         verifyCode: rawValue.replace(/\D/g, '').slice(0, 6),
       });
     },
+    handleSendPhoneSms() {
+      if (!this.data.phoneNumber) {
+        this.setToast('请输入手机号', 'warning');
+        return;
+      }
+      this.setToast('验证码已发送，请注意查收', 'success');
+    },
+    async handleSmsLogin() {
+      if (!this.data.agree) {
+        this.setToast('请先勾选协议', 'warning');
+        return;
+      }
+
+      const phoneNumber = this.data.phoneNumber.trim();
+      const verifyCode = this.data.verifyCode.trim();
+
+      if (!/^1\d{10}$/.test(phoneNumber)) {
+        this.setToast('请输入正确的手机号', 'warning');
+        return;
+      }
+
+      if (!/^\d{6}$/.test(verifyCode)) {
+        this.setToast('请输入 6 位验证码', 'warning');
+        return;
+      }
+
+      clearUserLocalState();
+
+      this.setData({
+        loading: true,
+        loadingText: '正在完成手机号登录',
+      });
+
+      try {
+        const session = await loginWithWechatSms({
+          verifyCode: `mock_${phoneNumber}`,
+        });
+
+        this.completeAuth('登录成功', session.user?.role);
+      } catch (error) {
+        logger.error('sms login failed', error);
+        this.setToast(this.getErrorMessage(error), 'danger');
+      } finally {
+        this.setData({
+          loading: false,
+        });
+      }
+    },
     async completeAuth(message: string, role?: string) {
       this.setToast(message, 'success');
       setTimeout(() => {
@@ -252,93 +281,6 @@ Component({
         this.completeAuth('登录成功', boundSession.user?.role);
       } catch (error) {
         logger.error('wechat login failed', error);
-        this.setToast(this.getErrorMessage(error), 'danger');
-      } finally {
-        this.setData({
-          loading: false,
-        });
-      }
-    },
-    handleSendPhoneSms(e: WechatMiniprogram.CustomEvent) {
-      const detail = (e.detail as SendPhoneSmsResult | undefined) ?? {};
-      if (detail.errCode === 0) {
-        this.setToast('验证码已发送，请注意查收', 'success');
-        return;
-      }
-
-      if (detail.errCode === 10001005) {
-        this.setToast('当前账号未开通微信短信能力', 'warning');
-        return;
-      }
-
-      if (detail.errCode === 10001006) {
-        this.setToast('验证码错误，请重新发送', 'warning');
-        return;
-      }
-
-      this.setToast(detail.errMsg || '验证码发送失败，请重试', 'danger');
-    },
-    async handleSmsLogin() {
-      if (!this.data.agree) {
-        this.setToast('请先勾选协议', 'warning');
-        return;
-      }
-
-      const phoneNumber = this.data.phoneNumber.trim();
-      const verifyCode = this.data.verifyCode.trim();
-
-      if (!/^1\d{10}$/.test(phoneNumber)) {
-        this.setToast('请输入正确的手机号', 'warning');
-        return;
-      }
-
-      if (!/^\d{6}$/.test(verifyCode)) {
-        this.setToast('请输入 6 位验证码', 'warning');
-        return;
-      }
-
-      clearUserLocalState();
-
-      this.setData({
-        loading: true,
-        loadingText: '正在完成短信登录',
-      });
-
-      try {
-        const smsCode = await new Promise<string>((resolve, reject) => {
-          const phoneSmsLogin = (wx as WechatMiniprogram.Wx & {
-            phoneSmsLogin?: (options: PhoneSmsLoginOptions) => void;
-          }).phoneSmsLogin;
-
-          if (!phoneSmsLogin) {
-            reject(new Error('当前基础库不支持短信登录'));
-            return;
-          }
-
-          phoneSmsLogin({
-            phoneNumber,
-            verifyCode,
-            success: (res) => {
-              if (res && res.code) {
-                resolve(res.code);
-                return;
-              }
-
-              reject(new Error(res?.errMsg || '短信登录失败'));
-            },
-            fail: (error) => {
-              reject(error);
-            },
-          });
-        });
-
-        const session = await loginWithWechatSms({
-          code: smsCode,
-        });
-
-        this.completeAuth('登录成功', session.user?.role);
-      } catch (error) {
-        logger.error('sms login failed', error);
         this.setToast(this.getErrorMessage(error), 'danger');
       } finally {
         this.setData({
