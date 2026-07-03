@@ -6965,7 +6965,6 @@ export class PlatformDataService {
         activeOrderCount = await this.prisma.orderItem.count({
           where: {
             skuId: { in: skuIds.map((s) => s.id) },
-            deletedAt: null,
             order: {
               is: {
                 deletedAt: null,

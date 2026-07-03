@@ -1,0 +1,602 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "团长与自提点模块接口文档（含登录）",
+    "description": "本次新实现的 Leader 模块接口 + 订单流程自提点改造相关接口。可直接导入 Apifox。新增登录接口说明，便于测试时获取 token。",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://124.223.108.180:6002/api",
+      "description": "服务器环境"
+    },
+    {
+      "url": "http://localhost:6002/api",
+      "description": "本地开发环境"
+    }
+  ],
+  "tags": [
+    { "name": "登录获取token", "description": "获取用户/管理员 JWT token" },
+    { "name": "小程序-团长", "description": "团长申请、自提点、订单、分佣" },
+    { "name": "小程序-订单", "description": "订单流程（含自提点改造）" },
+    { "name": "后台-团长", "description": "团长档案审核管理" },
+    { "name": "后台-自提点", "description": "自提点 CRUD" },
+    { "name": "后台-佣金", "description": "分佣记录查询与结算" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "ApiResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "statusCode": { "type": "integer", "example": 200 },
+          "data": { "type": "object" }
+        }
+      },
+      "ApplyLeaderDto": {
+        "type": "object",
+        "required": ["realName", "mobile"],
+        "properties": {
+          "realName": { "type": "string", "maxLength": 50, "example": "张三" },
+          "mobile": { "type": "string", "example": "13800138000" },
+          "idCardNo": { "type": "string", "nullable": true, "example": "110101199001011234" },
+          "idCardFrontUrl": { "type": "string", "nullable": true, "example": "https://cdn.example.com/idcard-front.png" },
+          "idCardBackUrl": { "type": "string", "nullable": true, "example": "https://cdn.example.com/idcard-back.png" },
+          "businessCertUrl": { "type": "string", "nullable": true, "example": "https://cdn.example.com/cert.png" }
+        }
+      },
+      "AuditLeaderDto": {
+        "type": "object",
+        "required": ["status"],
+        "properties": {
+          "status": { "type": "string", "enum": ["APPROVED", "REJECTED"], "example": "APPROVED" },
+          "rejectReason": { "type": "string", "nullable": true, "example": "资料不清晰" }
+        }
+      },
+      "UpdateLeaderDto": {
+        "type": "object",
+        "properties": {
+          "realName": { "type": "string", "example": "张三" },
+          "mobile": { "type": "string", "example": "13800138000" },
+          "commissionRate": { "type": "number", "minimum": 0, "maximum": 1, "example": 0.05 },
+          "status": { "type": "string", "enum": ["PENDING_AUDIT", "APPROVED", "REJECTED", "DISABLED"] }
+        }
+      },
+      "UpdateLeaderStatusDto": {
+        "type": "object",
+        "required": ["status"],
+        "properties": {
+          "status": { "type": "string", "enum": ["PENDING_AUDIT", "APPROVED", "REJECTED", "DISABLED"] }
+        }
+      },
+      "CreatePickupPointDto": {
+        "type": "object",
+        "required": ["name", "province", "city", "detailAddress"],
+        "properties": {
+          "leaderId": { "type": "integer", "nullable": true, "example": 1 },
+          "name": { "type": "string", "maxLength": 100, "example": "南山自提点" },
+          "contactName": { "type": "string", "nullable": true, "example": "张三" },
+          "contactMobile": { "type": "string", "nullable": true, "example": "13800138000" },
+          "province": { "type": "string", "example": "广东" },
+          "city": { "type": "string", "example": "深圳" },
+          "district": { "type": "string", "nullable": true, "example": "南山" },
+          "detailAddress": { "type": "string", "example": "科技园南路 1 号" },
+          "longitude": { "type": "string", "nullable": true, "example": "113.9430" },
+          "latitude": { "type": "string", "nullable": true, "example": "22.5230" },
+          "businessHours": { "type": "string", "nullable": true, "example": "09:00-21:00" }
+        }
+      },
+      "UpdatePickupPointDto": {
+        "type": "object",
+        "properties": {
+          "leaderId": { "type": "integer", "nullable": true },
+          "name": { "type": "string" },
+          "contactName": { "type": "string", "nullable": true },
+          "contactMobile": { "type": "string", "nullable": true },
+          "province": { "type": "string" },
+          "city": { "type": "string" },
+          "district": { "type": "string", "nullable": true },
+          "detailAddress": { "type": "string" },
+          "longitude": { "type": "string", "nullable": true },
+          "latitude": { "type": "string", "nullable": true },
+          "businessHours": { "type": "string", "nullable": true }
+        }
+      },
+      "UpdatePickupPointStatusDto": {
+        "type": "object",
+        "required": ["status"],
+        "properties": {
+          "status": { "type": "string", "enum": ["ENABLED", "DISABLED"] }
+        }
+      },
+      "BatchSettleCommissionsDto": {
+        "type": "object",
+        "required": ["ids"],
+        "properties": {
+          "ids": { "type": "array", "items": { "type": "integer" }, "example": [1, 2, 3] }
+        }
+      },
+      "OrderPreviewDto": {
+        "type": "object",
+        "properties": {
+          "cartIds": { "type": "array", "items": { "type": "integer" }, "example": [1, 2] },
+          "couponId": { "type": "integer", "nullable": true },
+          "usePoints": { "type": "integer", "nullable": true },
+          "deliveryType": { "type": "string", "enum": ["EXPRESS", "SELF_PICKUP"], "example": "SELF_PICKUP" },
+          "pickupPointId": { "type": "integer", "nullable": true, "example": 1 },
+          "remark": { "type": "string", "nullable": true }
+        }
+      },
+      "CreateOrderDto": {
+        "type": "object",
+        "properties": {
+          "cartIds": { "type": "array", "items": { "type": "integer" }, "example": [1, 2] },
+          "couponId": { "type": "integer", "nullable": true },
+          "usePoints": { "type": "integer", "nullable": true },
+          "deliveryType": { "type": "string", "enum": ["EXPRESS", "SELF_PICKUP"], "example": "SELF_PICKUP" },
+          "pickupPointId": { "type": "integer", "nullable": true, "example": 1 },
+          "remark": { "type": "string", "nullable": true }
+        }
+      }
+    }
+  },
+  "security": [{ "BearerAuth": [] }],
+  "paths": {
+    "/identity/auth/anonymous": {
+      "get": {
+        "tags": ["登录获取token"],
+        "summary": "获取游客token（可访问公开接口）",
+        "operationId": "anonymousLogin",
+        "security": [],
+        "responses": {
+          "200": { "description": "游客token", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiResponse" } } } }
+        }
+      }
+    },
+    "/identity/auth/wechat/login": {
+      "post": {
+        "tags": ["登录获取token"],
+        "summary": "小程序用户登录（获取用户token）",
+        "operationId": "wechatLogin",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": { "type": "string", "example": "123" },
+                  "encryptedData": { "type": "string", "example": "test" },
+                  "iv": { "type": "string", "example": "test" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "用户token", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiResponse" } } } }
+        }
+      }
+    },
+    "/admin/auth/login": {
+      "post": {
+        "tags": ["登录获取token"],
+        "summary": "管理员登录（获取后台token）",
+        "operationId": "adminLogin",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["username", "password"],
+                "properties": {
+                  "username": { "type": "string", "example": "admin" },
+                  "password": { "type": "string", "example": "admin123456" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "管理员token", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiResponse" } } } }
+        }
+      }
+    },
+    "/app/leaders/apply": {
+      "post": {
+        "tags": ["小程序-团长"],
+        "summary": "提交团长申请",
+        "operationId": "applyLeader",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/ApplyLeaderDto" } }
+          }
+        },
+        "responses": {
+          "200": { "description": "申请成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiResponse" } } } }
+        }
+      }
+    },
+    "/app/leaders/application": {
+      "get": {
+        "tags": ["小程序-团长"],
+        "summary": "我的申请状态",
+        "operationId": "getMyLeaderApplication",
+        "responses": {
+          "200": { "description": "申请状态", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiResponse" } } } }
+        }
+      },
+      "put": {
+        "tags": ["小程序-团长"],
+        "summary": "修改申请资料",
+        "operationId": "updateLeaderApplication",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/ApplyLeaderDto" } }
+          }
+        },
+        "responses": {
+          "200": { "description": "修改成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiResponse" } } } }
+        }
+      }
+    },
+    "/app/leaders/pickup-points": {
+      "get": {
+        "tags": ["小程序-团长"],
+        "summary": "附近自提点列表",
+        "operationId": "listNearbyPickupPoints",
+        "parameters": [
+          { "name": "city", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "district", "in": "query", "schema": { "type": "string" } },
+          { "name": "longitude", "in": "query", "schema": { "type": "string" } },
+          { "name": "latitude", "in": "query", "schema": { "type": "string" } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "pageSize", "in": "query", "schema": { "type": "integer", "default": 20 } }
+        ],
+        "responses": {
+          "200": { "description": "自提点列表", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiResponse" } } } }
+        }
+      }
+    },
+    "/app/leaders/pickup-points/{id}": {
+      "get": {
+        "tags": ["小程序-团长"],
+        "summary": "自提点详情",
+        "operationId": "getPickupPointDetail",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "自提点详情", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiResponse" } } } }
+        }
+      }
+    },
+    "/app/leaders/dashboard": {
+      "get": {
+        "tags": ["小程序-团长"],
+        "summary": "团长数据看板",
+        "operationId": "getLeaderDashboard",
+        "responses": {
+          "200": { "description": "看板数据", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiResponse" } } } }
+        }
+      }
+    },
+    "/app/leaders/orders": {
+      "get": {
+        "tags": ["小程序-团长"],
+        "summary": "到本点的订单",
+        "operationId": "listLeaderOrders",
+        "parameters": [
+          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["PENDING_PICKUP", "PICKED_UP"] } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "pageSize", "in": "query", "schema": { "type": "integer", "default": 20 } }
+        ],
+        "responses": {
+          "200": { "description": "订单列表", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiResponse" } } } }
+        }
+      }
+    },
+    "/app/leaders/orders/{orderNo}/pickup": {
+      "post": {
+        "tags": ["小程序-团长"],
+        "summary": "确认提货",
+        "operationId": "confirmPickup",
+        "parameters": [
+          { "name": "orderNo", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "提货成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiResponse" } } } }
+        }
+      }
+    },
+    "/app/leaders/commissions": {
+      "get": {
+        "tags": ["小程序-团长"],
+        "summary": "分佣记录",
+        "operationId": "listLeaderCommissions",
+        "parameters": [
+          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["PENDING_SETTLEMENT", "SETTLED", "CANCELLED"] } }
+        ],
+        "responses": {
+          "200": { "description": "分佣记录", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiResponse" } } } }
+        }
+      }
+    },
+    "/app/orders/preview": {
+      "post": {
+        "tags": ["小程序-订单"],
+        "summary": "订单预览（支持自提）",
+        "operationId": "previewOrder",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/OrderPreviewDto" } }
+          }
+        },
+        "responses": {
+          "200": { "description": "预览结果", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiResponse" } } } }
+        }
+      }
+    },
+    "/app/orders": {
+      "post": {
+        "tags": ["小程序-订单"],
+        "summary": "创建订单（支持自提）",
+        "operationId": "createOrder",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/CreateOrderDto" } }
+          }
+        },
+        "responses": {
+          "200": { "description": "创建成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiResponse" } } } }
+        }
+      }
+    },
+    "/app/orders/{orderNo}/confirm": {
+      "post": {
+        "tags": ["小程序-订单"],
+        "summary": "确认收货（自提订单触发分佣）",
+        "operationId": "confirmOrder",
+        "parameters": [
+          { "name": "orderNo", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "确认成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiResponse" } } } }
+        }
+      }
+    },
+    "/admin/leaders": {
+      "get": {
+        "tags": ["后台-团长"],
+        "summary": "团长列表/搜索",
+        "operationId": "listLeaders",
+        "parameters": [
+          { "name": "keyword", "in": "query", "schema": { "type": "string" } },
+          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["PENDING_AUDIT", "APPROVED", "REJECTED", "DISABLED"] } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "pageSize", "in": "query", "schema": { "type": "integer", "default": 20 } }
+        ],
+        "responses": {
+          "200": { "description": "团长列表", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiResponse" } } } }
+        }
+      }
+    },
+    "/admin/leaders/{id}": {
+      "get": {
+        "tags": ["后台-团长"],
+        "summary": "团长详情",
+        "operationId": "getLeaderDetail",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "团长详情", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiResponse" } } } }
+        }
+      },
+      "put": {
+        "tags": ["后台-团长"],
+        "summary": "编辑团长 / 设置抽成比例",
+        "operationId": "updateLeader",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/UpdateLeaderDto" } }
+          }
+        },
+        "responses": {
+          "200": { "description": "编辑成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiResponse" } } } }
+        }
+      },
+      "delete": {
+        "tags": ["后台-团长"],
+        "summary": "删除团长",
+        "operationId": "deleteLeader",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "删除成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiResponse" } } } }
+        }
+      }
+    },
+    "/admin/leaders/{id}/audit": {
+      "post": {
+        "tags": ["后台-团长"],
+        "summary": "审核团长申请",
+        "operationId": "auditLeader",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/AuditLeaderDto" } }
+          }
+        },
+        "responses": {
+          "200": { "description": "审核成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiResponse" } } } }
+        }
+      }
+    },
+    "/admin/leaders/{id}/status": {
+      "patch": {
+        "tags": ["后台-团长"],
+        "summary": "启用/停用团长",
+        "operationId": "updateLeaderStatus",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/UpdateLeaderStatusDto" } }
+          }
+        },
+        "responses": {
+          "200": { "description": "状态更新成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiResponse" } } } }
+        }
+      }
+    },
+    "/admin/pickup-points": {
+      "get": {
+        "tags": ["后台-自提点"],
+        "summary": "自提点列表",
+        "operationId": "listPickupPoints",
+        "parameters": [
+          { "name": "keyword", "in": "query", "schema": { "type": "string" } },
+          { "name": "city", "in": "query", "schema": { "type": "string" } },
+          { "name": "district", "in": "query", "schema": { "type": "string" } },
+          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["ENABLED", "DISABLED"] } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "pageSize", "in": "query", "schema": { "type": "integer", "default": 20 } }
+        ],
+        "responses": {
+          "200": { "description": "自提点列表", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiResponse" } } } }
+        }
+      },
+      "post": {
+        "tags": ["后台-自提点"],
+        "summary": "后台新增自提点",
+        "operationId": "createPickupPoint",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/CreatePickupPointDto" } }
+          }
+        },
+        "responses": {
+          "200": { "description": "创建成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiResponse" } } } }
+        }
+      }
+    },
+    "/admin/pickup-points/{id}": {
+      "put": {
+        "tags": ["后台-自提点"],
+        "summary": "编辑自提点",
+        "operationId": "updatePickupPoint",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/UpdatePickupPointDto" } }
+          }
+        },
+        "responses": {
+          "200": { "description": "编辑成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiResponse" } } } }
+        }
+      },
+      "delete": {
+        "tags": ["后台-自提点"],
+        "summary": "删除自提点",
+        "operationId": "deletePickupPoint",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "删除成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiResponse" } } } }
+        }
+      }
+    },
+    "/admin/pickup-points/{id}/status": {
+      "patch": {
+        "tags": ["后台-自提点"],
+        "summary": "启用/停用自提点",
+        "operationId": "updatePickupPointStatus",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/UpdatePickupPointStatusDto" } }
+          }
+        },
+        "responses": {
+          "200": { "description": "状态更新成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiResponse" } } } }
+        }
+      }
+    },
+    "/admin/leader-commissions": {
+      "get": {
+        "tags": ["后台-佣金"],
+        "summary": "分佣记录列表",
+        "operationId": "listLeaderCommissions",
+        "parameters": [
+          { "name": "leaderId", "in": "query", "schema": { "type": "integer" } },
+          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["PENDING_SETTLEMENT", "SETTLED", "CANCELLED"] } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "pageSize", "in": "query", "schema": { "type": "integer", "default": 20 } }
+        ],
+        "responses": {
+          "200": { "description": "分佣记录列表", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiResponse" } } } }
+        }
+      },
+      "post": {
+        "tags": ["后台-佣金"],
+        "summary": "批量结算",
+        "operationId": "batchSettleCommissions",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/BatchSettleCommissionsDto" } }
+          }
+        },
+        "responses": {
+          "200": { "description": "结算成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiResponse" } } } }
+        }
+      }
+    },
+    "/admin/leader-commissions/{id}/settle": {
+      "post": {
+        "tags": ["后台-佣金"],
+        "summary": "手动结算单条佣金",
+        "operationId": "settleCommission",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "结算成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiResponse" } } } }
+        }
+      }
+    }
+  }
+}
