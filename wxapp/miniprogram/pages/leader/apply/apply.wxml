@@ -12,7 +12,7 @@
   <scroll-view scroll-y="true" class="apply-scroll leader-page-scroll" enhanced="true" show-scrollbar="{{false}}">
     <view class="apply-content-inner">
       <view class="apply-hero">
-        <image class="apply-hero__bg" src="/assets/images/leader/leader-header-bg.png" mode="aspectFill"></image>
+        <image class="apply-hero__bg" src="/assets/images/leader/leader-header-bg.jpg" mode="aspectFill"></image>
         <view class="apply-hero__mask"></view>
         <view class="apply-hero__content">
           <text class="apply-hero__title">成为社区团长</text>

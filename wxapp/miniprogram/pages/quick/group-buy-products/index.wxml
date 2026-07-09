@@ -1,6 +1,6 @@
 <view class="phone-page zone-page zone-page--group" style="{{pageStyle}}">
   <view class="group-hero-bg">
-    <image class="group-hero-bg__img" src="/assets/images/Gemini_Generated_Image_ftx25lftx25lftx2.png" mode="widthFix"/>
+    <image class="group-hero-bg__img" src="/assets/images/group/group-hero.jpg" mode="widthFix"/>
     <view class="group-hero-bg__mask"></view>
   </view>
   <view class="group-hero">
