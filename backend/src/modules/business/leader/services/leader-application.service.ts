@@ -26,7 +26,10 @@ export class LeaderApplicationService {
   }
 
   private async ensureLeaderRole(userId: bigint) {
-    const leaderRole = await this.prisma.role.findUnique({ where: { code: RoleCode.LEADER } });
+    const [leaderRole, userRole] = await Promise.all([
+      this.prisma.role.findUnique({ where: { code: RoleCode.LEADER } }),
+      this.prisma.role.findUnique({ where: { code: RoleCode.USER } }),
+    ]);
     if (!leaderRole) {
       throw new BadRequestException('LEADER 角色未初始化');
     }
@@ -35,6 +38,13 @@ export class LeaderApplicationService {
       create: { userId, roleId: leaderRole.id },
       update: {},
     });
+    if (userRole) {
+      await this.prisma.userRole.upsert({
+        where: { userId_roleId: { userId, roleId: userRole.id } },
+        create: { userId, roleId: userRole.id },
+        update: {},
+      });
+    }
   }
 
   private async removeLeaderRole(userId: bigint) {

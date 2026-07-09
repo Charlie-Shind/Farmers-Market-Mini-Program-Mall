@@ -107,7 +107,7 @@ export class MessageService implements OnModuleInit {
   }
 
   private isUserFacingRole(role: RoleCode): boolean {
-    return role === RoleCode.GUEST || role === RoleCode.USER || role === RoleCode.MERCHANT;
+    return role === RoleCode.GUEST || role === RoleCode.USER || role === RoleCode.MERCHANT || role === RoleCode.LEADER;
   }
 
   private async resolveCurrentUser(authUser?: AuthUser): Promise<User> {

@@ -812,7 +812,7 @@ export class ChatService {
   }
 
   private async resolveCurrentUser(authUser: AuthUser | undefined): Promise<User> {
-    if (!authUser || ![RoleCode.GUEST, RoleCode.USER, RoleCode.MERCHANT].includes(authUser.role)) {
+    if (!authUser || ![RoleCode.GUEST, RoleCode.USER, RoleCode.MERCHANT, RoleCode.LEADER].includes(authUser.role)) {
       throw new UnauthorizedException('Chat requires a user session');
     }
 

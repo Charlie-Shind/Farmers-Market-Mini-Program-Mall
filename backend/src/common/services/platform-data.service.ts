@@ -593,25 +593,25 @@ export class PlatformDataService {
   }
 
   // P0-3: 订单状态机定义
-  private static readonly ORDER_STATUS = {
+  public static readonly ORDER_STATUS = {
     PENDING: 1,
     ACCEPTED: 2,
     COMPLETED: 3,
     CANCELLED: 4,
   } as const;
 
-  private static readonly PAY_STATUS = {
+  public static readonly PAY_STATUS = {
     UNPAID: 0,
     PAID: 1,
   } as const;
 
-  private static readonly DELIVERY_STATUS = {
+  public static readonly DELIVERY_STATUS = {
     NONE: 0,
     TO_SHIP: 1,
     SHIPPED: 2,
   } as const;
 
-  private static readonly REFUND_STATUS = {
+  public static readonly REFUND_STATUS = {
     NONE: 0,
     PENDING_MERCHANT: 1,
     PROCESSING: 2,
@@ -2535,6 +2535,38 @@ export class PlatformDataService {
     return RoleCode.USER;
   }
 
+  async getUserAllRoles(userId: bigint): Promise<RoleCode[]> {
+    const roles = await this.prisma.userRole.findMany({
+      where: { userId },
+      include: { role: true },
+    });
+
+    const roleCodes = new Set(roles.map((r) => r.role.code as RoleCode));
+    const hasMerchant = roleCodes.has(RoleCode.MERCHANT);
+    const hasLeader = roleCodes.has(RoleCode.LEADER);
+
+    // USER is the default role; include it unless the user only holds merchant/leader admin-only roles
+    // with no explicit USER record. To keep switch UX simple, always expose USER when the user is not
+    // exclusively a merchant/leader context without the user role.
+    if (!roleCodes.has(RoleCode.USER) && !hasMerchant && !hasLeader) {
+      roleCodes.add(RoleCode.USER);
+    }
+
+    // Ensure derived roles are also represented so the frontend can switch.
+    if (hasMerchant) {
+      roleCodes.add(RoleCode.MERCHANT);
+    }
+    const approvedLeader = await this.prisma.communityLeader.findFirst({
+      where: { userId, status: 'APPROVED', deletedAt: null },
+      select: { id: true },
+    });
+    if (approvedLeader) {
+      roleCodes.add(RoleCode.LEADER);
+    }
+
+    return Array.from(roleCodes);
+  }
+
   async getUserProfile(authUser: AuthUser) {
     const user = await this.ensureUser(authUser);
     const merchant = await this.prisma.merchant.findUnique({
@@ -2561,7 +2593,7 @@ export class PlatformDataService {
   async updateUserProfile(authUser: AuthUser, body: Record<string, unknown>) {
     await this.withSeed();
 
-    if (authUser.role !== RoleCode.USER && authUser.role !== RoleCode.MERCHANT) {
+    if (authUser.role !== RoleCode.USER && authUser.role !== RoleCode.MERCHANT && authUser.role !== RoleCode.LEADER) {
       throw new UnauthorizedException('Guest session cannot update profile');
     }
 
