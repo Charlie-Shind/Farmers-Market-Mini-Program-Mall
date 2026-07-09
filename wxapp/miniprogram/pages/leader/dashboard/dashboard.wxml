@@ -1,6 +1,6 @@
 <view class="leader-dashboard-page" style="{{pageStyle}}">
   <view class="dashboard-header">
-    <image class="dashboard-header__bg" src="/assets/images/leader/leader-header-bg.png" mode="aspectFill"></image>
+    <image class="dashboard-header__bg" src="/assets/images/leader/leader-header-bg.jpg" mode="aspectFill"></image>
     <view class="dashboard-header__mask"></view>
     <view class="dashboard-header__content">
     <view class="header-top">

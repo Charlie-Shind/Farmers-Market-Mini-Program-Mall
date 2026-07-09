@@ -81,7 +81,7 @@ Component({
     cartBadge: '',
     icons: icons_1.iconPaths,
     pageStyle: '',
-    heroImageUrl: '/assets/images/gift/gift-hero.png',
+    heroImageUrl: '/assets/images/gift/gift-hero.jpg',
   },
 
   lifetimes: {

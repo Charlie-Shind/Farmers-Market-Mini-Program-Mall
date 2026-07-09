@@ -1,6 +1,6 @@
 <view class="phone-page zone-page zone-page--flash" style="{{pageStyle}}">
   <view class="flash-hero-bg">
-    <image class="flash-hero-bg__img" src="/assets/images/flash/flash-hero.png" mode="aspectFill"/>
+    <image class="flash-hero-bg__img" src="/assets/images/flash/flash-hero.jpg" mode="aspectFill"/>
     <view class="flash-hero-bg__mask"></view>
   </view>
 
