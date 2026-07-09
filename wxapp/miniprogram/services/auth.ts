@@ -45,6 +45,13 @@ export interface WechatSmsLoginPayload {
   code: string;
 }
 
+export interface PhoneLoginPayload {
+  phoneNumber: string;
+}
+
+/** 是否启用手机号短信验证码校验，拿到微信短信 API 后改为 true */
+export const PHONE_SMS_VERIFY_ENABLED = false;
+
 export function fetchAuthStatus() {
   return get<AuthStatusResponse>('/identity/auth/status', undefined, {
     auth: false,
@@ -107,6 +114,20 @@ export function loginWithWechatSms(payload: WechatSmsLoginPayload) {
   return post<AuthSessionResponse>('/identity/auth/wechat/sms-login', payload, {
     auth: false,
   }).then((session) => {
+    if (session && session.accessToken) {
+      applySession(session);
+    }
+
+    return session;
+  });
+}
+
+export function loginWithPhone(payload: PhoneLoginPayload) {
+  return post<AuthSessionResponse>(
+    '/identity/auth/phone/login',
+    { mobile: payload.phoneNumber },
+    { auth: false },
+  ).then((session) => {
     if (session && session.accessToken) {
       applySession(session);
     }
