@@ -12,6 +12,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { RedisModule } from './redis/redis.module';
 import { ObjectStorageService } from './storage/object-storage.service';
 import { PlatformDataService } from './services/platform-data.service';
+import { WechatAuthService } from './services/wechat-auth.service';
 import { AdminAuthSecurityService } from './services/admin-auth-security.service';
 import { LeaderService } from './services/leader.service';
 import { RequestIdMiddleware } from './logging/request-id.middleware';
@@ -36,6 +37,7 @@ import type { MiddlewareConsumer, NestModule } from '@nestjs/common';
   ],
   providers: [
     PlatformDataService,
+    WechatAuthService,
     AdminAuthSecurityService,
     LeaderService,
     ObjectStorageService,
@@ -60,7 +62,7 @@ import type { MiddlewareConsumer, NestModule } from '@nestjs/common';
       useClass: RolesGuard,
     },
   ],
-  exports: [PlatformDataService, AdminAuthSecurityService, LeaderService, ObjectStorageService, RedisModule],
+  exports: [PlatformDataService, WechatAuthService, AdminAuthSecurityService, LeaderService, ObjectStorageService, RedisModule],
 })
 export class CommonModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
