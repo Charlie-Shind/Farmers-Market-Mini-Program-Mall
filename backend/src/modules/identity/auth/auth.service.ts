@@ -179,6 +179,46 @@ export class AuthService {
     );
   }
 
+  async loginWithPhoneDirect(body: Record<string, unknown>): Promise<AuthSessionResponse> {
+    const mobile = String(body.mobile ?? body.phone ?? body.phoneNumber ?? '').trim();
+
+    if (!/^1\d{10}$/.test(mobile)) {
+      throw new BadRequestException('Valid mobile number is required');
+    }
+
+    const user = await this.platformDataService.upsertPhoneLoginUser({
+      ...body,
+      mobile,
+    });
+
+    const role = await this.platformDataService.getUserDBRole(user.id);
+    const payload: AuthUser = {
+      sub: user.openid,
+      role,
+      tokenType: TokenType.ACCESS,
+    };
+
+    const accessToken = await this.jwtService.signAsync(payload, {
+      secret: requireConfigValue(this.configService, 'JWT_SECRET'),
+      expiresIn: this.configService.get<string>('JWT_ACCESS_EXPIRES_IN', '7d') as any,
+    });
+
+    return this.buildSessionResponse(
+      {
+        ...payload,
+        userId: Number(user.id),
+        accountNo: user.accountNo ?? '',
+        nickname: resolveProfileNickname(user.nickname, user.openid, '手机号用户'),
+        avatarUrl: resolveProfileText(user.avatarUrl, ''),
+        mobile: resolveProfileText(user.mobile, ''),
+        status: user.status,
+        lastLoginAt: user.lastLoginAt ? user.lastLoginAt.toISOString() : '',
+      },
+      TokenType.ACCESS,
+      accessToken,
+    );
+  }
+
   async loginWithWechatSms(body: Record<string, unknown>): Promise<AuthSessionResponse> {
     const smsCode = String(body.code ?? body.verifyCode ?? '').trim();
 

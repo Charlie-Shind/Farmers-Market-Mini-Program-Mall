@@ -91,4 +91,10 @@ export class AuthController {
   loginWithWechatSms(@Body() body: Record<string, unknown>): Promise<AuthSessionResponse> {
     return this.authService.loginWithWechatSms(body);
   }
+
+  @Public()
+  @Post('phone/login')
+  loginWithPhone(@Body() body: Record<string, unknown>): Promise<AuthSessionResponse> {
+    return this.authService.loginWithPhoneDirect(body);
+  }
 }

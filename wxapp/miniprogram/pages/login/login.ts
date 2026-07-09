@@ -11,8 +11,10 @@ import {
   bindWechatPhone,
   clearUserLocalState,
   fetchAnonymousSession,
+  loginWithPhone,
   loginWithWechatSms,
   loginWithWechatCode,
+  PHONE_SMS_VERIFY_ENABLED,
 } from '../../services/auth';
 import { setGuestMode } from '../../services/token';
 
@@ -64,6 +66,7 @@ const PRIVACY_POLICY_TEXT = [
 Component({
   data: {
     loginMode: 'wechat' as 'wechat' | 'sms',
+    smsVerifyEnabled: PHONE_SMS_VERIFY_ENABLED,
     phoneNumber: '',
     verifyCode: '',
     agree: false,
@@ -292,7 +295,7 @@ Component({
         return;
       }
 
-      if (!/^\d{6}$/.test(verifyCode)) {
+      if (this.data.smsVerifyEnabled && !/^\d{6}$/.test(verifyCode)) {
         this.setToast('请输入 6 位验证码', 'warning');
         return;
       }
@@ -301,10 +304,16 @@ Component({
 
       this.setData({
         loading: true,
-        loadingText: '正在完成短信登录',
+        loadingText: this.data.smsVerifyEnabled ? '正在完成短信登录' : '正在完成手机登录',
       });
 
       try {
+        if (!this.data.smsVerifyEnabled) {
+          const session = await loginWithPhone({ phoneNumber });
+          this.completeAuth('登录成功', session.user?.role);
+          return;
+        }
+
         const smsCode = await new Promise<string>((resolve, reject) => {
           const phoneSmsLogin = (wx as WechatMiniprogram.Wx & {
             phoneSmsLogin?: (options: PhoneSmsLoginOptions) => void;

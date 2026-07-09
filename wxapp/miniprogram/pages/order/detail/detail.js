@@ -90,10 +90,10 @@ function getStatusIcon(statusLabel) {
     return icons_1.iconPaths.shield;
 }
 function getStatusIconColor(colorClass) {
-    if (colorClass === 'banner--gold')
-        return '#b8894c';
     if (colorClass === 'banner--gray')
-        return '#888888';
+        return '#ffffff';
+    if (colorClass === 'banner--green' || colorClass === 'banner--gold')
+        return '#ffffff';
     return '#2c4a39';
 }
 function buildStatusSteps(order, statusLabel) {

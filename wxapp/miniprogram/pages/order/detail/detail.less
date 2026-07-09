@@ -26,6 +26,10 @@
   z-index: 2;
 }
 
+.page-title-bar .back-btn {
+  justify-self: center;
+}
+
 .page-title-bar__title {
   text-align: center;
   font-size: 36rpx;
@@ -52,86 +56,65 @@
   padding: 32rpx;
 }
 
-/* Status Card */
-.status-card {
+/* Status Hero — 参考京东/拼多多订单状态 */
+.status-hero {
   position: relative;
-  background: linear-gradient(165deg, #ffffff 0%, #fffdf9 55%, #faf6ee 100%);
-  border: 1rpx solid rgba(237, 224, 201, 0.55);
-  box-shadow:
-    0 24rpx 48rpx rgba(44, 74, 57, 0.07),
-    inset 0 1rpx 0 rgba(255, 255, 255, 0.9);
-  border-radius: 40rpx;
   margin-bottom: 24rpx;
-  padding: 36rpx 32rpx 32rpx;
+  border-radius: 32rpx;
   overflow: hidden;
+  box-shadow: 0 20rpx 48rpx rgba(44, 74, 57, 0.12);
 }
 
-.status-card__bg-deco {
+.status-hero__bg {
   position: absolute;
-  top: -60rpx;
-  right: -40rpx;
-  width: 220rpx;
-  height: 220rpx;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(44, 74, 57, 0.06) 0%, transparent 70%);
+  inset: 0;
   pointer-events: none;
 }
 
-.status-card.banner--green .status-card__bg-deco {
-  background: radial-gradient(circle, rgba(44, 74, 57, 0.09) 0%, transparent 70%);
+.status-hero.banner--green .status-hero__bg {
+  background: linear-gradient(135deg, #2c4a39 0%, #3f6f44 52%, #2f5638 100%);
 }
 
-.status-card.banner--gold .status-card__bg-deco {
-  background: radial-gradient(circle, rgba(184, 137, 76, 0.12) 0%, transparent 70%);
+.status-hero.banner--gold .status-hero__bg {
+  background: linear-gradient(135deg, #b8894c 0%, #d8a978 48%, #a66f2d 100%);
 }
 
-.status-card.banner--gray .status-card__bg-deco {
-  background: radial-gradient(circle, rgba(136, 136, 136, 0.08) 0%, transparent 70%);
+.status-hero.banner--gray .status-hero__bg {
+  background: linear-gradient(135deg, #6b7280 0%, #8b939e 52%, #5c6370 100%);
 }
 
-.status-card__head {
+.status-hero__content {
   position: relative;
   z-index: 1;
+  padding: 36rpx 32rpx 28rpx;
+}
+
+.status-hero__head {
   display: flex;
   align-items: center;
   gap: 24rpx;
 }
 
-.status-card__icon-wrap {
-  flex-shrink: 0;
-}
-
-.status-card__icon-ring {
+.status-hero__icon {
   width: 96rpx;
   height: 96rpx;
-  border-radius: 28rpx;
-  display: grid;
-  place-items: center;
-  position: relative;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  border: 2rpx solid rgba(255, 255, 255, 0.28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: inset 0 2rpx 8rpx rgba(255, 255, 255, 0.12);
 }
 
-.status-card.banner--green .status-card__icon-ring {
-  background: linear-gradient(145deg, rgba(44, 74, 57, 0.14) 0%, rgba(74, 122, 90, 0.08) 100%);
-  box-shadow:
-    0 12rpx 28rpx rgba(44, 74, 57, 0.12),
-    inset 0 1rpx 0 rgba(255, 255, 255, 0.6);
+.status-hero__icon .t-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.status-card.banner--gold .status-card__icon-ring {
-  background: linear-gradient(145deg, rgba(184, 137, 76, 0.16) 0%, rgba(216, 169, 120, 0.08) 100%);
-  box-shadow:
-    0 12rpx 28rpx rgba(184, 137, 76, 0.14),
-    inset 0 1rpx 0 rgba(255, 255, 255, 0.6);
-}
-
-.status-card.banner--gray .status-card__icon-ring {
-  background: linear-gradient(145deg, rgba(136, 136, 136, 0.12) 0%, rgba(180, 180, 180, 0.06) 100%);
-  box-shadow:
-    0 12rpx 28rpx rgba(100, 100, 100, 0.08),
-    inset 0 1rpx 0 rgba(255, 255, 255, 0.6);
-}
-
-.status-card__info {
+.status-hero__info {
   flex: 1;
   min-width: 0;
   display: flex;
@@ -139,180 +122,151 @@
   gap: 10rpx;
 }
 
-.status-card__title {
-  font-size: 38rpx;
+.status-hero__title {
+  font-size: 40rpx;
   font-weight: 900;
-  color: #1a1a1a;
+  color: #ffffff;
   line-height: 1.25;
-  letter-spacing: 0.5rpx;
+  letter-spacing: 1rpx;
 }
 
-.status-card.banner--green .status-card__title {
-  color: #1e3a2a;
-}
-
-.status-card.banner--gold .status-card__title {
-  color: #5c3d12;
-}
-
-.status-card__sub {
+.status-hero__sub {
   font-size: 24rpx;
-  color: var(--muted, #8a7a5f);
+  color: rgba(255, 255, 255, 0.88);
   line-height: 1.55;
-  padding-left: 2rpx;
 }
 
-.status-card__steps {
+.status-flow {
+  margin-top: 28rpx;
+  padding: 28rpx 20rpx 16rpx;
+  border-radius: 24rpx;
+  background: rgba(255, 255, 255, 0.96);
+  position: relative;
+}
+
+.status-flow__track {
+  position: absolute;
+  left: 56rpx;
+  right: 56rpx;
+  top: 46rpx;
+  height: 6rpx;
+  background: #ece4d8;
+  border-radius: 999rpx;
+  overflow: hidden;
+}
+
+.status-flow__fill {
+  height: 100%;
+  border-radius: 999rpx;
+  background: linear-gradient(90deg, #2c4a39 0%, #4a7a5a 100%);
+  transition: width 0.35s ease;
+}
+
+.status-hero.banner--gold .status-flow__fill {
+  background: linear-gradient(90deg, #b8894c 0%, #d8a978 100%);
+}
+
+.status-hero.banner--gray .status-flow__fill {
+  background: linear-gradient(90deg, #8b939e 0%, #a8b0bb 100%);
+}
+
+.status-flow__list {
   position: relative;
   z-index: 1;
-  margin-top: 32rpx;
-  padding: 28rpx 8rpx 4rpx;
-  background: rgba(251, 248, 239, 0.55);
-  border-radius: 28rpx;
-  border: 1rpx solid rgba(237, 224, 201, 0.35);
-}
-
-.status-card__step-list {
   display: flex;
-  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8rpx;
 }
 
-.status-card__step {
+.status-flow__item {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-width: 0;
+  gap: 14rpx;
 }
 
-.status-card__node-row {
-  width: 100%;
+.status-flow__dot {
+  width: 24rpx;
+  height: 24rpx;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 4rpx solid #d8cfc0;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
-  position: relative;
-  height: 36rpx;
+  transition: all 0.25s ease;
 }
 
-.status-card__dot {
-  width: 20rpx;
-  height: 20rpx;
-  border-radius: 50%;
-  background: #ddd5c8;
-  border: 4rpx solid #fff;
-  box-shadow: 0 4rpx 12rpx rgba(44, 74, 57, 0.08);
-  flex-shrink: 0;
-  display: grid;
-  place-items: center;
-  transition: all 0.3s ease;
-  z-index: 2;
-}
-
-.status-card__check {
+.status-flow__check {
   font-size: 14rpx;
   font-weight: 900;
-  color: #fff;
+  color: #ffffff;
   line-height: 1;
 }
 
-.status-card__connector {
-  position: absolute;
-  left: calc(50% + 14rpx);
-  right: calc(-50% + 14rpx);
-  top: 50%;
-  height: 4rpx;
-  margin-top: -2rpx;
-  background: #e0d5c4;
-  border-radius: 999rpx;
-  z-index: 1;
-}
-
-.status-card__connector--done {
-  background: linear-gradient(90deg, #2c4a39, #4a7a5a);
-}
-
-.status-card.banner--gold .status-card__connector--done {
-  background: linear-gradient(90deg, #d8a978, #b8894c);
-}
-
-.status-card__step--done .status-card__dot {
-  width: 24rpx;
-  height: 24rpx;
-  background: var(--green, #2c4a39);
-  border-color: #fff;
-}
-
-.status-card__step--current .status-card__dot {
-  width: 28rpx;
-  height: 28rpx;
-  background: var(--green, #2c4a39);
-  border-color: #fff;
-  box-shadow:
-    0 0 0 8rpx rgba(44, 74, 57, 0.14),
-    0 6rpx 16rpx rgba(44, 74, 57, 0.2);
-  animation: statusPulse 2s ease-in-out infinite;
-}
-
-.status-card.banner--gold .status-card__step--done .status-card__dot,
-.status-card.banner--gold .status-card__step--current .status-card__dot {
-  background: #b8894c;
-}
-
-.status-card.banner--gold .status-card__step--current .status-card__dot {
-  box-shadow:
-    0 0 0 8rpx rgba(184, 137, 76, 0.16),
-    0 6rpx 16rpx rgba(184, 137, 76, 0.2);
-  animation: statusPulseGold 2s ease-in-out infinite;
-}
-
-@keyframes statusPulse {
-  0%,
-  100% {
-    box-shadow:
-      0 0 0 8rpx rgba(44, 74, 57, 0.14),
-      0 6rpx 16rpx rgba(44, 74, 57, 0.2);
-  }
-
-  50% {
-    box-shadow:
-      0 0 0 14rpx rgba(44, 74, 57, 0.06),
-      0 6rpx 16rpx rgba(44, 74, 57, 0.2);
-  }
-}
-
-@keyframes statusPulseGold {
-  0%,
-  100% {
-    box-shadow:
-      0 0 0 8rpx rgba(184, 137, 76, 0.16),
-      0 6rpx 16rpx rgba(184, 137, 76, 0.2);
-  }
-
-  50% {
-    box-shadow:
-      0 0 0 14rpx rgba(184, 137, 76, 0.07),
-      0 6rpx 16rpx rgba(184, 137, 76, 0.2);
-  }
-}
-
-.status-card__step-label {
-  margin-top: 14rpx;
+.status-flow__label {
   font-size: 20rpx;
   color: #b5a894;
   font-weight: 600;
   white-space: nowrap;
   text-align: center;
+  line-height: 1.2;
 }
 
-.status-card__step--done .status-card__step-label,
-.status-card__step--current .status-card__step-label {
-  color: var(--green, #2c4a39);
+.status-flow__item--done .status-flow__dot {
+  width: 28rpx;
+  height: 28rpx;
+  background: #2c4a39;
+  border-color: #2c4a39;
+}
+
+.status-flow__item--done .status-flow__label {
+  color: #2c4a39;
   font-weight: 800;
 }
 
-.status-card.banner--gold .status-card__step--done .status-card__step-label,
-.status-card.banner--gold .status-card__step--current .status-card__step-label {
+.status-flow__item--current .status-flow__dot {
+  width: 32rpx;
+  height: 32rpx;
+  background: #ffffff;
+  border: 6rpx solid #2c4a39;
+  box-shadow: 0 0 0 6rpx rgba(44, 74, 57, 0.12);
+}
+
+.status-flow__item--current .status-flow__label {
+  color: #2c4a39;
+  font-weight: 900;
+}
+
+.status-hero.banner--gold .status-flow__item--done .status-flow__dot,
+.status-hero.banner--gold .status-flow__item--current .status-flow__dot {
+  border-color: #b8894c;
+}
+
+.status-hero.banner--gold .status-flow__item--done .status-flow__dot {
+  background: #b8894c;
+}
+
+.status-hero.banner--gold .status-flow__item--done .status-flow__label,
+.status-hero.banner--gold .status-flow__item--current .status-flow__label {
   color: #946222;
+}
+
+.status-hero.banner--gray .status-flow__item--done .status-flow__dot,
+.status-hero.banner--gray .status-flow__item--current .status-flow__dot {
+  border-color: #8b939e;
+}
+
+.status-hero.banner--gray .status-flow__item--done .status-flow__dot {
+  background: #8b939e;
+}
+
+.status-hero.banner--gray .status-flow__item--done .status-flow__label,
+.status-hero.banner--gray .status-flow__item--current .status-flow__label {
+  color: #5c6370;
 }
 
 /* Logistics Panel */

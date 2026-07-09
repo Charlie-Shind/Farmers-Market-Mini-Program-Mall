@@ -6,43 +6,40 @@
         <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
       </button>
       <text class="page-title-bar__title">订单详情</text>
-      <text></text>
+      <view class="page-title-bar__spacer"></view>
     </view>
   </view>
 
   <scroll-view scroll-y="true" class="detail-scroll" enhanced="true" show-scrollbar="{{false}}">
-    <!-- Status Card -->
-    <view class="status-card {{statusColorClass}}">
-      <view class="status-card__bg-deco"></view>
-      <view class="status-card__head">
-        <view class="status-card__icon-wrap">
-          <view class="status-card__icon-ring">
-            <t-icon name="{{statusIcon}}" size="48rpx" color="{{statusIconColor}}"></t-icon>
+    <!-- Status Hero (JD/PDD style) -->
+    <view class="status-hero {{statusColorClass}}">
+      <view class="status-hero__bg"></view>
+      <view class="status-hero__content">
+        <view class="status-hero__head">
+          <view class="status-hero__icon">
+            <t-icon name="{{statusIcon}}" size="56rpx" color="{{statusIconColor}}"></t-icon>
+          </view>
+          <view class="status-hero__info">
+            <text class="status-hero__title">{{statusLabel}}</text>
+            <text class="status-hero__sub" wx:if="{{statusSubLabel}}">{{statusSubLabel}}</text>
           </view>
         </view>
-        <view class="status-card__info">
-          <text class="status-card__title">{{statusLabel}}</text>
-          <text class="status-card__sub" wx:if="{{statusSubLabel}}">{{statusSubLabel}}</text>
-        </view>
-      </view>
-      <view class="status-card__steps" wx:if="{{statusSteps.length}}">
-        <view class="status-card__step-list">
-          <view
-            class="status-card__step {{item.done ? 'status-card__step--done' : ''}} {{item.current ? 'status-card__step--current' : ''}}"
-            wx:for="{{statusSteps}}"
-            wx:key="label"
-            wx:for-index="stepIdx"
-          >
-            <view class="status-card__node-row">
-              <view class="status-card__dot">
-                <text class="status-card__check" wx:if="{{item.done && !item.current}}">✓</text>
+
+        <view class="status-flow" wx:if="{{statusSteps.length}}">
+          <view class="status-flow__track">
+            <view class="status-flow__fill" style="width: {{statusProgressWidth}}%;"></view>
+          </view>
+          <view class="status-flow__list">
+            <view
+              class="status-flow__item {{item.done ? 'status-flow__item--done' : ''}} {{item.current ? 'status-flow__item--current' : ''}}"
+              wx:for="{{statusSteps}}"
+              wx:key="label"
+            >
+              <view class="status-flow__dot">
+                <text wx:if="{{item.done && !item.current}}" class="status-flow__check">✓</text>
               </view>
-              <view
-                class="status-card__connector {{item.done ? 'status-card__connector--done' : ''}}"
-                wx:if="{{stepIdx < statusSteps.length - 1}}"
-              ></view>
+              <text class="status-flow__label">{{item.label}}</text>
             </view>
-            <text class="status-card__step-label">{{item.label}}</text>
           </view>
         </view>
       </view>

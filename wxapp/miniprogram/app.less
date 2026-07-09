@@ -109,6 +109,12 @@ button::after {
   min-height: 68rpx;
 }
 
+.page-title-bar .back-btn,
+.page-title-bar .nav-icon-btn {
+  justify-self: center;
+  margin: 0 auto;
+}
+
 .page-title-bar__side {
   width: 68rpx;
   height: 68rpx;
@@ -172,12 +178,21 @@ button::after {
 .nav-icon-btn .t-icon {
   width: 48rpx !important;
   height: 48rpx !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 .back-btn .t-icon__image,
 .nav-icon-btn .t-icon__image {
-  width: 100% !important;
-  height: 100% !important;
+  width: 48rpx !important;
+  height: 48rpx !important;
+  display: block;
+}
+
+/* Lucide 返回箭头视觉重心偏左，向右微调 */
+.back-btn .t-icon__image {
+  transform: translateX(4rpx);
 }
 
 .back-btn--hover,

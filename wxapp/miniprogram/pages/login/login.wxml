@@ -79,7 +79,7 @@
         </view>
       </view>
 
-      <view class="form-item">
+      <view wx:if="{{smsVerifyEnabled}}" class="form-item">
         <view class="form-label">验证码</view>
         <view class="input-wrapper verify-row">
           <input
@@ -108,7 +108,7 @@
       <button
         class="login-btn"
         loading="{{loading}}"
-        disabled="{{!agree || loading || !phoneNumber || !verifyCode}}"
+        disabled="{{!agree || loading || !phoneNumber || (smsVerifyEnabled && !verifyCode)}}"
         bindtap="handleSmsLogin"
         hover-class="login-btn--hover"
       >
