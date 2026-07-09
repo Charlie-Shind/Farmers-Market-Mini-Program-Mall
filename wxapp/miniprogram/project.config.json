@@ -11,16 +11,42 @@
       "disablePlugins": [],
       "outputPath": ""
     },
-    "useCompilerPlugins": [
-      "typescript",
-      "less"
-    ],
+    "useCompilerPlugins": false,
     "minifyWXML": true
   },
   "compileType": "miniprogram",
   "simulatorPluginLibVersion": {},
   "packOptions": {
-    "ignore": [],
+    "ignore": [
+      {
+        "type": "suffix",
+        "value": ".md"
+      },
+      {
+        "type": "file",
+        "value": "config/env.config.example.ts"
+      },
+      {
+        "type": "file",
+        "value": "config/env.config.example.js"
+      },
+      {
+        "type": "file",
+        "value": "pages/logs/logs.ts"
+      },
+      {
+        "type": "file",
+        "value": "pages/logs/logs.wxml"
+      },
+      {
+        "type": "file",
+        "value": "pages/logs/logs.less"
+      },
+      {
+        "type": "file",
+        "value": "pages/logs/logs.json"
+      }
+    ],
     "include": []
   },
   "appid": "wx69b18ac09ffc0427",

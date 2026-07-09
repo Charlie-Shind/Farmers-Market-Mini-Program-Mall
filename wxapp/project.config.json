@@ -15,7 +15,7 @@
     "coverView": false,
     "postcss": false,
     "minified": true,
-    "enhance": false,
+    "enhance": true,
     "showShadowRootInWxmlPanel": false,
     "packNpmRelationList": [],
     "ignoreUploadUnusedFiles": true,
@@ -47,11 +47,35 @@
     "ignore": [
       {
         "type": "suffix",
-        "value": ".map"
+        "value": ".md"
       },
       {
-        "type": "glob",
-        "value": "**/*.example.ts"
+        "type": "file",
+        "value": "config/env.config.example.ts"
+      },
+      {
+        "type": "file",
+        "value": "config/env.config.example.js"
+      },
+      {
+        "type": "file",
+        "value": "pages/logs/logs.ts"
+      },
+      {
+        "type": "file",
+        "value": "pages/logs/logs.js"
+      },
+      {
+        "type": "file",
+        "value": "pages/logs/logs.json"
+      },
+      {
+        "type": "file",
+        "value": "pages/logs/logs.wxml"
+      },
+      {
+        "type": "file",
+        "value": "pages/logs/logs.less"
       }
     ],
     "include": []

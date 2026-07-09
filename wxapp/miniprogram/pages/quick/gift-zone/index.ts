@@ -95,7 +95,7 @@ Component({
     cartBadge: '',
     icons: iconPaths,
     pageStyle: '',
-    heroImageUrl: '/assets/images/gift/gift-hero.jpg',
+    heroImageUrl: '/assets/images/gift/gift-hero.png',
   },
 
   lifetimes: {
