@@ -139,6 +139,7 @@ export class LeaderOrderService {
       orderNo: updated.orderNo,
       payAmount: updated.payAmount,
       pickupPointId: updated.pickupPointId,
+      userId: updated.userId,
     }).catch(() => undefined);
 
     return {

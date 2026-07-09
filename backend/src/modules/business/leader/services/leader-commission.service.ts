@@ -10,6 +10,7 @@ export interface CommissionCreationContext {
   orderNo: string;
   payAmount: Prisma.Decimal;
   pickupPointId?: bigint | null;
+  userId: bigint;
 }
 
 @Injectable()
@@ -78,6 +79,7 @@ export class LeaderCommissionService {
     const commission = await this.prisma.leaderCommission.create({
       data: {
         leaderId: leader.id,
+        userId: ctx.userId,
         orderId: ctx.orderId,
         orderNo: ctx.orderNo,
         orderAmount: ctx.payAmount,
@@ -228,7 +230,7 @@ export class LeaderCommissionService {
 
   serialize(commission: {
     id: bigint;
-    leaderId: bigint;
+    leaderId: bigint | null;
     orderId: bigint | null;
     orderNo: string;
     orderAmount: Prisma.Decimal;
@@ -243,7 +245,7 @@ export class LeaderCommissionService {
   }) {
     return {
       id: Number(commission.id),
-      leaderId: Number(commission.leaderId),
+      leaderId: commission.leaderId != null ? Number(commission.leaderId) : null,
       orderId: commission.orderId != null ? Number(commission.orderId) : null,
       orderNo: commission.orderNo,
       orderAmount: Number(commission.orderAmount),
