@@ -2,20 +2,10 @@
   "pages": [
     "pages/index/index",
     "pages/search/search",
-    "pages/message/message",
-    "pages/message/history/history",
-    "pages/message/view/view",
-    "pages/chat/chat",
     "pages/category/category",
     "pages/category/detail/detail",
     "pages/marketing/marketing",
     "pages/marketing/points/exchange",
-    "pages/activity/topic/topic",
-    "pages/quick/flash-sale/index",
-    "pages/quick/group-buy/index",
-    "pages/quick/group-buy-products/index",
-    "pages/quick/gift-zone/index",
-    "pages/quick/origin-zone/index",
     "pages/cart/cart",
     "pages/login/login",
     "pages/profile/profile",
@@ -26,20 +16,7 @@
     "pages/profile/coupons/coupons",
     "pages/profile/feedback/feedback",
     "pages/profile/apply/apply",
-    "pages/profile/settings/settings",
-    "pages/service/help/help",
-    "pages/merchant-public/detail/index",
-    "pages/product/detail/detail",
-    "pages/product/list/list",
-    "pages/trace/detail/detail",
-    "pages/checkout/checkout",
-    "pages/address/list/list",
-    "pages/address/edit/edit",
-    "pages/order/detail/detail",
-    "pages/order/logistics/detail/detail",
-    "pages/order/review/review",
-    "pages/order/list/list",
-    "pages/logs/logs"
+    "pages/profile/settings/settings"
   ],
   "subPackages": [
     {
@@ -86,6 +63,13 @@
       ]
     },
     {
+      "root": "pages/merchant-public",
+      "name": "merchant-public",
+      "pages": [
+        "detail/index"
+      ]
+    },
+    {
       "root": "pages/leader",
       "name": "leader",
       "pages": [
@@ -97,16 +81,98 @@
         "pickup-detail/pickup-detail",
         "pickup-edit/pickup-edit"
       ]
+    },
+    {
+      "root": "pages/quick",
+      "name": "quick",
+      "pages": [
+        "flash-sale/index",
+        "group-buy/index",
+        "group-buy-products/index",
+        "gift-zone/index",
+        "origin-zone/index"
+      ]
+    },
+    {
+      "root": "pages/product",
+      "name": "product",
+      "pages": [
+        "detail/detail",
+        "list/list"
+      ]
+    },
+    {
+      "root": "pages/checkout",
+      "name": "checkout",
+      "pages": [
+        "checkout"
+      ]
+    },
+    {
+      "root": "pages/order",
+      "name": "order",
+      "pages": [
+        "detail/detail",
+        "logistics/detail/detail",
+        "review/review",
+        "list/list"
+      ]
+    },
+    {
+      "root": "pages/message",
+      "name": "message",
+      "pages": [
+        "message",
+        "history/history",
+        "view/view",
+        "detail/detail"
+      ]
+    },
+    {
+      "root": "pages/address",
+      "name": "address",
+      "pages": [
+        "list/list",
+        "edit/edit"
+      ]
+    },
+    {
+      "root": "pages/chat",
+      "name": "chat",
+      "pages": [
+        "chat"
+      ]
+    },
+    {
+      "root": "pages/trace",
+      "name": "trace",
+      "pages": [
+        "detail/detail"
+      ]
+    },
+    {
+      "root": "pages/activity",
+      "name": "activity",
+      "pages": [
+        "topic/topic"
+      ]
+    },
+    {
+      "root": "pages/service",
+      "name": "service",
+      "pages": [
+        "help/help"
+      ]
     }
   ],
   "preloadRule": {
+    "pages/index/index": {
+      "network": "all",
+      "packages": ["product", "quick"]
+    },
     "pages/profile/profile": {
       "network": "all",
-      "packages": ["merchant", "leader"]
-    },
-    "pages/profile/settings/settings": {
-      "network": "all",
-      "packages": ["merchant"]
+      "packages": ["order", "address"]
     }
   },
   "tabBar": {
@@ -157,6 +223,5 @@
     "navigationBarTextStyle": "black",
     "navigationStyle": "custom"
   },
-  "lazyCodeLoading": "requiredComponents",
   "sitemapLocation": "sitemap.json"
 }
