@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { randomUUID } from 'node:crypto';
@@ -11,6 +11,7 @@ import { resolveProfileNickname, resolveProfileText } from '../../../common/util
 import { requireConfigValue } from '../../../common/utils/config';
 import { AUTH_MODULE_NAME } from './auth.constants';
 import { AuthSessionResponse, AuthSessionUser } from './auth.types';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -39,6 +40,60 @@ export class AuthService {
       ),
       user,
     };
+  }
+
+  private async buildAccessSession(
+    user: User,
+    role: RoleCode,
+    nicknameFallback: string,
+  ): Promise<AuthSessionResponse> {
+    const payload: AuthUser = {
+      sub: user.openid,
+      role,
+      tokenType: TokenType.ACCESS,
+    };
+
+    const accessToken = await this.jwtService.signAsync(payload, {
+      secret: requireConfigValue(this.configService, 'JWT_SECRET'),
+      expiresIn: this.configService.get<string>('JWT_ACCESS_EXPIRES_IN', '7d') as any,
+    });
+
+    const allRoles = await this.platformDataService.getUserAllRoles(user.id);
+
+    return this.buildSessionResponse(
+      {
+        ...payload,
+        userId: Number(user.id),
+        accountNo: user.accountNo ?? '',
+        nickname: resolveProfileNickname(user.nickname, user.openid, nicknameFallback),
+        avatarUrl: resolveProfileText(user.avatarUrl, ''),
+        mobile: resolveProfileText(user.mobile, ''),
+        status: user.status,
+        lastLoginAt: user.lastLoginAt ? user.lastLoginAt.toISOString() : '',
+        roles: allRoles,
+      },
+      TokenType.ACCESS,
+      accessToken,
+    );
+  }
+
+  async switchRole(authUser: AuthUser, targetRole: RoleCode): Promise<AuthSessionResponse> {
+    if (authUser.tokenType === TokenType.GUEST || authUser.role === RoleCode.GUEST) {
+      throw new BadRequestException('Guest session cannot switch role');
+    }
+
+    const user = await this.platformDataService.ensureUser(authUser);
+    const allRoles = await this.platformDataService.getUserAllRoles(user.id);
+
+    if (!allRoles.includes(targetRole)) {
+      throw new UnauthorizedException('当前账号没有该角色权限');
+    }
+
+    if (targetRole === RoleCode.GUEST) {
+      throw new BadRequestException('不能切换到游客角色');
+    }
+
+    return this.buildAccessSession(user, targetRole, '微信用户');
   }
 
   async issueAnonymousToken(): Promise<AuthSessionResponse> {
@@ -81,61 +136,15 @@ export class AuthService {
 
     const user = await this.platformDataService.upsertWechatUser(body);
     const role = await this.platformDataService.getUserDBRole(user.id);
-    const payload: AuthUser = {
-      sub: user.openid,
-      role,
-      tokenType: TokenType.ACCESS,
-    };
 
-    const accessToken = await this.jwtService.signAsync(payload, {
-      secret: requireConfigValue(this.configService, 'JWT_SECRET'),
-      expiresIn: this.configService.get<string>('JWT_ACCESS_EXPIRES_IN', '7d') as any,
-    });
-
-    return this.buildSessionResponse(
-      {
-        ...payload,
-        userId: Number(user.id),
-        accountNo: user.accountNo ?? '',
-        nickname: resolveProfileNickname(user.nickname, user.openid, '微信用户'),
-        avatarUrl: resolveProfileText(user.avatarUrl, ''),
-        mobile: resolveProfileText(user.mobile, ''),
-        status: user.status,
-        lastLoginAt: user.lastLoginAt ? user.lastLoginAt.toISOString() : '',
-      },
-      TokenType.ACCESS,
-      accessToken,
-    );
+    return this.buildAccessSession(user, role, '微信用户');
   }
 
   async bindWechatPhone(body: Record<string, unknown>): Promise<AuthSessionResponse> {
     const user = await this.platformDataService.bindWechatPhone(body);
     const role = await this.platformDataService.getUserDBRole(user.id);
-    const payload: AuthUser = {
-      sub: user.openid,
-      role,
-      tokenType: TokenType.ACCESS,
-    };
 
-    const accessToken = await this.jwtService.signAsync(payload, {
-      secret: requireConfigValue(this.configService, 'JWT_SECRET'),
-      expiresIn: this.configService.get<string>('JWT_ACCESS_EXPIRES_IN', '7d') as any,
-    });
-
-    return this.buildSessionResponse(
-      {
-        ...payload,
-        userId: Number(user.id),
-        accountNo: user.accountNo ?? '',
-        nickname: resolveProfileNickname(user.nickname, user.openid, '微信用户'),
-        avatarUrl: resolveProfileText(user.avatarUrl, ''),
-        mobile: resolveProfileText(user.mobile, ''),
-        status: user.status,
-        lastLoginAt: user.lastLoginAt ? user.lastLoginAt.toISOString() : '',
-      },
-      TokenType.ACCESS,
-      accessToken,
-    );
+    return this.buildAccessSession(user, role, '微信用户');
   }
 
   async loginWithWechatPhone(body: Record<string, unknown>): Promise<AuthSessionResponse> {
@@ -152,31 +161,8 @@ export class AuthService {
     });
 
     const role = await this.platformDataService.getUserDBRole(user.id);
-    const payload: AuthUser = {
-      sub: user.openid,
-      role,
-      tokenType: TokenType.ACCESS,
-    };
 
-    const accessToken = await this.jwtService.signAsync(payload, {
-      secret: requireConfigValue(this.configService, 'JWT_SECRET'),
-      expiresIn: this.configService.get<string>('JWT_ACCESS_EXPIRES_IN', '7d') as any,
-    });
-
-    return this.buildSessionResponse(
-      {
-        ...payload,
-        userId: Number(user.id),
-        accountNo: user.accountNo ?? '',
-        nickname: resolveProfileNickname(user.nickname, user.openid, '手机号用户'),
-        avatarUrl: resolveProfileText(user.avatarUrl, ''),
-        mobile: resolveProfileText(user.mobile, ''),
-        status: user.status,
-        lastLoginAt: user.lastLoginAt ? user.lastLoginAt.toISOString() : '',
-      },
-      TokenType.ACCESS,
-      accessToken,
-    );
+    return this.buildAccessSession(user, role, '手机号用户');
   }
 
   async loginWithWechatSms(body: Record<string, unknown>): Promise<AuthSessionResponse> {
@@ -193,31 +179,8 @@ export class AuthService {
     });
 
     const role = await this.platformDataService.getUserDBRole(user.id);
-    const payload: AuthUser = {
-      sub: user.openid,
-      role,
-      tokenType: TokenType.ACCESS,
-    };
 
-    const accessToken = await this.jwtService.signAsync(payload, {
-      secret: requireConfigValue(this.configService, 'JWT_SECRET'),
-      expiresIn: this.configService.get<string>('JWT_ACCESS_EXPIRES_IN', '7d') as any,
-    });
-
-    return this.buildSessionResponse(
-      {
-        ...payload,
-        userId: Number(user.id),
-        accountNo: user.accountNo ?? '',
-        nickname: resolveProfileNickname(user.nickname, user.openid, '手机号用户'),
-        avatarUrl: resolveProfileText(user.avatarUrl, ''),
-        mobile: resolveProfileText(user.mobile, ''),
-        status: user.status,
-        lastLoginAt: user.lastLoginAt ? user.lastLoginAt.toISOString() : '',
-      },
-      TokenType.ACCESS,
-      accessToken,
-    );
+    return this.buildAccessSession(user, role, '手机号用户');
   }
 
   async refreshSessionToken(authUser: AuthUser): Promise<AuthSessionResponse> {
@@ -226,32 +189,9 @@ export class AuthService {
     }
 
     const user = await this.platformDataService.ensureUser(authUser);
-    const role = await this.platformDataService.getUserDBRole(user.id);
-    const payload: AuthUser = {
-      sub: user.openid,
-      role,
-      tokenType: TokenType.ACCESS,
-    };
 
-    const accessToken = await this.jwtService.signAsync(payload, {
-      secret: requireConfigValue(this.configService, 'JWT_SECRET'),
-      expiresIn: this.configService.get<string>('JWT_ACCESS_EXPIRES_IN', '7d') as any,
-    });
-
-    return this.buildSessionResponse(
-      {
-        ...payload,
-        userId: Number(user.id),
-        accountNo: user.accountNo ?? '',
-        nickname: resolveProfileNickname(user.nickname, user.openid, '微信用户'),
-        avatarUrl: resolveProfileText(user.avatarUrl, ''),
-        mobile: resolveProfileText(user.mobile, ''),
-        status: user.status,
-        lastLoginAt: user.lastLoginAt ? user.lastLoginAt.toISOString() : '',
-      },
-      TokenType.ACCESS,
-      accessToken,
-    );
+    // Keep the currently active role during refresh so role-switching is preserved.
+    return this.buildAccessSession(user, authUser.role, '微信用户');
   }
 
   async refreshToken(authUser: AuthUser): Promise<AuthSessionResponse> {
@@ -260,31 +200,7 @@ export class AuthService {
     }
 
     const user = await this.platformDataService.ensureUser(authUser);
-    const role = await this.platformDataService.getUserDBRole(user.id);
-    const payload: AuthUser = {
-      sub: user.openid,
-      role,
-      tokenType: TokenType.ACCESS,
-    };
 
-    const accessToken = await this.jwtService.signAsync(payload, {
-      secret: requireConfigValue(this.configService, 'JWT_SECRET'),
-      expiresIn: this.configService.get<string>('JWT_ACCESS_EXPIRES_IN', '7d') as any,
-    });
-
-    return this.buildSessionResponse(
-      {
-        ...payload,
-        userId: Number(user.id),
-        accountNo: user.accountNo ?? '',
-        nickname: resolveProfileNickname(user.nickname, user.openid, '微信用户'),
-        avatarUrl: resolveProfileText(user.avatarUrl, ''),
-        mobile: resolveProfileText(user.mobile, ''),
-        status: user.status,
-        lastLoginAt: user.lastLoginAt ? user.lastLoginAt.toISOString() : '',
-      },
-      TokenType.ACCESS,
-      accessToken,
-    );
+    return this.buildAccessSession(user, authUser.role, '微信用户');
   }
 }

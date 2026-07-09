@@ -1,6 +1,6 @@
-import { Body, Controller, Get, Patch, Post } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Patch, Post } from '@nestjs/common';
 
-import { CurrentUser, Public } from '../../../common/decorators';
+import { CurrentUser, Public, Roles } from '../../../common/decorators';
 import { RoleCode } from '../../../common/enums/role.enum';
 import { PlatformDataService } from '../../../common/services/platform-data.service';
 import { AuthUser } from '../../../common/types';
@@ -66,6 +66,19 @@ export class AuthController {
   @Post('refresh')
   refreshToken(@CurrentUser() user: AuthUser): Promise<AuthSessionResponse> {
     return this.authService.refreshSessionToken(user);
+  }
+
+  @Roles(RoleCode.USER, RoleCode.MERCHANT, RoleCode.LEADER)
+  @Post('switch-role')
+  switchRole(
+    @CurrentUser() user: AuthUser,
+    @Body() body: Record<string, unknown>,
+  ): Promise<AuthSessionResponse> {
+    const targetRole = String(body.role ?? '').trim().toUpperCase();
+    if (!targetRole || !Object.values(RoleCode).includes(targetRole as RoleCode)) {
+      throw new BadRequestException('Invalid target role');
+    }
+    return this.authService.switchRole(user, targetRole as RoleCode);
   }
 
   @Public()

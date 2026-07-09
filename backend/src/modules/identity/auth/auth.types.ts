@@ -1,5 +1,6 @@
 import { AuthUser } from '../../../common/types/auth-user.type';
 import { TokenType } from '../../../common/enums/token-type.enum';
+import { RoleCode } from '../../../common/enums/role.enum';
 
 export type AuthSessionUser = AuthUser & {
   userId?: number;
@@ -9,6 +10,7 @@ export type AuthSessionUser = AuthUser & {
   mobile?: string;
   status?: number;
   lastLoginAt?: string;
+  roles?: RoleCode[];
 };
 
 export type AuthSessionResponse = {
