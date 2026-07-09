@@ -1,5 +1,8 @@
 import { buildPageTopStyle } from '../../../utils/page-layout';
 import { fetchMerchantProfile, fetchMerchantDashboard, type MerchantProfile } from '../../../services/merchant';
+import { clearUserLocalState } from '../../../services/auth';
+import { setGuestMode } from '../../../services/token';
+import { buildMerchantLoginUrl } from '../../../utils/auth-route';
 
 Page<Record<string, any>, Record<string, any>>({
   data: {
@@ -74,5 +77,27 @@ Page<Record<string, any>, Record<string, any>>({
     const url = e.currentTarget.dataset.url as string;
     if (!url) return;
     wx.navigateTo({ url });
+  },
+
+  handleLogout() {
+    wx.showModal({
+      title: '提示',
+      content: '确定要退出登录吗？',
+      success: (res) => {
+        if (res.confirm) {
+          clearUserLocalState();
+          setGuestMode();
+          wx.showToast({
+            title: '已退出登录',
+            icon: 'success',
+          });
+          setTimeout(() => {
+            wx.reLaunch({
+              url: buildMerchantLoginUrl(),
+            });
+          }, 800);
+        }
+      },
+    });
   },
 });

@@ -75,6 +75,19 @@
     </view>
   </view>
 
+  <view class="section-line-title"><text>账号</text></view>
+  <view class="full-list">
+    <view class="setting-row logout-row" bindtap="handleLogout">
+      <view class="row-main">
+        <view class="row-title">退出登录</view>
+        <view class="row-desc">退出当前商户账号</view>
+      </view>
+      <view class="row-right-chevron">
+        <t-icon name="logout" size="40rpx"></t-icon>
+      </view>
+    </view>
+  </view>
+
   <view class="bottom-nav">
     <view class="nav-item" bindtap="goPage" data-url="/pages/merchant/dashboard/dashboard?tab=0" data-tab="0">
       <t-icon name="home" size="40rpx"></t-icon>
