@@ -2,10 +2,14 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const page_layout_1 = require("../../../utils/page-layout");
 const merchant_1 = require("../../../services/merchant");
+const auth_1 = require("../../../services/auth");
+const token_1 = require("../../../services/token");
+const auth_route_1 = require("../../../utils/auth-route");
 Page({
     data: {
         pageStyle: '',
         shopName: '湾源农仓',
+        canSwitchToUser: false,
         stats: [
             { label: '在售商品', value: '16' },
             { label: '进行中活动', value: '3' },
@@ -25,7 +29,10 @@ Page({
         ],
     },
     onLoad() {
-        this.setData({ pageStyle: (0, page_layout_1.buildPageTopStyle)(8) });
+        this.setData({
+            pageStyle: (0, page_layout_1.buildPageTopStyle)(8),
+            canSwitchToUser: (0, token_1.getAvailableRoles)().includes('USER'),
+        });
         this.loadShopData();
     },
     onShow() {
@@ -76,5 +83,49 @@ Page({
         if (!url)
             return;
         wx.navigateTo({ url });
+    },
+    handleSwitchToUser() {
+        wx.showModal({
+            title: '切换角色',
+            content: '确定要切换到普通用户端吗？',
+            success: async (res) => {
+                if (res.confirm) {
+                    try {
+                        wx.showLoading({ title: '切换中' });
+                        await (0, auth_1.switchRole)('USER');
+                        wx.hideLoading();
+                        wx.showToast({ title: '切换成功', icon: 'success' });
+                        setTimeout(() => {
+                            wx.reLaunch({ url: '/pages/index/index' });
+                        }, 800);
+                    }
+                    catch (error) {
+                        wx.hideLoading();
+                        wx.showToast({ title: '切换失败', icon: 'none' });
+                    }
+                }
+            },
+        });
+    },
+    handleLogout() {
+        wx.showModal({
+            title: '提示',
+            content: '确定要退出登录吗？',
+            success: (res) => {
+                if (res.confirm) {
+                    (0, auth_1.clearUserLocalState)();
+                    (0, token_1.setGuestMode)();
+                    wx.showToast({
+                        title: '已退出登录',
+                        icon: 'success',
+                    });
+                    setTimeout(() => {
+                        wx.reLaunch({
+                            url: (0, auth_route_1.buildMerchantLoginUrl)(),
+                        });
+                    }, 800);
+                }
+            },
+        });
     },
 });

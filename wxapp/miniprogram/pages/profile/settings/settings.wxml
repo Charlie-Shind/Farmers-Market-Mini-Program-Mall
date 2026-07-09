@@ -59,8 +59,9 @@
       </view>
     </view>
 
-    <!-- Logout Action Card -->
+    <!-- Switch Role / Logout Action Card -->
     <view wx:if="{{isLoggedIn}}" class="logout-section">
+      <button wx:if="{{canSwitchToMerchant}}" class="switch-role-btn" plain="true" bindtap="handleSwitchToMerchant">切换到商户端</button>
       <button class="logout-btn" plain="true" bindtap="handleLogout">退出当前账号</button>
     </view>
   </view>

@@ -8,6 +8,10 @@ exports.setGuestMode = setGuestMode;
 exports.getToken = getToken;
 exports.getAuthTokenType = getAuthTokenType;
 exports.removeToken = removeToken;
+exports.setAvailableRoles = setAvailableRoles;
+exports.getAvailableRoles = getAvailableRoles;
+exports.setCurrentRole = setCurrentRole;
+exports.getCurrentRole = getCurrentRole;
 exports.hasToken = hasToken;
 exports.isAccessSession = isAccessSession;
 exports.isGuestSession = isGuestSession;
@@ -16,6 +20,7 @@ exports.isMerchantSession = isMerchantSession;
 const TOKEN_KEY = 'farm_access_token';
 const TOKEN_TYPE_KEY = 'farm_access_token_type';
 const USER_ROLE_KEY = 'farm_user_role';
+const USER_ROLES_KEY = 'farm_user_roles';
 const CURRENT_SUB_KEY = 'farm_current_sub';
 function updateAppToken(token, tokenType, userRole) {
     try {
@@ -71,8 +76,27 @@ function removeToken() {
     wx.removeStorageSync(TOKEN_KEY);
     wx.removeStorageSync(TOKEN_TYPE_KEY);
     wx.removeStorageSync(USER_ROLE_KEY);
+    wx.removeStorageSync(USER_ROLES_KEY);
     wx.removeStorageSync(CURRENT_SUB_KEY);
     updateAppToken(undefined, undefined, undefined);
+}
+function setAvailableRoles(roles) {
+    wx.setStorageSync(USER_ROLES_KEY, (roles || []).filter(Boolean));
+}
+function getAvailableRoles() {
+    const roles = wx.getStorageSync(USER_ROLES_KEY);
+    if (Array.isArray(roles)) {
+        return roles.filter((r) => ['GUEST', 'USER', 'MERCHANT', 'ADMIN', 'LEADER'].includes(r));
+    }
+    return [];
+}
+function setCurrentRole(role) {
+    if (role) {
+        wx.setStorageSync(USER_ROLE_KEY, role);
+    }
+}
+function getCurrentRole() {
+    return getAuthUserRole();
 }
 function hasToken() {
     return Boolean(getToken());
@@ -85,7 +109,7 @@ function isGuestSession() {
 }
 function getAuthUserRole() {
     const userRole = wx.getStorageSync(USER_ROLE_KEY);
-    if (userRole === 'GUEST' || userRole === 'USER' || userRole === 'MERCHANT' || userRole === 'ADMIN') {
+    if (userRole === 'GUEST' || userRole === 'USER' || userRole === 'MERCHANT' || userRole === 'ADMIN' || userRole === 'LEADER') {
         return userRole;
     }
     if (isGuestSession()) {

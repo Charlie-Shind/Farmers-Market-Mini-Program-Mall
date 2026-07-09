@@ -1,5 +1,5 @@
 import { get, post } from './request';
-import { getCurrentSub, removeToken, setCurrentSub, setToken, getToken } from './token';
+import { getCurrentSub, removeToken, setCurrentSub, setToken, setAvailableRoles, setCurrentRole, getToken } from './token';
 import { invalidateCartItemCount } from './app';
 import { clearProfileDraft } from './profile';
 
@@ -7,6 +7,7 @@ export interface AuthUser {
   sub: string;
   role: string;
   tokenType: string;
+  roles?: string[];
 }
 
 export interface AuthSessionResponse {
@@ -125,6 +126,18 @@ export function refreshToken() {
   });
 }
 
+export function switchRole(role: string) {
+  return post<AuthSessionResponse>('/identity/auth/switch-role', { role }, {
+    auth: true,
+  }).then((session) => {
+    if (session && session.accessToken) {
+      applySession(session);
+    }
+
+    return session;
+  });
+}
+
 function applySession(session: AuthSessionResponse): void {
   const oldSub = getCurrentSub();
   const newSub = session.user?.sub;
@@ -139,6 +152,8 @@ function applySession(session: AuthSessionResponse): void {
     session.tokenType === 'guest' ? 'guest' : 'access',
     session.user?.role || '',
   );
+  setAvailableRoles(session.user?.roles || []);
+  setCurrentRole(session.user?.role || '');
 
   if (newSub) {
     setCurrentSub(newSub);

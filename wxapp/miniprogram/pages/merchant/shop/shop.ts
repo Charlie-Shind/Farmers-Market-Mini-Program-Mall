@@ -1,13 +1,14 @@
 import { buildPageTopStyle } from '../../../utils/page-layout';
 import { fetchMerchantProfile, fetchMerchantDashboard, type MerchantProfile } from '../../../services/merchant';
-import { clearUserLocalState } from '../../../services/auth';
-import { setGuestMode } from '../../../services/token';
+import { clearUserLocalState, switchRole } from '../../../services/auth';
+import { setGuestMode, getAvailableRoles } from '../../../services/token';
 import { buildMerchantLoginUrl } from '../../../utils/auth-route';
 
 Page<Record<string, any>, Record<string, any>>({
   data: {
     pageStyle: '',
     shopName: '湾源农仓',
+    canSwitchToUser: false,
     stats: [
       { label: '在售商品', value: '16' },
       { label: '进行中活动', value: '3' },
@@ -28,7 +29,10 @@ Page<Record<string, any>, Record<string, any>>({
   },
 
   onLoad() {
-    this.setData({ pageStyle: buildPageTopStyle(8) });
+    this.setData({
+      pageStyle: buildPageTopStyle(8),
+      canSwitchToUser: getAvailableRoles().includes('USER'),
+    });
     this.loadShopData();
   },
 
@@ -77,6 +81,29 @@ Page<Record<string, any>, Record<string, any>>({
     const url = e.currentTarget.dataset.url as string;
     if (!url) return;
     wx.navigateTo({ url });
+  },
+
+  handleSwitchToUser() {
+    wx.showModal({
+      title: '切换角色',
+      content: '确定要切换到普通用户端吗？',
+      success: async (res) => {
+        if (res.confirm) {
+          try {
+            wx.showLoading({ title: '切换中' });
+            await switchRole('USER');
+            wx.hideLoading();
+            wx.showToast({ title: '切换成功', icon: 'success' });
+            setTimeout(() => {
+              wx.reLaunch({ url: '/pages/index/index' });
+            }, 800);
+          } catch (error) {
+            wx.hideLoading();
+            wx.showToast({ title: '切换失败', icon: 'none' });
+          }
+        }
+      },
+    });
   },
 
   handleLogout() {

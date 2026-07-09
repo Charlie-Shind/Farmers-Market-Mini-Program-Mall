@@ -1,6 +1,7 @@
 const TOKEN_KEY = 'farm_access_token';
 const TOKEN_TYPE_KEY = 'farm_access_token_type';
 const USER_ROLE_KEY = 'farm_user_role';
+const USER_ROLES_KEY = 'farm_user_roles';
 const CURRENT_SUB_KEY = 'farm_current_sub';
 
 export type AuthTokenType = 'access' | 'guest';
@@ -73,8 +74,31 @@ export function removeToken(): void {
   wx.removeStorageSync(TOKEN_KEY);
   wx.removeStorageSync(TOKEN_TYPE_KEY);
   wx.removeStorageSync(USER_ROLE_KEY);
+  wx.removeStorageSync(USER_ROLES_KEY);
   wx.removeStorageSync(CURRENT_SUB_KEY);
   updateAppToken(undefined, undefined, undefined);
+}
+
+export function setAvailableRoles(roles: AuthUserRole[]): void {
+  wx.setStorageSync(USER_ROLES_KEY, roles.filter(Boolean));
+}
+
+export function getAvailableRoles(): AuthUserRole[] {
+  const roles = wx.getStorageSync(USER_ROLES_KEY);
+  if (Array.isArray(roles)) {
+    return roles.filter((r): r is AuthUserRole => ['GUEST', 'USER', 'MERCHANT', 'ADMIN', 'LEADER'].includes(r));
+  }
+  return [];
+}
+
+export function setCurrentRole(role: AuthUserRole): void {
+  if (role) {
+    wx.setStorageSync(USER_ROLE_KEY, role);
+  }
+}
+
+export function getCurrentRole(): AuthUserRole {
+  return getAuthUserRole();
 }
 
 export function hasToken(): boolean {

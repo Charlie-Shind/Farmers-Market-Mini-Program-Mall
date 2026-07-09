@@ -1,6 +1,6 @@
 import { iconPaths } from '../../../config/icons';
-import { getAuthUserRole, getAuthTokenType } from '../../../services/token';
-import { clearUserLocalState } from '../../../services/auth';
+import { getAuthUserRole, getAuthTokenType, getAvailableRoles } from '../../../services/token';
+import { clearUserLocalState, switchRole } from '../../../services/auth';
 import { buildPageTopStyle } from '../../../utils/page-layout';
 
 Component({
@@ -9,6 +9,7 @@ Component({
     pageStyle: '',
     userRole: '',
     isLoggedIn: false,
+    canSwitchToMerchant: false,
   },
 
   lifetimes: {
@@ -26,6 +27,7 @@ Component({
       this.setData({
         userRole: userRole || '',
         isLoggedIn: tokenType === 'access',
+        canSwitchToMerchant: getAvailableRoles().includes('MERCHANT'),
       });
     },
   },
@@ -46,6 +48,29 @@ Component({
     goToApply() {
       wx.navigateTo({
         url: '/pages/profile/apply/apply',
+      });
+    },
+
+    handleSwitchToMerchant() {
+      wx.showModal({
+        title: '切换角色',
+        content: '确定要切换到商户端吗？',
+        success: async (res) => {
+          if (res.confirm) {
+            try {
+              wx.showLoading({ title: '切换中' });
+              await switchRole('MERCHANT');
+              wx.hideLoading();
+              wx.showToast({ title: '切换成功', icon: 'success' });
+              setTimeout(() => {
+                wx.reLaunch({ url: '/pages/merchant/dashboard/dashboard' });
+              }, 800);
+            } catch (error) {
+              wx.hideLoading();
+              wx.showToast({ title: '切换失败', icon: 'none' });
+            }
+          }
+        },
       });
     },
 

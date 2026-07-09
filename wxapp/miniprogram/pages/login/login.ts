@@ -273,8 +273,24 @@ Component({
           code: loginCode,
         });
 
+        const freshLoginCode = await new Promise<string>((resolve, reject) => {
+          wx.login({
+            success: (res) => {
+              if (res.code) {
+                resolve(res.code);
+                return;
+              }
+
+              reject(new Error(res.errMsg || '微信登录失败'));
+            },
+            fail: (error) => {
+              reject(error);
+            },
+          });
+        });
+
         const boundSession = await bindWechatPhone({
-          loginCode,
+          loginCode: freshLoginCode,
           phoneCode: detail.code,
         });
 

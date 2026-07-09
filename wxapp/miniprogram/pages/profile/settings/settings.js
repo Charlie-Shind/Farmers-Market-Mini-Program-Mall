@@ -10,6 +10,7 @@ Component({
         pageStyle: '',
         userRole: '',
         isLoggedIn: false,
+        canSwitchToMerchant: false,
     },
     lifetimes: {
         attached() {
@@ -25,6 +26,7 @@ Component({
             this.setData({
                 userRole: userRole || '',
                 isLoggedIn: tokenType === 'access',
+                canSwitchToMerchant: (0, token_1.getAvailableRoles)().includes('MERCHANT'),
             });
         },
     },
@@ -42,6 +44,29 @@ Component({
         goToApply() {
             wx.navigateTo({
                 url: '/pages/profile/apply/apply',
+            });
+        },
+        handleSwitchToMerchant() {
+            wx.showModal({
+                title: '切换角色',
+                content: '确定要切换到商户端吗？',
+                success: async (res) => {
+                    if (res.confirm) {
+                        try {
+                            wx.showLoading({ title: '切换中' });
+                            await (0, auth_1.switchRole)('MERCHANT');
+                            wx.hideLoading();
+                            wx.showToast({ title: '切换成功', icon: 'success' });
+                            setTimeout(() => {
+                                wx.reLaunch({ url: '/pages/merchant/dashboard/dashboard' });
+                            }, 800);
+                        }
+                        catch (error) {
+                            wx.hideLoading();
+                            wx.showToast({ title: '切换失败', icon: 'none' });
+                        }
+                    }
+                },
             });
         },
         handleLogout() {

@@ -9,6 +9,7 @@ exports.bindWechatPhone = bindWechatPhone;
 exports.loginWithWechatPhone = loginWithWechatPhone;
 exports.loginWithWechatSms = loginWithWechatSms;
 exports.refreshToken = refreshToken;
+exports.switchRole = switchRole;
 exports.clearUserLocalState = clearUserLocalState;
 const request_1 = require("./request");
 const token_1 = require("./token");
@@ -80,8 +81,18 @@ function refreshToken() {
         return session;
     });
 }
+function switchRole(role) {
+    return (0, request_1.post)('/identity/auth/switch-role', { role }, {
+        auth: true,
+    }).then((session) => {
+        if (session && session.accessToken) {
+            applySession(session);
+        }
+        return session;
+    });
+}
 function applySession(session) {
-    var _a, _b;
+    var _a, _b, _c;
     const oldSub = (0, token_1.getCurrentSub)();
     const newSub = (_a = session.user) === null || _a === void 0 ? void 0 : _a.sub;
     const switched = Boolean(oldSub && newSub && oldSub !== newSub);
@@ -89,6 +100,8 @@ function applySession(session) {
         clearUserLocalState();
     }
     (0, token_1.setToken)(session.accessToken, session.tokenType === 'guest' ? 'guest' : 'access', ((_b = session.user) === null || _b === void 0 ? void 0 : _b.role) || '');
+    (0, token_1.setAvailableRoles)(((_c = session.user) === null || _c === void 0 ? void 0 : _c.roles) || []);
+    (0, token_1.setCurrentRole)((session.user && session.user.role) || '');
     if (newSub) {
         (0, token_1.setCurrentSub)(newSub);
     }

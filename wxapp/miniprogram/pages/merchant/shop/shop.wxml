@@ -77,6 +77,15 @@
 
   <view class="section-line-title"><text>账号</text></view>
   <view class="full-list">
+    <view class="setting-row" wx:if="{{canSwitchToUser}}" bindtap="handleSwitchToUser">
+      <view class="row-main">
+        <view class="row-title">切换至用户端</view>
+        <view class="row-desc">切换到普通用户界面</view>
+      </view>
+      <view class="row-right-chevron">
+        <t-icon name="chevronRight" size="40rpx"></t-icon>
+      </view>
+    </view>
     <view class="setting-row logout-row" bindtap="handleLogout">
       <view class="row-main">
         <view class="row-title">退出登录</view>

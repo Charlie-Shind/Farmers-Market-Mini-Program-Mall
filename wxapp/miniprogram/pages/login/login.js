@@ -186,8 +186,22 @@ Component({
                 await (0, auth_1.loginWithWechatCode)({
                     code: loginCode,
                 });
+                const freshLoginCode = await new Promise((resolve, reject) => {
+                    wx.login({
+                        success: (res) => {
+                            if (res.code) {
+                                resolve(res.code);
+                                return;
+                            }
+                            reject(new Error(res.errMsg || '微信登录失败'));
+                        },
+                        fail: (error) => {
+                            reject(error);
+                        },
+                    });
+                });
                 const boundSession = await (0, auth_1.bindWechatPhone)({
-                    loginCode,
+                    loginCode: freshLoginCode,
                     phoneCode: detail.code,
                 });
                 this.completeAuth('登录成功', (_a = boundSession.user) === null || _a === void 0 ? void 0 : _a.role);
