@@ -2,6 +2,37 @@
   padding-bottom: calc(168rpx + env(safe-area-inset-bottom));
 }
 
+.cart-edit-row {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0 0 16rpx;
+  padding: 0 16rpx;
+}
+
+.cart-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  height: auto;
+  min-width: 0;
+  min-height: 0;
+  padding: 12rpx 20rpx;
+  margin: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  color: var(--green);
+  font-size: 28rpx;
+  font-weight: 800;
+  line-height: 1;
+  box-sizing: border-box;
+}
+
+.cart-edit-btn::after {
+  border: none;
+}
+
 .cart-address {
   display: flex;
   gap: 16rpx;

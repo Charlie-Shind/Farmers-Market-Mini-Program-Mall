@@ -172,6 +172,9 @@
         wx:for="{{pointsGoods}}"
         wx:key="id"
         class="pts-item {{item.received ? 'pts-item--done' : ''}} {{item.canRedeem ? 'pts-item--avail' : ''}}"
+        data-coupon-id="{{item.couponId}}"
+        catchtap="redeemPoints"
+        hover-class="pts-item--hover"
       >
         <view class="pts-cover" style="{{item.imageStyle}}">
           <view wx:if="{{!item.imageStyle}}" class="cover-fallback cover-fallback--points">

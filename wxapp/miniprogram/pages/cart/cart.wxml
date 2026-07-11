@@ -2,7 +2,11 @@
   <view class="page-title-bar">
     <view class="page-title-bar__side"></view>
     <text class="page-title-bar__title">购物车</text>
-    <button class="text-btn" data-label="编辑购物车" bindtap="openSection">编辑</button>
+    <view class="page-title-bar__side"></view>
+  </view>
+
+  <view class="cart-edit-row">
+    <button class="cart-edit-btn" data-label="编辑购物车" bindtap="openSection">编辑</button>
   </view>
 
   <view class="panel cart-address" data-label="收货地址" bindtap="openSection">

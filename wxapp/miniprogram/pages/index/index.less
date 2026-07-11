@@ -226,10 +226,10 @@
 
 .quick-card {
   display: flex;
-  justify-content: space-between;
-  gap: 0;
+  justify-content: center;
+  gap: 64rpx;
   margin: 12rpx 0 12rpx;
-  padding: 12rpx 64rpx 10rpx;
+  padding: 12rpx 0 10rpx;
   background: transparent;
   border: 0;
   border-radius: 0;
@@ -291,6 +291,7 @@
 
 @media (max-width: 360px) {
   .quick-card {
+    justify-content: space-between;
     gap: 0;
     padding: 12rpx 12rpx 10rpx;
   }

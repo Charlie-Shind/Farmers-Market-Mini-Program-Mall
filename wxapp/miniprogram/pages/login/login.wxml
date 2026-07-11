@@ -11,11 +11,9 @@
   <!-- Logo 区域 -->
   <view class="logo-section">
     <view class="logo-wrapper">
-      <view class="logo-icon">
-        <t-icon name="logo" size="80rpx" color="#fff"></t-icon>
-      </view>
+      <image class="logo-image" src="/assets/avatars/default-user.png" mode="aspectFit"></image>
     </view>
-    <text class="app-name">农谷仓</text>
+    <text class="app-name">浔源农仓</text>
     <text class="app-slogan">欢迎来到农谷仓</text>
   </view>
 
