@@ -1,0 +1,61 @@
+{
+  "name": "farm-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "NestJS backend for the farm project",
+  "main": "dist/main.js",
+  "scripts": {
+    "clean": "node -e \"const fs=require('fs'); ['dist','tsconfig.tsbuildinfo','tsconfig.build.tsbuildinfo'].forEach((p)=>fs.rmSync(p,{recursive:true,force:true}))\"",
+    "build": "nest build",
+    "build:clean": "npm run clean && npm run build",
+    "start": "node dist/main.js",
+    "start:clean": "npm run build:clean && node dist/main.js",
+    "start:dev": "nest start --watch",
+    "start:debug": "nest start --debug --watch",
+    "prisma:generate": "prisma generate",
+    "prisma:studio": "prisma studio",
+    "prisma:dedupe-mobile": "ts-node --project tsconfig.scripts.json scripts/dedupe-user-mobile.ts",
+    "prisma:seed": "ts-node --project tsconfig.scripts.json prisma/seed.ts",
+    "scenario:payment:pending": "ts-node --project tsconfig.scripts.json scripts/scenario-payment-pending.ts",
+    "scenario:payment:paid": "ts-node --project tsconfig.scripts.json scripts/scenario-payment-paid.ts",
+    "scenario:test:all": "ts-node --project tsconfig.scripts.json scripts/scenario-test-data.ts --flow=all",
+    "scenario:test:order": "ts-node --project tsconfig.scripts.json scripts/scenario-test-data.ts --flow=order",
+    "scenario:test:message": "ts-node --project tsconfig.scripts.json scripts/scenario-test-data.ts --flow=message",
+    "scenario:flash:inject": "ts-node --project tsconfig.scripts.json scripts/inject-flash-sale.ts",
+    "scenario:flash:verify": "ts-node --project tsconfig.scripts.json scripts/verify-flash-sale.ts",
+    "scenario:group:inject": "ts-node --project tsconfig.scripts.json scripts/inject-group-buy.ts"
+  },
+  "prisma": {
+    "seed": "ts-node --project tsconfig.scripts.json prisma/seed.ts"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.1.24",
+    "@nestjs/config": "^4.0.4",
+    "@nestjs/core": "^11.1.24",
+    "@nestjs/jwt": "^11.0.2",
+    "@nestjs/passport": "^11.0.5",
+    "@nestjs/platform-express": "^11.1.24",
+    "@prisma/adapter-pg": "^7.8.0",
+    "@prisma/client": "^7.8.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.15.1",
+    "ioredis": "^5.11.1",
+    "minio": "^8.0.7",
+    "passport": "^0.7.0",
+    "passport-jwt": "^4.0.1",
+    "pg": "^8.21.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^11.0.21",
+    "@types/express": "^5.0.6",
+    "@types/ioredis": "^4.28.10",
+    "@types/node": "^25.9.2",
+    "@types/passport-jwt": "^4.0.1",
+    "prisma": "^7.8.0",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^6.0.3"
+  }
+}

@@ -1,0 +1,3 @@
+ALTER TABLE "activity"
+  ADD COLUMN IF NOT EXISTS "rule_json" JSONB,
+  ADD COLUMN IF NOT EXISTS "products_json" JSONB;
