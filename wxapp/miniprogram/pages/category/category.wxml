@@ -43,20 +43,20 @@
     </scroll-view>
 
     <view class="category-content">
-      <view class="category-toolbar">
-        <view class="sort-tabs">
-          <button class="sort-tab {{sortMode === 'comprehensive' ? 'active' : ''}}" data-sort="comprehensive" bindtap="toggleSort">综合</button>
-          <button class="sort-tab {{sortMode === 'sales' ? 'active' : ''}}" data-sort="sales" bindtap="toggleSort">销量</button>
-          <button class="sort-tab {{sortMode === 'priceAsc' || sortMode === 'priceDesc' ? 'active' : ''}}" data-sort="priceAsc" bindtap="toggleSort">
-            <text>价格</text>
-            <text class="sort-tab__arrow">{{sortMode === 'priceDesc' ? '↓' : '↑'}}</text>
-          </button>
-        </view>
-        <button class="filter-btn" bindtap="openFilterSheet">
-          <t-icon name="sort" size="24rpx" color="#2c4a39"></t-icon>
-          <text>筛选</text>
-        </button>
-      </view>
+  <view class="category-toolbar">
+    <view class="sort-tabs">
+      <button class="sort-tab {{sortMode === 'comprehensive' ? 'active' : ''}}" data-sort="comprehensive" bindtap="toggleSort">综合</button>
+      <button class="sort-tab {{sortMode === 'sales' ? 'active' : ''}}" data-sort="sales" bindtap="toggleSort">销量</button>
+      <button class="sort-tab {{sortMode === 'priceAsc' || sortMode === 'priceDesc' ? 'active' : ''}}" data-sort="priceAsc" bindtap="toggleSort">
+        <text>价格</text>
+        <text class="sort-tab__arrow">{{sortMode === 'priceDesc' ? '↓' : '↑'}}</text>
+      </button>
+    </view>
+    <button class="filter-btn" bindtap="openFilterSheet">
+      <t-icon name="filter" size="24rpx" color="#2c4a39"></t-icon>
+      <text>筛选</text>
+    </button>
+  </view>
 
       <view class="category-content__title">
         <text class="category-content__name">{{activeSectionName || '分类栏目'}}</text>
@@ -104,15 +104,6 @@
       <text class="filter-sheet__title">全部筛选</text>
       <view class="filter-sheet__close" bindtap="closeFilterSheet">
         <t-icon name="close" size="30rpx" color="#111"></t-icon>
-      </view>
-    </view>
-
-    <view class="filter-sheet__address" bindtap="chooseAddress">
-      <t-icon name="location" size="24rpx" color="#111"></t-icon>
-      <text class="filter-sheet__address-text {{hasAddress ? '' : 'is-placeholder'}}">{{addressText}}</text>
-      <view class="filter-sheet__address-action">
-        <t-icon name="edit" size="20rpx" color="#5f6c87"></t-icon>
-        <text>{{hasAddress ? '修改' : '选择'}}</text>
       </view>
     </view>
 

@@ -70,7 +70,7 @@ export class MarketingController {
     return this.platformDataService.getUserCoupons(user, status);
   }
 
-  @Roles(RoleCode.USER, RoleCode.GUEST, RoleCode.MERCHANT)
+  @Roles(RoleCode.USER, RoleCode.MERCHANT)
   @Post('coupons/:couponId/receive')
   receiveCoupon(@CurrentUser() user: AuthUser, @Param('couponId') couponId: string) {
     return this.platformDataService.receiveCoupon(user, Number(couponId));

@@ -9,7 +9,7 @@ import {
 } from '../../../services/app';
 import { receiveCoupon } from '../../../services/app';
 import { buildPageTopStyle } from '../../../utils/page-layout';
-import { navigateBackOrHome, redirectMerchantAwayFromCustomerRoute } from '../../../utils/auth-route';
+import { ensureCustomerAccess, navigateBackOrHome, redirectMerchantAwayFromCustomerRoute } from '../../../utils/auth-route';
 
 const PAGE_SIZE = 12;
 const COUPON_PREVIEW_COUNT = 2;
@@ -161,6 +161,10 @@ Component({
       });
     },
     async onReceiveCoupon(e: WechatMiniprogram.BaseEvent) {
+      if (!ensureCustomerAccess('/pages/merchant-public/detail/index')) {
+        return;
+      }
+
       const { couponId, received, active } = (e.currentTarget.dataset as {
         couponId?: string | number;
         received?: string | boolean;

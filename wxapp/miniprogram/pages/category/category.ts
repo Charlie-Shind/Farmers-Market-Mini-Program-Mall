@@ -1,32 +1,16 @@
 import { iconPaths } from '../../config/icons';
 import {
-  fetchAddresses,
   fetchCartItemCount,
   fetchCategories,
   fetchCategoryTags,
   fetchHomeHotProducts,
   fetchProducts,
-  type AppAddress,
   type AppCategory,
   type AppCategoryTag,
   type AppProduct,
 } from '../../services/app';
 import { buildPageTopStyle } from '../../utils/page-layout';
 import { navigateBackOrHome } from '../../utils/auth-route';
-
-const DEFAULT_ADDRESS_TEXT = '点击选择收货地址';
-
-function formatAddressText(address: AppAddress | null): string {
-  if (!address) {
-    return DEFAULT_ADDRESS_TEXT;
-  }
-  const region = [address.province, address.city, address.district]
-    .filter(Boolean)
-    .join(' ');
-  const detail = address.detailAddress || '';
-  const full = `${region} ${detail}`.trim();
-  return full.length > 24 ? `${full.slice(0, 24)}…` : full;
-}
 
 type CategoryRecommendationItem = {
   id: number;
@@ -223,7 +207,7 @@ function createEmptyFilterFlags(): FilterFlags {
   };
 }
 
-function buildFilterPanelSections(navKey: string, originPlaces: string[], activeSectionName: string): FilterPanelSection[] {
+function buildFilterPanelSections(navKey: string, originPlaces: string[]): FilterPanelSection[] {
   const makeChip = (value: string, label?: string, subLabel?: string): FilterPanelChip => ({
     value,
     label: label || value,
@@ -231,54 +215,22 @@ function buildFilterPanelSections(navKey: string, originPlaces: string[], active
   });
 
   const originChips = originPlaces.length
-    ? [makeChip('全部'), ...originPlaces.slice(0, 6).map((place) => makeChip(place))]
+    ? [makeChip('全部'), ...originPlaces.slice(0, 8).map((place) => makeChip(place))]
     : [makeChip('全部')];
-  const categoryBase = activeSectionName ? activeSectionName.replace(/系列$/, '') : '当前分类';
-  const brandBase = activeSectionName ? `${activeSectionName.replace(/系列$/, '')}品牌` : '热门品牌';
 
   const panelMap: Record<string, FilterPanelSection[]> = {
     category: [
       {
         key: 'category',
-        title: '分类',
-        chips: [makeChip(categoryBase), makeChip('精品推荐'), makeChip('源头直供')],
+        title: '分类筛选',
+        chips: [makeChip('全部'), makeChip('有机')],
       },
     ],
     logistics: [
       {
         key: 'logistics',
-        title: '物流',
-        chips: ['包邮', '坏果包赔', '冷链配送', '48小时内发', '现货'].map((value) => makeChip(value)),
-      },
-    ],
-    discount: [
-      {
-        key: 'discount',
-        title: '优惠',
-        chips: [makeChip('百亿补贴'), makeChip('限时秒杀')],
-      },
-    ],
-    rating: [
-      {
-        key: 'rating',
-        title: '店铺评分',
-        chips: [
-          makeChip('5分', '5分', '满分'),
-          makeChip('4.8分及以上', '4.8分及以上', '优秀'),
-          makeChip('4.6分及以上', '4.6分及以上', '良好'),
-        ],
-      },
-    ],
-    price: [
-      {
-        key: 'price',
-        title: '价格区间',
-        chips: [
-          makeChip('261元以下', '261元以下', '30%的选择'),
-          makeChip('261~398元', '261~398元', '60%的选择'),
-          makeChip('398~464元', '398~464元', '9%的选择'),
-          makeChip('464元以上', '464元以上', '1%的选择'),
-        ],
+        title: '物流类型',
+        chips: [makeChip('全部'), makeChip('现货'), makeChip('预售')],
       },
     ],
     origin: [
@@ -286,20 +238,6 @@ function buildFilterPanelSections(navKey: string, originPlaces: string[], active
         key: 'origin',
         title: '发货地',
         chips: originChips,
-      },
-    ],
-    brand: [
-      {
-        key: 'brand',
-        title: '热门品牌',
-        chips: [makeChip(brandBase), makeChip('源头直供'), makeChip('平台严选')],
-      },
-    ],
-    storage: [
-      {
-        key: 'storage',
-        title: '存储类型',
-        chips: ['冷藏', '冷冻', '常温'].map((value) => makeChip(value)),
       },
     ],
   };
@@ -395,19 +333,11 @@ Component({
     filterNavItems: [
       { key: 'category', label: '分类' },
       { key: 'logistics', label: '物流' },
-      { key: 'discount', label: '优惠' },
-      { key: 'rating', label: '店铺评分' },
-      { key: 'price', label: '价格区间' },
       { key: 'origin', label: '发货地' },
-      { key: 'brand', label: '热门品牌' },
-      { key: 'storage', label: '存储类型' },
     ] as FilterNavItem[],
     activeFilterNavIndex: 0,
     activeFilterPanelSections: [] as FilterPanelSection[],
     filterSelections: {} as Record<string, string>,
-    currentAddress: null as AppAddress | null,
-    addressText: DEFAULT_ADDRESS_TEXT,
-    hasAddress: false,
   },
   lifetimes: {
     attached() {
@@ -417,7 +347,6 @@ Component({
 
       void this.loadSections();
       void this.syncCartBadge();
-      void this.loadAddress(true);
     },
   },
   pageLifetimes: {
@@ -426,7 +355,6 @@ Component({
         pageStyle: buildPageTopStyle(4),
       });
       void this.syncCartBadge();
-      void this.loadAddress();
 
       const tabBar = (this as any).getTabBar?.();
       if (tabBar) {
@@ -449,51 +377,6 @@ Component({
           cartBadge: '',
         });
       }
-    },
-    async loadAddress(silent = false) {
-      try {
-        const list = await fetchAddresses();
-        const defaultAddress =
-          (list || []).find((item) => item.isDefault) ||
-          (list || [])[0] ||
-          null;
-        this.setData({
-          currentAddress: defaultAddress,
-          addressText: formatAddressText(defaultAddress),
-          hasAddress: Boolean(defaultAddress),
-        });
-      } catch {
-        if (!silent) {
-          this.setData({
-            currentAddress: null,
-            addressText: DEFAULT_ADDRESS_TEXT,
-            hasAddress: false,
-          });
-        }
-      }
-    },
-    chooseAddress() {
-      wx.navigateTo({
-        url: '/pages/address/list/list?mode=select&from=category',
-        events: {
-          selectAddress: (address: AppAddress) => {
-            if (!address) {
-              return;
-            }
-            this.setData({
-              currentAddress: address,
-              addressText: formatAddressText(address),
-              hasAddress: true,
-            });
-          },
-        },
-        success: (res) => {
-          const channel = (res as WechatMiniprogram.NavigateToSuccessCallbackResult).eventChannel;
-          if (channel && typeof channel.emit === 'function') {
-            channel.emit('requestCurrent', this.data.currentAddress);
-          }
-        },
-      });
     },
     async loadSections() {
       let sections: CategorySectionView[] = [];
@@ -622,7 +505,7 @@ Component({
       this.setData({
         showFilterSheet: true,
         activeFilterNavIndex: 0,
-        activeFilterPanelSections: buildFilterPanelSections(navKey, this.data.originPlaces, this.data.activeSectionName),
+        activeFilterPanelSections: buildFilterPanelSections(navKey, this.data.originPlaces),
       });
     },
     closeFilterSheet() {
@@ -632,36 +515,6 @@ Component({
     },
     stopBubble() {
       // Prevent sheet close
-    },
-    chooseFilter(e: WechatMiniprogram.BaseEvent) {
-      const { filter } = (e.currentTarget.dataset as { filter?: FilterMode }) || {};
-      if (filter == null) {
-        return;
-      }
-
-      if (filter === '') {
-        return;
-      }
-
-      const nextFilters = { ...this.data.activeFilters };
-      nextFilters[filter] = !nextFilters[filter];
-
-      this.setData({
-        activeFilters: nextFilters,
-        selectedOrigin: filter === 'origin' && !nextFilters.origin ? '' : this.data.selectedOrigin,
-      });
-      this.applyView();
-    },
-    chooseOrigin(e: WechatMiniprogram.BaseEvent) {
-      const { origin } = (e.currentTarget.dataset as { origin?: string }) || {};
-      this.setData({
-        selectedOrigin: origin || '',
-        activeFilters: {
-          ...this.data.activeFilters,
-          origin: true,
-        },
-      });
-      this.applyView();
     },
     switchFilterNav(e: WechatMiniprogram.BaseEvent) {
       const { index } = (e.currentTarget.dataset as { index?: number | string }) || {};
@@ -673,7 +526,7 @@ Component({
       const navKey = this.data.filterNavItems[nextIndex]?.key || 'logistics';
       this.setData({
         activeFilterNavIndex: nextIndex,
-        activeFilterPanelSections: buildFilterPanelSections(navKey, this.data.originPlaces, this.data.activeSectionName),
+        activeFilterPanelSections: buildFilterPanelSections(navKey, this.data.originPlaces),
       });
     },
     toggleFilterChip(e: WechatMiniprogram.BaseEvent) {
@@ -701,12 +554,22 @@ Component({
       }
 
       const nextFilters = { ...this.data.activeFilters };
+
       if (section === 'category') {
-        nextFilters.organic = chip === '精品推荐' ? !nextFilters.organic : nextFilters.organic;
+        nextFilters.organic = chip === '有机';
       }
+
       if (section === 'logistics') {
-        if (chip === '现货') nextFilters.instock = !nextFilters.instock;
-        if (chip === '预售') nextFilters.presale = !nextFilters.presale;
+        if (chip === '全部') {
+          nextFilters.instock = false;
+          nextFilters.presale = false;
+        } else if (chip === '现货') {
+          nextFilters.instock = true;
+          nextFilters.presale = false;
+        } else if (chip === '预售') {
+          nextFilters.instock = false;
+          nextFilters.presale = true;
+        }
       }
 
       this.setData({
@@ -721,7 +584,7 @@ Component({
         activeFilters: createEmptyFilterFlags(),
         selectedOrigin: '',
         filterSelections: {},
-        activeFilterPanelSections: buildFilterPanelSections(navKey, this.data.originPlaces, this.data.activeSectionName),
+        activeFilterPanelSections: buildFilterPanelSections(navKey, this.data.originPlaces),
       });
       this.applyView();
     },

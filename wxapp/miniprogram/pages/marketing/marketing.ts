@@ -19,7 +19,7 @@ import {
   type GroupBuyItem,
 } from '../../services/quick';
 import { buildPageTopStyle } from '../../utils/page-layout';
-import { navigateBackOrHome } from '../../utils/auth-route';
+import { ensureCustomerAccess, navigateBackOrHome } from '../../utils/auth-route';
 import { loadSelectedLocation } from '../../services/location';
 
 // ─── types ────────────────────────────────────────────────────────────────────
@@ -426,6 +426,10 @@ Component({
 
     // ── coupon receive ──────────────────────────────────────────────────────
     async receiveCoupon(e: WechatMiniprogram.BaseEvent) {
+      if (!ensureCustomerAccess('/pages/marketing/marketing')) {
+        return;
+      }
+
       const { couponId } = (e.currentTarget.dataset as { couponId?: number }) || {};
       if (!couponId || this.data.couponReceiving) return;
 
