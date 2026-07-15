@@ -36,7 +36,28 @@ type StoryBadgeItem = {
 
 type ProductDetailView = Omit<AppProductDetail, 'skus'> & {
   skus: SkuItem[];
+  detailIsHtml?: boolean;
+  detailHtml?: string;
 };
+
+function looksLikeHtml(content?: string | null) {
+  return /<\s*(p|img|div|br|h[1-6]|span|section|ul|ol|li)\b/i.test(String(content || ''));
+}
+
+function normalizeDetailHtml(content?: string | null) {
+  const raw = String(content || '').trim();
+  if (!raw) return '';
+  // 给图片补全宽度样式，方便小程序 rich-text 展示
+  return raw.replace(
+    /<img\b([^>]*?)\/?>/gi,
+    (_match, attrs: string) => {
+      if (/style=/i.test(attrs)) {
+        return `<img${attrs}>`;
+      }
+      return `<img${attrs} style="width:100%;display:block;margin:12px 0;">`;
+    },
+  );
+}
 
 function buildSkuSpecSummary(specJson?: Record<string, string>) {
   if (!specJson) {
@@ -351,6 +372,8 @@ Component({
             skus,
             images: galleryImages,
             videos: galleryVideos,
+            detailIsHtml: looksLikeHtml(product.detailDesc),
+            detailHtml: normalizeDetailHtml(product.detailDesc),
           },
           mediaList: mediaList.length ? mediaList : [{ kind: 'image', src: product.coverUrl || galleryImages[0] || '' }],
           currentMediaUrl: resolveMediaPreviewUrl(mediaList[0] || { kind: 'image', src: product.coverUrl || galleryImages[0] || '' }),

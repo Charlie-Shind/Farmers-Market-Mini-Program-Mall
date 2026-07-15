@@ -1,7 +1,10 @@
 .category-page {
   display: flex;
   flex-direction: column;
-  min-height: 90vh;
+  /* 覆盖全局 .phone-page { min-height: 90vh !important }，防止整页被撑高后左右一起滚 */
+  height: 100vh !important;
+  max-height: 100vh !important;
+  min-height: 0 !important;
   overflow: hidden;
   width: 100%;
   padding: 0 24rpx 0;
@@ -95,6 +98,7 @@
 
 .category-shell {
   flex: 1;
+  min-height: 0;
   display: flex;
   gap: 0;
   box-sizing: border-box;

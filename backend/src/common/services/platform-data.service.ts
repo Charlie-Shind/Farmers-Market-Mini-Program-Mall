@@ -1388,27 +1388,35 @@ export class PlatformDataService {
     };
 
     // 1. Seed Categories (Parent & Child Categories dynamically)
-    const categoryCount = await this.prisma.category.count();
-
     const parentCategories = [
       {
-        name: '时令果蔬',
+        name: '海鲜水产',
         sortOrder: 1,
+        svg: '<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><circle cx="64" cy="64" r="64" fill="#E3F2FD"/><g transform="translate(32, 32) scale(2.66)"><path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6-10-6-10-6z" fill="none" stroke="#1565C0" stroke-width="1.8"/><circle cx="12" cy="12" r="2" fill="#1565C0"/><path d="M16 8l4-3M16 16l4 3" fill="none" stroke="#1565C0" stroke-width="1.8" stroke-linecap="round"/></g></svg>'
+      },
+      {
+        name: '时令果蔬',
+        sortOrder: 2,
         svg: '<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><circle cx="64" cy="64" r="64" fill="#E8F5E9"/><g transform="translate(32, 32) scale(2.66)"><path d="M12 21a6 6 0 0 0 6-6c0-4-3-7-6-7s-6 3-6 7a6 6 0 0 0 6 6z" fill="none" stroke="#2C4A39" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 8A4 4 0 0 1 8 12" fill="none" stroke="#2C4A39" stroke-width="1.8" stroke-linecap="round"/><path d="M16 4l-4 4" fill="none" stroke="#2C4A39" stroke-width="1.8" stroke-linecap="round"/></g></svg>'
       },
       {
+        name: '肉禽蛋奶',
+        sortOrder: 3,
+        svg: '<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><circle cx="64" cy="64" r="64" fill="#FFF3E0"/><g transform="translate(32, 32) scale(2.66)"><path d="M12 4c-3 0-6 3-6 8 0 4 3 8 6 8s6-4 6-8c0-5-3-8-6-8z" fill="none" stroke="#E65100" stroke-width="1.8"/><path d="M9 10h6M10 14h4" fill="none" stroke="#E65100" stroke-width="1.8" stroke-linecap="round"/></g></svg>'
+      },
+      {
         name: '日用百货',
-        sortOrder: 2,
+        sortOrder: 4,
         svg: '<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><circle cx="64" cy="64" r="64" fill="#E3F2FD"/><g transform="translate(32, 32) scale(2.66)"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" fill="none" stroke="#1565C0" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 6h18" fill="none" stroke="#1565C0" stroke-width="1.8"/><path d="M16 10a4 4 0 0 1-8 0" fill="none" stroke="#1565C0" stroke-width="1.8"/></g></svg>'
       },
       {
         name: '粮油干货',
-        sortOrder: 3,
+        sortOrder: 5,
         svg: '<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><circle cx="64" cy="64" r="64" fill="#FFF8E1"/><g transform="translate(32, 32) scale(2.66)"><path d="M3 12h18" fill="none" stroke="#FF8F00" stroke-width="1.8"/><path d="M12 3v9" fill="none" stroke="#FF8F00" stroke-width="1.8" stroke-linecap="round"/><path d="M12 12a8 8 0 0 0 8 8H4a8 8 0 0 0 8-8z" fill="none" stroke="#FF8F00" stroke-width="1.8" stroke-linejoin="round"/></g></svg>'
       },
       {
         name: '特产礼盒',
-        sortOrder: 4,
+        sortOrder: 6,
         svg: '<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><circle cx="64" cy="64" r="64" fill="#FCE4EC"/><g transform="translate(32, 32) scale(2.66)"><rect x="3" y="11" width="18" height="10" rx="2" fill="none" stroke="#C2185B" stroke-width="1.8"/><path d="M12 2v18" fill="none" stroke="#C2185B" stroke-width="1.8"/><path d="M3 11h18" fill="none" stroke="#C2185B" stroke-width="1.8"/><path d="M12 7a2.5 2.5 0 1 0-2.5-2.5" fill="none" stroke="#C2185B" stroke-width="1.8" stroke-linecap="round"/><path d="M12 7a2.5 2.5 0 1 1 2.5-2.5" fill="none" stroke="#C2185B" stroke-width="1.8" stroke-linecap="round"/></g></svg>'
       },
     ];
@@ -1446,42 +1454,39 @@ export class PlatformDataService {
       },
     ];
 
-    if (categoryCount === 0) {
-      this.logger.log('Seeding client parent categories...');
-      const parentMap = new Map<string, any>();
+    this.logger.log('Ensuring client parent/sub categories...');
+    const parentMap = new Map<string, any>();
 
-      for (const pCat of parentCategories) {
-        const iconUrl = await uploadCategoryIcon(pCat.name, pCat.svg);
-        let cat = await this.prisma.category.findFirst({ where: { name: pCat.name, parentId: null } });
-        if (!cat) {
-          cat = await this.prisma.category.create({
-            data: { name: pCat.name, sortOrder: pCat.sortOrder, iconUrl, status: 1 },
-          });
-        } else {
-          cat = await this.prisma.category.update({
-            where: { id: cat.id },
-            data: { iconUrl },
-          });
-        }
-        parentMap.set(pCat.name, cat);
+    for (const pCat of parentCategories) {
+      const iconUrl = await uploadCategoryIcon(pCat.name, pCat.svg);
+      let cat = await this.prisma.category.findFirst({ where: { name: pCat.name, parentId: null } });
+      if (!cat) {
+        cat = await this.prisma.category.create({
+          data: { name: pCat.name, sortOrder: pCat.sortOrder, iconUrl, status: 1 },
+        });
+      } else {
+        cat = await this.prisma.category.update({
+          where: { id: cat.id },
+          data: { iconUrl, sortOrder: pCat.sortOrder, status: 1 },
+        });
       }
+      parentMap.set(pCat.name, cat);
+    }
 
-      this.logger.log('Seeding client subcategories...');
-      for (const sCat of subCategories) {
-        const parent = parentMap.get(sCat.parentName);
-        if (!parent) continue;
-        const iconUrl = await uploadCategoryIcon(sCat.name, sCat.svg);
-        const exists = await this.prisma.category.findFirst({ where: { name: sCat.name, parentId: parent.id } });
-        if (!exists) {
-          await this.prisma.category.create({
-            data: { name: sCat.name, parentId: parent.id, sortOrder: sCat.sortOrder, iconUrl, status: 1 },
-          });
-        } else {
-          await this.prisma.category.update({
-            where: { id: exists.id },
-            data: { iconUrl },
-          });
-        }
+    for (const sCat of subCategories) {
+      const parent = parentMap.get(sCat.parentName);
+      if (!parent) continue;
+      const iconUrl = await uploadCategoryIcon(sCat.name, sCat.svg);
+      const exists = await this.prisma.category.findFirst({ where: { name: sCat.name, parentId: parent.id } });
+      if (!exists) {
+        await this.prisma.category.create({
+          data: { name: sCat.name, parentId: parent.id, sortOrder: sCat.sortOrder, iconUrl, status: 1 },
+        });
+      } else {
+        await this.prisma.category.update({
+          where: { id: exists.id },
+          data: { iconUrl, sortOrder: sCat.sortOrder },
+        });
       }
     }
 
@@ -1559,10 +1564,10 @@ export class PlatformDataService {
       });
     }
 
-    // 2. Seed Products dynamically from client_products.json
+    // 2. Seed/sync Products from client_products.json（按 skuCode 幂等；已有商品刷新富文本详情）
     const productCount = await this.prisma.product.count();
-    if (productCount === 0) {
-      this.logger.log('Seeding client products from client_products.json...');
+    {
+      this.logger.log('Syncing client products from client_products.json...');
       const mockDir = this.findMockImagesDir();
 
       const uploadImage = async (relPath: string) => {
@@ -1612,11 +1617,36 @@ export class PlatformDataService {
         const defaultOriginsByCategory: Record<string, string[]> = {
           时令果蔬: ['云南昭通', '山东寿光', '广西南宁', '海南琼海'],
           肉禽蛋奶: ['黑龙江哈尔滨', '内蒙古通辽', '河北邢台', '四川成都'],
+          海鲜水产: ['辽宁大连', '浙江舟山', '山东青岛', '福建霞浦'],
           粮油干货: ['黑龙江牡丹江', '河南周口', '山东临沂', '安徽亳州'],
           特产礼盒: ['黑龙江牡丹江', '福建厦门', '云南普洱', '四川成都'],
         };
         const defaultOriginPool = ['云南昭通', '黑龙江牡丹江', '山东寿光', '广西南宁', '福建厦门', '四川成都'];
         let seedIndex = 0;
+        let createdCount = 0;
+        let updatedCount = 0;
+        const uploadedPathMap = new Map<string, string>();
+
+        const uploadCached = async (relPath: string) => {
+          const key = String(relPath || '').trim();
+          if (!key) return '';
+          if (uploadedPathMap.has(key)) {
+            return uploadedPathMap.get(key) || '';
+          }
+          const url = await uploadImage(key);
+          uploadedPathMap.set(key, url);
+          return url;
+        };
+
+        const rewriteDetailDesc = (html: string | undefined, pathMap: Map<string, string>) => {
+          const raw = String(html || '');
+          if (!raw) return '';
+          return raw.replace(/src=(["'])([^"']+)\1/gi, (full, quote: string, src: string) => {
+            const mapped = pathMap.get(src) || (src.startsWith('http') ? src : '');
+            if (!mapped) return full;
+            return `src=${quote}${mapped}${quote}`;
+          });
+        };
 
         const pickFallbackOrigin = (seed: { categoryName?: string; subCategoryName?: string; title?: string; originPlace?: string }) => {
           const explicit = String(seed.originPlace ?? '').trim();
@@ -1632,7 +1662,6 @@ export class PlatformDataService {
         };
 
         for (const seed of seeds) {
-          // Find category (try subcategory first, then parent category)
           let category = null;
           if (seed.subCategoryName) {
             category = await this.prisma.category.findFirst({ where: { name: seed.subCategoryName } });
@@ -1645,28 +1674,74 @@ export class PlatformDataService {
           }
           if (!category) continue;
 
-          // Upload cover image
+          const pathMap = new Map<string, string>();
           let coverUrl = '';
           if (seed.coverUrl) {
-            coverUrl = await uploadImage(seed.coverUrl);
+            coverUrl = await uploadCached(seed.coverUrl);
+            if (coverUrl) pathMap.set(seed.coverUrl, coverUrl);
           }
 
-          // Upload detail images
           const imageUrls: string[] = [];
           if (Array.isArray(seed.images)) {
             for (const imgPath of seed.images) {
-              const url = await uploadImage(imgPath);
-              if (url) imageUrls.push(url);
+              const url = await uploadCached(imgPath);
+              if (url) {
+                imageUrls.push(url);
+                pathMap.set(imgPath, url);
+              }
             }
           }
 
-          // Upload video if any
           let videoUrl = '';
           if (seed.videoUrl) {
             videoUrl = await uploadVideo(seed.videoUrl);
           }
 
-          // Create Product
+          const detailDesc = rewriteDetailDesc(seed.detailDesc, pathMap) || seed.detailDesc || null;
+          const skuCode = seed.skuCode || '';
+          const existingSku = skuCode
+            ? await this.prisma.productSku.findFirst({ where: { skuCode } })
+            : null;
+
+          if (existingSku) {
+            await this.prisma.product.update({
+              where: { id: existingSku.productId },
+              data: {
+                title: seed.title,
+                subtitle: seed.subtitle,
+                coverUrl: coverUrl || undefined,
+                detailDesc,
+                originPlace: pickFallbackOrigin(seed),
+                brand: seed.brand || null,
+                supplierName: seed.supplierName || null,
+                ingredients: seed.ingredients || null,
+                shelfLife: seed.shelfLife || null,
+                productionDate: seed.productionDate || null,
+                material: seed.material || null,
+                dimensions: seed.dimensions || null,
+                leadTime: seed.leadTime || null,
+                shippingRestrictedRegions: seed.shippingRestrictedRegions || null,
+                afterSalesCommitment: seed.afterSalesCommitment || null,
+                logisticsCompany: seed.logisticsCompany || null,
+                productNature: seed.productNature || null,
+                categoryId: category.id,
+              },
+            });
+            if (imageUrls.length > 0) {
+              await this.prisma.productImage.deleteMany({ where: { productId: existingSku.productId } });
+              await this.prisma.productImage.createMany({
+                data: imageUrls.map((url, idx) => ({
+                  productId: existingSku.productId,
+                  imageUrl: url,
+                  sortOrder: idx + 1,
+                })),
+              });
+            }
+            updatedCount += 1;
+            seedIndex += 1;
+            continue;
+          }
+
           const createdProduct = await this.prisma.product.create({
             data: {
               merchantId: merchant.id,
@@ -1674,15 +1749,13 @@ export class PlatformDataService {
               title: seed.title,
               subtitle: seed.subtitle,
               coverUrl: coverUrl || null,
-              detailDesc: seed.detailDesc,
+              detailDesc,
               originPlace: pickFallbackOrigin(seed),
               deliveryType: 1,
               status: 1,
-              auditStatus: 2, // 审核通过
+              auditStatus: 2,
               isPreSale: false,
               isHot: seed.title.includes('海参') || seed.title.includes('胖头鱼'),
-
-              // Custom fields
               brand: seed.brand || null,
               supplierName: seed.supplierName || null,
               ingredients: seed.ingredients || null,
@@ -1701,8 +1774,8 @@ export class PlatformDataService {
             },
           });
           seedIndex += 1;
+          createdCount += 1;
 
-          // Create SKU
           const originalPriceDecimal = seed.originalPrice ? new Prisma.Decimal(seed.originalPrice) : new Prisma.Decimal(seed.price);
           const offlinePriceDecimal = seed.offlinePrice ? new Prisma.Decimal(seed.offlinePrice) : null;
           const createdSku = await this.prisma.productSku.create({
@@ -1720,7 +1793,6 @@ export class PlatformDataService {
             },
           });
 
-          // Create images relationships
           if (imageUrls.length > 0) {
             await this.prisma.productImage.createMany({
               data: imageUrls.map((url, idx) => ({
@@ -1731,7 +1803,6 @@ export class PlatformDataService {
             });
           }
 
-          // Create video relationship
           if (videoUrl) {
             await this.prisma.productVideo.create({
               data: {
@@ -1743,7 +1814,6 @@ export class PlatformDataService {
             });
           }
 
-          // Create trace record
           await this.prisma.productTrace.create({
             data: {
               productId: createdProduct.id,
@@ -1756,9 +1826,11 @@ export class PlatformDataService {
             },
           });
         }
-        this.logger.log(`Successfully seeded ${seeds.length} products to database.`);
+        this.logger.log(`Synced products from JSON: created=${createdCount}, updated=${updatedCount}, totalSeeds=${seeds.length}.`);
       }
+    }
 
+    if (productCount === 0) {
       await this.prisma.banner.createMany({
         data: scaffoldBanners.map((banner) => ({
           title: banner.title,

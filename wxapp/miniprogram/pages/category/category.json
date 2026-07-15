@@ -1,4 +1,5 @@
 {
+  "disableScroll": true,
   "usingComponents": {
     "bottom-nav": "../../components/base/bottom-nav/bottom-nav",
     "t-icon": "../../components/base/t-icon/t-icon"

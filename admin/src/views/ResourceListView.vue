@@ -342,18 +342,15 @@
             </div>
           </div>
 
-          <!-- 商品详情图集 -->
-          <div v-if="currentProductDetail.images && currentProductDetail.images.length" class="product-album-section">
-            <h4>详情图集</h4>
-            <div class="detail-images-gallery">
-              <img v-for="(img, idx) in currentProductDetail.images" :key="idx" :src="img" class="gallery-img-item" />
-            </div>
-          </div>
-
-          <!-- 商品详情介绍 -->
+          <!-- 商品详情（富文本：图文交错） -->
           <div class="product-desc-section">
-            <h4>详细介绍</h4>
-            <p class="desc-text">{{ currentProductDetail.detailDesc || '暂无详细描述。' }}</p>
+            <h4>商品详情</h4>
+            <div
+              v-if="currentProductDetail.detailDesc"
+              class="desc-html"
+              v-html="currentProductDetail.detailDesc"
+            ></div>
+            <p v-else class="desc-text">暂无详细描述。</p>
           </div>
 
           <!-- 操作按钮区 -->
@@ -816,7 +813,7 @@
             </div>
 
             <div class="form-field">
-              <span>商品详情图集 (可多选)</span>
+              <span>顶部轮播图（可选，用于商品头图滑动）</span>
               <div class="album-uploader-grid">
                 <div v-for="(img, idx) in productAlbumList" :key="idx" class="album-item-card">
                   <img :src="img.url" class="album-image" />
@@ -838,6 +835,7 @@
                   </div>
                 </el-upload>
               </div>
+              <small class="form-help">详情正文请在下方「商品详情」中插入图文，此处仅用于顶部轮播。</small>
             </div>
           </div>
         </div>
@@ -1006,14 +1004,14 @@
             </div>
           </div>
 
-          <label class="form-field">
-            <span>商品详情介绍</span>
-            <textarea
-              v-model.trim="productForm.detailDesc"
-              rows="4"
-              placeholder="请填写商品详细介绍、卖点、发货时效、售后赔付标准等详细描述..."
-            ></textarea>
-          </label>
+          <div class="form-field">
+            <span>商品详情（图文交错富文本）</span>
+            <ProductRichEditor
+              v-model="productForm.detailDesc"
+              :upload="uploadRichImage"
+            />
+            <small class="form-help">支持文字与图片交替插入，小程序详情页将按同一顺序展示。</small>
+          </div>
         </div>
 
         <!-- Section 5: Settings -->
@@ -1556,6 +1554,7 @@ import {
 } from '@/api/admin';
 import AdminDrawer from '@/components/AdminDrawer.vue';
 import DateTimeField from '@/components/DateTimeField.vue';
+import ProductRichEditor from '@/components/ProductRichEditor.vue';
 import StatGrid from '@/components/StatGrid.vue';
 import RefreshDataButton from '@/components/RefreshDataButton.vue';
 import { refreshWithFeedback } from '@/utils/refresh-feedback';
@@ -1791,6 +1790,14 @@ async function uploadAlbumImage(options: any) {
   await handleSingleUpload(options.file, (url) => {
     productAlbumList.value.push({ name: options.file.name, url });
   });
+}
+
+async function uploadRichImage(file: File) {
+  let url = '';
+  await handleSingleUpload(file, (uploaded) => {
+    url = uploaded;
+  });
+  return url;
 }
 
 async function uploadTableSkuImage(file: File, index: number) {
@@ -5547,6 +5554,29 @@ function getUserTierClass(orderCount: number | string): string {
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 10px;
+}
+
+.desc-html {
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.7;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.desc-html :deep(p) {
+  margin: 0 0 10px;
+}
+
+.desc-html :deep(img) {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  margin: 8px 0 12px;
+  border-radius: 8px;
+  object-fit: cover;
 }
 
 /* Action button area */

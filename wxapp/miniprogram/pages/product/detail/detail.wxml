@@ -90,9 +90,14 @@
         <text class="pdd-detail__title">商品详情</text>
         <view class="pdd-detail__line"></view>
       </view>
-      <text class="pdd-detail__text" wx:if="{{product.detailDesc}}">{{product.detailDesc}}</text>
+      <rich-text
+        wx:if="{{product.detailIsHtml}}"
+        class="pdd-detail__rich"
+        nodes="{{product.detailHtml}}"
+      ></rich-text>
+      <text class="pdd-detail__text" wx:elif="{{product.detailDesc}}">{{product.detailDesc}}</text>
       <text class="pdd-detail__empty" wx:else>商家暂未补充图文详情</text>
-      <view class="pdd-detail__images" wx:if="{{product.images && product.images.length}}">
+      <view class="pdd-detail__images" wx:if="{{!product.detailIsHtml && product.images && product.images.length}}">
         <image
           wx:for="{{product.images}}"
           wx:key="*this"
