@@ -1,5 +1,5 @@
 import { iconPaths } from '../../../config/icons';
-import { buildPageHeaderStyle } from '../../../utils/page-layout';
+import { buildPageTopStyle } from '../../../utils/page-layout';
 import { fetchPickupPointDetail, fetchMyPickupPoint, type PickupPointDetail } from '../../../services/leader';
 import { getAuthUserRole } from '../../../services/token';
 
@@ -19,7 +19,7 @@ Component({
   lifetimes: {
     attached() {
       this.setData({
-        pageStyle: buildPageHeaderStyle(8),
+        pageStyle: buildPageTopStyle(0),
       });
 
       const pages = getCurrentPages();

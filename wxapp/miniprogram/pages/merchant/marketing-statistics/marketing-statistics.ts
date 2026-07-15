@@ -15,11 +15,11 @@ Page<Record<string, any>, Record<string, any>>({
   },
 
   onLoad(options: Record<string, string>) {
-    this.setData({ pageStyle: buildPageTopStyle(8) });
+    this.setData({ pageStyle: buildPageTopStyle(0) });
     if (options.name) this.setData({ activityName: options.name });
     if (options.id) this.loadStats(Number(options.id));
   },
-  onShow() { this.setData({ pageStyle: buildPageTopStyle(8) }); },
+  onShow() { this.setData({ pageStyle: buildPageTopStyle(0) }); },
 
   async loadStats(id: number) {
     try {

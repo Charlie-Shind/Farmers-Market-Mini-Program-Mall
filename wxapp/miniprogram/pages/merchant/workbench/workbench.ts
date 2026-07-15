@@ -45,8 +45,8 @@ Page<Record<string, any>, Record<string, any>>({
     ],
   },
 
-  onLoad() { this.setData({ pageStyle: buildPageTopStyle(8) }); },
-  onShow() { this.setData({ pageStyle: buildPageTopStyle(8) }); this.loadTodos(); },
+  onLoad() { this.setData({ pageStyle: buildPageTopStyle(0) }); },
+  onShow() { this.setData({ pageStyle: buildPageTopStyle(0) }); this.loadTodos(); },
 
   async loadTodos() {
     try {

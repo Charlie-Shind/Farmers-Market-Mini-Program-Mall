@@ -16,7 +16,7 @@ Page<Record<string, any>, Record<string, any>>({
   },
 
   onLoad(options: any) {
-    this.setData({ pageStyle: buildPageTopStyle(8) });
+    this.setData({ pageStyle: buildPageTopStyle(0) });
     if (options.merchantId) {
       this.setData({ merchantId: Number(options.merchantId) });
     }
@@ -24,7 +24,7 @@ Page<Record<string, any>, Record<string, any>>({
   },
 
   onShow() {
-    this.setData({ pageStyle: buildPageTopStyle(8) });
+    this.setData({ pageStyle: buildPageTopStyle(0) });
   },
 
   async loadData() {

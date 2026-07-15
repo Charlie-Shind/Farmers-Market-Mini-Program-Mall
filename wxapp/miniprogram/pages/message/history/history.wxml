@@ -1,13 +1,5 @@
 ﻿<view class="phone-page history-page" style="{{pageStyle}}">
-  <view class="board-head">
-    <view class="page-title-bar">
-      <button class="back-btn" bindtap="goBack" hover-class="back-btn--hover">
-        <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
-      </button>
-      <text class="page-title-bar__title">{{typeLabel}}</text>
-      <text class="page-title-bar__spacer"></text>
-    </view>
-  </view>
+  <page-nav title="{{typeLabel}}" theme="solid" />
 
   <scroll-view
     scroll-y="true"

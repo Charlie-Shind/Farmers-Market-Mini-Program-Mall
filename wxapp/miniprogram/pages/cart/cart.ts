@@ -104,7 +104,7 @@ Component({
       }
 
       this.setData({
-        pageStyle: buildPageTopStyle(4),
+        pageStyle: buildPageTopStyle(0),
       });
 
       this.loadCartData();
@@ -113,7 +113,7 @@ Component({
   pageLifetimes: {
     show() {
       this.setData({
-        pageStyle: buildPageTopStyle(4),
+        pageStyle: buildPageTopStyle(0),
       });
       this.loadCartData();
 

@@ -142,7 +142,7 @@ Component({
   lifetimes: {
     attached() {
       this.setData({
-        pageStyle: buildPageTopStyle(4),
+        pageStyle: buildPageTopStyle(0),
       });
       (this as any).pollTimer = null;
       (this as any).ignoreNextMessageScroll = false;

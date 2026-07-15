@@ -4,8 +4,8 @@ import { fetchMerchantNotices, type MerchantNotice } from '../../../services/mer
 Page<Record<string, any>, Record<string, any>>({
   data: { pageStyle: '', notices: [] as any[] },
 
-  onLoad() { this.setData({ pageStyle: buildPageTopStyle(8) }); },
-  onShow() { this.setData({ pageStyle: buildPageTopStyle(8) }); this.loadNotices(); },
+  onLoad() { this.setData({ pageStyle: buildPageTopStyle(0) }); },
+  onShow() { this.setData({ pageStyle: buildPageTopStyle(0) }); this.loadNotices(); },
 
   async loadNotices() {
     try {

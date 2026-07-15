@@ -1,11 +1,11 @@
-/* 团长模块统一页面壳：custom 导航 + 安全区 */
+/* 团长模块统一页面壳：与全局导航变量对齐 */
 .leader-page-shell {
   min-height: 100vh;
   height: 100vh;
   background: #f5f7f6;
   display: flex;
   flex-direction: column;
-  padding-top: var(--page-top, 88rpx);
+  padding-top: var(--page-top, var(--page-top-fallback, 48px));
   box-sizing: border-box;
 }
 
@@ -13,9 +13,11 @@
   position: relative;
   display: flex;
   align-items: center;
-  min-height: 88rpx;
-  padding: 4rpx 28rpx 12rpx;
+  height: var(--nav-height, 32px);
+  min-height: var(--nav-height, 32px);
+  padding: 0 28rpx;
   padding-right: calc(28rpx + var(--header-safe-right, 112rpx));
+  margin-bottom: var(--nav-gap-bottom, 12rpx);
   background: #ffffff;
   flex-shrink: 0;
   box-sizing: border-box;
@@ -29,8 +31,8 @@
   position: relative;
   z-index: 2;
   flex-shrink: 0;
-  width: 72rpx;
-  height: 72rpx;
+  width: var(--nav-height, 32px);
+  height: var(--nav-height, 32px);
   border-radius: 50%;
   background: #f5f7f6;
   display: flex;
@@ -43,6 +45,9 @@
 }
 
 .leader-header-title {
+  position: absolute;
+  left: 0;
+  right: 0;
   text-align: center;
   font-size: 34rpx;
   font-weight: 800;
@@ -50,6 +55,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  pointer-events: none;
 }
 
 .leader-page-scroll {

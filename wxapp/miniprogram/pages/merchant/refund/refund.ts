@@ -21,11 +21,11 @@ Page<Record<string, any>, Record<string, any>>({
   },
 
   onLoad(options: Record<string, string>) {
-    this.setData({ pageStyle: buildPageTopStyle(8) });
+    this.setData({ pageStyle: buildPageTopStyle(0) });
     const refundNo = options.refundNo || options.id;
     if (refundNo) { this.setData({ refundNo }); this.loadDetail(refundNo); }
   },
-  onShow() { this.setData({ pageStyle: buildPageTopStyle(8) }); },
+  onShow() { this.setData({ pageStyle: buildPageTopStyle(0) }); },
 
   async loadDetail(refundNo: string) {
     this.setData({ loading: true });

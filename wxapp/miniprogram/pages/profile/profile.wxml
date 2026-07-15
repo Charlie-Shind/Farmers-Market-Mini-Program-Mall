@@ -91,19 +91,20 @@
         <text class="profile-section__title">我的服务</text>
       </view>
       <view class="service-shortcuts">
-        <button
+        <view
           wx:for="{{profile.services || []}}"
           wx:key="key"
           class="service-shortcuts__item"
           data-key="{{item.key}}"
           data-label="{{item.label}}"
           bindtap="openProtectedSection"
+          hover-class="service-shortcuts__item--hover"
         >
           <view class="service-shortcuts__icon service-shortcuts__icon--{{item.key}}">
             <t-icon name="{{item.icon}}" size="48rpx" color="{{item.iconColor}}" strokeWidth="{{2}}"></t-icon>
           </view>
           <text class="service-shortcuts__label">{{item.label}}</text>
-        </button>
+        </view>
       </view>
     </view>
 
@@ -173,6 +174,6 @@
       </view>
     </view>
 
-    <view class="safe-bottom"></view>
+    <view class="tab-bar-placeholder"></view>
   </view>
 </view>

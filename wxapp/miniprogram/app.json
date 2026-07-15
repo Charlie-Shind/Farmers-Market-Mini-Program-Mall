@@ -10,6 +10,7 @@
     "pages/login/login",
     "pages/profile/profile",
     "pages/favorite/list/list",
+    "pages/logs/logs",
     "pages/profile/home/home",
     "pages/profile/edit/edit",
     "pages/profile/contact/contact",
@@ -222,6 +223,10 @@
   "window": {
     "navigationBarTextStyle": "black",
     "navigationStyle": "custom"
+  },
+  "usingComponents": {
+    "page-nav": "/components/base/page-nav/page-nav",
+    "t-icon": "/components/base/t-icon/t-icon"
   },
   "sitemapLocation": "sitemap.json"
 }

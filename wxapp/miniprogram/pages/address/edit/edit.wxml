@@ -1,14 +1,5 @@
 ﻿<view class="phone-page address-edit-page" style="{{pageStyle}}">
-  <!-- Top Navigation Bar -->
-  <view class="board-head">
-    <view class="page-title-bar">
-      <button class="back-btn" bindtap="goBack" hover-class="back-btn--hover">
-        <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
-      </button>
-      <text class="page-title-bar__title">{{addressId ? '编辑收货地址' : '新增收货地址'}}</text>
-      <text></text>
-    </view>
-  </view>
+  <page-nav title="{{addressId ? '编辑收货地址' : '新增收货地址'}}" theme="solid" />
 
   <scroll-view scroll-y="true" class="edit-scroll" enhanced="true" show-scrollbar="{{false}}">
     <!-- Form Panels -->

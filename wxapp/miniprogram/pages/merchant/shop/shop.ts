@@ -30,14 +30,14 @@ Page<Record<string, any>, Record<string, any>>({
 
   onLoad() {
     this.setData({
-      pageStyle: buildPageTopStyle(8),
+      pageStyle: buildPageTopStyle(0),
       canSwitchToUser: getAvailableRoles().includes('USER'),
     });
     this.loadShopData();
   },
 
   onShow() {
-    this.setData({ pageStyle: buildPageTopStyle(8) });
+    this.setData({ pageStyle: buildPageTopStyle(0) });
   },
 
   async loadShopData() {

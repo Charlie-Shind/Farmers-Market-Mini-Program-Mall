@@ -17,8 +17,8 @@ Page<Record<string, any>, Record<string, any>>({
     drafts: [] as any[],
   },
 
-  onLoad() { this.setData({ pageStyle: buildPageTopStyle(8) }); this.loadDrafts(); },
-  onShow() { this.setData({ pageStyle: buildPageTopStyle(8) }); },
+  onLoad() { this.setData({ pageStyle: buildPageTopStyle(0) }); this.loadDrafts(); },
+  onShow() { this.setData({ pageStyle: buildPageTopStyle(0) }); },
 
   async loadDrafts() {
     try {

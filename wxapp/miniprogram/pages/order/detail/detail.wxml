@@ -1,14 +1,5 @@
 ﻿<view class="phone-page order-detail-page" style="{{pageStyle}}">
-  <!-- Top Navigation Bar -->
-  <view class="board-head">
-    <view class="page-title-bar">
-      <button class="back-btn" bindtap="goBack" hover-class="back-btn--hover">
-        <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
-      </button>
-      <text class="page-title-bar__title">订单详情</text>
-      <view class="page-title-bar__spacer"></view>
-    </view>
-  </view>
+  <page-nav title="订单详情" theme="solid" />
 
   <scroll-view scroll-y="true" class="detail-scroll" enhanced="true" show-scrollbar="{{false}}">
     <!-- Status Hero (JD/PDD style) -->

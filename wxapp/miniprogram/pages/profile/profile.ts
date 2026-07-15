@@ -21,7 +21,7 @@ import { maskPhone } from '../../utils/util';
 import { merchantHomeRoute } from '../../config/merchant';
 import { loadProfileDraft } from '../../services/profile';
 import { fetchLeaderApplication } from '../../services/leader';
-import { buildPageHeaderStyle } from '../../utils/page-layout';
+import { buildPageTopStyle } from '../../utils/page-layout';
 
 type ToastType = 'info' | 'success' | 'warning' | 'danger';
 
@@ -227,7 +227,7 @@ Component({
   methods: {
     syncPageLayout() {
       this.setData({
-        pageStyle: buildPageHeaderStyle(20, 16),
+        pageStyle: buildPageTopStyle(0, 16),
       });
     },
     ensureAccess() {
@@ -527,31 +527,32 @@ Component({
         return;
       }
 
-      if (key === 'address') {
+      const go = (url: string) => {
         wx.navigateTo({
-          url: '/pages/address/list/list',
+          url,
+          fail: (err) => {
+            wx.showToast({
+              title: err?.errMsg?.includes('is not found')
+                ? '页面未注册，请重新编译'
+                : '打开失败，请稍后重试',
+              icon: 'none',
+            });
+          },
         });
+      };
+
+      if (key === 'address') {
+        go('/pages/address/list/list');
         return;
       }
 
-      if (key === 'favorite') {
-        wx.navigateTo({
-          url: '/pages/favorite/list/list',
-        });
+      if (key === 'favorite' || key === 'follow') {
+        go('/pages/favorite/list/list');
         return;
       }
 
       if (key === 'history') {
-        wx.navigateTo({
-          url: '/pages/logs/logs',
-        });
-        return;
-      }
-
-      if (key === 'follow') {
-        wx.navigateTo({
-          url: '/pages/favorite/list/list',
-        });
+        go('/pages/logs/logs');
         return;
       }
 
@@ -565,35 +566,27 @@ Component({
       }
 
       if (key === 'feedback') {
-        wx.navigateTo({
-          url: '/pages/profile/feedback/feedback',
-        });
+        go('/pages/profile/feedback/feedback');
         return;
       }
 
       if (['orders', 'pay', 'ship', 'receive', 'comment', 'refund'].includes(key || '')) {
         const orderType = key === 'orders' ? 'all' : key;
-        wx.navigateTo({
-          url: `/pages/order/list/list?type=${orderType}`,
-        });
+        go(`/pages/order/list/list?type=${orderType}`);
         return;
       }
 
       if (key === 'coupon') {
-        wx.navigateTo({
-          url: '/pages/profile/coupons/coupons',
-        });
+        go('/pages/profile/coupons/coupons');
         return;
       }
 
       if (key === 'points') {
-        wx.navigateTo({
-          url: '/pages/marketing/points/exchange',
-        });
+        go('/pages/marketing/points/exchange');
         return;
       }
 
-      wx.navigateTo({ url: '/pages/profile/home/home' });
+      go('/pages/profile/home/home');
     },
     closeSheet() {
       this.setData({

@@ -33,7 +33,7 @@ Component({
   lifetimes: {
     attached() {
       this.setData({
-        pageStyle: buildPageTopStyle(4),
+        pageStyle: buildPageTopStyle(0),
       });
       void this.loadPoints();
     },
@@ -41,7 +41,7 @@ Component({
   pageLifetimes: {
     show() {
       this.setData({
-        pageStyle: buildPageTopStyle(4),
+        pageStyle: buildPageTopStyle(0),
       });
       void this.loadPoints();
     },

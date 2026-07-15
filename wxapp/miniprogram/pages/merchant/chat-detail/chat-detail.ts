@@ -60,7 +60,7 @@ Page<Record<string, any>, Record<string, any>>({
   },
 
   onLoad(options: any) {
-    this.setData({ pageStyle: buildPageTopStyle(8) });
+    this.setData({ pageStyle: buildPageTopStyle(0) });
     if (options.conversationId) {
       this.setData({ conversationId: Number(options.conversationId) });
     }
@@ -92,7 +92,7 @@ Page<Record<string, any>, Record<string, any>>({
   },
 
   onShow() {
-    this.setData({ pageStyle: buildPageTopStyle(8) });
+    this.setData({ pageStyle: buildPageTopStyle(0) });
   },
 
   async loadMessages() {

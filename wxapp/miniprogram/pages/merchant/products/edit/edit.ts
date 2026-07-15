@@ -297,7 +297,7 @@ Component({
       const anchor = normalizeEditAnchor(query.anchor);
 
       this.setData({
-        pageStyle: buildPageTopStyle(4),
+        pageStyle: buildPageTopStyle(0),
         showMoreInfo: false,
         moreInfoFilledCount: 0,
       });

@@ -43,6 +43,22 @@ const QUICK_ENTRY_IMAGE_PATHS = [
   '/assets/quick/4.png',
 ];
 
+type HomeSceneEntryView = {
+  key: string;
+  label: string;
+  icon: string;
+  linkType: string;
+};
+
+/** 第二排场景入口（参考花礼网双排） */
+const SCENE_ENTRIES: HomeSceneEntryView[] = [
+  { key: 'hot', label: '热销榜', icon: 'star', linkType: 'hot' },
+  { key: 'new', label: '新品尝鲜', icon: 'categoryPresale', linkType: 'new' },
+  { key: 'points', label: '积分兑换', icon: 'points', linkType: 'points' },
+  { key: 'category', label: '全部分类', icon: 'category', linkType: 'category' },
+  { key: 'favorite', label: '我的收藏', icon: 'favorite', linkType: 'favorite' },
+];
+
 type RankTabKey = 'sales' | 'new' | 'good';
 
 type RankTabView = {
@@ -113,11 +129,23 @@ function resolveHomeEntryRoute(linkType?: string, _linkId?: number | null, title
   }
 
   if (linkType === 'coupon') {
-    return '/pages/marketing/marketing';
+    return '/pages/profile/coupons/coupons';
   }
 
   if (linkType === 'points') {
-    return '/pages/profile/profile';
+    return '/pages/marketing/points/exchange';
+  }
+
+  if (linkType === 'hot') {
+    return `/pages/product/list/list?title=${encodeURIComponent('热销榜单')}&scene=hot`;
+  }
+
+  if (linkType === 'new') {
+    return `/pages/product/list/list?title=${encodeURIComponent('新品尝鲜')}&scene=new`;
+  }
+
+  if (linkType === 'favorite') {
+    return '/pages/favorite/list/list';
   }
 
   return '';
@@ -144,6 +172,7 @@ Component({
       banners: [] as HomeBannerView[],
       activeBannerIndex: 0,
       quickEntries: [] as HomeQuickEntryView[],
+      sceneEntries: SCENE_ENTRIES,
       recommendations: [] as HomeCardView[],
       rankTabs: RANK_TABS,
       rankDataSets: {} as Record<RankTabKey, HomeRankView[]>,
@@ -167,7 +196,7 @@ Component({
       }
 
       this.setData({
-        pageStyle: buildPageTopStyle(8),
+        pageStyle: buildPageTopStyle(0, 16),
         topSearchStyle: buildHeaderSafeRightStyle(16),
       });
 
@@ -178,7 +207,7 @@ Component({
   pageLifetimes: {
     show() {
       this.setData({
-        pageStyle: buildPageTopStyle(8),
+        pageStyle: buildPageTopStyle(0, 16),
       });
       this.loadHomeData();
       this.syncCartBadge();
@@ -295,11 +324,23 @@ Component({
             locationModeLabel,
             banners: bannerViews,
             activeBannerIndex: 0,
-            quickEntries: quickEntries.map((entry, index) => ({
-              ...entry,
-              label: entry.linkType === 'origin' ? '产地直销' : entry.title,
-              icon: QUICK_ENTRY_IMAGE_PATHS[index] || iconPaths[entry.icon as keyof typeof iconPaths] || iconPaths.flash,
-            })),
+            quickEntries: (() => {
+              const mapped = quickEntries.map((entry, index) => ({
+                ...entry,
+                label: entry.linkType === 'origin' ? '产地直销' : entry.title,
+                icon: QUICK_ENTRY_IMAGE_PATHS[index] || iconPaths[entry.icon as keyof typeof iconPaths] || iconPaths.flash,
+              }));
+              mapped.push({
+                id: -1001,
+                label: '卡券专区',
+                title: '卡券专区',
+                icon: '/assets/quick/5.png',
+                linkType: 'coupon',
+                linkId: null as number | null,
+              });
+              return mapped;
+            })(),
+            sceneEntries: SCENE_ENTRIES,
             recommendations: products.slice(0, 3).map((product, index) => ({
               id: String(product.id),
               skuId: product.skuId,
@@ -349,11 +390,16 @@ Component({
       }) || {};
       const route = resolveHomeEntryRoute(linkType, linkId != null ? Number(linkId) : null, title);
 
-      if (route) {
-        wx.navigateTo({
-          url: route,
-        });
+      if (!route) {
+        return;
       }
+
+      if (linkType === 'category') {
+        wx.switchTab({ url: route });
+        return;
+      }
+
+      wx.navigateTo({ url: route });
     },
     openSection(e: WechatMiniprogram.BaseEvent) {
       const { label, target, scene } = (e.currentTarget.dataset as { label?: string; target?: string; scene?: string }) || {};

@@ -1,30 +1,16 @@
 .zone-page {
-  padding: var(--page-top, 14rpx) 28rpx 44rpx;
+  padding: 0 28rpx 44rpx;
   display: flex;
   flex-direction: column;
   gap: 14rpx;
 }
 
 .zone-head {
-  position: sticky;
-  top: 0;
+  position: relative;
   z-index: 10;
   margin: 0 -28rpx;
-  padding: 0 28rpx 10rpx;
-}
-
-.page-title-bar {
-  height: 64rpx;
-  display: grid;
-  grid-template-columns: 68rpx 1fr 68rpx;
-  align-items: center;
-}
-
-.page-title-bar__title {
-  text-align: center;
-  font-size: 34rpx;
-  font-weight: 800;
-  color: white;
+  padding-left: 28rpx;
+  padding-right: 28rpx;
 }
 
 .head-action {

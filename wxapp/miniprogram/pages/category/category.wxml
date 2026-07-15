@@ -1,13 +1,7 @@
-﻿<view class="phone-page category-page" style="{{pageStyle}}">
-  <view class="board-head">
-    <view class="page-title-bar">
-      <button class="back-btn" bindtap="goBack" hover-class="back-btn--hover">
-        <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
-      </button>
-      <text class="page-title-bar__title">商品分类</text>
-      <text class="page-title-bar__spacer"></text>
-    </view>
+<view class="phone-page category-page" style="{{pageStyle}}">
+  <page-nav title="商品分类" show-back="{{true}}" theme="solid" />
 
+  <view class="category-toolbar-block">
     <view class="search-shell" bindtap="openSearch" hover-class="search-shell--hover">
       <view class="search-box search-box--hero">
         <t-icon name="search" size="42rpx" opacity="0.65" color="#89b99e"></t-icon>
@@ -58,10 +52,6 @@
     </button>
   </view>
 
-      <view class="category-content__title">
-        <text class="category-content__name">{{activeSectionName || '分类栏目'}}</text>
-      </view>
-
       <scroll-view class="category-list" scroll-y enhanced show-scrollbar="{{false}}">
         <view wx:if="{{products.length}}" class="category-list__inner">
           <view
@@ -95,7 +85,7 @@
     </view>
   </view>
 
-  <view class="safe-bottom"></view>
+  <view class="tab-bar-placeholder"></view>
 </view>
 
 <view wx:if="{{showFilterSheet}}" class="filter-mask" catchtap="closeFilterSheet">

@@ -1,11 +1,7 @@
 <view class="phone-page zone-page topic-page" style="{{pageStyle}}">
-  <view class="zone-head">
-    <view class="page-title-bar">
-      <view class="back-btn" hover-class="back-btn--hover" bindtap="goBack">‹</view>
-      <text class="page-title-bar__title">{{pageTitle}}</text>
-      <view class="page-title-bar__action"></view>
-    </view>
+  <page-nav title="{{pageTitle}}" theme="solid" />
 
+  <view class="zone-head">
     <view class="zone-hero zone-hero--origin">
       <text class="zone-hero__eyebrow">Activity Topic</text>
       <text class="zone-hero__title">{{pageTitle}}</text>

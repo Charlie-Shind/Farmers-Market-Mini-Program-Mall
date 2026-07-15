@@ -1,14 +1,5 @@
 ﻿<view class="phone-page profile-edit-page profile-edit-shell" style="{{pageStyle}}">
-  <!-- Top Navigation Bar -->
-  <view class="board-head">
-    <view class="page-title-bar">
-      <view class="back-btn" bindtap="goBack" hover-class="back-btn--hover">
-        <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
-      </view>
-      <text class="page-title-bar__title">修改个人资料</text>
-      <text></text>
-    </view>
-  </view>
+  <page-nav title="修改个人资料" theme="solid" />
 
   <scroll-view scroll-y="true" class="edit-scroll" enhanced="true" show-scrollbar="{{false}}">
     <view class="edit-content-inner">

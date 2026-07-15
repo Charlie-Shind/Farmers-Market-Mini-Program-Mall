@@ -1,13 +1,7 @@
 ﻿<view class="phone-page category-detail-page" style="{{pageStyle}}">
-  <view class="board-head">
-    <view class="page-title-bar">
-      <button class="back-btn" bindtap="goBack" hover-class="back-btn--hover">
-        <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
-      </button>
-      <text class="page-title-bar__title">{{categoryName || '分类商品'}}</text>
-      <text></text>
-    </view>
+  <page-nav title="{{categoryName || '分类商品'}}" theme="solid" />
 
+  <view class="board-head">
     <!-- 次分类筛选标签 -->
     <view class="filter-tabs">
       <view 

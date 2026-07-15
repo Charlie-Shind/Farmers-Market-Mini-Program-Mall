@@ -1,13 +1,5 @@
 ﻿<view class="phone-page search-page" style="{{pageStyle}}">
-  <view class="board-head">
-    <view class="page-title-bar">
-      <button class="back-btn" bindtap="goBack" hover-class="back-btn--hover">
-        <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
-      </button>
-      <text class="page-title-bar__title">{{pageTitle}}</text>
-      <text></text>
-    </view>
-  </view>
+  <page-nav title="{{pageTitle}}" theme="solid" />
 
   <view class="search-landing">
     <view class="panel search-panel">

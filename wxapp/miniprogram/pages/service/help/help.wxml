@@ -1,10 +1,7 @@
 <view class="phone-page help-page" style="{{pageStyle}}">
+  <page-nav title="服务中心" theme="solid" />
+
   <view class="help-head">
-    <view class="page-title-bar">
-      <view class="back-btn" hover-class="back-btn--hover" bindtap="goBack">‹</view>
-      <text class="page-title-bar__title">服务中心</text>
-      <view class="page-title-bar__action"></view>
-    </view>
     <view class="help-hero">
       <text class="help-hero__eyebrow">Support Center</text>
       <text class="help-hero__title">问题直接找平台管理员，不绕路</text>

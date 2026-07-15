@@ -61,8 +61,8 @@ Page<Record<string, any>, Record<string, any>>({
     allOrders: [] as any[],
   },
 
-  onLoad() { this.setData({ pageStyle: buildPageTopStyle(8) }); },
-  onShow() { this.setData({ pageStyle: buildPageTopStyle(8) }); this.loadOrders(); },
+  onLoad() { this.setData({ pageStyle: buildPageTopStyle(0) }); },
+  onShow() { this.setData({ pageStyle: buildPageTopStyle(0) }); this.loadOrders(); },
 
   async loadOrders() {
     this.setData({ loading: true });

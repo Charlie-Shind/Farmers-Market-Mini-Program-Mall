@@ -16,11 +16,11 @@ Page<Record<string, any>, Record<string, any>>({
   },
 
   onLoad(options: Record<string, string>) {
-    this.setData({ pageStyle: buildPageTopStyle(8) });
+    this.setData({ pageStyle: buildPageTopStyle(0) });
     const orderNo = options.orderNo;
     if (orderNo) { this.setData({ orderNo }); this.loadDetail(orderNo); }
   },
-  onShow() { this.setData({ pageStyle: buildPageTopStyle(8) }); },
+  onShow() { this.setData({ pageStyle: buildPageTopStyle(0) }); },
 
   async loadDetail(orderNo: string) {
     this.setData({ loading: true });

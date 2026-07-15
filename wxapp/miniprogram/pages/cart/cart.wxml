@@ -1,39 +1,32 @@
 <view class="phone-page cart-page" style="{{pageStyle}}">
-  <view class="page-title-bar">
-    <view class="page-title-bar__side"></view>
-    <text class="page-title-bar__title">购物车</text>
-    <view class="page-title-bar__side"></view>
-  </view>
+  <page-nav title="购物车" show-back="{{false}}" theme="solid" />
 
-  <view class="cart-edit-row">
-    <button class="cart-edit-btn" data-label="编辑购物车" bindtap="openSection">编辑</button>
-  </view>
-
-  <view class="panel cart-address" data-label="收货地址" bindtap="openSection">
-    <t-icon name="location" size="32rpx"></t-icon>
-    <view>
-      <text class="cart-address__title">{{cart.address.title}}</text>
-      <text class="cart-address__desc">{{cart.address.desc}}</text>
+  <view class="cart-head">
+    <view class="cart-address-card" data-label="收货地址" bindtap="openSection" hover-class="cart-address-card--hover">
+      <view class="cart-address-card__icon">
+        <t-icon name="location" size="36rpx" color="#2c4a39"></t-icon>
+      </view>
+      <view class="cart-address-card__body">
+        <text class="cart-address-card__title">{{cart.address.title}}</text>
+        <text class="cart-address-card__desc">{{cart.address.desc}}</text>
+      </view>
+      <view class="cart-address-card__action">
+        <text>更换</text>
+        <t-icon name="chevronRight" size="22rpx" color="#8a877f"></t-icon>
+      </view>
     </view>
-    <t-icon name="chevronRight" size="24rpx" opacity="0.72"></t-icon>
-  </view>
 
-  <view class="cart-promo" data-label="去凑单" bindtap="openSection">
-    <text class="cart-promo__text">{{cart.promo.text}}</text>
-    <view class="cart-promo__action">
-      <text>{{cart.promo.actionLabel}}</text>
-      <t-icon name="chevronRight" size="24rpx" color="#c67a3c"></t-icon>
+    <view class="cart-freight" data-label="去凑单" bindtap="openSection" hover-class="cart-freight--hover">
+      <view class="cart-freight__badge">运费</view>
+      <text class="cart-freight__text">{{cart.promo.text}}</text>
+      <view class="cart-freight__link">
+        <text>{{cart.promo.actionLabel}}</text>
+        <t-icon name="chevronRight" size="22rpx" color="#c65f2d"></t-icon>
+      </view>
     </view>
   </view>
 
-  <view class="panel">
-    <view class="section-title">
-      <text class="section-title__title">{{cart.shopName}}</text>
-      <button class="section-more" data-label="去凑单" bindtap="openSection">
-        <text>去凑单</text>
-        <t-icon name="chevronRight" size="24rpx" opacity="0.72"></t-icon>
-      </button>
-    </view>
+  <view class="panel cart-goods-panel">
     <block wx:if="{{cart.items.length}}">
       <view wx:for="{{cart.items}}" wx:key="id" class="cart-item">
         <view class="check {{item.checked ? 'check--active' : ''}}" data-cart-id="{{item.id}}" data-checked="{{item.checked}}" bindtap="toggleItem">

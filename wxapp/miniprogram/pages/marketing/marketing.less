@@ -1,6 +1,6 @@
 .mkt-page {
   min-height: 100vh;
-  padding: calc(var(--page-top, 24rpx) + 10rpx) 24rpx 140rpx;
+  padding: 0 24rpx 0;
   box-sizing: border-box;
   --mkt-text: #111111;
   --mkt-muted: #8b8880;
@@ -17,20 +17,6 @@
     radial-gradient(circle at 8% 0%, rgba(216, 169, 120, 0.14), transparent 24%),
     radial-gradient(circle at 92% 8%, rgba(44, 74, 57, 0.06), transparent 20%),
     linear-gradient(180deg, #faf6ee 0%, #f6f1e6 100%);
-}
-
-.page-title-bar {
-  display: grid;
-  grid-template-columns: 88rpx 1fr 88rpx;
-  align-items: center;
-  margin: 0 0 18rpx;
-}
-
-.page-title-bar__title {
-  text-align: center;
-  font-size: 36rpx;
-  font-weight: 900;
-  color: var(--mkt-text);
 }
 
 .mkt-block {
@@ -467,7 +453,7 @@
   border-radius: 20rpx;
   background: var(--mkt-card-solid);
   border: 1rpx solid var(--mkt-line);
-  min-height: 208rpx;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -490,7 +476,7 @@
 }
 
 .pts-item--skel {
-  height: 208rpx;
+  height: 168rpx;
 }
 
 .pts-cover {
@@ -571,10 +557,6 @@
 .pts-btn--lock {
   background: #e7e0d1;
   color: #948f84;
-}
-
-.safe-bottom {
-  height: 120rpx;
 }
 
 @keyframes mkt-shimmer {

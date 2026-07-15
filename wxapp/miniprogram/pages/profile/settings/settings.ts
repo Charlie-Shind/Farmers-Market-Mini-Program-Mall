@@ -15,7 +15,7 @@ Component({
   lifetimes: {
     attached() {
       this.setData({
-        pageStyle: buildPageTopStyle(),
+        pageStyle: buildPageTopStyle(0),
       });
     },
   },

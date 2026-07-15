@@ -27,11 +27,11 @@ Page<Record<string, any>, Record<string, any>>({
   },
 
   onLoad() {
-    this.setData({ pageStyle: buildPageTopStyle(8) });
+    this.setData({ pageStyle: buildPageTopStyle(0) });
   },
 
   onShow() {
-    this.setData({ pageStyle: buildPageTopStyle(8) });
+    this.setData({ pageStyle: buildPageTopStyle(0) });
   },
 
   goBack() {

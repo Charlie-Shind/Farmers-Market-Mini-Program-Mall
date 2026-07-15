@@ -31,12 +31,12 @@ Page<Record<string, any>, Record<string, any>>({
   },
 
   onLoad() {
-    this.setData({ pageStyle: buildPageTopStyle(8) });
+    this.setData({ pageStyle: buildPageTopStyle(0) });
     this.loadNotices(true);
   },
 
   onShow() {
-    this.setData({ pageStyle: buildPageTopStyle(8) });
+    this.setData({ pageStyle: buildPageTopStyle(0) });
   },
 
   async loadNotices(reset = true) {

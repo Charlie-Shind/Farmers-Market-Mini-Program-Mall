@@ -34,7 +34,7 @@ Page<Record<string, any>, Record<string, any>>({
   },
 
   onLoad(options: Record<string, string>) {
-    this.setData({ pageStyle: buildPageTopStyle(8) });
+    this.setData({ pageStyle: buildPageTopStyle(0) });
     const productId = Number(options.productId) || 0;
     if (productId) {
       this.setData({ productId });
@@ -43,7 +43,7 @@ Page<Record<string, any>, Record<string, any>>({
   },
 
   onShow() {
-    this.setData({ pageStyle: buildPageTopStyle(8) });
+    this.setData({ pageStyle: buildPageTopStyle(0) });
     // 从 publish-sku 回传的数据会通过 prev.setData 注入，这里读取
     this.refreshSkuSummary();
   },

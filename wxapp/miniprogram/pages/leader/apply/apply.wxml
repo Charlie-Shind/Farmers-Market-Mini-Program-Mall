@@ -1,13 +1,5 @@
 ﻿<view class="phone-page leader-apply-page" style="{{pageStyle}}">
-  <view class="board-head">
-    <view class="page-title-bar">
-      <view class="back-btn" bindtap="goBack" hover-class="back-btn--hover">
-        <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
-      </view>
-      <text class="page-title-bar__title">社区团长申请</text>
-      <text></text>
-    </view>
-  </view>
+  <page-nav title="社区团长申请" theme="solid" />
 
   <scroll-view scroll-y="true" class="apply-scroll leader-page-scroll" enhanced="true" show-scrollbar="{{false}}">
     <view class="apply-content-inner">

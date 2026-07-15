@@ -29,22 +29,6 @@
       {
         "type": "file",
         "value": "config/env.config.example.js"
-      },
-      {
-        "type": "file",
-        "value": "pages/logs/logs.ts"
-      },
-      {
-        "type": "file",
-        "value": "pages/logs/logs.wxml"
-      },
-      {
-        "type": "file",
-        "value": "pages/logs/logs.less"
-      },
-      {
-        "type": "file",
-        "value": "pages/logs/logs.json"
       }
     ],
     "include": []

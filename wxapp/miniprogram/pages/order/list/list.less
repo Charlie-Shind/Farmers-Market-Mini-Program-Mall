@@ -1,35 +1,10 @@
 .order-list-page {
-  padding: var(--page-top, 24rpx) 32rpx 140rpx;
+  padding: 0 32rpx 140rpx;
   background-color: #fbf8ef;
   min-height: 100vh;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-}
-
-.board-head {
-  position: sticky;
-  top: 0;
-  margin: 0 -32rpx;
-  padding: 0 32rpx 12rpx;
-  background: linear-gradient(180deg, #fbf8ef 0%, rgba(251, 248, 239, 0.96) 76%, rgba(251, 248, 239, 0) 100%);
-  z-index: 10;
-}
-
-.page-title-bar {
-  height: 104rpx;
-  display: grid;
-  grid-template-columns: 88rpx 1fr 88rpx;
-  align-items: center;
-  position: relative;
-  z-index: 2;
-}
-
-.page-title-bar__title {
-  text-align: center;
-  font-size: 36rpx;
-  font-weight: 900;
-  color: #111;
 }
 
 /* Tabs */
@@ -87,7 +62,7 @@
 .orders-scroll {
   flex: 1;
   min-height: 0;
-  height: calc(100vh - 104rpx - 100rpx - var(--page-top, 24rpx) - 100rpx);
+  height: calc(100vh - var(--page-top, 48px) - var(--nav-height, 44px) - 100rpx - 100rpx);
 }
 
 .scroll-spacer {

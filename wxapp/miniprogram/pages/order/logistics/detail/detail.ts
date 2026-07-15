@@ -115,7 +115,7 @@ Page({
   },
   onLoad(options) {
     this.setData({
-      pageStyle: buildPageTopStyle(4),
+      pageStyle: buildPageTopStyle(0),
     });
 
     const orderNo = options.orderNo || '';

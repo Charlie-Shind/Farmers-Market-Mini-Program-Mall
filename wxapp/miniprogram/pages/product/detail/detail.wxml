@@ -1,204 +1,139 @@
 <view class="phone-page detail-page" style="{{pageStyle}}">
-  <scroll-view scroll-y="true" class="detail-scroll" enhanced="true" show-scrollbar="{{false}}" bindscroll="onPageScroll">
-    <view class="hero-shell">
+  <scroll-view scroll-y="true" class="detail-scroll" enhanced="true" show-scrollbar="{{false}}">
+    <!-- 主图轮播 -->
+    <view class="pdd-gallery">
       <image-adaptive-nav
         image-url="{{currentMediaUrl}}"
         bind:back="goBack"
         bind:share="shareProduct"
       ></image-adaptive-nav>
-      <view class="media-banner">
-        <swiper class="banner-swiper" circular="true" indicator-dots="{{false}}" bindchange="onBannerChange">
-          <swiper-item wx:for="{{mediaList}}" wx:key="index" class="banner-slide">
-            <image wx:if="{{item.kind === 'image'}}" class="banner-media" src="{{item.src}}" mode="aspectFill"></image>
-            <video
-              wx:else
-              class="banner-media"
-              src="{{item.src}}"
-              poster="{{item.poster}}"
-              controls="true"
-              show-play-btn="true"
-            ></video>
-          </swiper-item>
-        </swiper>
-        <view class="banner-indicator" wx:if="{{bannerTotal > 1}}">
-          <text>{{bannerIndex + 1}}/{{bannerTotal}}</text>
-        </view>
+      <swiper class="pdd-gallery__swiper" circular="{{bannerTotal > 1}}" indicator-dots="{{false}}" bindchange="onBannerChange">
+        <swiper-item wx:for="{{mediaList}}" wx:key="index">
+          <image wx:if="{{item.kind === 'image'}}" class="pdd-gallery__media" src="{{item.src}}" mode="aspectFill"></image>
+          <video
+            wx:else
+            class="pdd-gallery__media"
+            src="{{item.src}}"
+            poster="{{item.poster}}"
+            controls="true"
+            show-play-btn="true"
+          ></video>
+        </swiper-item>
+      </swiper>
+      <view class="pdd-gallery__index" wx:if="{{bannerTotal > 0}}">
+        <text>{{bannerIndex + 1}}/{{bannerTotal}}</text>
       </view>
     </view>
 
-    <view class="product-info-panel">
-      <view class="price-row">
-        <view class="price-box">
-          <text class="price-symbol">¥</text>
-          <view class="price-value">
-            <text class="price-value__integer">{{displayPriceInteger}}</text>
-            <text class="price-value__fraction" wx:if="{{displayPriceFraction}}">.{{displayPriceFraction}}</text>
-          </view>
-          <text class="price-original" wx:if="{{displayOriginalPrice}}">¥{{displayOriginalPrice}}</text>
+    <!-- 价格卡 -->
+    <view class="pdd-price-card">
+      <view class="pdd-price-card__main">
+        <view class="pdd-price">
+          <text class="pdd-price__symbol">¥</text>
+          <text class="pdd-price__int">{{displayPriceInteger}}</text>
+          <text class="pdd-price__frac" wx:if="{{displayPriceFraction}}">.{{displayPriceFraction}}</text>
         </view>
+        <text class="pdd-price__origin" wx:if="{{displayOriginalPrice}}">¥{{displayOriginalPrice}}</text>
+        <text class="pdd-price__sales">{{displaySalesText}}</text>
       </view>
-
-      <view class="product-title-row">
-        <text class="product-title">{{product.title}}</text>
-        <text class="tag-badge pre-sale" wx:if="{{product.isPreSale}}">预售</text>
+      <view class="pdd-title-row">
+        <text class="pdd-badge" wx:if="{{product.isPreSale}}">预售</text>
+        <text class="pdd-title">{{product.title}}</text>
       </view>
-
-      <view class="product-tag-row" wx:if="{{coreTags && coreTags.length}}">
-        <text class="product-tag-chip" wx:for="{{coreTags}}" wx:key="index">{{item}}</text>
-      </view>
-
-    </view>
-
-    <view class="stats-bar">
-      <text class="stats-bar__sales">{{displaySalesText}}</text>
-      <button class="stats-bar__favorite {{product.isFavorite ? 'stats-bar__favorite--active' : ''}}" bindtap="toggleFavorite">
-        <t-icon name="favorite" size="42rpx" color="{{product.isFavorite ? '#C35B27' : '#000000'}}"></t-icon>
-        <text class="stats-bar__favorite-text">{{product.isFavorite ? '已收藏' : '收藏'}}</text>
-      </button>
-    </view>
-
-    <view class="story-card">
-      <view class="section-head">
-        <text class="section-head__title"></text>
-      </view>
-
-      <view class="video-card" wx:if="{{product.videos && product.videos.length}}" bindtap="playStoryVideo">
-        <view class="video-card__thumb">
-          <image
-            class="video-card__video"
-            src="{{product.videos[0].coverUrl || heroImageUrl || product.coverUrl}}"
-            mode="aspectFill"
-          ></image>
-          <view class="video-card__overlay">
-            <view class="video-card__play">
-              <t-icon name="play" size="26rpx"></t-icon>
-            </view>
-            <text class="video-card__time">{{product.videos[0].duration || '01:28'}}</text>
-          </view>
-        </view>
-        <view class="video-card__body">
-          <text class="video-card__title">产地实拍</text>
-          <text class="video-card__desc">带你看见好产品</text>
-        </view>
-      </view>
-
-      <view class="badge-row">
-        <view wx:for="{{storyBadges}}" wx:key="key" class="badge-pill">
-          <view class="badge-pill__icon">
-            <t-icon name="{{item.icon}}" size="24rpx" color="#fff"></t-icon>
-          </view>
-          <view class="badge-pill__copy">
-            <text class="badge-pill__title">{{item.title}}</text>
-            <text class="badge-pill__desc">{{item.desc}}</text>
-          </view>
-        </view>
+      <text class="pdd-subtitle" wx:if="{{product.subtitle}}">{{product.subtitle}}</text>
+      <view class="pdd-tags" wx:if="{{coreTags && coreTags.length}}">
+        <text class="pdd-tag" wx:for="{{coreTags}}" wx:key="*this">{{item}}</text>
       </view>
     </view>
 
-    <view class="spec-card" wx:if="{{product.skus && product.skus.length}}">
-      <view class="section-head">
-        <view class="section-head__title-wrap">
-          <text class="section-head__title">规格选择</text>
-          <text class="section-head__subtitle">选择合适的包装 / 组合</text>
-        </view>
-        <text class="section-head__more">{{product.skus.length}} 款</text>
-      </view>
+    <!-- 选择规格 -->
+    <view class="pdd-cell" wx:if="{{product.skus && product.skus.length}}" bindtap="openSkuDrawerForCart">
+      <text class="pdd-cell__label">选择</text>
+      <text class="pdd-cell__value">{{selectedSku ? selectedSku.skuName : '请选择规格'}}</text>
+      <t-icon name="chevronRight" size="24rpx" color="#bbb"></t-icon>
+    </view>
 
-      <view class="spec-grid">
-        <button
-          wx:for="{{product.skus}}"
-          wx:key="id"
-          class="spec-chip {{selectedSku && selectedSku.id === item.id ? 'spec-chip--active' : ''}}"
-          data-index="{{index}}"
-          bindtap="selectSku"
-        >
-          <text class="spec-chip__title">{{item.skuName}}</text>
-          <text wx:if="{{item.specSummary}}" class="spec-chip__sub">{{item.specSummary}}</text>
-        </button>
+    <!-- 服务保障 -->
+    <view class="pdd-cell pdd-cell--service" wx:if="{{storyBadges && storyBadges.length}}">
+      <text class="pdd-cell__label">服务</text>
+      <view class="pdd-service-list">
+        <text class="pdd-service-item" wx:for="{{storyBadges}}" wx:key="key">{{item.title}}</text>
       </view>
     </view>
 
-    <!--
-    <view class="trace-panel" wx:if="{{product.traceInfo}}">
-      <view class="section-head section-head--compact">
-        <view class="section-head__title-wrap">
-          <text class="section-head__title">一键溯源</text>
-          <text class="section-head__subtitle">一品一码，来源清晰</text>
-        </view>
-        <text class="trace-badge">一品一码</text>
-      </view>
-      <view class="trace-body">
-        <view class="trace-qr-row">
-          <image class="trace-qr-img" src="{{traceQrUrl}}" mode="aspectFit" wx:if="{{traceQrUrl}}"></image>
-        </view>
-        <text class="trace-code">溯源码：{{product.traceInfo.traceCode}}</text>
-        <text class="trace-desc">{{product.traceInfo.traceDesc}}</text>
-      </view>
-      <view class="trace-actions">
-        <button class="trace-btn trace-btn--ghost" plain="true" bindtap="scanTraceCode">扫码查询其他溯源码</button>
-        <button class="trace-btn" plain="true" bindtap="viewTraceUrl">查看当前商品溯源详情</button>
-      </view>
-    </view>
-    -->
-
-    <view class="detail-desc-panel">
-      <view class="section-head section-head--compact">
-        <view class="section-head__title-wrap">
-          <text class="section-head__title">商品介绍</text>
-          <text class="section-head__subtitle">把细节说清楚</text>
-        </view>
-      </view>
-      <view class="detail-desc-content">
-        <text class="desc-text" wx:if="{{product.detailDesc}}">{{product.detailDesc}}</text>
-        <view wx:else class="empty-desc">商家暂无补充说明，新鲜原产地，美味直达。</view>
-      </view>
+    <!-- 产地 -->
+    <view class="pdd-cell" wx:if="{{product.originPlace}}">
+      <text class="pdd-cell__label">产地</text>
+      <text class="pdd-cell__value">{{product.originPlace}}</text>
     </view>
 
-    <view class="merchant-info-panel" wx:if="{{product.merchant}}">
-      <view class="section-head section-head--compact">
-        <view class="section-head__title-wrap">
-          <text class="section-head__title">店铺信息</text>
-          <text class="section-head__subtitle">去了解商家更多</text>
-        </view>
+    <!-- 店铺 -->
+    <view class="pdd-shop" wx:if="{{product.merchant}}" bindtap="openStoreInfo">
+      <view class="pdd-shop__avatar">
+        <image
+          class="pdd-shop__logo"
+          src="{{product.merchant.storeLogo || icons.defaultAvatar}}"
+          mode="aspectFill"
+        ></image>
       </view>
-      <view class="merchant-card">
-        <view class="merchant-avatar">
-          <image wx:if="{{product.merchant.storeLogo}}" class="merchant-avatar-img" src="{{product.merchant.storeLogo}}" mode="aspectFill"></image>
-          <image wx:else class="merchant-avatar-img merchant-avatar-img--placeholder" name="defaultAvatar" mode="aspectFill"></image>
-        </view>
-        <view class="merchant-body">
-          <text class="merchant-name">{{product.merchant.storeName || '本店商家'}}</text>
-          <text class="merchant-contact">{{product.merchant.contactName || '优质商家'}}</text>
-        </view>
-        <button class="merchant-contact-btn" bindtap="contactMerchant">联系客服</button>
+      <view class="pdd-shop__info">
+        <text class="pdd-shop__name">{{product.merchant.storeName || '本店商家'}}</text>
+        <text class="pdd-shop__desc">{{product.merchant.contactName || '产地直采优选好店'}}</text>
+      </view>
+      <view class="pdd-shop__btn" catchtap="contactMerchant">进店</view>
+    </view>
+
+    <!-- 商品详情 -->
+    <view class="pdd-detail">
+      <view class="pdd-detail__head">
+        <view class="pdd-detail__line"></view>
+        <text class="pdd-detail__title">商品详情</text>
+        <view class="pdd-detail__line"></view>
+      </view>
+      <text class="pdd-detail__text" wx:if="{{product.detailDesc}}">{{product.detailDesc}}</text>
+      <text class="pdd-detail__empty" wx:else>商家暂未补充图文详情</text>
+      <view class="pdd-detail__images" wx:if="{{product.images && product.images.length}}">
+        <image
+          wx:for="{{product.images}}"
+          wx:key="*this"
+          class="pdd-detail__img"
+          src="{{item}}"
+          mode="widthFix"
+        ></image>
       </view>
     </view>
 
-    <view class="scroll-spacer"></view>
+    <view class="pdd-bottom-space"></view>
   </scroll-view>
 
-  <view class="bottom-action-bar">
-    <view class="bar-left-actions">
-      <button class="action-icon-btn" bindtap="contactMerchant">
-        <t-icon name="support" size="34rpx"></t-icon>
-        <text class="action-label">官方客服</text>
-      </button>
-      <button class="action-icon-btn" bindtap="openStoreInfo">
-        <t-icon name="shop" size="34rpx"></t-icon>
-        <text class="action-label">店铺</text>
-      </button>
-      <button class="action-icon-btn" bindtap="navToCart">
-        <t-icon name="cart" size="44rpx"></t-icon>
-        <text class="action-label">购物车</text>
-        <text class="badge" wx:if="{{cartCount > 0}}">{{cartCount}}</text>
-      </button>
+  <!-- 底部操作栏 -->
+  <view class="pdd-bar">
+    <view class="pdd-bar__icons">
+      <view class="pdd-bar__icon" bindtap="contactMerchant">
+        <t-icon name="support" size="40rpx" color="#333"></t-icon>
+        <text>客服</text>
+      </view>
+      <view class="pdd-bar__icon" bindtap="openStoreInfo">
+        <t-icon name="shop" size="40rpx" color="#333"></t-icon>
+        <text>店铺</text>
+      </view>
+      <view class="pdd-bar__icon" bindtap="toggleFavorite">
+        <t-icon name="favorite" size="40rpx" color="{{product.isFavorite ? '#e02e24' : '#333'}}"></t-icon>
+        <text>{{product.isFavorite ? '已收藏' : '收藏'}}</text>
+      </view>
+      <view class="pdd-bar__icon" bindtap="navToCart">
+        <t-icon name="cart" size="40rpx" color="#333"></t-icon>
+        <text>购物车</text>
+        <text class="pdd-bar__badge" wx:if="{{cartCount > 0}}">{{cartCount}}</text>
+      </view>
     </view>
-    <view class="bar-right-buttons">
-      <button class="add-to-cart-btn" bindtap="openSkuDrawerForCart">加入购物车</button>
-      <button class="buy-now-btn" bindtap="openSkuDrawerForBuy">立即购买</button>
+    <view class="pdd-bar__actions">
+      <button class="pdd-bar__cart" bindtap="openSkuDrawerForCart">加入购物车</button>
+      <button class="pdd-bar__buy" bindtap="openSkuDrawerForBuy">立即购买</button>
     </view>
   </view>
 
+  <!-- 规格弹层 -->
   <view class="custom-sheet-mask {{activeSheet ? 'custom-sheet-mask--show' : ''}}" bindtap="closeSheet" catchtouchmove="preventTouchMove">
     <view class="custom-sheet {{activeSheet ? 'custom-sheet--show' : ''}}" catchtap="preventBubble">
       <view class="sheet-header">
@@ -223,7 +158,13 @@
         <view class="spec-section">
           <text class="spec-title">规格</text>
           <view class="spec-list spec-list--sheet">
-            <button wx:for="{{product.skus || []}}" wx:key="id" class="spec-btn {{selectedSku && selectedSku.id === item.id ? 'spec-btn--active' : ''}}" data-index="{{index}}" bindtap="selectSku">
+            <button
+              wx:for="{{product.skus || []}}"
+              wx:key="id"
+              class="spec-btn {{selectedSku && selectedSku.id === item.id ? 'spec-btn--active' : ''}}"
+              data-index="{{index}}"
+              bindtap="selectSku"
+            >
               <view class="spec-btn__main">
                 <text>{{item.skuName}}</text>
                 <text wx:if="{{item.specSummary}}" class="spec-btn__sub">{{item.specSummary}}</text>

@@ -22,7 +22,7 @@ import { buildPageTopStyle } from '../../utils/page-layout';
 import { ensureCustomerAccess, navigateBackOrHome } from '../../utils/auth-route';
 import { loadSelectedLocation } from '../../services/location';
 
-// ─── types ────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 type CouponView = {
   id: string;
@@ -44,7 +44,7 @@ type FlashView = {
   discount: string;
   imageStyle: string;
   stockLeft: number;
-  stockProgress: number;  // 0‒100
+  stockProgress: number;  // 0â€’100
 };
 
 type GroupView = {
@@ -70,7 +70,7 @@ type PointsView = {
   imageStyle: string;
 };
 
-// ─── helpers ──────────────────────────────────────────────────────────────────
+// â”€â”€â”€ helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function pad(n: number) { return String(n).padStart(2, '0'); }
 
@@ -101,7 +101,7 @@ function splitCountdown(value: string): [string, string, string] {
 
 function formatExpire(expireAt: string): string {
   const diff = new Date(expireAt).getTime() - Date.now();
-  if (isNaN(diff) || diff <= 0) return '已结束';
+  if (isNaN(diff) || diff <= 0) return 'å·²ç»“æ�Ÿ';
   const h = Math.floor(diff / 3_600_000);
   const m = Math.floor((diff % 3_600_000) / 60_000);
   if (h >= 24) return `${Math.floor(h / 24)} 天后`;
@@ -240,7 +240,7 @@ Component({
 
   lifetimes: {
     attached() {
-      this.setData({ pageStyle: buildPageTopStyle(4) });
+      this.setData({ pageStyle: buildPageTopStyle(0) });
       void this.loadAll();
       void this.syncCartBadge();
     },
@@ -251,7 +251,7 @@ Component({
 
   pageLifetimes: {
     show() {
-      this.setData({ pageStyle: buildPageTopStyle(4) });
+      this.setData({ pageStyle: buildPageTopStyle(0) });
       void this.loadAll();
       void this.syncCartBadge();
 
@@ -557,7 +557,7 @@ Component({
               fail: () => wx.showModal({
                 title: '需要定位权限',
                 content: '请在设置中授权小程序使用位置信息',
-                confirmText: '去设置',
+                confirmText: 'åŽ»è®¾ç½®',
                 success: (mr) => { if (mr.confirm) wx.openSetting(); },
               }),
             });

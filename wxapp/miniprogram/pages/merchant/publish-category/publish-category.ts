@@ -23,12 +23,12 @@ Page<Record<string, any>, Record<string, any>>({
   },
 
   onLoad() {
-    this.setData({ pageStyle: buildPageTopStyle(8) });
+    this.setData({ pageStyle: buildPageTopStyle(0) });
     this.loadCategories();
   },
 
   onShow() {
-    this.setData({ pageStyle: buildPageTopStyle(8) });
+    this.setData({ pageStyle: buildPageTopStyle(0) });
   },
 
   async loadCategories() {

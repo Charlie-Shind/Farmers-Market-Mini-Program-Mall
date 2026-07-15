@@ -1,0 +1,30 @@
+<view class="page-nav page-nav--{{theme}}">
+  <view
+    class="page-nav__fixed"
+    style="padding-top: {{statusBarHeight}}px; padding-right: {{safeRight}}px;"
+  >
+    <view class="page-nav__bar" style="height: {{navBarHeight}}px;">
+      <view class="page-nav__side page-nav__side--left">
+        <button
+          wx:if="{{showBack}}"
+          class="page-nav__back"
+          bindtap="onBack"
+          hover-class="page-nav__back--hover"
+          aria-role="button"
+          aria-label="返回"
+        >
+          <t-icon name="back" size="40rpx" color="{{iconColor}}"></t-icon>
+        </button>
+      </view>
+      <text class="page-nav__title">{{title}}</text>
+      <view class="page-nav__side page-nav__side--right">
+        <slot name="right"></slot>
+      </view>
+    </view>
+  </view>
+  <view
+    wx:if="{{placeholder}}"
+    class="page-nav__placeholder"
+    style="height: {{totalHeight}}px;"
+  ></view>
+</view>

@@ -18,8 +18,8 @@ Page<Record<string, any>, Record<string, any>>({
     products: [] as any[],
   },
 
-  onLoad() { this.setData({ pageStyle: buildPageTopStyle(8) }); this.loadCandidates(); },
-  onShow() { this.setData({ pageStyle: buildPageTopStyle(8) }); },
+  onLoad() { this.setData({ pageStyle: buildPageTopStyle(0) }); this.loadCandidates(); },
+  onShow() { this.setData({ pageStyle: buildPageTopStyle(0) }); },
 
   async loadCandidates() {
     try {

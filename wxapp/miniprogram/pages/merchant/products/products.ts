@@ -52,9 +52,9 @@ Page<Record<string, any>, Record<string, any>>({
     draftCount: 0,
   },
 
-  onLoad() { this.setData({ pageStyle: buildPageTopStyle(8) }); },
+  onLoad() { this.setData({ pageStyle: buildPageTopStyle(0) }); },
   onShow() {
-    this.setData({ pageStyle: buildPageTopStyle(8) });
+    this.setData({ pageStyle: buildPageTopStyle(0) });
     this.loadProducts();
     this.updateDraftCount();
   },

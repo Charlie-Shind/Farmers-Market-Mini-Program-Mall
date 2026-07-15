@@ -104,7 +104,7 @@ Page<Record<string, any>, Record<string, any>>({
     this._startIndices = startIdx;
     this._endIndices = endIdx;
     this.setData({
-      pageStyle: buildPageTopStyle(8),
+      pageStyle: buildPageTopStyle(0),
       startTimeRange: [range.years, range.months, range.days, range.hours, range.minutes],
       endTimeRange: [range.years, range.months, range.days, range.hours, range.minutes],
       startTimeText: formatTimeFromRange(range, startIdx),
@@ -113,7 +113,7 @@ Page<Record<string, any>, Record<string, any>>({
   },
 
   onShow() {
-    this.setData({ pageStyle: buildPageTopStyle(8) });
+    this.setData({ pageStyle: buildPageTopStyle(0) });
     const selected = wx.getStorageSync('merchant_activity_selected_product');
     if (selected && selected.id) {
       this.setData({

@@ -1,14 +1,5 @@
 ﻿<view class="phone-page order-list-page" style="{{pageStyle}}">
-  <!-- Top Navigation Bar -->
-  <view class="board-head">
-    <view class="page-title-bar">
-      <button class="back-btn" bindtap="goBack" hover-class="back-btn--hover">
-        <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
-      </button>
-      <text class="page-title-bar__title">我的订单</text>
-      <text></text>
-    </view>
-  </view>
+  <page-nav title="我的订单" theme="solid" />
 
   <!-- Status Tabs -->
   <view class="tabs-wrap">

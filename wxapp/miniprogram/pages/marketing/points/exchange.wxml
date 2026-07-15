@@ -1,11 +1,5 @@
 ﻿<view class="phone-page points-page" style="{{pageStyle}}">
-  <view class="page-title-bar">
-    <view class="back-btn" bindtap="goBack" hover-class="back-btn--hover">
-      <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
-    </view>
-    <text class="page-title-bar__title">积分兑换</text>
-    <text></text>
-  </view>
+  <page-nav title="积分兑换" theme="solid" />
 
   <view class="points-summary panel">
     <view class="points-summary__left">

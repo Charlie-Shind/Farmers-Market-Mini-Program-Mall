@@ -1,68 +1,33 @@
 .history-page {
-  padding: var(--page-top, 0rpx) 0 0;
+  padding: 0;
   background: #ededed;
   min-height: 100vh;
   box-sizing: border-box;
 }
 
-.board-head {
-  position: sticky;
-  top: 0;
-  padding: 0 28rpx 8rpx;
-  background: #ededed;
-  z-index: 20;
-}
-
-.page-title-bar {
-  height: 68rpx;
-  display: grid;
-  grid-template-columns: 68rpx 1fr 132rpx;
-  align-items: center;
-}
-
-.page-title-bar__title {
-  text-align: center;
-  font-size: 34rpx;
-  font-weight: 800;
-  color: #111;
-  letter-spacing: 1rpx;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.page-title-bar__spacer {
-  width: 132rpx;
-  height: 1rpx;
-}
-
-.back-btn,
 .read-btn {
   margin: 0;
-  padding: 0;
+  padding: 0 8rpx;
   border: none;
   box-sizing: border-box;
-}
-
-.back-btn::after,
-.read-btn::after {
-  border: none;
-}
-
-.read-btn {
-  justify-self: end;
-  width: 132rpx;
+  width: auto;
+  min-width: 120rpx;
   height: 64rpx;
   line-height: 64rpx;
   color: #2c4a39;
   font-size: 24rpx;
   font-weight: 700;
   text-align: right;
+  background: transparent;
+}
+
+.read-btn::after {
+  border: none;
 }
 
 .history-scroll {
   width: 100%;
-  height: calc(100vh - var(--page-top, 0rpx) - 112rpx);
+  height: calc(100vh - var(--page-top, 48px) - var(--nav-height, 44px));
 }
 
 .history-list {

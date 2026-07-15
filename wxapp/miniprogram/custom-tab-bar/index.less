@@ -6,7 +6,7 @@
   z-index: 80;
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  height: calc(112rpx + env(safe-area-inset-bottom));
+  height: calc(var(--tab-bar-height, 112rpx) + env(safe-area-inset-bottom));
   padding: 8rpx 24rpx env(safe-area-inset-bottom);
   box-sizing: border-box;
   background: rgba(255, 255, 255, 0.94);

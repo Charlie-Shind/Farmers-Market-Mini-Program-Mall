@@ -1,19 +1,10 @@
 <view class="leader-dashboard-page" style="{{pageStyle}}">
+  <page-nav title="团长工作台" theme="transparent" placeholder="{{false}}" />
+
   <view class="dashboard-header">
     <image class="dashboard-header__bg" src="/assets/images/leader/leader-header-bg.jpg" mode="aspectFill"></image>
     <view class="dashboard-header__mask"></view>
     <view class="dashboard-header__content">
-    <view class="header-top">
-      <view class="header-icon-btn" bindtap="goBack">
-        <t-icon name="chevronLeft" size="40rpx" color="#ffffff"></t-icon>
-      </view>
-      <view class="header-title">
-        <text class="title-main">团长工作台</text>
-        <text class="title-sub">社区自提 · 轻松赚佣</text>
-      </view>
-      <view class="header-spacer"></view>
-    </view>
-
     <view class="overview-card">
       <view class="overview-main">
         <view class="overview-item">

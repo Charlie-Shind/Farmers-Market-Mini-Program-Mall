@@ -1,5 +1,5 @@
 import { iconPaths } from '../../../config/icons';
-import { buildPageHeaderStyle } from '../../../utils/page-layout';
+import { buildPageTopStyle } from '../../../utils/page-layout';
 import { buildLoginUrl } from '../../../utils/auth-route';
 import { getAuthTokenType } from '../../../services/token';
 import { fetchLeaderDashboard, fetchMyPickupPoint, type LeaderDashboard } from '../../../services/leader';
@@ -61,7 +61,7 @@ Component({
   lifetimes: {
     attached() {
       this.setData({
-        pageStyle: buildPageHeaderStyle(8),
+        pageStyle: buildPageTopStyle(0),
       });
       this.loadData();
     },

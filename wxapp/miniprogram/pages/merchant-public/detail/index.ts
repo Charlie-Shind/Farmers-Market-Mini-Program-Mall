@@ -53,7 +53,7 @@ Component({
       }
 
       this.setData({
-        pageStyle: buildPageTopStyle(4),
+        pageStyle: buildPageTopStyle(0),
       });
     },
   },

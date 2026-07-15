@@ -1,13 +1,5 @@
 <view class="phone-page zone-page zone-page--group-list" style="{{pageStyle}}">
-  <view class="zone-head">
-    <view class="page-title-bar">
-      <button class="back-btn" bindtap="goBack" hover-class="back-btn--hover">
-        <t-icon name="back" size="40rpx" color="#ffffff"></t-icon>
-      </button>
-      <text class="page-title-bar__title">{{pageTitle}}</text>
-      <view class="head-action"></view>
-    </view>
-  </view>
+  <page-nav title="{{pageTitle}}" theme="solid" />
 
   <view wx:if="{{products.length}}" class="product-list">
     <view

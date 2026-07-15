@@ -1,14 +1,5 @@
 <view class="phone-page settings-page" style="{{pageStyle}}">
-  <!-- Top Navigation Title Bar -->
-  <view class="board-head">
-    <view class="page-title-bar">
-      <button class="back-btn" bindtap="goBack" hover-class="back-btn--hover">
-        <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
-      </button>
-      <text class="page-title-bar__title">设置</text>
-      <view class="page-title-bar__spacer"></view>
-    </view>
-  </view>
+  <page-nav title="设置" theme="solid" />
 
   <view class="settings-content">
     <!-- Main Settings List -->

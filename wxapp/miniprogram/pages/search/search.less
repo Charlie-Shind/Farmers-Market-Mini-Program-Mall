@@ -1,19 +1,20 @@
 .search-page {
-  min-height: 100vh;
   height: 100vh;
+  max-height: 100vh;
   display: flex;
   flex-direction: column;
   background: #fafaf7;
-  padding-top: var(--page-top, 88rpx);
+  padding-top: var(--page-top, 88px);
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 .search-header {
   display: flex;
   align-items: center;
   gap: 16rpx;
+  width: 100%;
   padding: 8rpx 24rpx 20rpx;
-  padding-right: calc(24rpx + var(--header-safe-right, 112rpx));
   background: #fafaf7;
   flex-shrink: 0;
   box-sizing: border-box;

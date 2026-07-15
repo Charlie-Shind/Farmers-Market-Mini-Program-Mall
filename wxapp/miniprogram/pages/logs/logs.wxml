@@ -1,14 +1,10 @@
 <view class="phone-page history-page" style="{{pageStyle}}">
-  <view class="history-head">
-    <view class="page-title-bar">
-      <view class="back-btn" hover-class="back-btn--hover" bindtap="goBack">‹</view>
-      <text class="page-title-bar__title">浏览历史</text>
-      <view class="page-title-bar__action" hover-class="page-title-bar__action--hover" bindtap="openClearSheet">清空</view>
-    </view>
-    <view class="history-summary">
-      <text class="history-summary__title">今天浏览</text>
-      <text class="history-summary__desc">{{history.items.length}} 条记录</text>
-    </view>
+  <page-nav title="浏览历史" theme="solid">
+    <view slot="right" class="nav-clear-btn" hover-class="nav-clear-btn--hover" bindtap="openClearSheet">清空</view>
+  </page-nav>
+  <view class="history-summary">
+    <text class="history-summary__title">今天浏览</text>
+    <text class="history-summary__desc">{{history.items.length}} 条记录</text>
   </view>
 
   <view wx:if="{{history.items.length}}" class="history-list">

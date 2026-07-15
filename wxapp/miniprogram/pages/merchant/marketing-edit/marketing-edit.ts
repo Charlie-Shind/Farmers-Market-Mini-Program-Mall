@@ -53,7 +53,7 @@ Page<Record<string, any>, Record<string, any>>({
   },
 
   onLoad(options: Record<string, string>) {
-    this.setData({ pageStyle: buildPageTopStyle(8) });
+    this.setData({ pageStyle: buildPageTopStyle(0) });
     // 默认时间：今天 + 7 天
     const now = new Date();
     const pad2 = (n: number) => String(n).padStart(2, '0');
@@ -70,7 +70,7 @@ Page<Record<string, any>, Record<string, any>>({
   },
 
   onShow() {
-    this.setData({ pageStyle: buildPageTopStyle(8) });
+    this.setData({ pageStyle: buildPageTopStyle(0) });
     const selected = wx.getStorageSync('merchant_activity_selected_product');
     if (selected && selected.id) {
       this.setData({

@@ -1,19 +1,13 @@
 <view class="phone-page history-page" style="{{pageStyle}}">
-  <view class="board-head">
-    <view class="page-title-bar">
-      <button class="back-btn" bindtap="goBack" hover-class="back-btn--hover">
-        <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
-      </button>
-      <text class="page-title-bar__title">消息</text>
-      <button
-        wx:if="{{totalUnread > 0}}"
-        class="read-btn"
-        bindtap="clearUnread"
-        disabled="{{loadingAction}}"
-      >全部已读</button>
-      <text wx:else class="page-title-bar__spacer"></text>
-    </view>
-  </view>
+  <page-nav title="消息" theme="solid">
+    <button
+      wx:if="{{totalUnread > 0}}"
+      slot="right"
+      class="read-btn"
+      bindtap="clearUnread"
+      disabled="{{loadingAction}}"
+    >全部已读</button>
+  </page-nav>
 
   <scroll-view
     scroll-y="true"

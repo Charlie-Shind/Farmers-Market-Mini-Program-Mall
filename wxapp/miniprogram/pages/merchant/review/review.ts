@@ -25,8 +25,8 @@ Page<Record<string, any>, Record<string, any>>({
     filteredList: [] as any[],
   },
 
-  onLoad() { this.setData({ pageStyle: buildPageTopStyle(8) }); },
-  onShow() { this.setData({ pageStyle: buildPageTopStyle(8) }); this.loadData(); },
+  onLoad() { this.setData({ pageStyle: buildPageTopStyle(0) }); },
+  onShow() { this.setData({ pageStyle: buildPageTopStyle(0) }); this.loadData(); },
 
   async loadData() {
     try {

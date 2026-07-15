@@ -1,19 +1,11 @@
 <view class="phone-page zone-page zone-page--group" style="{{pageStyle}}">
+  <page-nav title="{{pageTitle}}" theme="transparent" />
+
   <view class="group-hero-bg">
-    <image class="group-hero-bg__img" src="/assets/images/Gemini_Generated_Image_ftx25lftx25lftx2.png" mode="widthFix"/>
+    <image class="group-hero-bg__img" src="/assets/images/group/group-hero.jpg" mode="aspectFill"/>
     <view class="group-hero-bg__mask"></view>
   </view>
   <view class="group-hero">
-    <view class="zone-head">
-      <view class="page-title-bar">
-        <button class="back-btn" bindtap="goBack" hover-class="back-btn--hover">
-          <t-icon name="back" size="40rpx" color="#ffffff"></t-icon>
-        </button>
-        <text class="page-title-bar__title">{{pageTitle}}</text>
-        <view class="head-action"></view>
-      </view>
-    </view>
-
     <view class="group-hero-content">
       <view class="group-hero-title">
         <view>{{group ? '邀请好友拼团' : '立即拼团'}}</view>

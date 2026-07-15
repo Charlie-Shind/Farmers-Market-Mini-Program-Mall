@@ -1,32 +1,9 @@
 .favorite-list-page {
-  padding: var(--page-top, 24rpx) 32rpx 44rpx;
+  padding: 0 32rpx 44rpx;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
   box-sizing: border-box;
-}
-
-.board-head {
-  position: sticky;
-  top: 0;
-  margin: 0 -32rpx;
-  padding: 0 32rpx 24rpx;
-  background: linear-gradient(180deg, #fbf8ef 0%, rgba(251, 248, 239, 0.96) 76%, rgba(251, 248, 239, 0) 100%);
-  z-index: 10;
-}
-
-.page-title-bar {
-  height: 104rpx;
-  display: grid;
-  grid-template-columns: 88rpx 1fr 88rpx;
-  align-items: center;
-}
-
-.page-title-bar__title {
-  text-align: center;
-  font-size: 36rpx;
-  font-weight: 900;
-  color: #111;
 }
 
 .list-meta {
@@ -223,6 +200,8 @@
 
 .empty-icon-box {
   margin-bottom: 20rpx;
+  display: flex;
+  justify-content: center;
 }
 
 .empty-text {

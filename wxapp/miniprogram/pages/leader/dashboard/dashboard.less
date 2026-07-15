@@ -5,13 +5,12 @@
   background: #f5f7f6;
   display: flex;
   flex-direction: column;
-  padding-top: var(--page-top, 88rpx);
   box-sizing: border-box;
 }
 
 .dashboard-header {
   position: relative;
-  padding: 12rpx 28rpx 40rpx;
+  padding: calc(var(--page-top, 48px) + var(--nav-height, 44px) + 12rpx) 28rpx 40rpx;
   overflow: hidden;
 }
 
@@ -35,60 +34,11 @@
   z-index: 2;
 }
 
-.header-top {
-  position: relative;
-  display: flex;
-  align-items: center;
-  min-height: 88rpx;
-  padding-right: var(--header-safe-right, 112rpx);
-}
-
-.header-title {
-  position: absolute;
-  left: 88rpx;
-  right: calc(88rpx + var(--header-safe-right, 112rpx));
-  display: flex;
-  flex-direction: column;
-  gap: 4rpx;
-  align-items: center;
-  text-align: center;
-  min-width: 0;
-  pointer-events: none;
-}
-
-.header-spacer {
-  display: none;
-}
-
-.title-main {
-  font-size: 36rpx;
-  font-weight: 900;
-  color: #ffffff;
-}
-
-.title-sub {
-  font-size: 22rpx;
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.header-icon-btn {
-  position: relative;
-  z-index: 2;
-  flex-shrink: 0;
-  width: 72rpx;
-  height: 72rpx;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.15);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .overview-card {
   background: #ffffff;
   border-radius: 28rpx;
   padding: 32rpx;
-  margin-top: 20rpx;
+  margin-top: 0;
   box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.08);
 }
 

@@ -2440,6 +2440,14 @@ export class PlatformDataService {
     return createHash('sha256').update(password).digest('hex');
   }
 
+  private resolvePasswordHash(password: string, passwordHashed = false): string {
+    const value = String(password ?? '').trim();
+    if (passwordHashed || /^[a-f0-9]{64}$/i.test(value)) {
+      return value.toLowerCase();
+    }
+    return this.hashPassword(value);
+  }
+
   async ensureUser(authUser: AuthUser) {
     if (!authUser || !this.isUserFacingRole(authUser.role)) {
       throw new UnauthorizedException('Admin session cannot access user data');
@@ -7734,6 +7742,7 @@ export class PlatformDataService {
 
     const username = String(body.username ?? '').trim();
     const password = String(body.password ?? '');
+    const passwordHashed = Boolean(body.passwordHashed);
     const captchaId = String(body.captchaId ?? '').trim();
     const captchaCode = String(body.captchaCode ?? '').trim();
 
@@ -7745,7 +7754,7 @@ export class PlatformDataService {
       throw this.adminAuthSecurityService.buildInvalidCaptchaError();
     }
 
-    const passwordHash = this.hashPassword(password);
+    const passwordHash = this.resolvePasswordHash(password, passwordHashed);
     const admin = await this.prisma.adminUser.findFirst({
       where: {
         username,
@@ -7984,6 +7993,7 @@ export class PlatformDataService {
     const nickname = String(body.nickname ?? '').trim();
     const mobile = String(body.mobile ?? '').trim();
     const password = String(body.password ?? '').trim();
+    const passwordHashed = Boolean(body.passwordHashed);
     const roleCodes = this.normalizeAdminRoleCodes(body.roleCodes ?? body.roleCode ?? 'ADMIN');
 
     if (!username) {
@@ -8017,7 +8027,7 @@ export class PlatformDataService {
         username,
         nickname,
         mobile: mobile || null,
-        passwordHash: this.hashPassword(password),
+        passwordHash: this.resolvePasswordHash(password, passwordHashed),
         status: 1,
       },
     });
@@ -8130,6 +8140,7 @@ export class PlatformDataService {
     await this.withSeed();
 
     const password = String(body.password ?? '').trim();
+    const passwordHashed = Boolean(body.passwordHashed);
     if (!password) {
       throw new BadRequestException('Password is required');
     }
@@ -8142,7 +8153,7 @@ export class PlatformDataService {
 
     await this.prisma.adminUser.update({
       where: { id },
-      data: { passwordHash: this.hashPassword(password) },
+      data: { passwordHash: this.resolvePasswordHash(password, passwordHashed) },
     });
 
     await this.recordAdminOperation(authUser, 'RESET_ADMIN_PASSWORD', '平台账号', id, {

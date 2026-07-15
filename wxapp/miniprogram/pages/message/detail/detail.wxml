@@ -1,13 +1,5 @@
 ﻿<view class="phone-page message-detail-page" style="{{pageStyle}}">
-  <view class="board-head">
-    <view class="page-title-bar">
-      <button class="back-btn" bindtap="goBack" hover-class="back-btn--hover">
-        <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
-      </button>
-      <text class="page-title-bar__title">公告详情</text>
-      <text></text>
-    </view>
-  </view>
+  <page-nav title="公告详情" theme="solid" />
 
   <view wx:if="{{message}}" class="detail-card">
     <view class="detail-hero {{toneClass}}">

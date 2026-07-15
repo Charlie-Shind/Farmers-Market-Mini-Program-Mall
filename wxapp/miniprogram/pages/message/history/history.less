@@ -1,44 +1,13 @@
 .history-page {
-  padding: var(--page-top, 0rpx) 0 0;
+  padding: 0;
   background: #ededed;
   min-height: 100vh;
   box-sizing: border-box;
 }
 
-.board-head {
-  position: sticky;
-  top: 0;
-  padding: 0 28rpx 8rpx;
-  background: #ededed;
-  z-index: 20;
-}
-
-.page-title-bar {
-  height: 68rpx;
-  display: grid;
-  grid-template-columns: 68rpx 1fr 68rpx;
-  align-items: center;
-}
-
-.page-title-bar__title {
-  text-align: center;
-  font-size: 34rpx;
-  font-weight: 800;
-  color: #111;
-  letter-spacing: 1rpx;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.page-title-bar__spacer {
-  width: 68rpx;
-  height: 1rpx;
-}
-
 .history-scroll {
   width: 100%;
-  height: calc(100vh - var(--page-top, 0rpx) - 112rpx);
+  height: calc(100vh - var(--page-top, 48px) - var(--nav-height, 44px));
 }
 
 .history-list {

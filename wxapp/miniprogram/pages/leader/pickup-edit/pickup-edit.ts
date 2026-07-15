@@ -1,6 +1,6 @@
 import { iconPaths } from '../../../config/icons';
 import { upload } from '../../../services/request';
-import { buildPageHeaderStyle } from '../../../utils/page-layout';
+import { buildPageTopStyle } from '../../../utils/page-layout';
 import { buildLoginUrl, navigateBackOrHome } from '../../../utils/auth-route';
 import { getAuthTokenType } from '../../../services/token';
 import { fetchMyPickupPoint, saveMyPickupPoint } from '../../../services/leader';
@@ -34,7 +34,7 @@ Component({
   lifetimes: {
     attached() {
       this.setData({
-        pageStyle: buildPageHeaderStyle(8),
+        pageStyle: buildPageTopStyle(0),
       });
       if (!this.ensureAccess()) {
         return;

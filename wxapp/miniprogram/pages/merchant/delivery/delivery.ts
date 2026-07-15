@@ -26,8 +26,8 @@ Page<Record<string, any>, Record<string, any>>({
     activeSheet: '',
   },
 
-  onLoad() { this.setData({ pageStyle: buildPageTopStyle(8) }); this.loadSettings(); },
-  onShow() { this.setData({ pageStyle: buildPageTopStyle(8) }); },
+  onLoad() { this.setData({ pageStyle: buildPageTopStyle(0) }); this.loadSettings(); },
+  onShow() { this.setData({ pageStyle: buildPageTopStyle(0) }); },
 
   async loadSettings() {
     try {

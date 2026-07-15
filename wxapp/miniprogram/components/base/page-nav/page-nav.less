@@ -1,0 +1,161 @@
+.page-nav {
+  position: relative;
+  z-index: 100;
+  width: 100%;
+}
+
+.page-nav__fixed {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  // box-sizing: border-box;
+  width: 100%;
+}
+
+.page-nav__bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  padding: 0 16rpx;
+}
+
+.page-nav__side {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  min-width: 88rpx;
+  min-height: 64rpx;
+}
+
+.page-nav__side--left {
+  justify-content: flex-start;
+}
+
+.page-nav__side--right {
+  justify-content: flex-end;
+  flex: 0 1 auto;
+}
+
+.page-nav__title {
+  position: absolute;
+  left: 120rpx;
+  right: 120rpx;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+  text-align: center;
+  font-size: 34rpx;
+  font-weight: 800;
+  letter-spacing: 0.5rpx;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.page-nav__back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64rpx;
+  height: 64rpx;
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: 50%;
+  box-sizing: border-box;
+  appearance: none;
+  -webkit-appearance: none;
+  overflow: hidden;
+}
+
+.page-nav__back::after {
+  border: none;
+}
+
+.page-nav__back--hover {
+  opacity: 0.72;
+}
+
+.page-nav__placeholder {
+  width: 100%;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+/* solid：白底黑字 */
+.page-nav--solid .page-nav__fixed {
+  background: rgba(255, 255, 255, 0.96);
+  border-bottom: 1rpx solid rgba(41, 73, 54, 0.06);
+  backdrop-filter: blur(16px);
+}
+
+.page-nav--solid .page-nav__title {
+  color: #111111;
+}
+
+.page-nav--solid .page-nav__back {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+/* transparent：透明显示在头图上 */
+.page-nav--transparent .page-nav__fixed {
+  background: transparent;
+  border-bottom: none;
+}
+
+.page-nav--transparent .page-nav__title {
+  color: #ffffff;
+  text-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.28);
+}
+
+.page-nav--transparent .page-nav__back {
+  background: rgba(0, 0, 0, 0.28);
+}
+
+/* dark：深色标题区 */
+.page-nav--dark .page-nav__fixed {
+  background: rgba(17, 17, 17, 0.92);
+  border-bottom: none;
+  backdrop-filter: blur(16px);
+}
+
+.page-nav--dark .page-nav__title {
+  color: #ffffff;
+}
+
+.page-nav--dark .page-nav__back {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+/* 右侧插槽操作按钮（分享等） */
+.page-nav-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64rpx;
+  height: 64rpx;
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.06);
+  box-sizing: border-box;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.page-nav-action::after {
+  border: none;
+}
+
+.page-nav--transparent .page-nav-action,
+.page-nav--dark .page-nav-action {
+  background: rgba(255, 255, 255, 0.2);
+}

@@ -1,3 +1,5 @@
+import { sha256Hex } from '@/utils/crypto';
+
 type QueryValue = string | number | boolean | null | undefined;
 
 type QueryParams = Record<string, QueryValue>;
@@ -397,6 +399,7 @@ export async function login(
   captchaId: string,
   captchaCode: string,
 ) {
+  const passwordHash = await sha256Hex(password);
   const data = await request<{
     accessToken: string;
     role: string;
@@ -406,7 +409,13 @@ export async function login(
     accountNo: string;
   }>('/auth/login', {
     method: 'POST',
-    body: JSON.stringify({ username, password, captchaId, captchaCode }),
+    body: JSON.stringify({
+      username,
+      password: passwordHash,
+      passwordHashed: true,
+      captchaId,
+      captchaCode,
+    }),
   });
 
   localStorage.setItem('farm-admin-token', data.accessToken);
@@ -1026,9 +1035,14 @@ export async function createAdminAccount(payload: {
   password: string;
   roleCodes: string[];
 }) {
+  const passwordHash = await sha256Hex(payload.password);
   return request<AdminAccountRow>('/admin-accounts', {
     method: 'POST',
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      ...payload,
+      password: passwordHash,
+      passwordHashed: true,
+    }),
   });
 }
 
@@ -1048,9 +1062,10 @@ export async function updateAdminAccount(
 }
 
 export async function resetAdminPassword(adminUserId: number, password: string) {
+  const passwordHash = await sha256Hex(password);
   return request<{ success: boolean }>(`/admin-accounts/${adminUserId}/reset-password`, {
     method: 'POST',
-    body: JSON.stringify({ password }),
+    body: JSON.stringify({ password: passwordHash, passwordHashed: true }),
   });
 }
 

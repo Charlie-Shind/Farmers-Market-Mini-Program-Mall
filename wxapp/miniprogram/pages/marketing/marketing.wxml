@@ -1,11 +1,5 @@
-﻿<view class="phone-page mkt-page" style="{{pageStyle}}">
-  <view class="page-title-bar">
-    <view class="back-btn" bindtap="goBack" hover-class="back-btn--hover">
-      <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
-    </view>
-    <text class="page-title-bar__title">营销中心</text>
-    <text></text>
-  </view>
+<view class="phone-page mkt-page" style="{{pageStyle}}">
+  <page-nav title="营销中心" show-back="{{true}}" theme="solid" />
 
   <view class="panel mkt-block">
     <view class="section-title">
@@ -189,5 +183,5 @@
     </view>
   </view>
 
-  <view class="safe-bottom"></view>
+  <view class="tab-bar-placeholder"></view>
 </view>

@@ -1,13 +1,5 @@
 ﻿<view class="phone-page profile-support-page" style="{{pageStyle}}">
-  <view class="board-head">
-    <view class="page-title-bar">
-      <button class="back-btn" plain="true" bindtap="goBack" hover-class="back-btn--hover">
-        <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
-      </button>
-      <text class="page-title-bar__title">联系客服</text>
-      <text></text>
-    </view>
-  </view>
+  <page-nav title="联系客服" theme="solid" />
 
   <view class="support-content">
     <view class="support-card support-card--hero">

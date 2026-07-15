@@ -1,14 +1,14 @@
 .profile-page {
   min-height: 100vh;
   background: #f4f6f4;
-  padding-bottom: 152rpx;
+  padding-bottom: 0;
   box-sizing: border-box;
 }
 
 /* ========== 顶部 Header ========== */
 .profile-header {
   position: relative;
-  padding: calc(var(--header-content-top, var(--page-top, 68rpx)) + -71rpx) 28rpx 0;
+  padding: calc(var(--page-top, 48px) + 30px) 28rpx 0;
   overflow: hidden;
   box-sizing: border-box;
 }
@@ -27,7 +27,7 @@
   position: relative;
   z-index: 2;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12rpx;
   margin-bottom: 32rpx;
 }
@@ -36,8 +36,18 @@
   flex: 1;
   min-width: 0;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 20rpx;
+}
+
+.profile-header__meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+  padding-top: 37rpx;
+  box-sizing: border-box;
 }
 
 .profile-header__avatar-wrap {
@@ -72,14 +82,6 @@
   box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.12);
 }
 
-.profile-header__meta {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10rpx;
-}
-
 .profile-header__name {
   font-size: 40rpx;
   font-weight: 900;
@@ -99,9 +101,11 @@
 .profile-header__actions {
   flex: 0 0 auto;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   gap: 20rpx;
   padding-left: 8rpx;
+  padding-top: 75rpx;
+  box-sizing: border-box;
 }
 
 .profile-header__tool {
@@ -355,6 +359,7 @@
   border-radius: 16rpx;
 }
 
+.service-shortcuts__item--hover,
 .service-shortcuts__item:active {
   background: rgba(44, 74, 57, 0.04);
 }
@@ -501,10 +506,6 @@
 
 .promo-card__btn--ghost text {
   color: #fff;
-}
-
-.safe-bottom {
-  height: 120rpx;
 }
 
 button::after {
