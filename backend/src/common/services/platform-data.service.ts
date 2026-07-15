@@ -2441,7 +2441,7 @@ export class PlatformDataService {
   }
 
   async ensureUser(authUser: AuthUser) {
-    if (!this.isUserFacingRole(authUser.role)) {
+    if (!authUser || !this.isUserFacingRole(authUser.role)) {
       throw new UnauthorizedException('Admin session cannot access user data');
     }
 

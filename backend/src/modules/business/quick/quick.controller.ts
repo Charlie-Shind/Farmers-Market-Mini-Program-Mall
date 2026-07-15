@@ -5,21 +5,23 @@ import { RoleCode } from '../../../common/enums/role.enum';
 import { AuthUser } from '../../../common/types';
 import { PlatformDataService } from '../../../common/services/platform-data.service';
 
-@Public()
 @Controller('app/quick')
 export class QuickZoneController {
   constructor(private readonly platformDataService: PlatformDataService) {}
 
+  @Public()
   @Get('flash-sale/active')
   flashSaleActive() {
     return this.platformDataService.getQuickFlashSaleActive();
   }
 
+  @Public()
   @Get('flash-sale/windows')
   flashSaleWindows() {
     return this.platformDataService.getQuickFlashSaleWindows();
   }
 
+  @Public()
   @Get('flash-sale/items')
   flashSaleItems(@Query() query: Record<string, string>) {
     return this.platformDataService.getQuickFlashSaleItems(query);
@@ -34,6 +36,7 @@ export class QuickZoneController {
     });
   }
 
+  @Public()
   @Post('group-buy/nearby')
   groupBuyNearby(@Body() body: Record<string, unknown>) {
     return this.platformDataService.getQuickGroupBuyNearby({
@@ -45,6 +48,7 @@ export class QuickZoneController {
     });
   }
 
+  @Public()
   @Get('group-buy/products')
   groupBuyProducts(@Query() query: Record<string, string>) {
     return this.platformDataService.getQuickGroupBuyProducts(query);
@@ -62,6 +66,7 @@ export class QuickZoneController {
     });
   }
 
+  @Public()
   @Get('gift-zone/items')
   giftZoneItems(@Query() query: Record<string, string>) {
     return this.platformDataService.getQuickGiftZoneItems({
@@ -71,6 +76,7 @@ export class QuickZoneController {
     });
   }
 
+  @Public()
   @Get('origin-zone/items')
   originZoneItems(@Query() query: Record<string, string>) {
     return this.platformDataService.getQuickOriginZoneItems({
