@@ -1,4 +1,5 @@
 import { get, post } from './request';
+import { fetchOrders } from './app';
 
 export type FlashSaleStatus = 'ONGOING' | 'UPCOMING' | 'ENDED';
 
@@ -136,15 +137,138 @@ export async function fetchGroupBuyNearby(
   return post<GroupBuyNearbyResult>('/app/quick/group-buy/nearby', options);
 }
 
+export type GroupBuyJoinResult = {
+  groupId: number;
+  groupNo: string;
+  inviteCode?: string | null;
+  productId: number;
+  skuId?: number;
+  title: string;
+  coverUrl: string;
+  roughArea: string;
+  memberCount: number;
+  needed: number;
+  groupPrice: string;
+  originPrice: string;
+  expireAt: string;
+  status: 'OPEN' | 'COMPLETED' | 'FAILED';
+  isNewGroup: boolean;
+  /** 若该用户此前已为该团创建过未支付订单，这里会带回订单号，前端应引导续付而不是重新下单 */
+  pendingOrderNo: string | null;
+  /** 该用户已经是这个团的付费成员（重复点击"正在拼团"的同一个团） */
+  alreadyJoined: boolean;
+  /** alreadyJoined 为 true 时，对应的已支付订单号，前端应跳转订单详情查看拼团进度 */
+  orderNo: string | null;
+};
+
+/**
+ * 开团/参团校验接口。
+ * 注意：调用本接口【不会】占用成团名额，只有真正下单并支付成功才会计入成团人数。
+ */
 export async function joinGroupBuy(payload: { productId: number; skuId?: number; groupId?: number; lat?: number; lng?: number }) {
-  return post<{
-    groupId?: number;
-    groupBuyId?: number;
-    productId: number;
-    skuId?: number;
-    inviteCode?: string | null;
-    status?: string;
-  }>('/app/quick/group-buy/join', payload, { auth: true });
+  return post<GroupBuyJoinResult>('/app/quick/group-buy/join', payload, { auth: true });
+}
+
+/** 是否为「已在该团中」类错误（兼容尚未部署新后端的旧接口文案） */
+export function isAlreadyJoinedGroupError(err: unknown): boolean {
+  const message = String((err as { message?: string })?.message || '');
+  return message.includes('你已在该团中') || message.includes('已在该团');
+}
+
+/**
+ * 已参团时跳转进度页：优先订单详情（含拼团进度），找不到订单则去「我的拼团」。
+ * 兼容旧后端仍返回「你已在该团中」400、且尚未部署 /mine 接口的情况。
+ */
+export async function navigateToJoinedGroupProgress(options: {
+  groupId?: number | string | null;
+  orderNo?: string | null;
+}) {
+  const orderNo = String(options.orderNo || '').trim();
+  if (orderNo) {
+    wx.navigateTo({ url: `/pages/order/detail/detail?orderNo=${encodeURIComponent(orderNo)}` });
+    return;
+  }
+
+  const groupId = Number(options.groupId || 0);
+  if (groupId > 0) {
+    // 1) 新接口：我的拼团
+    try {
+      const mine = await fetchMyGroupBuys();
+      const matched = (mine.items || []).find((item) => Number(item.groupId) === groupId);
+      const targetOrderNo = String(matched?.orderNo || matched?.pendingOrderNo || '').trim();
+      if (targetOrderNo) {
+        wx.navigateTo({ url: `/pages/order/detail/detail?orderNo=${encodeURIComponent(targetOrderNo)}` });
+        return;
+      }
+    } catch {
+      // ignore
+    }
+
+    // 2) 兼容旧后端：从订单列表里按 groupBuyId 找
+    try {
+      const orders = await fetchOrders({ page: 1, pageSize: 50 });
+      const matchedOrder = (orders.items || []).find((item) => Number(item.groupBuyId || 0) === groupId);
+      const targetOrderNo = String(matchedOrder?.orderNo || '').trim();
+      if (targetOrderNo) {
+        wx.navigateTo({ url: `/pages/order/detail/detail?orderNo=${encodeURIComponent(targetOrderNo)}` });
+        return;
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  wx.navigateTo({ url: '/pages/order/list/list' });
+}
+
+export type GroupBuyDetail = {
+  groupId: number;
+  groupNo: string;
+  inviteCode?: string | null;
+  productId: number;
+  skuId?: number;
+  title: string;
+  coverUrl: string;
+  roughArea: string;
+  memberCount: number;
+  needed: number;
+  expireAt: string;
+  completedAt: string | null;
+  groupPrice: string;
+  originPrice: string;
+  status: 'OPEN' | 'COMPLETED' | 'FAILED';
+};
+
+/** 拼团详情：用于分享参团链接 / 邀请码落地页 */
+export async function fetchGroupBuyDetail(options: { groupId?: number; inviteCode?: string }) {
+  return get<GroupBuyDetail>('/app/quick/group-buy/detail', options as any);
+}
+
+export type MyGroupBuyItem = {
+  groupId: number;
+  groupNo: string;
+  inviteCode?: string | null;
+  productId: number;
+  skuId?: number;
+  title: string;
+  coverUrl: string;
+  status: 'OPEN' | 'COMPLETED' | 'FAILED';
+  needed: number;
+  memberCount: number;
+  isInitiator: boolean;
+  isPaidMember: boolean;
+  needsPayment: boolean;
+  orderNo: string | null;
+  pendingOrderNo: string | null;
+  groupPrice: string;
+  originPrice: string;
+  expireAt: string;
+  completedAt: string | null;
+};
+
+/** 我的拼团列表：我发起或已付款参加过的团 */
+export async function fetchMyGroupBuys() {
+  return get<{ items: MyGroupBuyItem[] }>('/app/quick/group-buy/mine', undefined, { auth: true });
 }
 
 export async function claimFlashSale(payload: { itemId: number; quantity?: number }) {

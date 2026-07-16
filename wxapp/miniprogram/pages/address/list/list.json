@@ -1,5 +1,7 @@
 {
+  "disableScroll": true,
   "usingComponents": {
-    "t-icon": "../../../components/base/t-icon/t-icon"
+    "t-icon": "../../../components/base/t-icon/t-icon",
+    "page-nav": "/components/base/page-nav/page-nav"
   }
 }

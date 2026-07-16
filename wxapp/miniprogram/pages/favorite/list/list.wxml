@@ -1,4 +1,4 @@
-﻿<view class="phone-page favorite-list-page" style="{{pageStyle}}">
+<view class="phone-page favorite-list-page" style="{{pageStyle}}">
   <page-nav title="我的收藏" theme="solid" />
 
   <view class="list-meta">
@@ -11,36 +11,45 @@
   <scroll-view class="favorite-scroll" scroll-y="true" enhanced="true" show-scrollbar="{{false}}" bindscrolltolower="loadMore">
     <view wx:if="{{favorites.length}}" class="favorite-list">
       <view wx:for="{{favorites}}" wx:key="favoriteId" class="favorite-card">
-        <image
-          wx:if="{{item.coverUrl}}"
-          class="favorite-img"
-          src="{{item.coverUrl}}"
-          mode="aspectFill"
-          data-product-id="{{item.productId}}"
-          bindtap="openProductDetail"
-        ></image>
-        <view
-          wx:else
-          class="favorite-img favorite-img--empty"
-          data-product-id="{{item.productId}}"
-          bindtap="openProductDetail"
-        >
-          暂无封面
-        </view>
-        <view class="favorite-body">
-          <view class="favorite-top">
-            <text class="favorite-title">{{item.title}}</text>
-            <text wx:if="{{item.isPreSale}}" class="favorite-badge">预售</text>
+        <view class="favorite-card__media" data-product-id="{{item.productId}}" bindtap="openProductDetail">
+          <image
+            wx:if="{{item.coverUrl}}"
+            class="favorite-card__img"
+            src="{{item.coverUrl}}"
+            mode="aspectFill"
+          ></image>
+          <view wx:else class="favorite-card__img favorite-card__img--empty">
+            <t-icon name="image" size="40rpx" color="#b9ac8c"></t-icon>
           </view>
-          <text class="favorite-subtitle">{{item.subtitle || item.originPlace || '已收藏的优选好货'}}</text>
-          <text class="favorite-store">{{item.storeName}}</text>
-          <text class="favorite-time">收藏于 {{item.createdAtLabel}}</text>
-          <view class="favorite-footer">
-            <text class="favorite-price">¥{{item.minPrice}}</text>
-            <view class="favorite-actions">
-              <button class="favorite-action favorite-action--ghost" plain="true" data-product-id="{{item.productId}}" catchtap="removeFavoriteItem">取消收藏</button>
-              <button class="favorite-action favorite-action--solid" data-product-id="{{item.productId}}" catchtap="openProductDetail">查看商品</button>
+          <text wx:if="{{item.isPreSale}}" class="favorite-card__badge">预售</text>
+        </view>
+
+        <view class="favorite-card__body">
+          <view class="favorite-card__top">
+            <text class="favorite-card__title">{{item.title}}</text>
+            <view class="favorite-card__unfav" data-product-id="{{item.productId}}" catchtap="removeFavoriteItem" hover-class="favorite-card__unfav--hover">
+              <t-icon name="favorite" size="26rpx" color="#c65f2d"></t-icon>
             </view>
+          </view>
+          <text class="favorite-card__subtitle">{{item.subtitle || item.originPlace || '已收藏的优选好货'}}</text>
+
+          <view class="favorite-card__meta">
+            <view class="favorite-card__meta-item">
+              <t-icon name="shop" size="20rpx" color="#8a877f"></t-icon>
+              <text>{{item.storeName}}</text>
+            </view>
+            <view class="favorite-card__meta-item">
+              <t-icon name="history" size="20rpx" color="#8a877f"></t-icon>
+              <text>{{item.createdAtLabel}}</text>
+            </view>
+          </view>
+
+          <view class="favorite-card__footer">
+            <text class="favorite-card__price">¥{{item.minPrice}}</text>
+            <button class="favorite-card__btn" data-product-id="{{item.productId}}" bindtap="openProductDetail">
+              <text>查看商品</text>
+              <t-icon name="chevronRight" size="20rpx" color="#ffffff"></t-icon>
+            </button>
           </view>
         </view>
       </view>
@@ -54,10 +63,9 @@
       <text class="empty-sub">遇到喜欢的农产品，先收藏起来更方便回看</text>
     </view>
 
-    <view wx:if="{{favorites.length}}" class="load-more-area">
+    <view wx:if="{{favorites.length && (loadingMore || noMore)}}" class="load-more-area">
       <text wx:if="{{loadingMore}}" class="load-more-area__text">正在继续加载…</text>
-      <text wx:elif="{{noMore}}" class="load-more-area__text">已经到底了</text>
-      <view wx:else class="load-more-area__button">下滑加载更多</view>
+      <text wx:else class="load-more-area__text">已经到底了</text>
     </view>
 
     <view class="safe-bottom"></view>

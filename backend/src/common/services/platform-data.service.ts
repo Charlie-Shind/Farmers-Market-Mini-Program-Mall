@@ -3017,7 +3017,13 @@ export class PlatformDataService {
     const mobile = await this.wechatAuthService.resolveWechatPhoneNumberForLogin(phoneCode);
     const session = await this.wechatAuthService.resolveWechatCodeSession(loginCode);
     const openid = session.openid;
-    const user = await this.prisma.user.findUnique({ where: { openid } });
+    let user = await this.prisma.user.findUnique({ where: { openid } });
+
+    // 开发态或异常情况下，login 与 bind 可能短暂拿不到同一用户；
+    // 找不到时按 openid 自动建号，避免 phone-bind 直接 404。
+    if (!user) {
+      user = await this.upsertWechatUser({ loginCode, nickName: '微信用户' });
+    }
 
     if (!user) {
       throw new NotFoundException('User not found');
@@ -4704,6 +4710,9 @@ export class PlatformDataService {
       if (group.status !== 'OPEN' || group.expireAt < this.now()) {
         throw new BadRequestException('拼团已结束');
       }
+      if (group.members.length >= group.needed && !group.members.some((m) => this.toNumber(m.userId) === this.toNumber(user.id))) {
+        throw new BadRequestException('拼团已满员');
+      }
 
       const groupConfig = this.normalizeGroupBuyConfig(group.product.groupBuyConfig);
       if (groupConfig && !groupConfig.enabled) {
@@ -4945,14 +4954,30 @@ export class PlatformDataService {
         throw new BadRequestException('该商品暂不支持拼团');
       }
 
-      const groupMember = group.members.find((member) => this.toNumber(member.userId) === this.toNumber(user.id));
-      if (groupMember?.orderNo) {
-        return { orderNo: groupMember.orderNo, status: 'PENDING' };
+      // 名额只在支付成功后才占用（见 settleGroupBuyOrderPayment），此处的 members 均为已支付的真实成员
+      const alreadyPaidMember = group.members.find((member) => this.toNumber(member.userId) === this.toNumber(user.id));
+      if (alreadyPaidMember) {
+        throw new BadRequestException('你已参加该拼团');
+      }
+      if (group.members.length >= group.needed) {
+        throw new BadRequestException('拼团已满员');
+      }
+
+      // 避免用户反复点击下单生成多个待支付订单，重复锁库存
+      const existingPendingOrder = await this.prisma.order.findFirst({
+        where: { groupBuyId: group.id, userId: user.id, orderStatus: PlatformDataService.ORDER_STATUS.PENDING, payStatus: PlatformDataService.PAY_STATUS.UNPAID },
+        orderBy: { createdAt: 'desc' },
+      });
+      if (existingPendingOrder) {
+        return { orderNo: existingPendingOrder.orderNo, status: 'PENDING', payAmount: existingPendingOrder.payAmount.toFixed(2) };
       }
 
       const quantity = Math.max(Number(body.quantity ?? 1) || 1, 1);
       if (quantity !== 1) {
         throw new BadRequestException('拼团商品仅支持单件下单');
+      }
+      if (group.sku.stock < quantity) {
+        throw new BadRequestException('该拼团商品库存不足');
       }
 
       const merchantId = group.product.merchantId;
@@ -4996,6 +5021,27 @@ export class PlatformDataService {
       const orderNo = `NO${randomUUID().replace(/-/g, '').slice(0, 12)}`;
 
       const order = await this.prisma.$transaction(async (tx) => {
+        // 事务内二次校验，防止并发下超卖/超员（例如同一时刻两人下单最后一个名额/最后一件库存）
+        const freshGroup = await tx.groupBuy.findUnique({
+          where: { id: group.id },
+          select: { status: true, expireAt: true, needed: true, members: { select: { id: true } } },
+        });
+        if (!freshGroup || freshGroup.status !== 'OPEN' || freshGroup.expireAt < this.now()) {
+          throw new BadRequestException('拼团已结束');
+        }
+        if (freshGroup.members.length >= freshGroup.needed) {
+          throw new BadRequestException('拼团已满员');
+        }
+
+        // P0：拼团下单同样锁定库存，与普通购物车订单保持一致，避免"失败时释放从未锁定的库存"
+        const lockedSku = await tx.productSku.updateMany({
+          where: { id: group.skuId, stock: { gte: quantity } },
+          data: { stock: { decrement: quantity }, lockedStock: { increment: quantity } },
+        });
+        if (lockedSku.count === 0) {
+          throw new BadRequestException('该拼团商品库存不足');
+        }
+
         const created = await tx.order.create({
           data: {
             orderNo,
@@ -5031,36 +5077,8 @@ export class PlatformDataService {
           include: { items: true },
         });
 
-        if (groupMember) {
-          await tx.groupBuyMember.update({
-            where: {
-              groupId_userId: {
-                groupId: group.id,
-                userId: user.id,
-              },
-            },
-            data: {
-              orderNo: created.orderNo,
-            },
-          });
-        } else {
-          await tx.groupBuyMember.create({
-            data: {
-              groupId: group.id,
-              userId: user.id,
-              isInitiator: false,
-              orderNo: created.orderNo,
-            },
-          });
-        }
-
-        const memberCount = groupMember ? group.members.length : group.members.length + 1;
-        if (memberCount >= group.needed) {
-          await tx.groupBuy.update({
-            where: { id: group.id },
-            data: { status: 'COMPLETED', completedAt: this.now() },
-          });
-        }
+        // 注意：这里【不】创建 GroupBuyMember、不判断成团——名额与成团判定统一放到支付成功回调
+        // （settleGroupBuyOrderPayment）里做，确保"占名额"="真实付款"。
 
         if (usePoints > 0) {
           await tx.pointLog.create({
@@ -5825,7 +5843,7 @@ export class PlatformDataService {
 
     const order = await this.prisma.order.findFirst({
       where: { orderNo },
-      select: { id: true, payStatus: true, merchantId: true, payAmount: true, isParent: true, expireAt: true },
+      select: { id: true, payStatus: true, merchantId: true, payAmount: true, isParent: true, expireAt: true, userId: true, groupBuyId: true },
     });
 
     if (!order || order.payStatus === 1) {
@@ -5897,6 +5915,20 @@ export class PlatformDataService {
         },
       });
 
+      // P0：拼团订单支付成功后才真正占用成团名额，若此时团已满员/已结束（并发竞态），
+      // 则这笔钱直接走自动退款，不进入商家钱包，避免"钱付了但没入团、商家却已收到货款"。
+      if (order.groupBuyId != null) {
+        const overflowRefunded = await this.settleGroupBuyOrderPayment(tx, {
+          orderId: order.id,
+          orderNo,
+          groupBuyId: order.groupBuyId,
+          userId: order.userId,
+        });
+        if (overflowRefunded) {
+          return;
+        }
+      }
+
       // 商家钱包入账：父订单按各子订单 merchantId 分别入账；普通订单直接入账
       if (childOrders.length > 0) {
         const merchantTotals = new Map<bigint, Prisma.Decimal>();
@@ -5942,6 +5974,113 @@ export class PlatformDataService {
       received: true,
       processed: true,
     };
+  }
+
+  /**
+   * 拼团订单支付成功后的结算：真正占用成团名额、判断是否成团。
+   * 若团已结束(FAILED/COMPLETED)或恰好在并发下被其他人付款占满，
+   * 则该笔订单自动退款（模拟退款：退库存/积分/优惠券，订单标记已退款）。
+   *
+   * @returns true 表示本次是"超员/团已结束"触发了自动退款（调用方应跳过商家钱包入账）
+   */
+  private async settleGroupBuyOrderPayment(
+    tx: Prisma.TransactionClient,
+    params: { orderId: bigint; orderNo: string; groupBuyId: bigint; userId: bigint },
+  ): Promise<boolean> {
+    const group = await tx.groupBuy.findUnique({
+      where: { id: params.groupBuyId },
+      include: { members: { select: { id: true, userId: true } } },
+    });
+    if (!group) {
+      return false;
+    }
+
+    // 幂等：支付回调重复触发时不重复处理
+    if (group.members.some((m) => m.userId === params.userId)) {
+      return false;
+    }
+
+    const groupEnded = group.status !== 'OPEN' || group.expireAt < this.now();
+    const groupFull = group.members.length >= group.needed;
+    if (groupEnded || groupFull) {
+      await this.autoRefundGroupBuyOrder(tx, params.orderId, groupEnded ? '拼团已结束，自动退款' : '拼团已满员，自动退款');
+      return true;
+    }
+
+    await tx.groupBuyMember.create({
+      data: {
+        groupId: group.id,
+        userId: params.userId,
+        isInitiator: this.toNumber(group.initiatorId) === this.toNumber(params.userId),
+        orderNo: params.orderNo,
+      },
+    });
+
+    const newCount = group.members.length + 1;
+    if (newCount >= group.needed) {
+      await tx.groupBuy.update({
+        where: { id: group.id },
+        data: { status: 'COMPLETED', completedAt: this.now() },
+      });
+    }
+
+    return false;
+  }
+
+  /**
+   * 对一笔"已支付但无法计入拼团"的订单执行模拟退款：恢复库存、退还积分/优惠券，
+   * 并把订单标记为已取消+已退款。用于支付回调里的并发超员/团已结束兜底，
+   * 以及拼团超时失败后对已支付订单的批量退款（见 GroupBuyExpireService）。
+   */
+  private async autoRefundGroupBuyOrder(tx: Prisma.TransactionClient, orderId: bigint, reason: string) {
+    const order = await tx.order.findUnique({
+      where: { id: orderId },
+      include: { items: { select: { skuId: true, quantity: true } } },
+    });
+    if (!order) {
+      return;
+    }
+
+    for (const item of order.items) {
+      await tx.productSku.update({
+        where: { id: item.skuId },
+        data: { stock: { increment: item.quantity }, lockedStock: { decrement: item.quantity } },
+      });
+    }
+
+    const pointsDeductLog = await tx.pointLog.findFirst({
+      where: { sourceNo: order.orderNo, changeType: 'DEDUCT' },
+    });
+    if (pointsDeductLog) {
+      const refundPoints = Math.abs(Number(pointsDeductLog.points));
+      if (refundPoints > 0) {
+        await tx.pointLog.create({
+          data: {
+            userId: order.userId,
+            changeType: 'REFUND',
+            points: refundPoints,
+            sourceType: 'ORDER',
+            sourceNo: order.orderNo,
+            remark: reason,
+          },
+        });
+      }
+    }
+
+    await tx.userCoupon.updateMany({
+      where: { orderNo: order.orderNo, status: 'USED' },
+      data: { status: 'RECEIVED', usedAt: null, orderNo: null },
+    });
+
+    await tx.order.update({
+      where: { id: order.id },
+      data: {
+        orderStatus: PlatformDataService.ORDER_STATUS.CANCELLED,
+        payStatus: PlatformDataService.PAY_STATUS.UNPAID,
+        refundStatus: PlatformDataService.REFUND_STATUS.APPROVED,
+        cancelReason: reason,
+      },
+    });
   }
 
   async applyMerchant(authUser: AuthUser, body: Record<string, unknown>) {
@@ -6966,7 +7105,7 @@ export class PlatformDataService {
     const merchant = await this.ensureCurrentMerchant(authUser);
     const order = await this.prisma.order.findFirst({
       where: { orderNo, merchantId: merchant.id, isParent: false },
-      select: { id: true, orderStatus: true, payStatus: true, deliveryStatus: true, refundStatus: true },
+      select: { id: true, orderStatus: true, payStatus: true, deliveryStatus: true, refundStatus: true, groupBuyId: true },
     });
 
     if (!order) {
@@ -6985,6 +7124,9 @@ export class PlatformDataService {
         '仅已支付的待接单订单可接单',
     );
 
+    // P0：未成团的拼团订单禁止接单/发货，避免团失败后已发货造成资损
+    await this.assertGroupBuyFulfillable(order.groupBuyId);
+
     await this.prisma.order.update({
       where: { id: order.id },
       data: { orderStatus: 2, deliveryStatus: 1 },
@@ -7000,7 +7142,7 @@ export class PlatformDataService {
     const merchant = await this.ensureCurrentMerchant(authUser);
     const order = await this.prisma.order.findFirst({
       where: { orderNo, merchantId: merchant.id, isParent: false },
-      select: { id: true, orderStatus: true, payStatus: true, deliveryStatus: true, refundStatus: true },
+      select: { id: true, orderStatus: true, payStatus: true, deliveryStatus: true, refundStatus: true, groupBuyId: true },
     });
 
     if (!order) {
@@ -7019,6 +7161,9 @@ export class PlatformDataService {
         ],
         '仅已接单待发货的订单可发货',
     );
+
+    // P0：未成团的拼团订单禁止接单/发货，避免团失败后已发货造成资损
+    await this.assertGroupBuyFulfillable(order.groupBuyId);
 
     await this.prisma.order.update({
       where: { id: order.id },
@@ -9086,12 +9231,14 @@ export class PlatformDataService {
 
     const payStatus = query.payStatus ? Number(query.payStatus) : undefined;
     const deliveryStatus = query.deliveryStatus ? Number(query.deliveryStatus) : undefined;
+    const isGroupBuyOrder = String(query.orderMode ?? '').trim().toUpperCase() === 'GROUP_BUY';
 
     const where: Prisma.OrderWhereInput = {
       deletedAt: null,
       ...(orderStatus !== undefined ? { orderStatus } : {}),
       ...(payStatus !== undefined && !Number.isNaN(payStatus) ? { payStatus } : {}),
       ...(deliveryStatus !== undefined && !Number.isNaN(deliveryStatus) ? { deliveryStatus } : {}),
+      ...(isGroupBuyOrder ? { groupBuyId: { not: null } } : {}),
       ...(keyword
           ? {
             OR: [
@@ -9135,6 +9282,78 @@ export class PlatformDataService {
         freightAmount: this.toMoney(order.freightAmount),
         discountAmount: this.toMoney(order.discountAmount),
         payAmount: this.toMoney(order.payAmount),
+        isGroupBuy: order.groupBuyId != null,
+        groupBuyId: order.groupBuyId != null ? this.toNumber(order.groupBuyId) : null,
+      })),
+    };
+  }
+
+  /** 拼团实例列表 + 状态统计，供运营后台查看进行中/已成团/已失败的团 */
+  async listAdminGroupBuys(query: Record<string, string>) {
+    await this.withSeed();
+    const page = this.normalizePage(query.page);
+    const pageSize = this.normalizePageSize(query.pageSize);
+    const keyword = String(query.keyword ?? '').trim();
+
+    const rawStatus = String(query.status ?? '').trim().toUpperCase();
+    const status = ['OPEN', 'COMPLETED', 'FAILED'].includes(rawStatus) ? rawStatus : undefined;
+
+    const where: Prisma.GroupBuyWhereInput = {
+      ...(status ? { status } : {}),
+      ...(keyword
+        ? {
+            OR: [
+              { groupNo: { contains: keyword } },
+              { inviteCode: { contains: keyword } },
+              { product: { title: { contains: keyword } } },
+            ],
+          }
+        : {}),
+    };
+
+    const [total, groups, statusCounts] = await Promise.all([
+      this.prisma.groupBuy.count({ where }),
+      this.prisma.groupBuy.findMany({
+        where,
+        include: {
+          product: { select: { title: true, coverUrl: true } },
+          initiator: { select: { nickname: true, mobile: true } },
+          members: { select: { id: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: (Math.max(page, 1) - 1) * Math.max(pageSize, 1),
+        take: Math.max(pageSize, 1),
+      }),
+      this.prisma.groupBuy.groupBy({ by: ['status'], _count: { _all: true } }),
+    ]);
+
+    const stats = { OPEN: 0, COMPLETED: 0, FAILED: 0 } as Record<'OPEN' | 'COMPLETED' | 'FAILED', number>;
+    for (const row of statusCounts) {
+      if (row.status === 'OPEN' || row.status === 'COMPLETED' || row.status === 'FAILED') {
+        stats[row.status] = row._count._all;
+      }
+    }
+
+    return {
+      page: Math.max(page, 1),
+      pageSize: Math.max(pageSize, 1),
+      total,
+      stats,
+      items: groups.map((g) => ({
+        groupId: this.toNumber(g.id),
+        groupNo: g.groupNo,
+        inviteCode: g.inviteCode,
+        status: g.status,
+        productTitle: g.product.title,
+        coverUrl: this.resolvePublicUrl(g.product.coverUrl) ?? '',
+        initiatorName: g.initiator.nickname ?? g.initiator.mobile ?? '用户',
+        needed: g.needed,
+        memberCount: g.members.length,
+        groupPrice: this.toMoney(g.groupPrice),
+        originPrice: this.toMoney(g.originPrice),
+        expireAt: g.expireAt.toISOString(),
+        completedAt: g.completedAt ? g.completedAt.toISOString() : null,
+        createdAt: g.createdAt.toISOString().slice(0, 16).replace('T', ' '),
       })),
     };
   }
@@ -10293,15 +10512,26 @@ export class PlatformDataService {
     };
   }
 
+  /**
+   * 开团/参团校验接口。
+   *
+   * 重要：本方法【不会】创建 GroupBuyMember（不占用成团名额）。
+   * 名额只在用户真正支付成功后（见 settleGroupBuyOrderPayment）才会写入，
+   * 避免"点一下就占坑、不下单不付款也不释放"的幽灵成员问题。
+   * 开新团时仍会创建 GroupBuy 容器（拿到 groupId / 邀请码 / 冻结价），
+   * 但发起人同样需要走下单+支付才会被计入成团人数。
+   */
   async joinGroupBuy(authUser: AuthUser, body: { productId: number; skuId?: number; groupId?: number; lat?: number; lng?: number }) {
     const user = await this.ensureUser(authUser);
     const productId = BigInt(body.productId);
     const skuId = body.skuId ? BigInt(body.skuId) : null;
-    const lat = Number(body.lat);
-    const lng = Number(body.lng);
 
     const result = await this.prisma.$transaction(async (tx) => {
       let group: Prisma.GroupBuyGetPayload<{ include: { members: true; product: true; sku: true } }> | null = null;
+      let isNewGroup = false;
+      let alreadyJoined = false;
+      let alreadyJoinedOrderNo: string | null = null;
+
       if (body.groupId) {
         group = await tx.groupBuy.findUnique({
           where: { id: BigInt(body.groupId) },
@@ -10316,8 +10546,26 @@ export class PlatformDataService {
         if (group.status !== 'OPEN' || group.expireAt < new Date()) {
           throw new BadRequestException('该团已结束或过期');
         }
-        if (group.members.some((m) => m.userId === user.id)) {
-          throw new BadRequestException('你已在该团中');
+        const existingMember = group.members.find((m) => m.userId === user.id);
+        if (existingMember) {
+          // 已经付款成为该团成员：不再报错打断，而是把该成员对应的订单号带回去，
+          // 交给前端跳转到订单详情页查看拼团进度，而不是弹一个无操作意义的错误提示。
+          alreadyJoined = true;
+          alreadyJoinedOrderNo = existingMember.orderNo ?? null;
+          if (!alreadyJoinedOrderNo) {
+            const paidOrder = await tx.order.findFirst({
+              where: {
+                groupBuyId: group.id,
+                userId: user.id,
+                payStatus: PlatformDataService.PAY_STATUS.PAID,
+              },
+              select: { orderNo: true },
+              orderBy: { createdAt: 'desc' },
+            });
+            alreadyJoinedOrderNo = paidOrder?.orderNo ?? null;
+          }
+        } else if (group.members.length >= group.needed) {
+          throw new BadRequestException('该团已满员');
         }
       } else {
         if (!skuId) {
@@ -10359,26 +10607,19 @@ export class PlatformDataService {
           },
           include: { members: true, product: true, sku: true },
         });
-        await tx.groupBuyMember.create({
-          data: { groupId: group.id, userId: user.id, isInitiator: true },
-        });
-        return {
-          group: { ...group, members: [await tx.groupBuyMember.findFirst({ where: { groupId: group.id, userId: user.id } })] },
-          isNewGroup: true,
-        };
+        isNewGroup = true;
       }
 
-      await tx.groupBuyMember.create({
-        data: { groupId: group.id, userId: user.id, isInitiator: false },
-      });
-      const updatedMembers = await tx.groupBuyMember.findMany({ where: { groupId: group.id } });
-      if (updatedMembers.length >= group.needed) {
-        await tx.groupBuy.update({
-          where: { id: group.id },
-          data: { status: 'COMPLETED', completedAt: new Date() },
-        });
-      }
-      return { group: { ...group, members: updatedMembers }, isNewGroup: false };
+      // 若该用户此前已为该团创建过未支付订单，直接把订单号带回去，方便前端续付，避免重复下单锁重复库存
+      const pendingOrder = alreadyJoined
+        ? null
+        : await tx.order.findFirst({
+            where: { groupBuyId: group.id, userId: user.id, orderStatus: PlatformDataService.ORDER_STATUS.PENDING, payStatus: PlatformDataService.PAY_STATUS.UNPAID },
+            select: { orderNo: true },
+            orderBy: { createdAt: 'desc' },
+          });
+
+      return { group, isNewGroup, pendingOrderNo: pendingOrder?.orderNo ?? null, alreadyJoined, alreadyJoinedOrderNo };
     });
 
     const g = result.group;
@@ -10396,8 +10637,130 @@ export class PlatformDataService {
       groupPrice: Number(g.groupPrice).toFixed(2),
       originPrice: Number(g.originPrice).toFixed(2),
       expireAt: g.expireAt.toISOString(),
-      status: g.members.length >= g.needed ? 'COMPLETED' : g.status,
+      status: g.status as 'OPEN' | 'COMPLETED' | 'FAILED',
       isNewGroup: result.isNewGroup,
+      pendingOrderNo: result.pendingOrderNo,
+      // 已是该团付费成员：不算加入失败，前端应跳转到此订单查看拼团进度而非报错
+      alreadyJoined: result.alreadyJoined,
+      orderNo: result.alreadyJoinedOrderNo,
+    };
+  }
+
+  /** 未成团(非 COMPLETED)的拼团订单禁止接单/发货 */
+  private async assertGroupBuyFulfillable(groupBuyId: bigint | null | undefined) {
+    if (groupBuyId == null) {
+      return;
+    }
+    const group = await this.prisma.groupBuy.findUnique({
+      where: { id: groupBuyId },
+      select: { status: true },
+    });
+    if (!group || group.status !== 'COMPLETED') {
+      throw new BadRequestException('拼团尚未成团，暂不能接单/发货');
+    }
+  }
+
+  /** 拼团详情：供分享参团链接、邀请码落地页使用。groupId 优先，其次 inviteCode。 */
+  async getQuickGroupBuyDetail(query: { groupId?: number; inviteCode?: string }) {
+    await this.withSeed();
+
+    let where: Prisma.GroupBuyWhereInput | null = null;
+    if (query.groupId != null && query.groupId > 0) {
+      where = { id: BigInt(query.groupId) };
+    } else if (query.inviteCode) {
+      where = { inviteCode: String(query.inviteCode).trim().toUpperCase() };
+    }
+    if (!where) {
+      throw new BadRequestException('缺少拼团标识');
+    }
+
+    const group = await this.prisma.groupBuy.findFirst({
+      where,
+      include: {
+        product: { include: { skus: { orderBy: { id: 'asc' } } } },
+        sku: true,
+        members: { select: { id: true, userId: true, isInitiator: true, joinedAt: true } },
+      },
+    });
+    if (!group) {
+      throw new NotFoundException('拼团不存在或已失效');
+    }
+
+    return {
+      groupId: this.toNumber(group.id),
+      groupNo: group.groupNo,
+      inviteCode: group.inviteCode,
+      productId: this.toNumber(group.productId),
+      skuId: this.toNumber(group.skuId),
+      title: group.product.title,
+      coverUrl: this.resolvePublicUrl(group.product.coverUrl) ?? '',
+      roughArea: group.roughArea ?? '',
+      memberCount: group.members.length,
+      needed: group.needed,
+      expireAt: group.expireAt.toISOString(),
+      completedAt: group.completedAt ? group.completedAt.toISOString() : null,
+      groupPrice: Number(group.groupPrice).toFixed(2),
+      originPrice: Number(group.originPrice).toFixed(2),
+      status: group.status as 'OPEN' | 'COMPLETED' | 'FAILED',
+    };
+  }
+
+  /** 我的拼团：我发起或已付款参加过的团，用于"我的拼团"列表页 */
+  async getMyGroupBuys(authUser: AuthUser) {
+    const user = await this.ensureUser(authUser);
+
+    const groups = await this.prisma.groupBuy.findMany({
+      where: {
+        OR: [{ initiatorId: user.id }, { members: { some: { userId: user.id } } }],
+      },
+      include: {
+        product: { select: { title: true, coverUrl: true } },
+        members: { select: { id: true, userId: true, orderNo: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    });
+
+    const groupIds = groups.map((g) => g.id);
+    const pendingOrders = groupIds.length
+      ? await this.prisma.order.findMany({
+          where: {
+            userId: user.id,
+            groupBuyId: { in: groupIds },
+            orderStatus: PlatformDataService.ORDER_STATUS.PENDING,
+            payStatus: PlatformDataService.PAY_STATUS.UNPAID,
+          },
+          select: { groupBuyId: true, orderNo: true },
+        })
+      : [];
+    const pendingByGroup = new Map(pendingOrders.map((o) => [o.groupBuyId!.toString(), o.orderNo]));
+
+    return {
+      items: groups.map((g) => {
+        const myMember = g.members.find((m) => this.toNumber(m.userId) === this.toNumber(user.id));
+        const isPaidMember = Boolean(myMember);
+        return {
+          groupId: this.toNumber(g.id),
+          groupNo: g.groupNo,
+          inviteCode: g.inviteCode,
+          productId: this.toNumber(g.productId),
+          skuId: this.toNumber(g.skuId),
+          title: g.product.title,
+          coverUrl: this.resolvePublicUrl(g.product.coverUrl) ?? '',
+          status: g.status as 'OPEN' | 'COMPLETED' | 'FAILED',
+          needed: g.needed,
+          memberCount: g.members.length,
+          isInitiator: this.toNumber(g.initiatorId) === this.toNumber(user.id),
+          isPaidMember,
+          needsPayment: !isPaidMember,
+          orderNo: myMember?.orderNo ?? null,
+          pendingOrderNo: pendingByGroup.get(g.id.toString()) ?? null,
+          groupPrice: Number(g.groupPrice).toFixed(2),
+          originPrice: Number(g.originPrice).toFixed(2),
+          expireAt: g.expireAt.toISOString(),
+          completedAt: g.completedAt ? g.completedAt.toISOString() : null,
+        };
+      }),
     };
   }
 

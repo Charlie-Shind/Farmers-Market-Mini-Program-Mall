@@ -14,6 +14,7 @@ import CategoriesView from '@/views/CategoriesView.vue';
 import ChatView from '@/views/ChatView.vue';
 import ExchangeCenterView from '@/views/ExchangeCenterView.vue';
 import LeaderView from '@/views/LeaderView.vue';
+import GroupBuyView from '@/views/GroupBuyView.vue';
 import PickupPointView from '@/views/PickupPointView.vue';
 import CommissionView from '@/views/CommissionView.vue';
 import { canAccessPermission, findFirstAccessiblePath, readStoredPermissionKeys } from '@/utils/admin-permissions';
@@ -146,6 +147,16 @@ const router = createRouter({
             breadcrumb: '后台管理 / 活动管理',
             searchPlaceholder: '搜索活动 / 类型 / 状态',
             permissionKey: 'activities',
+          },
+        },
+        {
+          path: 'group-buys',
+          name: 'group-buys',
+          component: GroupBuyView,
+          meta: {
+            title: '拼团管理',
+            breadcrumb: '后台管理 / 拼团管理',
+            permissionKey: 'groupBuys',
           },
         },
         {

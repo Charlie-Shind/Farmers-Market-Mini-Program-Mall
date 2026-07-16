@@ -1,4 +1,5 @@
 {
+  "disableScroll": true,
   "usingComponents": {
     "loading": "../../../components/base/loading/loading",
     "t-icon": "../../../components/base/t-icon/t-icon"

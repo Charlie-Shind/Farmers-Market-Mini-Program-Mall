@@ -105,13 +105,21 @@ Component({
     async bootstrapPage() {
       await new Promise((resolve) => setTimeout(resolve, 0));
       const options = readPageOptions();
+      const title = options.title ? decodeURIComponent(options.title) : '';
+      const loadKey = title || '__default__';
+      if ((this as any)._loadedKey === loadKey) {
+        return;
+      }
 
       this.setData({
-        pageTitle: options.title ? decodeURIComponent(options.title) : '活动专题',
-        pageDesc: options.title ? '平台官方活动专题聚合页' : '源头好货限时补贴，产地直采、冷链直发、售后无忧。',
+        pageTitle: title || '活动专题',
+        pageDesc: title ? '平台官方活动专题聚合页' : '源头好货限时补贴，产地直采、冷链直发、售后无忧。',
       });
 
       await this.loadTopicData();
+      if (!this.data.loading) {
+        (this as any)._loadedKey = loadKey;
+      }
     },
     goBack() {
       navigateBackOrHome();

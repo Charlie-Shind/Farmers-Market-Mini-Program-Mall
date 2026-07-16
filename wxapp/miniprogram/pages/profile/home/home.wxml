@@ -16,6 +16,14 @@
     </button>
   </view>
 
+  <scroll-view
+    class="profile-scroll"
+    scroll-y="{{true}}"
+    scroll-top="{{scrollTop}}"
+    enhanced="{{true}}"
+    bounces="{{false}}"
+    show-scrollbar="{{false}}"
+  >
   <!-- 个人主页悬浮面板 -->
   <view class="profile-container">
     <!-- 头像与主操作区 -->
@@ -27,9 +35,6 @@
       <view class="header-actions">
         <button class="primary-btn-pill" bindtap="handlePrimaryAction">
           {{primaryActionLabel}}
-        </button>
-        <button class="icon-btn-pill" plain="true" bindtap="shareProfile">
-          <t-icon name="share" size="20px" color="#2c4a39" />
         </button>
       </view>
     </view>
@@ -106,22 +111,34 @@
             </view>
           </block>
 
-          <!-- 普通用户卡券列表 -->
+          <!-- 普通用户卡券列表（与商铺页同款票券） -->
           <block wx:else>
-            <view class="user-coupons-list" wx:if="{{userCoupons && userCoupons.length > 0}}">
-              <view class="coupon-fancy-ticket" wx:for="{{userCoupons}}" wx:key="userCouponId">
-                <view class="coupon-val-side">
-                  <text class="coupon-currency">¥</text>
-                  <text class="coupon-value-num">{{item.discountAmount}}</text>
-                </view>
-                <view class="coupon-info-side">
-                  <text class="coupon-title-name">{{item.name}}</text>
-                  <text class="coupon-limit-desc">满{{item.thresholdAmount}}元可用</text>
-                  <view class="coupon-status-btn {{item.status === 'USED' || item.status === 'EXPIRED' ? 'status-used' : 'status-ready'}}">
-                    {{item.status === 'USED' ? '已使用' : item.status === 'EXPIRED' ? '已过期' : '可使用'}}
+            <view class="user-coupons-block" wx:if="{{userCoupons && userCoupons.length > 0}}">
+              <view class="user-coupons-head">
+                <text class="user-coupons-sub">领券下单更划算</text>
+                <text class="user-coupons-extra">{{userCoupons.length}} 张</text>
+              </view>
+              <scroll-view class="coupon-scroll" scroll-x enhanced show-scrollbar="{{false}}">
+                <view
+                  wx:for="{{userCoupons}}"
+                  wx:key="userCouponId"
+                  class="coupon-ticket {{item.status === 'USED' || item.status === 'EXPIRED' ? 'is-disabled' : ''}}"
+                >
+                  <view class="coupon-ticket__main">
+                    <text class="coupon-ticket__amount">{{item.discountAmount}}</text>
+                    <view class="coupon-ticket__line"></view>
+                    <text class="coupon-ticket__rule">满{{item.thresholdAmount}}元可用</text>
+                  </view>
+                  <view class="coupon-ticket__gap">
+                    <view class="coupon-ticket__notch coupon-ticket__notch--top"></view>
+                    <view class="coupon-ticket__dash"></view>
+                    <view class="coupon-ticket__notch coupon-ticket__notch--bottom"></view>
+                  </view>
+                  <view class="coupon-ticket__action">
+                    <text class="coupon-ticket__action-text">{{item.status === 'USED' ? '已使用' : item.status === 'EXPIRED' ? '已过期' : '可使用'}}</text>
                   </view>
                 </view>
-              </view>
+              </scroll-view>
             </view>
             <view class="profile-empty-state" wx:else>
               <t-icon name="coupon" size="48px" color="#c1c9c1" />
@@ -183,6 +200,8 @@
     </view>
   </view>
 
-  <loading show="{{loading}}" text="{{loadingText}}"></loading>
   <view class="bottom-safe"></view>
+  </scroll-view>
+
+  <loading show="{{loading}}" text="{{loadingText}}"></loading>
 </view>

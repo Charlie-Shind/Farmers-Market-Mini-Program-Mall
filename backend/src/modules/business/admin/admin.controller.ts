@@ -469,6 +469,11 @@ export class AdminController {
     return this.platformDataService.listAdminOrders(query);
   }
 
+  @Get('group-buys')
+  listGroupBuys(@Query() query: Record<string, string>) {
+    return this.platformDataService.listAdminGroupBuys(query);
+  }
+
   @Get('orders/:orderNo')
   getOrder(@Param('orderNo') orderNo: string) {
     return this.platformDataService.getAdminOrderDetail(orderNo);

@@ -12,14 +12,19 @@ type BrowseHistoryRecord = {
 };
 
 type BrowseHistoryView = BrowseHistoryRecord & {
-  visitedAtText: string;
+  visitedTimeText: string;
   coverStyle: string;
   priceLabel: string;
 };
 
+type BrowseHistoryGroup = {
+  label: string;
+  items: BrowseHistoryView[];
+};
+
 const BROWSE_HISTORY_KEY = 'farm.browse.history.v1';
 
-function formatDateTime(value?: number) {
+function formatTime(value?: number) {
   if (!value) {
     return '';
   }
@@ -29,13 +34,36 @@ function formatDateTime(value?: number) {
     return '';
   }
 
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
   const hours = String(date.getHours()).padStart(2, '0');
   const minutes = String(date.getMinutes()).padStart(2, '0');
 
-  return `${year}-${month}-${day} ${hours}:${minutes}`;
+  return `${hours}:${minutes}`;
+}
+
+function getDateGroupLabel(value?: number) {
+  if (!value) {
+    return '更早';
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return '更早';
+  }
+
+  const startOfDay = (input: Date) => new Date(input.getFullYear(), input.getMonth(), input.getDate()).getTime();
+  const diffDays = Math.round((startOfDay(new Date()) - startOfDay(date)) / 86400000);
+
+  if (diffDays <= 0) {
+    return '今天';
+  }
+  if (diffDays === 1) {
+    return '昨天';
+  }
+  if (diffDays > 1 && diffDays < 7) {
+    return `${diffDays} 天前`;
+  }
+
+  return `${date.getMonth() + 1}月${date.getDate()}日`;
 }
 
 function normalizeHistoryItems(raw: unknown): BrowseHistoryView[] {
@@ -45,12 +73,29 @@ function normalizeHistoryItems(raw: unknown): BrowseHistoryView[] {
     .filter((item) => item && Number.isFinite(Number(item.productId)))
     .map((item) => ({
       ...item,
-      visitedAtText: formatDateTime(item.visitedAt),
+      visitedTimeText: formatTime(item.visitedAt),
       coverStyle: item.coverUrl
         ? `background-image: url(${item.coverUrl}); background-size: cover; background-position: center;`
         : '',
       priceLabel: item.price ? `¥${item.price}` : '¥0.00',
     }));
+}
+
+function groupHistoryItems(items: BrowseHistoryView[]): BrowseHistoryGroup[] {
+  const groups: BrowseHistoryGroup[] = [];
+
+  items.forEach((item) => {
+    const label = getDateGroupLabel(item.visitedAt);
+    const lastGroup = groups[groups.length - 1];
+
+    if (lastGroup && lastGroup.label === label) {
+      lastGroup.items.push(item);
+    } else {
+      groups.push({ label, items: [item] });
+    }
+  });
+
+  return groups;
 }
 
 Component({
@@ -61,6 +106,7 @@ Component({
     history: {
       items: [] as BrowseHistoryView[],
     },
+    historyGroups: [] as BrowseHistoryGroup[],
   },
   lifetimes: {
     attached() {
@@ -77,10 +123,10 @@ Component({
   methods: {
     async loadHistory() {
       const raw = wx.getStorageSync(BROWSE_HISTORY_KEY);
+      const items = normalizeHistoryItems(raw);
       this.setData({
-        history: {
-          items: normalizeHistoryItems(raw),
-        },
+        history: { items },
+        historyGroups: groupHistoryItems(items),
       });
     },
     goBack() {
@@ -97,6 +143,10 @@ Component({
       });
     },
     openClearSheet() {
+      if (!this.data.history.items.length) {
+        return;
+      }
+
       this.setData({
         showClearSheet: true,
       });
@@ -116,6 +166,7 @@ Component({
         history: {
           items: [],
         },
+        historyGroups: [],
       });
       wx.showToast({ title: '已清空', icon: 'success' });
     },

@@ -4,18 +4,41 @@
 }
 
 .settings-content {
-  margin-top: 16rpx;
+  margin-top: 20rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 36rpx;
+}
+
+/* ========== 分组 ========== */
+.settings-group {
+  display: flex;
+  flex-direction: column;
+  gap: 14rpx;
+}
+
+.settings-group__title {
+  padding-left: 12rpx;
+  font-size: 24rpx;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 1rpx;
 }
 
 .settings-list {
-  padding: 8rpx 20rpx !important;
+  padding: 6rpx 20rpx !important;
+  background: #ffffff;
+  border-radius: 28rpx;
+  box-shadow: 0 16rpx 36rpx rgba(44, 74, 57, 0.06);
+  box-sizing: border-box;
 }
 
 .settings-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 28rpx 8rpx;
+  gap: 16rpx;
+  padding: 26rpx 8rpx;
   border-bottom: 1rpx solid rgba(44, 74, 57, 0.05);
   transition: all 0.2s ease;
 
@@ -32,45 +55,78 @@
 .settings-item__left {
   display: flex;
   align-items: center;
-  gap: 24rpx;
+  gap: 22rpx;
+  min-width: 0;
 }
 
 .settings-item__icon-wrap {
-  width: 68rpx;
-  height: 68rpx;
-  border-radius: 20rpx;
-  background: rgba(44, 74, 57, 0.06);
-  border: 1rpx solid rgba(44, 74, 57, 0.08);
+  flex-shrink: 0;
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 22rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #2c4a39;
+}
+
+.settings-item__icon-wrap--green {
+  background: rgba(44, 74, 57, 0.08);
+}
+
+.settings-item__icon-wrap--blue {
+  background: rgba(58, 107, 138, 0.1);
+}
+
+.settings-item__icon-wrap--gold {
+  background: rgba(214, 166, 101, 0.16);
+}
+
+.settings-item__text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5rpx;
 }
 
 .settings-item__title {
   font-size: 28rpx;
   font-weight: 800;
-  color: #25372d;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
+.settings-item__desc {
+  font-size: 21rpx;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ========== 角色切换 / 退出登录 ========== */
 .logout-section {
-  margin-top: 48rpx;
   padding: 0 12rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
 }
 
 .switch-role-btn {
   width: 100% !important;
   height: 96rpx;
   background: #ffffff !important;
-  border: 2rpx solid #2c4a39 !important;
+  border: 2rpx solid rgba(44, 74, 57, 0.24) !important;
   border-radius: 24rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #2c4a39;
+  gap: 10rpx;
+  color: var(--green);
   font-size: 28rpx;
   font-weight: 800;
-  margin: 0 0 24rpx 0;
+  margin: 0;
   transition: all 0.2s ease;
 
   &:active {
@@ -96,4 +152,26 @@
   &:active {
     background: #f5e8e1 !important;
   }
+}
+
+/* ========== 底部品牌信息 ========== */
+.settings-footer {
+  margin-top: 12rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+  text-align: center;
+}
+
+.settings-footer__brand {
+  font-size: 22rpx;
+  color: var(--muted);
+  opacity: 0.8;
+}
+
+.settings-footer__version {
+  font-size: 20rpx;
+  color: var(--muted);
+  opacity: 0.6;
 }

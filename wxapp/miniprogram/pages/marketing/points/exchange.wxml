@@ -1,11 +1,35 @@
 ﻿<view class="phone-page points-page" style="{{pageStyle}}">
   <page-nav title="积分兑换" theme="solid" />
 
-  <view class="points-summary panel">
-    <view class="points-summary__left">
-      <text class="points-summary__label">当前积分</text>
-      <text class="points-summary__value">{{pointsBalance}}</text>
+  <view class="points-hero">
+    <view class="points-hero__glow points-hero__glow--one"></view>
+    <view class="points-hero__glow points-hero__glow--two"></view>
+    <view class="points-hero__brand">
+      <t-icon name="origin" size="24rpx" color="#d8a978"></t-icon>
+      <text>浔源农仓 · 积分商城</text>
     </view>
+    <view class="points-hero__main">
+      <view class="points-hero__info">
+        <text class="points-hero__label">当前可用积分</text>
+        <view class="points-hero__value-row">
+          <text class="points-hero__value">{{pointsBalance}}</text>
+          <text class="points-hero__unit">分</text>
+        </view>
+        <view class="points-hero__hint">
+          <t-icon name="gift" size="20rpx" color="rgba(255,255,255,0.85)"></t-icon>
+          <text>积分可用于兑换优惠券</text>
+        </view>
+      </view>
+      <view class="points-hero__gift-box">
+        <t-icon name="gift" size="56rpx" color="#ffffff"></t-icon>
+      </view>
+    </view>
+  </view>
+
+  <view class="points-section-title">
+    <view class="points-section-title__line"></view>
+    <text>精选兑换</text>
+    <view class="points-section-title__line"></view>
   </view>
 
   <view wx:if="{{loading}}" class="points-loading">
@@ -14,12 +38,16 @@
   </view>
 
   <view wx:elif="{{!pointsGoods.length}}" class="points-empty">
+    <view class="points-empty__icon">
+      <t-icon name="gift" size="52rpx" color="#c7bfa8"></t-icon>
+    </view>
     <text class="points-empty__title">暂无可兑换商品</text>
     <text class="points-empty__desc">平台还在补充积分权益，过一会再来看看。</text>
   </view>
 
   <view wx:else class="points-list">
     <view wx:for="{{pointsGoods}}" wx:key="id" class="points-card {{item.received ? 'points-card--done' : ''}} {{item.canRedeem ? 'points-card--avail' : ''}}">
+      <text class="points-card__ribbon {{item.received ? 'points-card__ribbon--done' : item.canRedeem ? 'points-card__ribbon--avail' : 'points-card__ribbon--lack'}}">{{item.received ? '已兑换' : item.canRedeem ? '可兑换' : '积分不足'}}</text>
       <view class="points-card__cover" style="{{item.imageStyle}}">
         <view wx:if="{{!item.imageStyle}}" class="points-card__cover-fallback">
           <t-icon name="gift" size="42rpx" color="#8f7f64"></t-icon>
@@ -31,7 +59,6 @@
             <text class="points-card__title">{{item.title}}</text>
             <text class="points-card__desc">{{item.desc}}</text>
           </view>
-          <text class="points-card__tag">{{item.received ? '已兑换' : item.canRedeem ? '可兑换' : '积分不足'}}</text>
         </view>
         <view class="points-card__footer">
           <view class="points-card__cost-box">
@@ -47,6 +74,37 @@
           </button>
         </view>
       </view>
+    </view>
+  </view>
+
+  <view class="points-features">
+    <view class="points-feature">
+      <view class="points-feature__icon">
+        <t-icon name="shield" size="32rpx" color="#2c4a39"></t-icon>
+      </view>
+      <text class="points-feature__title">安全可靠</text>
+      <text class="points-feature__sub">品质保障</text>
+    </view>
+    <view class="points-feature">
+      <view class="points-feature__icon">
+        <t-icon name="origin" size="32rpx" color="#2c4a39"></t-icon>
+      </view>
+      <text class="points-feature__title">绿色健康</text>
+      <text class="points-feature__sub">天然无害</text>
+    </view>
+    <view class="points-feature">
+      <view class="points-feature__icon">
+        <t-icon name="favorite" size="32rpx" color="#2c4a39"></t-icon>
+      </view>
+      <text class="points-feature__title">用心优选</text>
+      <text class="points-feature__sub">精选好物</text>
+    </view>
+    <view class="points-feature">
+      <view class="points-feature__icon">
+        <t-icon name="gift" size="32rpx" color="#2c4a39"></t-icon>
+      </view>
+      <text class="points-feature__title">更多好礼</text>
+      <text class="points-feature__sub">敬请期待</text>
     </view>
   </view>
 </view>

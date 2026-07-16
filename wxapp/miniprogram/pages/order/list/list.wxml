@@ -87,10 +87,9 @@
       <text class="empty-sub">买点新鲜绿色农产品犒劳一下自己吧</text>
     </view>
 
-    <view wx:if="{{orders.length}}" class="load-more-area">
+    <view wx:if="{{orders.length && (loadingMore || noMore)}}" class="load-more-area">
       <text wx:if="{{loadingMore}}" class="load-more-area__text">正在继续加载…</text>
-      <text wx:elif="{{noMore}}" class="load-more-area__text">已经到底了</text>
-      <view wx:else class="load-more-area__button">下滑加载更多</view>
+      <text wx:else class="load-more-area__text">已经到底了</text>
     </view>
 
     <view class="scroll-spacer"></view>

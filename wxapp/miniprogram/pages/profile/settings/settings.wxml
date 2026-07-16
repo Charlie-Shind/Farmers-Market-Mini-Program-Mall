@@ -2,58 +2,84 @@
   <page-nav title="设置" theme="solid" />
 
   <view class="settings-content">
-    <!-- Main Settings List -->
-    <view class="panel settings-list">
-      <!-- 个人资料修改 -->
-      <view class="settings-item" bindtap="goToEdit" hover-class="settings-item--hover">
-        <view class="settings-item__left">
-          <view class="settings-item__icon-wrap">
-            <t-icon name="avatar" size="32rpx" color="brandGreen"></t-icon>
+    <!-- 账户 -->
+    <view class="settings-group">
+      <text class="settings-group__title">账户</text>
+      <view class="panel settings-list">
+        <view class="settings-item" bindtap="goToEdit" hover-class="settings-item--hover">
+          <view class="settings-item__left">
+            <view class="settings-item__icon-wrap settings-item__icon-wrap--green">
+              <t-icon name="avatar" size="30rpx" color="#2c4a39"></t-icon>
+            </view>
+            <view class="settings-item__text">
+              <text class="settings-item__title">修改个人资料</text>
+              <text class="settings-item__desc">头像、昵称与联系方式</text>
+            </view>
           </view>
-          <text class="settings-item__title">修改个人资料</text>
+          <t-icon name="chevronRight" size="24rpx" opacity="0.4"></t-icon>
         </view>
-        <t-icon name="chevronRight" size="24rpx" opacity="0.6"></t-icon>
-      </view>
 
-      <!-- 申请成为商家/农户 暂时关闭
-      <view wx:if="{{userRole === 'USER'}}" class="settings-item" bindtap="goToApply" hover-class="settings-item--hover">
-        <view class="settings-item__left">
-          <view class="settings-item__icon-wrap">
-            <t-icon name="shop" size="32rpx" color="brandGreen"></t-icon>
+        <!-- 申请成为商家/农户 暂时关闭
+        <view wx:if="{{userRole === 'USER'}}" class="settings-item" bindtap="goToApply" hover-class="settings-item--hover">
+          <view class="settings-item__left">
+            <view class="settings-item__icon-wrap settings-item__icon-wrap--gold">
+              <t-icon name="shop" size="30rpx" color="#8b5e22"></t-icon>
+            </view>
+            <view class="settings-item__text">
+              <text class="settings-item__title">申请成为商家/农户</text>
+              <text class="settings-item__desc">开店直供，产地好货直达买家</text>
+            </view>
           </view>
-          <text class="settings-item__title">申请成为商家/农户</text>
+          <t-icon name="chevronRight" size="24rpx" opacity="0.4"></t-icon>
         </view>
-        <t-icon name="chevronRight" size="24rpx" opacity="0.6"></t-icon>
-      </view>
-      -->
+        -->
 
-      <!-- 账户安全 (Placeholder/Action) -->
-      <view class="settings-item" hover-class="settings-item--hover">
-        <view class="settings-item__left">
-          <view class="settings-item__icon-wrap">
-            <t-icon name="shield" size="32rpx" color="brandGreen"></t-icon>
+        <view class="settings-item" bindtap="openPlaceholder" data-label="账户安全" hover-class="settings-item--hover">
+          <view class="settings-item__left">
+            <view class="settings-item__icon-wrap settings-item__icon-wrap--blue">
+              <t-icon name="shield" size="30rpx" color="#3a6b8a"></t-icon>
+            </view>
+            <view class="settings-item__text">
+              <text class="settings-item__title">账户安全</text>
+              <text class="settings-item__desc">登录保护与账号管理</text>
+            </view>
           </view>
-          <text class="settings-item__title">账户安全</text>
+          <t-icon name="chevronRight" size="24rpx" opacity="0.4"></t-icon>
         </view>
-        <t-icon name="chevronRight" size="24rpx" opacity="0.6"></t-icon>
-      </view>
-
-      <!-- 关于我们 -->
-      <view class="settings-item" hover-class="settings-item--hover">
-        <view class="settings-item__left">
-          <view class="settings-item__icon-wrap">
-            <t-icon name="support" size="32rpx" color="brandGreen"></t-icon>
-          </view>
-          <text class="settings-item__title">关于我们 & 隐私协议</text>
-        </view>
-        <t-icon name="chevronRight" size="24rpx" opacity="0.6"></t-icon>
       </view>
     </view>
 
-    <!-- Switch Role / Logout Action Card -->
+    <!-- 支持与关于 -->
+    <view class="settings-group">
+      <text class="settings-group__title">支持与关于</text>
+      <view class="panel settings-list">
+        <view class="settings-item" bindtap="openPlaceholder" data-label="关于我们" hover-class="settings-item--hover">
+          <view class="settings-item__left">
+            <view class="settings-item__icon-wrap settings-item__icon-wrap--gold">
+              <t-icon name="support" size="30rpx" color="#8b5e22"></t-icon>
+            </view>
+            <view class="settings-item__text">
+              <text class="settings-item__title">关于我们 & 隐私协议</text>
+              <text class="settings-item__desc">了解湾源农仓，查看隐私政策</text>
+            </view>
+          </view>
+          <t-icon name="chevronRight" size="24rpx" opacity="0.4"></t-icon>
+        </view>
+      </view>
+    </view>
+
+    <!-- 切换角色 / 退出登录 -->
     <view wx:if="{{isLoggedIn}}" class="logout-section">
-      <button wx:if="{{canSwitchToMerchant}}" class="switch-role-btn" plain="true" bindtap="handleSwitchToMerchant">切换到商户端</button>
+      <button wx:if="{{canSwitchToMerchant}}" class="switch-role-btn" plain="true" bindtap="handleSwitchToMerchant">
+        <t-icon name="shop" size="26rpx" color="#2c4a39"></t-icon>
+        <text>切换到商户端</text>
+      </button>
       <button class="logout-btn" plain="true" bindtap="handleLogout">退出当前账号</button>
+    </view>
+
+    <view class="settings-footer">
+      <text class="settings-footer__brand">湾源农仓 · 产地直采优选平台</text>
+      <text class="settings-footer__version">当前版本 v{{appVersion}}</text>
     </view>
   </view>
 

@@ -10,6 +10,7 @@ Component({
     userRole: '',
     isLoggedIn: false,
     canSwitchToMerchant: false,
+    appVersion: '1.0.0',
   },
 
   lifetimes: {
@@ -17,6 +18,15 @@ Component({
       this.setData({
         pageStyle: buildPageTopStyle(0),
       });
+
+      try {
+        const version = wx.getAccountInfoSync?.()?.miniProgram?.version;
+        if (version) {
+          this.setData({ appVersion: version });
+        }
+      } catch {
+        // Keep the fallback version when the API is unavailable (e.g. dev tools).
+      }
     },
   },
 
@@ -49,6 +59,11 @@ Component({
       wx.navigateTo({
         url: '/pages/profile/apply/apply',
       });
+    },
+
+    openPlaceholder(e: WechatMiniprogram.BaseEvent) {
+      const { label } = (e.currentTarget.dataset as { label?: string }) || {};
+      wx.showToast({ title: label ? `${label}功能开发中` : '功能开发中', icon: 'none' });
     },
 
     handleSwitchToMerchant() {

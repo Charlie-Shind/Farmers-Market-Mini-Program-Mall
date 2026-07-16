@@ -4,15 +4,14 @@
   <view class="cart-head">
     <view class="cart-address-card" data-label="收货地址" bindtap="openSection" hover-class="cart-address-card--hover">
       <view class="cart-address-card__icon">
-        <t-icon name="location" size="36rpx" color="#2c4a39"></t-icon>
+        <t-icon name="location" size="34rpx" color="#2c4a39"></t-icon>
       </view>
       <view class="cart-address-card__body">
         <text class="cart-address-card__title">{{cart.address.title}}</text>
         <text class="cart-address-card__desc">{{cart.address.desc}}</text>
       </view>
       <view class="cart-address-card__action">
-        <text>更换</text>
-        <t-icon name="chevronRight" size="22rpx" color="#8a877f"></t-icon>
+        <t-icon name="chevronRight" size="24rpx" color="#a9a595"></t-icon>
       </view>
     </view>
 
@@ -21,7 +20,7 @@
       <text class="cart-freight__text">{{cart.promo.text}}</text>
       <view class="cart-freight__link">
         <text>{{cart.promo.actionLabel}}</text>
-        <t-icon name="chevronRight" size="22rpx" color="#c65f2d"></t-icon>
+        <t-icon name="chevronRight" size="22rpx" color="#2c4a39"></t-icon>
       </view>
     </view>
   </view>
@@ -49,12 +48,11 @@
             </view>
           </view>
         </view>
+        <button class="cart-delete" data-cart-id="{{item.id}}" data-title="{{item.title}}" catchtap="removeItem">
+          <t-icon name="delete" size="32rpx" color="#b0aca2"></t-icon>
+        </button>
       </view>
     </block>
-    <view wx:elif="{{loading}}" class="cart-empty-state">
-      <text class="cart-empty-state__title">购物车加载中</text>
-      <text class="cart-empty-state__desc">正在同步你的商品和地址信息</text>
-    </view>
     <view wx:elif="{{loadError}}" class="cart-empty-state">
       <text class="cart-empty-state__title">购物车暂时没加载出来</text>
       <text class="cart-empty-state__desc">下拉刷新或重新进入页面后会再次尝试</text>
@@ -90,9 +88,9 @@
 
   <view class="cart-spacer"></view>
   <view class="cart-bottom">
-    <view class="cart-select">
-      <view class="check check--active">
-        <t-icon name="check" size="24rpx" color="#ffffff"></t-icon>
+    <view class="cart-select" bindtap="toggleSelectAll">
+      <view class="check {{isAllChecked ? 'check--active' : ''}}">
+        <t-icon wx:if="{{isAllChecked}}" name="check" size="24rpx" color="#ffffff"></t-icon>
       </view>
       <text>全选</text>
     </view>

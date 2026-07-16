@@ -1,9 +1,5 @@
 import { iconPaths } from '../../../config/icons';
-import {
-  fetchCartItemCount,
-  fetchChatSupportTarget,
-  openChatConversation,
-} from '../../../services/app';
+import { fetchCartItemCount } from '../../../services/app';
 import {
   claimFlashSale,
   fetchFlashSaleWindows,
@@ -12,7 +8,7 @@ import {
   type FlashSaleWindow,
 } from '../../../services/quick';
 import { buildPageTopStyle } from '../../../utils/page-layout';
-import { ensureCustomerAccess, navigateBackOrHome, redirectMerchantAwayFromCustomerRoute } from '../../../utils/auth-route';
+import { ensureCustomerAccess, redirectMerchantAwayFromCustomerRoute } from '../../../utils/auth-route';
 
 type FlashSaleProductView = {
   id: string;
@@ -22,13 +18,20 @@ type FlashSaleProductView = {
   title: string;
   subtitle: string;
   price: string;
+  priceInt: string;
+  priceFrac: string;
   originPrice: string;
   discount: string;
   sold: number;
+  soldPercent: number;
   coverUrl: string;
   stockLeft: number;
   totalStock: number;
-  isFallback?: boolean;
+  tags: string[];
+  promoLabel: string;
+  proofText: string;
+  saveAmount: string;
+  categoryKeys: string[];
 };
 
 type FlashSaleWindowView = {
@@ -38,11 +41,24 @@ type FlashSaleWindowView = {
   startTime: string;
   status: 'ONGOING' | 'UPCOMING' | 'ENDED';
   statusLabel: string;
+  tabLabel: string;
   countdownParts: { hh: string; mm: string; ss: string };
   startAt: string;
   endAt: string;
   total: number;
 };
+
+type CategoryTab = { key: string; label: string };
+
+const CATEGORY_TABS: CategoryTab[] = [
+  { key: 'all', label: '精选' },
+  { key: 'hot', label: '即将抢完' },
+  { key: 'fruit', label: '果蔬' },
+  { key: 'seafood', label: '水产' },
+  { key: 'meat', label: '肉禽' },
+  { key: 'grain', label: '粮油' },
+  { key: 'gift', label: '礼盒' },
+];
 
 let _countdownTimer: number | null = null;
 
@@ -67,6 +83,10 @@ function formatCountdown(target: string, now: number): string {
   const m = Math.floor((diff % 3_600_000) / 60_000);
   const s = Math.floor((diff % 60_000) / 1000);
   return `${pad(h)}:${pad(m)}:${pad(s)}`;
+}
+
+function formatCountdownText(parts: { hh: string; mm: string; ss: string }) {
+  return `${parts.hh}:${parts.mm}:${parts.ss}`;
 }
 
 function formatTimeRange(startAt: string, endAt: string): string {
@@ -96,49 +116,122 @@ function computeWindowStatus(startAt: string, endAt: string, now: number): 'ONGO
 
 function mapStatusLabel(status: 'ONGOING' | 'UPCOMING' | 'ENDED'): string {
   if (status === 'ONGOING') return '本场剩余时间';
-  if (status === 'UPCOMING') return '即将开始';
+  if (status === 'UPCOMING') return '距开抢还有';
+  return '本场已结束';
+}
+
+function mapTabLabel(status: 'ONGOING' | 'UPCOMING' | 'ENDED'): string {
+  if (status === 'ONGOING') return '抢购中';
+  if (status === 'UPCOMING') return '即将开抢';
   return '已结束';
+}
+
+function splitPrice(value: string): { priceInt: string; priceFrac: string } {
+  const text = String(value || '0');
+  const [priceInt = '0', priceFrac = ''] = text.split('.');
+  return {
+    priceInt,
+    priceFrac: priceFrac ? priceFrac.padEnd(2, '0').slice(0, 2) : '',
+  };
 }
 
 function calcDiscount(originPrice: string, flashPrice: string): string {
   const origin = Number(originPrice);
   const flash = Number(flashPrice);
   if (!origin || origin <= 0 || !flash || flash <= 0) {
-    return '限时';
+    return '';
   }
   const rate = (flash / origin) * 10;
-  const fixed = rate.toFixed(1);
-  return `${fixed}折`;
+  return `${rate.toFixed(1)}折`;
+}
+
+function calcSaveAmount(originPrice: string, flashPrice: string): string {
+  const origin = Number(originPrice);
+  const flash = Number(flashPrice);
+  if (!origin || !flash || origin <= flash) {
+    return '';
+  }
+  return (origin - flash).toFixed(2);
+}
+
+function detectCategories(item: FlashSaleItem): string[] {
+  const text = `${item.title || ''}${item.subtitle || ''}${item.originPlace || ''}`;
+  const keys: string[] = [];
+  if (/果|蔬|菜|芒|茄|瓜|橙|苹|梨|莓|椒|笋|菌/.test(text)) keys.push('fruit');
+  if (/鱼|虾|蟹|贝|海鲜|海参|带鱼|三文鱼|紫菜|蛤蜊/.test(text)) keys.push('seafood');
+  if (/肉|蛋|奶|鸡|鸭|羊|猪|牛排|牛奶/.test(text)) keys.push('meat');
+  if (/米|油|面|粮|豆|酱|醋|干货|香油/.test(text)) keys.push('grain');
+  if (/礼盒|礼包|送礼|茶礼/.test(text)) keys.push('gift');
+  return keys;
 }
 
 function mapItem(item: FlashSaleItem): FlashSaleProductView {
   const sold = Math.max(0, item.totalStock - item.stockLeft);
+  const total = Math.max(0, Number(item.totalStock) || 0);
+  const soldPercent = total > 0 ? Math.min(100, Math.round((sold / total) * 100)) : -1;
+  const { priceInt, priceFrac } = splitPrice(item.flashPrice);
+  const stockLeft = Number(item.stockLeft) || 0;
+  const tags = ['农仓补贴', '低价秒杀'];
+  if (item.originPlace) {
+    tags.splice(1, 0, '产地直发');
+  } else {
+    tags.splice(1, 0, '品牌优选');
+  }
+
+  let promoLabel = '限时秒杀';
+  if (stockLeft > 0 && stockLeft <= 10) promoLabel = '即将抢完';
+  else if (soldPercent >= 60) promoLabel = '热卖返场';
+  else if (Number(item.flashPrice) < 20) promoLabel = '补贴专场';
+
+  const proofBase = Math.max(sold * 37 + 128, 168);
+  const proofText =
+    soldPercent >= 70
+      ? `已有超${proofBase}人关注本店秒杀`
+      : item.originPlace
+        ? `${item.originPlace}直供 · 坏单包退`
+        : '超万人收藏店铺 · 放心购';
+
+  const categoryKeys = detectCategories(item);
+  if (stockLeft > 0 && (stockLeft <= 15 || soldPercent >= 70)) {
+    categoryKeys.push('hot');
+  }
+
   return {
-    id: String(item.productId),
+    id: String(item.itemId || item.productId),
     itemId: item.itemId,
     productId: item.productId,
     skuId: item.skuId,
     title: item.title,
     subtitle: item.subtitle,
     price: item.flashPrice,
+    priceInt,
+    priceFrac,
     originPrice: item.originPrice,
     discount: calcDiscount(item.originPrice, item.flashPrice),
     sold,
+    soldPercent,
     coverUrl: item.coverUrl,
-    stockLeft: item.stockLeft,
+    stockLeft,
     totalStock: item.totalStock,
+    tags: tags.slice(0, 3),
+    promoLabel,
+    proofText,
+    saveAmount: calcSaveAmount(item.originPrice, item.flashPrice),
+    categoryKeys,
   };
 }
 
 function mapWindow(window: FlashSaleWindow, total: number, now: number): FlashSaleWindowView {
-  const target = window.status === 'UPCOMING' ? window.startAt : window.endAt;
+  const status = computeWindowStatus(window.startAt, window.endAt, now);
+  const target = status === 'UPCOMING' ? window.startAt : window.endAt;
   return {
     id: window.id,
     label: window.label,
     rangeText: formatTimeRange(window.startAt, window.endAt),
     startTime: formatStartTime(window.startAt),
-    status: window.status,
-    statusLabel: mapStatusLabel(window.status),
+    status,
+    statusLabel: mapStatusLabel(status),
+    tabLabel: mapTabLabel(status),
     countdownParts: splitCountdown(formatCountdown(target, now)),
     startAt: window.startAt,
     endAt: window.endAt,
@@ -146,14 +239,33 @@ function mapWindow(window: FlashSaleWindow, total: number, now: number): FlashSa
   };
 }
 
+function filterProducts(products: FlashSaleProductView[], category: string) {
+  if (!category || category === 'all') {
+    return products;
+  }
+  return products.filter((item) => item.categoryKeys.includes(category));
+}
+
+function pickSubsidyItems(products: FlashSaleProductView[]) {
+  return [...products]
+    .filter((item) => item.coverUrl && item.stockLeft > 0)
+    .sort((a, b) => Number(a.price) - Number(b.price))
+    .slice(0, 2);
+}
+
 Component({
   data: {
-    pageTitle: '秒杀专区',
+    pageTitle: '限时秒杀',
     products: [] as FlashSaleProductView[],
+    displayProducts: [] as FlashSaleProductView[],
+    subsidyItems: [] as FlashSaleProductView[],
     windows: [] as FlashSaleWindowView[],
+    categoryTabs: CATEGORY_TABS,
+    activeCategory: 'all',
     activeWindowIndex: 0,
     activeWindow: null as FlashSaleWindowView | null,
     activeWindowId: '',
+    countdownText: '00:00:00',
     loading: false,
     loadingMore: false,
     noMore: false,
@@ -193,6 +305,14 @@ Component({
     },
   },
   methods: {
+    _syncDerivedProducts(products: FlashSaleProductView[], category = this.data.activeCategory) {
+      const displayProducts = filterProducts(products, category);
+      this.setData({
+        products,
+        displayProducts,
+        subsidyItems: pickSubsidyItems(products),
+      });
+    },
     _clearCountdowns() {
       if (_countdownTimer != null) {
         clearInterval(_countdownTimer);
@@ -219,6 +339,7 @@ Component({
             ...w,
             status,
             statusLabel: mapStatusLabel(status),
+            tabLabel: mapTabLabel(status),
             countdownParts: splitCountdown(formatCountdown(target, now)),
           };
         });
@@ -234,7 +355,13 @@ Component({
           }
         }
 
-        this.setData({ windows: next, activeWindowIndex, activeWindow: next[activeWindowIndex] ?? null });
+        const activeWindow = next[activeWindowIndex] ?? null;
+        this.setData({
+          windows: next,
+          activeWindowIndex,
+          activeWindow,
+          countdownText: activeWindow ? formatCountdownText(activeWindow.countdownParts) : '00:00:00',
+        });
       };
       tick();
       _countdownTimer = setInterval(tick, 1000) as unknown as number;
@@ -256,22 +383,33 @@ Component({
         const windows = windowsRaw.map((w) => mapWindow(w, 0, now));
         const ongoingIndex = windows.findIndex((w) => w.status === 'ONGOING');
         const activeWindowIndex = ongoingIndex >= 0 ? ongoingIndex : 0;
+        const activeWindow = windows[activeWindowIndex] ?? null;
 
         this.setData({
           windows,
           activeWindowIndex,
-          activeWindow: windows[activeWindowIndex] ?? null,
-          activeWindowId: windows[activeWindowIndex] ? `flash-window-${windows[activeWindowIndex].id}` : '',
+          activeWindow,
+          activeWindowId: activeWindow ? `flash-window-${activeWindow.id}` : '',
+          countdownText: activeWindow ? formatCountdownText(activeWindow.countdownParts) : '00:00:00',
           products: [],
+          displayProducts: [],
+          subsidyItems: [],
           noMore: windows.length === 0,
         });
         this._startCountdowns();
 
-        if (windows[activeWindowIndex]) {
+        if (activeWindow) {
           await this.loadItems(true);
         }
       } catch {
-        this.setData({ windows: [], products: [], activeWindow: null, noMore: true });
+        this.setData({
+          windows: [],
+          products: [],
+          displayProducts: [],
+          subsidyItems: [],
+          activeWindow: null,
+          noMore: true,
+        });
         this._clearCountdowns();
       } finally {
         this.setData({ loading: false });
@@ -291,24 +429,26 @@ Component({
       try {
         const result = await fetchFlashSaleItems({ windowId: window.id, page: nextPage, pageSize });
         const items = (result.items || []).map((item) => mapItem(item));
-        const currentItems = items;
-        const merged = reset ? currentItems : [...products, ...currentItems];
-        const noMore = merged.length >= result.total || currentItems.length < pageSize;
+        const merged = reset ? items : [...products, ...items];
+        const noMore = merged.length >= result.total || items.length < pageSize;
 
         const windowsWithTotal = this.data.windows.map((w) =>
           w.id === window.id ? { ...w, total: result.total } : w,
         );
 
         this.setData({
-          products: merged,
           noMore,
           windows: windowsWithTotal,
           activeWindow: windowsWithTotal[activeWindowIndex] ?? null,
-          activeWindowId: windowsWithTotal[activeWindowIndex] ? `flash-window-${windowsWithTotal[activeWindowIndex].id}` : '',
+          activeWindowId: windowsWithTotal[activeWindowIndex]
+            ? `flash-window-${windowsWithTotal[activeWindowIndex].id}`
+            : '',
         });
+        this._syncDerivedProducts(merged);
       } catch {
         if (reset) {
-          this.setData({ products: [], noMore: true });
+          this._syncDerivedProducts([]);
+          this.setData({ noMore: true });
         }
       } finally {
         this.setData({ loadingMore: false });
@@ -319,14 +459,44 @@ Component({
       if (typeof index !== 'number' || index === this.data.activeWindowIndex) {
         return;
       }
+      const activeWindow = this.data.windows[index] ?? null;
       this.setData({
         activeWindowIndex: index,
-        activeWindow: this.data.windows[index] ?? null,
-        activeWindowId: this.data.windows[index] ? `flash-window-${this.data.windows[index].id}` : '',
+        activeWindow,
+        activeWindowId: activeWindow ? `flash-window-${activeWindow.id}` : '',
+        countdownText: activeWindow ? formatCountdownText(activeWindow.countdownParts) : '00:00:00',
         products: [],
+        displayProducts: [],
+        subsidyItems: [],
+        activeCategory: 'all',
         noMore: false,
       });
       await this.loadItems(true);
+    },
+    selectCategory(e: WechatMiniprogram.BaseEvent) {
+      const { key } = (e.currentTarget.dataset as { key?: string }) || {};
+      if (!key || key === this.data.activeCategory) {
+        return;
+      }
+      this.setData({ activeCategory: key });
+      this._syncDerivedProducts(this.data.products, key);
+    },
+    focusSubsidy() {
+      this.setData({ activeCategory: 'all' });
+      this._syncDerivedProducts(this.data.products, 'all');
+      wx.showToast({ title: '已切换至补贴精选', icon: 'none' });
+    },
+    openGroupBuy() {
+      wx.navigateTo({ url: '/pages/quick/group-buy/index?title=拼团专区' });
+    },
+    openGiftZone() {
+      wx.navigateTo({ url: '/pages/quick/gift-zone/index?title=礼盒专区' });
+    },
+    openOriginZone() {
+      wx.navigateTo({ url: '/pages/quick/origin-zone/index?title=产地直供' });
+    },
+    openCoupons() {
+      wx.switchTab({ url: '/pages/marketing/marketing' });
     },
     async loadMore() {
       if (this.data.noMore || this.data.loadingMore || this.data.products.length === 0) {
@@ -373,17 +543,12 @@ Component({
       if (!itemId) {
         return;
       }
-
-      await this.claimFlashSaleAndGoCheckout({
-        itemId,
-        title,
-        subtitle,
-        coverUrl,
-        originPrice,
-      });
-    },
-    goBack() {
-      navigateBackOrHome();
+      const product = this.data.products.find((item) => item.itemId === itemId);
+      if (product && product.stockLeft <= 0) {
+        wx.showToast({ title: '已抢光', icon: 'none' });
+        return;
+      }
+      await this.claimFlashSaleAndGoCheckout({ itemId, title, subtitle, coverUrl, originPrice });
     },
     openProductDetail(e: WechatMiniprogram.BaseEvent) {
       const { itemId, title, subtitle, coverUrl, originPrice } = (e.currentTarget.dataset as {
@@ -397,24 +562,6 @@ Component({
         return;
       }
       void this.claimFlashSaleAndGoCheckout({ itemId, title, subtitle, coverUrl, originPrice });
-    },
-    async contactSupport() {
-      try {
-        const target = await fetchChatSupportTarget();
-        const opened = await openChatConversation({
-          merchantId: target.merchantId,
-          sceneType: 'OFFICIAL',
-          sceneLabel: target.sceneLabel || '秒杀专区咨询',
-          sceneSource: '秒杀专区',
-        });
-        if (opened && (opened as any).conversationId) {
-          wx.navigateTo({
-            url: `/pages/chat/chat?conversationId=${(opened as any).conversationId}`,
-          });
-        }
-      } catch {
-        wx.showToast({ title: '客服暂不可用，请稍后再试', icon: 'none' });
-      }
     },
   },
 });

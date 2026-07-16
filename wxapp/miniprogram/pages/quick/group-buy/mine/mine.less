@@ -1,0 +1,242 @@
+/* 我的拼团 — 项目墨绿暖彩，风格与附近拼单列表一致 */
+
+.gbm {
+  --gbm-green: #2c4a39;
+  --gbm-green-2: #3f6f44;
+  --gbm-orange: #c65f2d;
+  --gbm-bg: #f6f3eb;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  background: var(--gbm-bg);
+  box-sizing: border-box;
+}
+
+.gbm__top {
+  background: linear-gradient(180deg, #2c4a39 0%, #3a5f48 70%, #f6f3eb 100%);
+  padding-bottom: 16rpx;
+  flex-shrink: 0;
+}
+
+.gbm__list {
+  flex: 1;
+  height: 0;
+  min-height: 50vh;
+  padding: 12rpx 20rpx 0;
+  box-sizing: border-box;
+}
+
+.gbm-item {
+  display: flex;
+  gap: 18rpx;
+  padding: 20rpx;
+  margin-bottom: 14rpx;
+  background: #ffffff;
+  border-radius: 20rpx;
+}
+
+.gbm-item__cover {
+  position: relative;
+  width: 140rpx;
+  height: 140rpx;
+  border-radius: 16rpx;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #f2f2f2;
+}
+
+.gbm-item__img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.gbm-item__img.img-orange { background: linear-gradient(135deg, #ffd4a8, #ff9f5a); }
+.gbm-item__img.img-rice { background: linear-gradient(135deg, #fff3c4, #e8d48b); }
+.gbm-item__img.img-gift { background: linear-gradient(135deg, #ffd0d0, #f08a8a); }
+.gbm-item__img.img-egg { background: linear-gradient(135deg, #fff6d6, #f0d78a); }
+.gbm-item__img.img-meat { background: linear-gradient(135deg, #ffc9c9, #e88a8a); }
+.gbm-item__img.img-tomato { background: linear-gradient(135deg, #ffb8a8, #f06a4a); }
+
+.gbm-item__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.gbm-item__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12rpx;
+}
+
+.gbm-item__title {
+  flex: 1;
+  min-width: 0;
+  font-size: 28rpx;
+  font-weight: 800;
+  color: #222;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.gbm-item__status {
+  flex-shrink: 0;
+  font-size: 20rpx;
+  font-weight: 800;
+  padding: 3rpx 12rpx;
+  border-radius: 999rpx;
+
+  &.is-open {
+    color: var(--gbm-green-2);
+    background: rgba(63, 111, 68, 0.12);
+  }
+
+  &.is-completed {
+    color: var(--gbm-orange);
+    background: rgba(198, 95, 45, 0.12);
+  }
+
+  &.is-failed {
+    color: #999999;
+    background: rgba(0, 0, 0, 0.06);
+  }
+}
+
+.gbm-item__role {
+  margin-top: 6rpx;
+  font-size: 22rpx;
+  color: #999;
+}
+
+.gbm-item__progress {
+  margin-top: 12rpx;
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.gbm-item__bar {
+  flex: 1;
+  height: 10rpx;
+  border-radius: 999rpx;
+  background: #f0f0f0;
+  overflow: hidden;
+}
+
+.gbm-item__fill {
+  height: 100%;
+  border-radius: 999rpx;
+  background: linear-gradient(90deg, var(--gbm-green-2), var(--gbm-orange));
+}
+
+.gbm-item__members {
+  flex-shrink: 0;
+  font-size: 20rpx;
+  color: #888;
+}
+
+.gbm-item__foot {
+  margin-top: auto;
+  padding-top: 10rpx;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12rpx;
+}
+
+.gbm-item__price-wrap {
+  display: flex;
+  align-items: baseline;
+}
+
+.gbm-item__yen {
+  font-size: 22rpx;
+  font-weight: 900;
+  color: var(--gbm-orange);
+}
+
+.gbm-item__price {
+  font-size: 36rpx;
+  font-weight: 900;
+  color: var(--gbm-orange);
+  line-height: 1;
+}
+
+.gbm-item__old {
+  margin-left: 8rpx;
+  font-size: 20rpx;
+  color: #bbb;
+  text-decoration: line-through;
+}
+
+.gbm-item__btn {
+  flex-shrink: 0;
+  height: 56rpx;
+  padding: 0 24rpx;
+  border-radius: 999rpx;
+  background: rgba(44, 74, 57, 0.08);
+  color: var(--gbm-green);
+  font-size: 24rpx;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gbm-item__btn--pay {
+  background: linear-gradient(135deg, var(--gbm-green), var(--gbm-green-2));
+  color: #ffffff;
+}
+
+.gbm__empty {
+  margin: 100rpx 24rpx;
+  text-align: center;
+  color: #888;
+  font-size: 26rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10rpx;
+}
+
+.gbm__empty-title {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 800;
+  color: #333;
+}
+
+.gbm__empty-desc {
+  display: block;
+  font-size: 24rpx;
+  color: #999;
+}
+
+.gbm__empty-btn {
+  margin-top: 16rpx;
+  height: 68rpx;
+  padding: 0 40rpx;
+  border-radius: 999rpx;
+  background: linear-gradient(135deg, var(--gbm-green), var(--gbm-green-2));
+  color: #ffffff;
+  font-size: 26rpx;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &::after {
+    border: none;
+  }
+}
+
+.safe-bottom {
+  height: calc(32rpx + env(safe-area-inset-bottom));
+}

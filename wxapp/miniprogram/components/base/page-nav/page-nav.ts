@@ -56,9 +56,8 @@ Component({
       });
     },
     applyThemeColors(theme: string) {
-      const iconColor =
-        theme === 'solid' ? '#111111' : '#ffffff';
-      this.setData({ iconColor });
+      const darkIcon = theme === 'solid' || theme === 'light' || theme === 'amber' || theme === 'brand';
+      this.setData({ iconColor: darkIcon ? '#111111' : '#ffffff' });
     },
     onBack() {
       const delta = Math.max(1, Number(this.data.delta) || 1);

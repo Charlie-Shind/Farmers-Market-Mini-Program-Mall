@@ -1,4 +1,5 @@
 import { iconPaths } from '../../../config/icons';
+import { readPageMetrics } from '../../../utils/page-layout';
 
 type ThemeMode = 'auto' | 'light' | 'dark';
 type ThemeName = 'light' | 'dark';
@@ -80,9 +81,11 @@ Component({
     },
     theme: 'light' as ThemeName,
     iconColor: '#111111',
+    navStyle: '',
   },
   lifetimes: {
     attached() {
+      this.applyMetrics();
       void this.resolveTheme();
     },
     detached() {
@@ -95,6 +98,18 @@ Component({
     },
   },
   methods: {
+    applyMetrics() {
+      const metrics = readPageMetrics(12);
+      // 按钮与右侧胶囊垂直居中
+      const btnSizePx = 32;
+      const padTop = Math.max(
+        metrics.menuTop,
+        metrics.statusBarHeight + Math.round((metrics.navBarHeight - btnSizePx) / 2),
+      );
+      this.setData({
+        navStyle: `padding-top: ${padTop}px;`,
+      });
+    },
     onBack() {
       this.triggerEvent('back');
     },

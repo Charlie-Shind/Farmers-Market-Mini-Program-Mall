@@ -1,12 +1,12 @@
 .image-adaptive-nav {
-  position: absolute;
-  top: 90rpx;
+  position: fixed;
+  top: 0;
   left: 0;
-  right: 0;
-  z-index: 40;
+  z-index: 200;
   display: flex;
-  align-items: flex-start;
-  padding: calc(env(safe-area-inset-top) + 14rpx) 24rpx 0;
+  align-items: center;
+  padding-left: 24rpx;
+  padding-right: 24rpx;
   box-sizing: border-box;
   pointer-events: none;
 }
@@ -16,10 +16,6 @@
   align-items: center;
   gap: 12rpx;
   pointer-events: auto;
-}
-
-.image-adaptive-nav__side--right {
-  justify-content: flex-end;
 }
 
 .image-adaptive-nav__btn {
@@ -48,17 +44,12 @@
   height: 64rpx;
 }
 
-.image-adaptive-nav__side:first-child {
-  margin-left: 0;
-}
-
-.image-adaptive-nav__side--right {
-  margin-left: 10px;
-  margin-right: 0;
-}
-
 .image-adaptive-nav__btn--hover {
   transform: scale(0.96);
+}
+
+.image-adaptive-nav__btn::after {
+  border: none;
 }
 
 .image-adaptive-nav__probe {

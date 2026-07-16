@@ -4,9 +4,13 @@
   display: flex;
   flex-direction: column;
   background: #fafaf7;
-  padding-top: var(--page-top, 88px);
   box-sizing: border-box;
   overflow: hidden;
+
+  .page-nav--solid .page-nav__fixed {
+    background: rgba(250, 250, 247, 0.96);
+    border-bottom-color: rgba(44, 74, 57, 0.06);
+  }
 }
 
 .search-header {
@@ -18,22 +22,6 @@
   background: #fafaf7;
   flex-shrink: 0;
   box-sizing: border-box;
-}
-
-.search-header__back {
-  width: 64rpx;
-  height: 64rpx;
-  border-radius: 50%;
-  background: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  box-shadow: 0 8rpx 24rpx rgba(44, 74, 57, 0.06);
-}
-
-.search-header__back--hover {
-  background: #f3f5f4;
 }
 
 .search-header__bar {

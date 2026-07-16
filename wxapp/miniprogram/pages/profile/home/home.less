@@ -6,9 +6,15 @@
 
 .profile-home-page {
   background: #f8f6ef;
-  min-height: 100vh;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
   position: relative;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 0;
 }
 
 // 顶部高质感背景图 cover (流光渐变 + 磨砂质感)
@@ -57,6 +63,7 @@
 .custom-nav-bar {
   position: relative;
   z-index: 10;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -94,17 +101,29 @@
   }
 }
 
+.profile-scroll {
+  position: relative;
+  z-index: 5;
+  flex: 1;
+  height: 500rpx;
+}
+
 // 主面板悬浮重叠效果
 .profile-container {
   position: relative;
   z-index: 5;
-  margin-top: 96rpx;
+  top: 96rpx;
   background: #fffdf8;
   border-top-left-radius: 40rpx;
   border-top-right-radius: 40rpx;
   padding: 32rpx;
   box-shadow: 0 -12rpx 40rpx rgba(44, 74, 57, 0.08);
-  min-height: calc(100vh - 220rpx);
+  /* 去掉强制撑高，避免内容不足时页面空滚 */
+  min-height: 0;
+}
+
+.bottom-safe {
+  height: calc(24rpx + env(safe-area-inset-bottom));
 }
 
 // 头部头像及交互行
@@ -417,108 +436,144 @@
   }
 }
 
-// 优惠券票券列表 (立体卡券)
-.user-coupons-list {
-  display: grid;
-  gap: 20rpx;
+// 优惠券票券（与商铺页同款）
+.user-coupons-block {
+  width: 100%;
+}
 
-  .coupon-fancy-ticket {
-    display: flex;
-    background: linear-gradient(135deg, #fffcf6 0%, #fffcfc 100%);
-    border-radius: 20rpx;
-    border: 2rpx solid rgba(214, 166, 101, 0.16);
-    overflow: hidden;
-    box-shadow: 0 4rpx 16rpx rgba(214, 166, 101, 0.05);
-    position: relative;
+.user-coupons-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16rpx;
+}
 
-    // 半圆打孔美学
-    &::before,
-    &::after {
-      content: '';
-      position: absolute;
-      width: 16rpx;
-      height: 16rpx;
-      border-radius: 50%;
-      background: #fffdf8;
-      left: 172rpx;
-      z-index: 2;
-      border: 2rpx solid rgba(214, 166, 101, 0.16);
-    }
-    &::before {
-      top: -8rpx;
-    }
-    &::after {
-      bottom: -8rpx;
-    }
+.user-coupons-sub,
+.user-coupons-extra {
+  font-size: 22rpx;
+  color: #999;
+}
 
-    .coupon-val-side {
-      width: 180rpx;
-      flex-shrink: 0;
-      background: transparent;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-right: 2rpx dashed rgba(214, 166, 101, 0.22);
-      padding: 28rpx 0;
+.coupon-scroll {
+  white-space: nowrap;
+  width: 100%;
+}
 
-      .coupon-currency {
-        font-size: 24rpx;
-        font-weight: 800;
-        color: #8b5e22;
-        margin-right: 2rpx;
-      }
+.coupon-ticket {
+  --coupon-bg: #e0c79e;
+  --coupon-page: #fffdf8;
+  display: inline-flex;
+  align-items: stretch;
+  width: 300rpx;
+  height: 132rpx;
+  margin-right: 14rpx;
+  vertical-align: top;
+  box-sizing: border-box;
+  background: var(--coupon-bg);
+  /* 左右锯齿票根 */
+  -webkit-mask-image:
+    radial-gradient(circle at 0, transparent 7rpx, #000 7.5rpx),
+    radial-gradient(circle at 100%, transparent 7rpx, #000 7.5rpx);
+  -webkit-mask-size: 51% 14rpx, 51% 14rpx;
+  -webkit-mask-position: left, right;
+  -webkit-mask-repeat: repeat-y;
+  mask-image:
+    radial-gradient(circle at 0, transparent 7rpx, #000 7.5rpx),
+    radial-gradient(circle at 100%, transparent 7rpx, #000 7.5rpx);
+  mask-size: 51% 14rpx, 51% 14rpx;
+  mask-position: left, right;
+  mask-repeat: repeat-y;
+}
 
-      .coupon-value-num {
-        font-size: 50rpx;
-        font-weight: 900;
-        color: #8b5e22;
-      }
-    }
+.coupon-ticket.is-disabled {
+  opacity: 0.55;
+  filter: grayscale(0.15);
+}
 
-    .coupon-info-side {
-      flex: 1;
-      padding: 24rpx 28rpx;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-      justify-content: center;
+.coupon-ticket__main {
+  flex: 1;
+  min-width: 0;
+  padding: 18rpx 16rpx 16rpx 22rpx;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-sizing: border-box;
+}
 
-      .coupon-title-name {
-        font-size: 28rpx;
-        font-weight: 800;
-        color: var(--text);
-      }
+.coupon-ticket__amount {
+  color: #ffffff;
+  font-size: 40rpx;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.5rpx;
+}
 
-      .coupon-limit-desc {
-        font-size: 22rpx;
-        color: var(--muted);
-        margin-top: 8rpx;
-        font-weight: 600;
-      }
+.coupon-ticket__line {
+  width: 100%;
+  height: 1rpx;
+  margin: 12rpx 0 10rpx;
+  background: rgba(255, 255, 255, 0.85);
+}
 
-      .coupon-status-btn {
-        position: absolute;
-        right: 28rpx;
-        top: 50%;
-        transform: translateY(-50%);
-        font-size: 20rpx;
-        font-weight: 800;
-        padding: 6rpx 20rpx;
-        border-radius: 999rpx;
-      }
+.coupon-ticket__rule {
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 20rpx;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
-      .status-used {
-        background: #f0eee6;
-        color: #8c928c;
-      }
+.coupon-ticket__gap {
+  position: relative;
+  width: 2rpx;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 
-      .status-ready {
-        background: var(--green);
-        color: #ffffff;
-        box-shadow: 0 4rpx 12rpx rgba(44, 74, 57, 0.16);
-      }
-    }
-  }
+.coupon-ticket__notch {
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 50%;
+  background: var(--coupon-page);
+  flex-shrink: 0;
+}
+
+.coupon-ticket__notch--top {
+  margin-top: -8rpx;
+}
+
+.coupon-ticket__notch--bottom {
+  margin-bottom: -8rpx;
+}
+
+.coupon-ticket__dash {
+  flex: 1;
+  width: 0;
+  border-left: 2rpx dashed rgba(255, 255, 255, 0.9);
+  margin: 4rpx 0;
+}
+
+.coupon-ticket__action {
+  width: 56rpx;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10rpx 8rpx 10rpx 4rpx;
+  box-sizing: border-box;
+}
+
+.coupon-ticket__action-text {
+  color: #ffffff;
+  font-size: 22rpx;
+  font-weight: 700;
+  line-height: 1.25;
+  writing-mode: vertical-rl;
+  letter-spacing: 4rpx;
 }
 
 // 档案资料详情卡片

@@ -605,6 +605,38 @@ export async function getOrders(query: QueryParams = {}) {
   );
 }
 
+export type AdminGroupBuyRow = {
+  groupId: number;
+  groupNo: string;
+  inviteCode: string | null;
+  status: 'OPEN' | 'COMPLETED' | 'FAILED';
+  productTitle: string;
+  coverUrl: string;
+  initiatorName: string;
+  needed: number;
+  memberCount: number;
+  groupPrice: string;
+  originPrice: string;
+  expireAt: string;
+  completedAt: string | null;
+  createdAt: string;
+};
+
+export type AdminGroupBuyListResponse = PageResponse<AdminGroupBuyRow> & {
+  stats: { OPEN: number; COMPLETED: number; FAILED: number };
+};
+
+export async function getGroupBuys(query: QueryParams = {}) {
+  return request<AdminGroupBuyListResponse>(
+    `/group-buys${buildQueryString({
+      page: query.page ?? 1,
+      pageSize: query.pageSize ?? 20,
+      keyword: query.keyword,
+      status: query.status,
+    })}`,
+  );
+}
+
 export async function getOrderDetail(orderNo: string) {
   return request<AdminOrderDetailRow>(`/orders/${orderNo}`);
 }

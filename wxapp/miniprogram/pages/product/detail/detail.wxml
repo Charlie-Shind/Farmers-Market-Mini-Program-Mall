@@ -1,12 +1,13 @@
 <view class="phone-page detail-page" style="{{pageStyle}}">
+  <image-adaptive-nav
+    image-url="{{currentMediaUrl}}"
+    bind:back="goBack"
+    bind:share="shareProduct"
+  ></image-adaptive-nav>
+
   <scroll-view scroll-y="true" class="detail-scroll" enhanced="true" show-scrollbar="{{false}}">
     <!-- 主图轮播 -->
     <view class="pdd-gallery">
-      <image-adaptive-nav
-        image-url="{{currentMediaUrl}}"
-        bind:back="goBack"
-        bind:share="shareProduct"
-      ></image-adaptive-nav>
       <swiper class="pdd-gallery__swiper" circular="{{bannerTotal > 1}}" indicator-dots="{{false}}" bindchange="onBannerChange">
         <swiper-item wx:for="{{mediaList}}" wx:key="index">
           <image wx:if="{{item.kind === 'image'}}" class="pdd-gallery__media" src="{{item.src}}" mode="aspectFill"></image>
@@ -44,6 +45,26 @@
       <view class="pdd-tags" wx:if="{{coreTags && coreTags.length}}">
         <text class="pdd-tag" wx:for="{{coreTags}}" wx:key="*this">{{item}}</text>
       </view>
+    </view>
+
+    <!-- 产地实拍视频 -->
+    <view class="pdd-video-card" wx:if="{{product.videos && product.videos.length}}" bindtap="playStoryVideo">
+      <view class="pdd-video-card__thumb">
+        <image
+          class="pdd-video-card__cover"
+          src="{{product.videos[0].coverUrl || heroImageUrl || product.coverUrl}}"
+          mode="aspectFill"
+        ></image>
+        <view class="pdd-video-card__play">
+          <t-icon name="play" size="24rpx" color="#ffffff"></t-icon>
+        </view>
+        <text class="pdd-video-card__duration" wx:if="{{product.videos[0].duration}}">{{product.videos[0].duration}}</text>
+      </view>
+      <view class="pdd-video-card__body">
+        <text class="pdd-video-card__title">产地实拍视频</text>
+        <text class="pdd-video-card__desc">点击查看商品实拍，看得见的放心</text>
+      </view>
+      <t-icon name="chevronRight" size="24rpx" color="#bbb"></t-icon>
     </view>
 
     <!-- 选择规格 -->

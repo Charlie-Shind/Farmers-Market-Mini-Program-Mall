@@ -2,15 +2,16 @@
 <view class="phone-page home-page" style="{{pageStyle}}">
   <!-- 品牌顶栏 -->
   <view class="home-brand" style="{{topSearchStyle}}">
-    <view class="home-brand__main">
-      <text class="home-brand__name">浔源农仓</text>
-      <text class="home-brand__slogan">产地直供 · 新鲜到家</text>
-    </view>
-    <view class="home-brand__loc" data-label="定位" bindtap="openSection">
+  <view class="home-brand__loc" data-label="定位" bindtap="openSection">
       <t-icon name="location" size="28rpx" color="#2c4a39"></t-icon>
       <text class="home-brand__loc-text">{{home.locationDisplay}}</text>
       <t-icon name="chevronDown" size="18rpx" color="#8a877f"></t-icon>
     </view>
+    <view class="home-brand__main">
+      <text class="home-brand__name">浔源农仓</text>
+      <text class="home-brand__slogan">产地直供 · 新鲜到家</text>
+    </view>
+    <view style="width: 85px"></view>
   </view>
 
   <!-- 搜索 -->
@@ -20,31 +21,38 @@
     <view class="home-search__btn">搜索</view>
   </view>
 
-  <!-- Banner 全宽沉浸 -->
+  <!-- Banner：非受控 swiper，避免 current 双向绑定造成来回跳动 -->
   <view wx:if="{{home.banners.length}}" class="home-banner">
     <swiper
       class="home-banner__swiper"
-      circular="{{home.banners.length > 1}}"
-      autoplay="{{home.banners.length > 1}}"
-      interval="5000"
-      duration="520"
-      current="{{activeBannerIndex}}"
+      circular="{{home.banners.length > 2}}"
+      autoplay="{{bannerAutoplay}}"
+      interval="4500"
+      duration="400"
+      easing-function="easeOutCubic"
+      skip-hidden-item-layout
       bindchange="onBannerChange"
+      bindanimationfinish="onBannerAnimationFinish"
     >
-      <swiper-item wx:for="{{home.banners}}" wx:for-item="banner" wx:key="id">
-        <image class="home-banner__img" src="{{banner.imageUrl}}" mode="aspectFill" />
+      <swiper-item wx:for="{{home.banners}}" wx:for-item="banner" wx:key="key">
+        <image
+          class="home-banner__img"
+          src="{{banner.imageUrl}}"
+          mode="aspectFill"
+          lazy-load="{{false}}"
+        />
       </swiper-item>
     </swiper>
-    <view class="home-banner__dots">
+    <view class="home-banner__dots" wx:if="{{home.banners.length > 1}}">
       <view
         wx:for="{{home.banners}}"
-        wx:key="id"
+        wx:key="key"
         class="home-banner__dot {{index === activeBannerIndex ? 'is-active' : ''}}"
       ></view>
     </view>
   </view>
 
-  <!-- 快捷入口：双排 -->
+  <!-- 快捷入口 -->
   <view class="home-quick">
     <view class="home-quick__row">
       <view
@@ -77,21 +85,38 @@
     </view>
   </view>
 
-  <!-- 信任条 -->
+  <!-- 服务保障条 -->
   <view class="home-trust">
     <view class="home-trust__item">
-      <text class="home-trust__em">产地</text>
-      <text class="home-trust__txt">直供优选</text>
+      <t-icon name="origin" size="36rpx" color="#2c4a39"></t-icon>
+      <view class="home-trust__copy">
+        <text class="home-trust__title">产地直供</text>
+        <text class="home-trust__desc">源头好货</text>
+      </view>
     </view>
     <view class="home-trust__divider"></view>
     <view class="home-trust__item">
-      <text class="home-trust__em">新鲜</text>
-      <text class="home-trust__txt">当日发货</text>
+      <t-icon name="truck" size="36rpx" color="#2c4a39"></t-icon>
+      <view class="home-trust__copy">
+        <text class="home-trust__title">新鲜当日发</text>
+        <text class="home-trust__desc">当日采摘</text>
+      </view>
     </view>
     <view class="home-trust__divider"></view>
     <view class="home-trust__item">
-      <text class="home-trust__em">品质</text>
-      <text class="home-trust__txt">一物一码</text>
+      <t-icon name="shield" size="36rpx" color="#2c4a39"></t-icon>
+      <view class="home-trust__copy">
+        <text class="home-trust__title">品质严选</text>
+        <text class="home-trust__desc">层层把关</text>
+      </view>
+    </view>
+    <view class="home-trust__divider"></view>
+    <view class="home-trust__item">
+      <t-icon name="support" size="36rpx" color="#2c4a39"></t-icon>
+      <view class="home-trust__copy">
+        <text class="home-trust__title">售后无忧</text>
+        <text class="home-trust__desc">贴心服务</text>
+      </view>
     </view>
   </view>
 

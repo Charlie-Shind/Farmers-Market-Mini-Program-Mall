@@ -1,32 +1,71 @@
 <view class="phone-page history-page" style="{{pageStyle}}">
   <page-nav title="浏览历史" theme="solid">
-    <view slot="right" class="nav-clear-btn" hover-class="nav-clear-btn--hover" bindtap="openClearSheet">清空</view>
+    <view
+      slot="right"
+      class="nav-clear-btn {{history.items.length ? '' : 'nav-clear-btn--disabled'}}"
+      hover-class="nav-clear-btn--hover"
+      bindtap="openClearSheet"
+    >
+      <t-icon name="delete" size="24rpx" color="{{history.items.length ? '#c65f2d' : '#c7c2b4'}}"></t-icon>
+      <text>清空</text>
+    </view>
   </page-nav>
-  <view class="history-summary">
-    <text class="history-summary__title">今天浏览</text>
-    <text class="history-summary__desc">{{history.items.length}} 条记录</text>
+
+  <view class="history-hero">
+    <view class="history-hero__glow"></view>
+    <view class="history-hero__icon">
+      <t-icon name="history" size="36rpx" color="#ffffff"></t-icon>
+    </view>
+    <view class="history-hero__info">
+      <text class="history-hero__title">共 {{history.items.length}} 条浏览记录</text>
+      <text class="history-hero__desc">浏览过的商品会自动保存在这里，方便你随时回看下单</text>
+    </view>
   </view>
 
-  <view wx:if="{{history.items.length}}" class="history-list">
-    <view
-      wx:for="{{history.items}}"
-      wx:key="productId"
-      class="history-item"
-      data-product-id="{{item.productId}}"
-      bindtap="openProductDetail"
-    >
-      <view class="history-item__cover {{item.coverUrl ? '' : 'history-item__cover--empty'}}" style="{{item.coverStyle}}"></view>
-      <view class="history-item__body">
-        <text class="history-item__title">{{item.title}}</text>
-        <text class="history-item__desc">{{item.subtitle}}</text>
-        <text class="history-item__meta">浏览于 {{item.visitedAtText}}</text>
+  <view wx:if="{{history.items.length}}" class="history-groups">
+    <view wx:for="{{historyGroups}}" wx:key="label" class="history-group">
+      <view class="history-group__head">
+        <view class="history-group__dot"></view>
+        <text class="history-group__label">{{item.label}}</text>
+        <view class="history-group__line"></view>
       </view>
-      <text class="history-item__price">{{item.priceLabel}}</text>
+
+      <view class="history-list">
+        <view
+          wx:for="{{item.items}}"
+          wx:for-item="record"
+          wx:key="productId"
+          class="history-item"
+          data-product-id="{{record.productId}}"
+          bindtap="openProductDetail"
+          hover-class="history-item--hover"
+        >
+          <view class="history-item__cover {{record.coverUrl ? '' : 'history-item__cover--empty'}}" style="{{record.coverStyle}}">
+            <t-icon wx:if="{{!record.coverUrl}}" name="image" size="36rpx" color="#c1a877"></t-icon>
+          </view>
+          <view class="history-item__body">
+            <text class="history-item__title">{{record.title}}</text>
+            <text class="history-item__desc">{{record.subtitle}}</text>
+            <view class="history-item__time">
+              <t-icon name="clock" size="18rpx" color="#a9a595"></t-icon>
+              <text>{{record.visitedTimeText}}</text>
+            </view>
+          </view>
+          <view class="history-item__side">
+            <text class="history-item__price">{{record.priceLabel}}</text>
+            <view class="history-item__chevron">
+              <t-icon name="chevronRight" size="20rpx" color="#c7c2b4"></t-icon>
+            </view>
+          </view>
+        </view>
+      </view>
     </view>
   </view>
 
   <view wx:else class="empty-state">
-    <view class="empty-state__icon">⌁</view>
+    <view class="empty-state__icon">
+      <t-icon name="history" size="52rpx" color="#2c4a39" opacity="0.55"></t-icon>
+    </view>
     <text class="empty-state__title">暂无浏览历史</text>
     <text class="empty-state__desc">浏览过的商品会自动记录在这里，方便你继续回看。</text>
     <button class="empty-state__action" bindtap="goBack">去首页看看</button>
@@ -34,6 +73,9 @@
 
   <view wx:if="{{showClearSheet}}" class="sheet-mask" bindtap="closeClearSheet">
     <view class="clear-sheet" catchtap="stopBubble">
+      <view class="clear-sheet__icon">
+        <t-icon name="delete" size="36rpx" color="#c84f2c"></t-icon>
+      </view>
       <text class="clear-sheet__title">清空浏览历史？</text>
       <text class="clear-sheet__desc">该操作会删除当前账号的全部浏览记录，清空后无法恢复。</text>
       <view class="clear-sheet__actions">

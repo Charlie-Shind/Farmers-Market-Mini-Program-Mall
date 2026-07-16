@@ -29,6 +29,7 @@ function getDistance(lat1: number, lng1: number, lat2: number, lng2: number) {
 
 type HomeBannerView = {
   id: number;
+  key: string;
   title: string;
   imageUrl: string;
   linkType?: string;
@@ -170,7 +171,6 @@ Component({
       searchPlaceholder: '搜索商品名称',
       locationModeLabel: '当前定位 · 自动',
       banners: [] as HomeBannerView[],
-      activeBannerIndex: 0,
       quickEntries: [] as HomeQuickEntryView[],
       sceneEntries: SCENE_ENTRIES,
       recommendations: [] as HomeCardView[],
@@ -184,6 +184,9 @@ Component({
     pageStyle: '',
     topSearchStyle: '',
     cartBadge: '',
+    /** 指示点下标；不回写到 swiper 的 current，避免自动轮播抖动 */
+    activeBannerIndex: 0,
+    bannerAutoplay: false,
     locationMode: 'auto' as 'auto' | 'manual',
     isLocating: false,
     showSpecSheet: false,
@@ -199,17 +202,18 @@ Component({
         pageStyle: buildPageTopStyle(0, 16),
         topSearchStyle: buildHeaderSafeRightStyle(16),
       });
-
-      this.loadHomeData();
-      this.syncMessageBadge();
     },
   },
   pageLifetimes: {
     show() {
       this.setData({
         pageStyle: buildPageTopStyle(0, 16),
+        bannerAutoplay: (this.data.home.banners || []).length > 1,
       });
-      this.loadHomeData();
+      // 首次加载；从商品详情返回时不重拉首页，避免闪屏
+      if (!(this as any)._hasLoaded) {
+        this.loadHomeData();
+      }
       this.syncCartBadge();
       this.syncMessageBadge();
       this.autoUpdateLocationIfEnabled();
@@ -224,6 +228,10 @@ Component({
           tabBar.syncFromRoute();
         }
       }
+    },
+    hide() {
+      // 离开首页时关掉自动播放，避免后台继续触发 change 造成状态错乱
+      this.setData({ bannerAutoplay: false });
     },
   },
   methods: {
@@ -261,13 +269,33 @@ Component({
           fetchProducts('', 6),
         ]);
 
-        const bannerViews = (banners || []).map((b: any) => ({
-          id: b.id ?? b.bannerId ?? 0,
-          title: b.title ?? '',
-          imageUrl: b.imageUrl ?? '',
-          linkType: b.linkType ?? '',
-          linkId: b.linkId ?? null,
-        }));
+        const bannerViews = (() => {
+          const seen = new Set<string>();
+          const list: HomeBannerView[] = [];
+          (banners || []).forEach((b: any, index: number) => {
+            const imageUrl = String(b.imageUrl || '').trim();
+            if (!imageUrl) return;
+            const dedupeKey = imageUrl;
+            if (seen.has(dedupeKey)) return;
+            seen.add(dedupeKey);
+            const id = Number(b.id ?? b.bannerId ?? index + 1) || index + 1;
+            list.push({
+              id,
+              key: `banner-${id}-${index}`,
+              title: b.title ?? '',
+              imageUrl,
+              linkType: b.linkType ?? '',
+              linkId: b.linkId ?? null,
+            });
+          });
+          return list;
+        })();
+
+        const prevBannerSignature = (this.data.home.banners || [])
+          .map((item) => `${item.id}:${item.imageUrl}`)
+          .join('|');
+        const nextBannerSignature = bannerViews.map((item) => `${item.id}:${item.imageUrl}`).join('|');
+        const bannersChanged = prevBannerSignature !== nextBannerSignature;
 
         const products = productsPage.items ?? [];
         const hotProductMap = new Map<string, any>();
@@ -317,13 +345,20 @@ Component({
 
         this.setData({
           locationMode,
+          ...(bannersChanged
+            ? {
+                activeBannerIndex: 0,
+                bannerAutoplay: bannerViews.length > 1,
+              }
+            : {
+                bannerAutoplay: bannerViews.length > 1,
+              }),
           home: {
             location: selectedLocation?.name || selectedLocation?.address || DEFAULT_LOCATION_LABEL,
             locationDisplay: truncateLocationText(selectedLocation?.name || selectedLocation?.address || DEFAULT_LOCATION_LABEL),
             searchPlaceholder: '搜索商品名称',
             locationModeLabel,
-            banners: bannerViews,
-            activeBannerIndex: 0,
+            banners: bannersChanged ? bannerViews : this.data.home.banners,
             quickEntries: (() => {
               const mapped = quickEntries.map((entry, index) => ({
                 ...entry,
@@ -362,6 +397,7 @@ Component({
             unreadMessageCount: this.data.unreadMessageCount,
           },
         });
+        (this as any)._hasLoaded = true;
       } catch {
         // Keep the initial shell data when the backend is temporarily unavailable.
       }
@@ -376,11 +412,23 @@ Component({
         url: '/pages/search/search',
       });
     },
-    onBannerChange(e: WechatMiniprogram.BaseEvent & { detail?: { current?: number } }) {
+    onBannerChange(e: WechatMiniprogram.CustomEvent<{ current: number; source: string }>) {
+      const { current, source } = e.detail || {};
+      // 忽略空 source 的程序触发，只同步指示点，绝不回写 current
+      if (source !== 'touch' && source !== 'autoplay') {
+        return;
+      }
+      if (typeof current !== 'number' || current === this.data.activeBannerIndex) {
+        return;
+      }
+      this.setData({ activeBannerIndex: current });
+    },
+    onBannerAnimationFinish(e: WechatMiniprogram.CustomEvent<{ current: number }>) {
       const { current } = e.detail || {};
-      this.setData({
-        activeBannerIndex: typeof current === 'number' ? current : 0,
-      });
+      if (typeof current !== 'number' || current === this.data.activeBannerIndex) {
+        return;
+      }
+      this.setData({ activeBannerIndex: current });
     },
     openHomeEntry(e: WechatMiniprogram.BaseEvent) {
       const { linkType, linkId, title } = (e.currentTarget.dataset as {

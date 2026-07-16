@@ -1,125 +1,168 @@
-﻿<view class="chat-page" style="{{pageStyle}}">
-  <view wx:if="{{loading}}" class="chat-loading">
-    <text class="chat-loading__title">正在加载…</text>
-    <text class="chat-loading__desc">{{pageHint}}</text>
+<view class="phone-page cs-page" style="{{pageStyle}}">
+  <view wx:if="{{loading}}" class="cs-state">
+    <view class="cs-state__orb">
+      <image class="cs-state__icon" src="{{supportIcon}}" mode="aspectFit"></image>
+    </view>
+    <text class="cs-state__title">正在接入客服</text>
+    <text class="cs-state__desc">{{pageHint}}</text>
   </view>
 
-  <view wx:elif="{{role === 'merchant' && activeConversationId === 0}}" class="chat-list">
-    <view class="chat-page__header">
-      <button class="chat-page__back" bindtap="goBack" hover-class="back-btn--hover">
-        <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
-      </button>
-      <view class="chat-page__header-body">
-        <text class="chat-page__title">客服会话</text>
-        <text class="chat-page__subtitle">商户客服会话</text>
-      </view>
-      <text class="chat-page__meta">{{unreadCount > 0 ? unreadCount + ' 条未读' : ' '}}</text>
+  <!-- 商户：会话列表 -->
+  <view wx:elif="{{role === 'merchant' && activeConversationId === 0}}" class="cs-list">
+    <page-nav title="客服会话" theme="solid" />
+    <view class="cs-list__hint">
+      <text class="cs-list__hint-title">客户咨询</text>
+      <text class="cs-list__hint-meta">{{unreadCount > 0 ? unreadCount + ' 条未读' : '暂无未读'}}</text>
     </view>
 
-    <view wx:if="{{conversations.length}}" class="chat-list__body">
+    <scroll-view wx:if="{{conversations.length}}" class="cs-list__scroll" scroll-y enhanced show-scrollbar="{{false}}">
       <view
         wx:for="{{conversations}}"
         wx:key="conversationId"
-        class="chat-conversation-card"
+        class="cs-conv"
         data-conversation-id="{{item.conversationId}}"
         bindtap="selectConversation"
       >
-        <image class="chat-conversation-card__avatar" src="{{item.displayAvatar}}" mode="aspectFill"></image>
-        <view class="chat-conversation-card__body">
-          <view class="chat-conversation-card__top">
-            <text class="chat-conversation-card__name">{{item.displayName}}</text>
-            <text class="chat-conversation-card__time">{{item.displayTime}}</text>
+        <image class="cs-conv__avatar" src="{{item.displayAvatar}}" mode="aspectFill"></image>
+        <view class="cs-conv__body">
+          <view class="cs-conv__top">
+            <text class="cs-conv__name">{{item.displayName}}</text>
+            <text class="cs-conv__time">{{item.displayTime}}</text>
           </view>
-          <text class="chat-conversation-card__scene">{{item.displayScene}}</text>
-          <text class="chat-conversation-card__preview">{{item.lastMessageContent || '暂无消息'}}</text>
+          <text class="cs-conv__scene">{{item.displayScene}}</text>
+          <text class="cs-conv__preview">{{item.lastMessageContent || '暂无消息'}}</text>
         </view>
-        <text wx:if="{{item.unreadCount > 0}}" class="chat-conversation-card__badge">{{item.unreadCount}}</text>
+        <text wx:if="{{item.unreadCount > 0}}" class="cs-conv__badge">{{item.unreadCount}}</text>
       </view>
-    </view>
+      <view class="cs-spacer"></view>
+    </scroll-view>
 
-    <view wx:else class="chat-empty">
-      <text class="chat-empty__title">{{pageHint || '暂无会话'}}</text>
-      <text class="chat-empty__desc">新的咨询会自动出现在这里，并显示来源场景。</text>
+    <view wx:else class="cs-state cs-state--soft">
+      <view class="cs-state__orb">
+        <t-icon name="message" size="56rpx" color="#2c4a39"></t-icon>
+      </view>
+      <text class="cs-state__title">{{pageHint || '暂无会话'}}</text>
+      <text class="cs-state__desc">新的咨询会自动出现在这里</text>
     </view>
   </view>
 
-  <view wx:elif="{{activeConversationId > 0}}" class="chat-thread">
-    <view class="chat-thread__header">
-      <button class="chat-thread__back" bindtap="goBack" hover-class="back-btn--hover">
-        <t-icon name="back" size="30rpx"></t-icon>
-      </button>
+  <!-- 聊天会话 -->
+  <view wx:elif="{{activeConversationId > 0}}" class="cs-thread">
+    <page-nav title="{{conversationTitle}}" theme="solid" />
+
+    <view class="cs-service">
+      <view class="cs-service__avatar">
+        <image class="cs-service__img" src="{{supportIcon}}" mode="aspectFit"></image>
+      </view>
+      <view class="cs-service__copy">
+        <text class="cs-service__name">{{conversationSubtitle || '在线客服'}}</text>
+        <text class="cs-service__status">
+          专属接待 · 一般为即时回复
+        </text>
+      </view>
     </view>
 
     <scroll-view
-      scroll-y="true"
+      scroll-y
       scroll-into-view="{{messageAnchorId}}"
-      class="chat-message-list"
+      class="cs-messages"
       lower-threshold="80"
       enhanced
       show-scrollbar="{{false}}"
       bindscroll="onMessageScroll"
       bindscrolltolower="onMessageScrollToLower"
       bindscrolltoupper="loadMore"
-      >
-      <view wx:if="{{messages.length}}">
-        <view
-          wx:for="{{messages}}"
-          wx:key="messageId"
-          class="chat-message-wrap"
-        >
-          <view wx:if="{{item.showTime}}" class="chat-time-node">
-            <text class="chat-time-node__text">{{item.displayTime}}</text>
+    >
+      <view wx:if="{{messages.length}}" class="cs-messages__inner">
+        <view wx:for="{{messages}}" wx:key="messageId" class="cs-msg-wrap">
+          <view wx:if="{{item.showTime}}" class="cs-time">
+            <text>{{item.displayTime}}</text>
           </view>
-          <view class="chat-message {{item.isMine ? 'is-mine' : 'is-other'}}">
+          <view class="cs-msg {{item.isMine ? 'is-mine' : 'is-other'}}">
             <image
-              class="chat-message__avatar"
-              src="{{item.isMine ? currentUserAvatar : (activeConversation && activeConversation.displayAvatar ? activeConversation.displayAvatar : icons.defaultAvatar)}}"
-              mode="aspectFill"
-            ></image>
-            <view class="chat-message__body">
-              <text wx:if="{{!item.isMine}}" class="chat-message__name">{{conversationTitle}}</text>
-              <view class="chat-message__bubble">
-                <text wx:if="{{item.contentType === 'TEXT'}}" class="chat-message__text">{{item.content}}</text>
+              class="cs-msg__avatar"
+              src="{{item.isMine ? currentUserAvatar : supportIcon}}"
+              mode="{{item.isMine ? 'aspectFill' : 'aspectFit'}}"
+            />
+            <view class="cs-msg__body">
+              <text wx:if="{{!item.isMine}}" class="cs-msg__name">{{conversationTitle}}</text>
+              <view class="cs-msg__bubble">
+                <text wx:if="{{item.contentType === 'TEXT'}}" class="cs-msg__text">{{item.content}}</text>
                 <image
                   wx:elif="{{item.contentType === 'IMAGE' && item.attachments && item.attachments.imageUrl}}"
-                  class="chat-message__image"
+                  class="cs-msg__image"
                   src="{{item.attachments.imageUrl}}"
                   mode="widthFix"
                   bindtap="previewImage"
                   data-url="{{item.attachments.imageUrl}}"
-                ></image>
+                />
               </view>
             </view>
           </view>
         </view>
       </view>
 
-      <view wx:else class="chat-empty chat-empty--thread">
-        <text class="chat-empty__title">{{loadingMessages ? '加载消息中…' : '还没有消息'}}</text>
-        <text class="chat-empty__desc">直接发送消息，客服会在这里回复你。</text>
+      <view wx:else class="cs-empty">
+        <view class="cs-empty__orb">
+          <image class="cs-empty__icon" src="{{supportIcon}}" mode="aspectFit"></image>
+        </view>
+        <text class="cs-empty__title">{{loadingMessages ? '正在同步消息…' : '开始与客服沟通吧'}}</text>
+        <text class="cs-empty__desc">产地问题、订单售后、活动咨询，都可以直接发给我们</text>
+        <view wx:if="{{!loadingMessages}}" class="cs-quick">
+          <view
+            wx:for="{{quickReplies}}"
+            wx:key="*this"
+            class="cs-quick__chip"
+            data-text="{{item}}"
+            bindtap="useQuickReply"
+          >{{item}}</view>
+        </view>
       </view>
 
-      <view id="{{messageAnchorId}}" class="chat-message-list__anchor"></view>
+      <view id="{{messageAnchorId}}" class="cs-messages__anchor"></view>
     </scroll-view>
 
-    <view class="chat-composer">
-      <button class="chat-composer__media-btn" bindtap="chooseAndSendImage" hover-class="composer-btn--hover">
-        <t-icon name="plus" size="36rpx"></t-icon>
+    <view wx:if="{{messages.length}}" class="cs-quick cs-quick--bar">
+      <scroll-view scroll-x enhanced show-scrollbar="{{false}}" class="cs-quick__scroll">
+        <view
+          wx:for="{{quickReplies}}"
+          wx:key="*this"
+          class="cs-quick__chip"
+          data-text="{{item}}"
+          bindtap="useQuickReply"
+        >{{item}}</view>
+      </scroll-view>
+    </view>
+
+    <view class="cs-composer">
+      <button class="cs-composer__media" bindtap="chooseAndSendImage" hover-class="cs-composer__media--hover">
+        <t-icon name="plus" size="36rpx" color="#2c4a39"></t-icon>
       </button>
-      <textarea
-        class="chat-composer__input"
-        value="{{messageText}}"
-        placeholder="请输入消息内容"
-        auto-height="true"
-        maxlength="500"
-        bindinput="onInput"
-      ></textarea>
-      <button class="chat-composer__send" loading="{{sending}}" bindtap="sendMessage">发送</button>
+      <view class="cs-composer__field">
+        <textarea
+          class="cs-composer__input"
+          value="{{messageText}}"
+          placeholder="描述你的问题，例如物流/退换…"
+          auto-height
+          maxlength="500"
+          bindinput="onInput"
+          confirm-type="send"
+          bindconfirm="sendMessage"
+        />
+      </view>
+      <button
+        class="cs-composer__send {{messageText ? 'is-ready' : ''}}"
+        loading="{{sending}}"
+        bindtap="sendMessage"
+      >发送</button>
     </view>
   </view>
 
-  <view wx:else class="chat-loading">
-    <text class="chat-loading__title">{{pageHint}}</text>
-    <text class="chat-loading__desc">如果一直打不开，请稍后重试。</text>
+  <view wx:else class="cs-state">
+    <view class="cs-state__orb">
+      <image class="cs-state__icon" src="{{supportIcon}}" mode="aspectFit"></image>
+    </view>
+    <text class="cs-state__title">{{pageHint}}</text>
+    <text class="cs-state__desc">如果一直打不开，请稍后重试</text>
   </view>
 </view>

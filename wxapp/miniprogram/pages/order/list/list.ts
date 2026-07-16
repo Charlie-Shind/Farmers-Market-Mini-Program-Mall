@@ -265,11 +265,18 @@ Component({
           displayStatus: formatOrderDisplayStatus(item, normalizeOrderStatus(item)),
         }));
         const mergedOrders = reset ? items : [...this.data.allOrders, ...items];
+        const serverPageSize = Number((res as any).pageSize) || this.data.pageSize;
+        const total = Number(res.total);
+        const noMore =
+          items.length === 0 ||
+          items.length < serverPageSize ||
+          (Number.isFinite(total) && total >= 0 && mergedOrders.length >= total);
+
         this.setData({
           allOrders: mergedOrders,
-          total: res.total ?? mergedOrders.length,
+          total: Number.isFinite(total) ? total : mergedOrders.length,
           page: page + 1,
-          noMore: mergedOrders.length >= (res.total ?? mergedOrders.length) || items.length < this.data.pageSize,
+          noMore,
         });
         this.applyFilter(activeTab);
       } catch (err) {

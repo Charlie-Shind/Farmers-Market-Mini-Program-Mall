@@ -25,6 +25,7 @@ import { navigateBackOrHome, navigateBackOrMerchantHome } from '../../utils/auth
 import { upload } from '../../services/request';
 
 const PAGE_SIZE = 30;
+const SUPPORT_ICON = '/assets/kefu.svg';
 
 type ChatRole = 'buyer' | 'merchant';
 
@@ -113,7 +114,8 @@ Component({
     activeConversation: null as ChatConversationView | null,
     conversationTitle: '联系客服',
     conversationSubtitle: '在线客服',
-    conversationAvatar: iconPaths.defaultAvatar,
+    conversationAvatar: SUPPORT_ICON,
+    supportIcon: SUPPORT_ICON,
     currentUserAvatar: iconPaths.defaultAvatar,
     currentUserName: '我',
     messages: [] as ChatMessageView[],
@@ -137,6 +139,7 @@ Component({
     sceneSource: '',
     requestedConversationId: 0,
     requestedOrderNo: '',
+    quickReplies: ['查询订单进度', '售后如何处理', '活动怎么参与', '自提点在哪里'],
   },
 
   lifetimes: {
@@ -452,6 +455,12 @@ Component({
       this.setData({
         messageText: e.detail.value,
       });
+    },
+
+    useQuickReply(e: WechatMiniprogram.BaseEvent) {
+      const text = String((e.currentTarget.dataset as { text?: string }).text || '').trim();
+      if (!text) return;
+      this.setData({ messageText: text });
     },
 
     async sendMessage() {

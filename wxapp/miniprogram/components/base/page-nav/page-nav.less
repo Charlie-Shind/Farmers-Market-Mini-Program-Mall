@@ -104,6 +104,21 @@
   background: rgba(0, 0, 0, 0.08);
 }
 
+/* amber：黄底页专用，透明底 + 深色字 */
+.page-nav--amber .page-nav__fixed {
+  background: transparent;
+  border-bottom: none;
+}
+
+.page-nav--amber .page-nav__title {
+  color: #1a1a1a;
+  text-shadow: none;
+}
+
+.page-nav--amber .page-nav__back {
+  background: rgba(0, 0, 0, 0.08);
+}
+
 /* transparent：透明显示在头图上 */
 .page-nav--transparent .page-nav__fixed {
   background: transparent;
@@ -117,6 +132,35 @@
 
 .page-nav--transparent .page-nav__back {
   background: rgba(0, 0, 0, 0.28);
+}
+
+/* brand：浅色品牌头顶（如拼好饭黄顶）— 透明底 + 深色字 */
+.page-nav--brand .page-nav__fixed {
+  background: transparent;
+  border-bottom: none;
+}
+
+.page-nav--brand .page-nav__title {
+  color: #111111;
+}
+
+.page-nav--brand .page-nav__back {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+/* light：浅色背景（如拼好饭黄顶）上的深色导航 */
+.page-nav--light .page-nav__fixed {
+  background: transparent;
+  border-bottom: none;
+}
+
+.page-nav--light .page-nav__title {
+  color: #111111;
+  text-shadow: none;
+}
+
+.page-nav--light .page-nav__back {
+  background: rgba(0, 0, 0, 0.08);
 }
 
 /* dark：深色标题区 */

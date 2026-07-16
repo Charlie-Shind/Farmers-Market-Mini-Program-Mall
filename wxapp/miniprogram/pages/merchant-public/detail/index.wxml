@@ -1,155 +1,168 @@
-﻿<view class="phone-page" style="{{pageStyle}}">
-  <view class="head">
-    <button class="back-btn" bindtap="goBack">
-      <t-icon name="back" size="48rpx" color="#ffffff"></t-icon>
-    </button>
-    <text class="head-title">{{shopName || '店铺主页'}}</text>
-    <text class="head-spacer"></text>
-  </view>
+<view class="phone-page shop-page" style="{{pageStyle}}">
+  <page-nav title="{{shop.storeName || '店铺主页'}}" theme="solid" show-back="{{true}}" />
 
-  <scroll-view class="detail-scroll" scroll-y="true" enhanced="true" show-scrollbar="{{false}}" bindscrolltolower="loadMore">
-    <view wx:if="{{shop}}" class="shop">
-      <view class="shop__head">
-        <view class="shop__logo-wrap">
+  <scroll-view
+    class="shop-scroll"
+    scroll-y
+    enhanced
+    show-scrollbar="{{false}}"
+    scroll-into-view="{{scrollIntoView}}"
+    bindscrolltolower="loadMore"
+  >
+    <!-- 店铺头图卡片 -->
+    <view class="shop-hero" id="shop-top">
+      <view class="shop-hero__bg"></view>
+      <view class="shop-hero__card">
+        <view class="shop-hero__main">
           <image
-            class="shop__logo {{shop.storeLogo ? '' : 'shop__logo--placeholder'}}"
+            class="shop-hero__logo"
             src="{{shop.storeLogo || icons.defaultAvatar}}"
             mode="aspectFill"
-          ></image>
-        </view>
-
-        <view class="shop__meta">
-          <text class="shop__name">{{shop.storeName}}</text>
-          <text wx:if="{{shop.contactName}}" class="shop__contact">联系人：{{shop.contactName}}</text>
-          <text wx:if="{{shop.description}}" class="shop__desc">{{shop.description}}</text>
-          <view class="shop__tags">
-            <text class="shop__tag">认证店铺</text>
-            <text class="shop__tag shop__tag--soft">{{shop.qualificationCount}} 项资质</text>
+          />
+          <view class="shop-hero__info">
+            <text class="shop-hero__name">{{shop.storeName || '加载中…'}}</text>
+            <view class="shop-hero__tags">
+              <text class="shop-hero__tag">认证店铺</text>
+              <text class="shop-hero__tag shop-hero__tag--warm">{{shop.qualificationCount || 0}}项资质</text>
+            </view>
+            <text wx:if="{{shop.contactName}}" class="shop-hero__contact">联系人 {{shop.contactName}}</text>
           </view>
+          <button class="shop-hero__chat" bindtap="contactShop">客服</button>
         </view>
-      </view>
 
-      <view class="shop__stats">
-        <view class="shop__stat">
-          <text class="shop__stat-value">{{shop.productCount}}</text>
-          <text class="shop__stat-label">在售商品</text>
-        </view>
-        <view class="shop__stat">
-          <text class="shop__stat-value">{{shop.totalSales}}</text>
-          <text class="shop__stat-label">累计销量</text>
-        </view>
-        <view class="shop__stat">
-          <text class="shop__stat-value">{{shop.qualificationCount}}</text>
-          <text class="shop__stat-label">资质</text>
+        <text wx:if="{{shop.description}}" class="shop-hero__desc">{{shop.description}}</text>
+
+        <view class="shop-hero__stats">
+          <view class="shop-hero__stat">
+            <text class="shop-hero__stat-num">{{shop.productCount || 0}}</text>
+            <text class="shop-hero__stat-label">在售商品</text>
+          </view>
+          <view class="shop-hero__stat-line"></view>
+          <view class="shop-hero__stat">
+            <text class="shop-hero__stat-num">{{shop.totalSales || 0}}</text>
+            <text class="shop-hero__stat-label">累计销量</text>
+          </view>
+          <view class="shop-hero__stat-line"></view>
+          <view class="shop-hero__stat">
+            <text class="shop-hero__stat-num">{{shop.qualificationCount || 0}}</text>
+            <text class="shop-hero__stat-label">资质证书</text>
+          </view>
         </view>
       </view>
     </view>
 
-    <view class="section section--coupon">
-      <view class="section__head">
-        <view class="section__head-main">
-          <text class="section__title">可领优惠券</text>
-          <text class="section__subtitle">领取后可直接用于下单</text>
+    <!-- 优惠券横滑 -->
+    <view class="shop-block" id="shop-coupons">
+      <view class="shop-block__head">
+        <view>
+          <text class="shop-block__title">店铺优惠</text>
+          <text class="shop-block__sub">领券下单更划算</text>
         </view>
-        <text class="section__count">共 {{coupons.length}} 张</text>
+        <text class="shop-block__extra">{{coupons.length}} 张可领</text>
       </view>
 
-      <view wx:if="{{coupons.length}}">
-        <view class="coupon-list">
-          <view
-            wx:for="{{visibleCoupons}}"
-            wx:key="couponId"
-            class="coupon {{item.received || !item.isActive ? 'coupon--disabled' : ''}}"
-          >
-            <view class="coupon__main">
-              <view class="coupon__amount">
-                <text class="coupon__amount-symbol">¥</text>
-                <text class="coupon__amount-num">{{item.discountAmount}}</text>
-              </view>
-              <text class="coupon__threshold">满 {{item.thresholdAmount}} 可用</text>
-              <text wx:if="{{item.name}}" class="coupon__name">{{item.name}}</text>
-            </view>
-            <view class="coupon__side">
-              <view
-                class="coupon__cta {{item.received || !item.isActive ? 'coupon__cta--disabled' : ''}}"
-                data-coupon-id="{{item.couponId}}"
-                data-received="{{item.received}}"
-                data-active="{{item.isActive}}"
-                bindtap="onReceiveCoupon"
-              >
-                <text>{{item.received ? '已领取' : item.isActive ? '立即领取' : '已结束'}}</text>
-              </view>
-              <text wx:if="{{item.scope === 'SHOP'}}" class="coupon__scope">店铺券</text>
-            </view>
-          </view>
-        </view>
-
-        <button wx:if="{{moreCouponsCount > 0}}" class="coupon-more" bindtap="toggleCoupons">
-          <text>{{couponMoreText}}</text>
-        </button>
-      </view>
-
-      <view wx:elif="{{!loading && hasLoaded}}" class="empty-inline">
-        <text>暂无可领取的优惠券</text>
-      </view>
-    </view>
-
-    <view class="section section--product">
-      <view class="section__head">
-        <view class="section__head-main">
-          <text class="section__title">在售商品</text>
-          <text class="section__subtitle">按热度与上新持续更新</text>
-        </view>
-        <text class="section__count">共 {{total}} 件</text>
-      </view>
-
-      <view wx:if="{{products.length}}" class="product-list">
+      <scroll-view wx:if="{{coupons.length}}" class="coupon-scroll" scroll-x enhanced show-scrollbar="{{false}}">
         <view
-          wx:for="{{products}}"
+          wx:for="{{coupons}}"
+          wx:key="couponId"
+          class="coupon-ticket {{item.received || !item.isActive ? 'is-disabled' : ''}}"
+          data-coupon-id="{{item.couponId}}"
+          data-received="{{item.received}}"
+          data-active="{{item.isActive}}"
+          bindtap="onReceiveCoupon"
+        >
+          <view class="coupon-ticket__main">
+            <text class="coupon-ticket__amount">{{item.discountAmount}}</text>
+            <view class="coupon-ticket__line"></view>
+            <text class="coupon-ticket__rule">满{{item.thresholdAmount}}元可用</text>
+          </view>
+          <view class="coupon-ticket__gap">
+            <view class="coupon-ticket__notch coupon-ticket__notch--top"></view>
+            <view class="coupon-ticket__dash"></view>
+            <view class="coupon-ticket__notch coupon-ticket__notch--bottom"></view>
+          </view>
+          <view class="coupon-ticket__action">
+            <text class="coupon-ticket__action-text">{{item.received ? '已领取' : item.isActive ? '立即领取' : '已结束'}}</text>
+          </view>
+        </view>
+      </scroll-view>
+
+      <view wx:elif="{{!loading && hasLoaded}}" class="shop-empty">暂无可领优惠券</view>
+    </view>
+
+    <!-- 在售商品 -->
+    <view class="shop-block shop-block--products" id="shop-products">
+      <view class="shop-block__head">
+        <view>
+          <text class="shop-block__title">全部商品</text>
+          <text class="shop-block__sub">共 {{total}} 件好货</text>
+        </view>
+      </view>
+
+      <view class="shop-sorts">
+        <view
+          wx:for="{{sortTabs}}"
+          wx:key="key"
+          class="shop-sort {{productSort === item.key ? 'is-active' : ''}}"
+          data-key="{{item.key}}"
+          bindtap="selectSort"
+        >{{item.label}}</view>
+      </view>
+
+      <view wx:if="{{displayProducts.length}}" class="goods-grid">
+        <view
+          wx:for="{{displayProducts}}"
           wx:key="productId"
-          class="product-card"
+          class="goods-card"
           data-product-id="{{item.productId}}"
           bindtap="openProductDetail"
         >
           <image
             wx:if="{{item.coverUrl}}"
-            class="product-card__img"
+            class="goods-card__img"
             src="{{item.coverUrl}}"
             mode="aspectFill"
-          ></image>
-          <view wx:else class="product-card__img product-card__img--placeholder"></view>
-
-          <view class="product-card__body">
-            <view class="product-card__top-row">
-              <text wx:if="{{item.originPlace}}" class="product-card__origin-pill">{{item.originPlace}}</text>
-              <text wx:if="{{item.saleCount > 0}}" class="product-card__sales">已售 {{item.saleCount}}件</text>
+          />
+          <view wx:else class="goods-card__img goods-card__img--empty"></view>
+          <view class="goods-card__body">
+            <text class="goods-card__title">{{item.title}}</text>
+            <view class="goods-card__meta">
+              <text wx:if="{{item.originPlace}}" class="goods-card__origin">{{item.originPlace}}</text>
+              <text wx:if="{{item.saleCount > 0}}" class="goods-card__sales">已售{{item.saleCount}}</text>
             </view>
-            <text class="product-card__title">{{item.title}}</text>
-            <text wx:if="{{item.subtitle}}" class="product-card__subtitle">{{item.subtitle}}</text>
-            <view class="product-card__price-row">
-              <view class="product-card__price">
-                <text class="product-card__price-symbol">¥</text>
-                <text class="product-card__price-num">{{item.minPrice}}</text>
-                <text wx:if="{{item.originPrice}}" class="product-card__price-origin">¥{{item.originPrice}}</text>
-              </view>
+            <view class="goods-card__price">
+              <text class="goods-card__yen">¥</text>
+              <text class="goods-card__num">{{item.minPrice}}</text>
+              <text wx:if="{{item.originPrice}}" class="goods-card__origin-price">¥{{item.originPrice}}</text>
             </view>
           </view>
         </view>
       </view>
 
-      <view wx:elif="{{!loading}}" class="empty-inline">
-        <text>暂无在售商品</text>
-      </view>
+      <view wx:elif="{{loading}}" class="shop-empty">商品加载中…</view>
+      <view wx:elif="{{hasLoaded}}" class="shop-empty">暂无在售商品</view>
 
-      <view wx:if="{{!noMore && products.length > 0 && !loading}}" class="load-more">
-        <text>下滑加载更多</text>
-      </view>
-      <view wx:if="{{loadingMore}}" class="load-more">
-        <text>加载中…</text>
-      </view>
-      <view wx:if="{{noMore && products.length > 0}}" class="load-more load-more--end">
-        <text>已加载全部</text>
-      </view>
+      <view wx:if="{{loadingMore}}" class="shop-more">加载中…</view>
+      <view wx:elif="{{noMore && displayProducts.length}}" class="shop-more">— 已展示全部商品 —</view>
     </view>
+
+    <view class="shop-safe"></view>
   </scroll-view>
+
+  <!-- 底部操作栏 -->
+  <view class="shop-dock">
+    <view class="shop-dock__action" bindtap="contactShop">
+      <t-icon name="support" size="40rpx" color="#333333"></t-icon>
+      <text>客服</text>
+    </view>
+    <view class="shop-dock__action" bindtap="scrollToCoupons">
+      <t-icon name="coupon" size="40rpx" color="#333333"></t-icon>
+      <text>领券</text>
+    </view>
+    <view class="shop-dock__action" bindtap="scrollToProducts">
+      <t-icon name="shop" size="40rpx" color="#333333"></t-icon>
+      <text>全部</text>
+    </view>
+    <button class="shop-dock__primary" bindtap="scrollToProducts">进店逛逛</button>
+  </view>
 </view>

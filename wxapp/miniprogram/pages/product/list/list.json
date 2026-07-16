@@ -1,7 +1,9 @@
 {
   "navigationStyle": "custom",
   "navigationBarTitleText": "商品列表",
+  "disableScroll": true,
   "usingComponents": {
+    "page-nav": "../../../components/base/page-nav/page-nav",
     "t-icon": "../../../components/base/t-icon/t-icon"
   }
 }

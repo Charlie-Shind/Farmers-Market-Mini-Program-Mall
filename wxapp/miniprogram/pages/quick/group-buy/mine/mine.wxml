@@ -1,0 +1,52 @@
+<view class="phone-page gbm" style="{{pageStyle}}">
+  <view class="gbm__top">
+    <page-nav title="我的拼团" theme="transparent" />
+  </view>
+
+  <view wx:if="{{loading}}" class="gbm__empty">
+    <text>正在加载我的拼团…</text>
+  </view>
+  <view wx:elif="{{!groups.length}}" class="gbm__empty">
+    <text class="gbm__empty-title">暂无拼团记录</text>
+    <text class="gbm__empty-desc">去挑一件商品，喊上邻居一起拼</text>
+    <button class="gbm__empty-btn" bindtap="goExplore">去逛逛拼团</button>
+  </view>
+
+  <scroll-view wx:else class="gbm__list" scroll-y enhanced show-scrollbar="{{false}}">
+    <view
+      wx:for="{{groups}}"
+      wx:key="groupId"
+      class="gbm-item"
+      data-order-no="{{item.orderNo}}"
+      data-product-id="{{item.productId}}"
+      bindtap="onItemTap"
+    >
+      <view class="gbm-item__cover">
+        <image wx:if="{{item.coverUrl}}" class="gbm-item__img" src="{{item.coverUrl}}" mode="aspectFill" />
+        <view wx:else class="gbm-item__img {{item.imageClass}}"></view>
+      </view>
+      <view class="gbm-item__main">
+        <view class="gbm-item__head">
+          <text class="gbm-item__title">{{item.title}}</text>
+          <text class="gbm-item__status {{item.status.className}}">{{item.status.label}}</text>
+        </view>
+        <text class="gbm-item__role">{{item.roleLabel}}</text>
+        <view class="gbm-item__progress">
+          <view class="gbm-item__bar">
+            <view class="gbm-item__fill" style="width: {{item.percent}}%;"></view>
+          </view>
+          <text class="gbm-item__members">{{item.memberCount}}/{{item.needed}}人</text>
+        </view>
+        <view class="gbm-item__foot">
+          <view class="gbm-item__price-wrap">
+            <text class="gbm-item__yen">¥</text>
+            <text class="gbm-item__price">{{item.groupPrice}}</text>
+            <text class="gbm-item__old">¥{{item.originPrice}}</text>
+          </view>
+          <view wx:if="{{item.actionLabel}}" class="gbm-item__btn {{item.actionKind === 'pay' ? 'gbm-item__btn--pay' : ''}}">{{item.actionLabel}}</view>
+        </view>
+      </view>
+    </view>
+    <view class="safe-bottom"></view>
+  </scroll-view>
+</view>

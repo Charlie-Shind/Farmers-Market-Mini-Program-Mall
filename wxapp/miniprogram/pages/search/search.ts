@@ -6,7 +6,7 @@ import {
   loadSearchHistory,
   removeSearchHistory,
 } from '../../services/search-history';
-import { buildPageHeaderStyle } from '../../utils/page-layout';
+import { buildPageTopStyle } from '../../utils/page-layout';
 import { navigateBackOrHome } from '../../utils/auth-route';
 
 type SearchProductView = {
@@ -174,7 +174,7 @@ Component({
       const initialKeyword = options.keyword ? decodeURIComponent(options.keyword) : '';
 
       this.setData({
-        pageStyle: buildPageHeaderStyle(8),
+        pageStyle: buildPageTopStyle(0),
         searchText: initialKeyword,
         focusSearch: true,
         searchHistory: loadSearchHistory(),
@@ -277,8 +277,13 @@ Component({
           .map(({ item, index }) => mapProductToView(item, index));
 
         const mergedItems = reset ? sortedItems : [...this.data.results, ...sortedItems];
-        const total = response.total ?? mergedItems.length;
-        const noMore = mergedItems.length >= total || sortedItems.length < SEARCH_PAGE_SIZE;
+        const serverPageSize = Number((response as any).pageSize) || SEARCH_PAGE_SIZE;
+        const totalNum = Number(response.total);
+        const noMore =
+          sortedItems.length === 0 ||
+          sortedItems.length < serverPageSize ||
+          (Number.isFinite(totalNum) && totalNum >= 0 && mergedItems.length >= totalNum);
+        const total = Number.isFinite(totalNum) ? totalNum : mergedItems.length;
 
         this.setData({
           results: mergedItems,
@@ -287,7 +292,7 @@ Component({
           noMore,
           resultNote: noMore
             ? `共 ${mergedItems.length} 件匹配结果`
-            : `已加载 ${mergedItems.length}/${total} 件，下滑加载更多`,
+            : `已加载 ${mergedItems.length}/${total} 件`,
           loading: false,
           loadingMore: false,
         });

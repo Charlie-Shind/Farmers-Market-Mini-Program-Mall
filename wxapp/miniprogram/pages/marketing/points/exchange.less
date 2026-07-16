@@ -4,38 +4,160 @@
   flex-direction: column;
 }
 
-.points-summary {
+// ==================== 顶部积分 Hero ====================
+
+.points-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 32rpx;
+  padding: 32rpx 28rpx 28rpx;
+  margin-bottom: 28rpx;
+  background: linear-gradient(135deg, #1f3629 0%, #2c4a39 55%, #3e684f 100%);
+  box-shadow: 0 20rpx 40rpx rgba(31, 54, 41, 0.22);
+  box-sizing: border-box;
+}
+
+.points-hero__glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(10px);
+  pointer-events: none;
+}
+
+.points-hero__glow--one {
+  top: -80rpx;
+  right: -60rpx;
+  width: 220rpx;
+  height: 220rpx;
+  background: radial-gradient(circle, rgba(214, 166, 101, 0.5) 0%, transparent 75%);
+}
+
+.points-hero__glow--two {
+  bottom: -100rpx;
+  left: -80rpx;
+  width: 240rpx;
+  height: 240rpx;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, transparent 80%);
+}
+
+.points-hero__brand {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 8rpx;
+  font-size: 22rpx;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.72);
+  letter-spacing: 1rpx;
+  margin-bottom: 22rpx;
+}
+
+.points-hero__main {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 20rpx;
-  margin-bottom: 20rpx;
 }
 
-.points-summary__left {
-  flex: 0 0 auto;
-  min-width: 160rpx;
+.points-hero__info {
   display: flex;
   flex-direction: column;
-  gap: 8rpx;
+  gap: 10rpx;
 }
 
-.points-summary__label {
-  font-size: 22rpx;
-  color: #8a877f;
+.points-hero__label {
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.7);
 }
 
-.points-summary__value {
-  font-size: 52rpx;
+.points-hero__value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6rpx;
+}
+
+.points-hero__value {
+  font-size: 64rpx;
   font-weight: 900;
-  color: var(--green);
+  color: #ffffff;
   line-height: 1;
+  font-family: "Avenir Next", "Segoe UI", Arial, sans-serif;
+  font-variant-numeric: tabular-nums lining-nums;
 }
+
+.points-hero__unit {
+  font-size: 24rpx;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.points-hero__hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6rpx;
+  font-size: 21rpx;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.points-hero__gift-box {
+  flex: 0 0 auto;
+  width: 108rpx;
+  height: 108rpx;
+  border-radius: 28rpx;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1rpx solid rgba(255, 255, 255, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// ==================== 分区标题 ====================
+
+.points-section-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16rpx;
+  margin: 4rpx 0 20rpx;
+}
+
+.points-section-title text {
+  font-size: 26rpx;
+  font-weight: 800;
+  color: #4f5f54;
+  letter-spacing: 2rpx;
+}
+
+.points-section-title__line {
+  width: 64rpx;
+  height: 1rpx;
+  background: linear-gradient(90deg, transparent, rgba(44, 74, 57, 0.32));
+}
+
+.points-section-title__line:last-child {
+  background: linear-gradient(90deg, rgba(44, 74, 57, 0.32), transparent);
+}
+
+// ==================== 加载 / 空态 ====================
 
 .points-loading,
 .points-empty {
-  padding: 72rpx 20rpx;
+  padding: 60rpx 20rpx 72rpx;
   text-align: center;
+}
+
+.points-empty__icon {
+  width: 116rpx;
+  height: 116rpx;
+  margin: 0 auto 20rpx;
+  border-radius: 50%;
+  background: #f1eee3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .points-loading__title,
@@ -55,6 +177,8 @@
   line-height: 1.6;
 }
 
+// ==================== 兑换列表 ====================
+
 .points-list {
   display: flex;
   flex-direction: column;
@@ -62,19 +186,47 @@
 }
 
 .points-card {
+  position: relative;
   overflow: hidden;
-  border-radius: 26rpx;
+  border-radius: 28rpx;
   background: #fffdf8;
   border: 1rpx solid rgba(44, 74, 57, 0.08);
   box-shadow: 0 14rpx 30rpx rgba(44, 74, 57, 0.06);
   display: flex;
   gap: 18rpx;
-  padding: 16rpx;
+  padding: 18rpx;
   box-sizing: border-box;
 }
 
 .points-card--done {
-  opacity: 0.72;
+  opacity: 0.68;
+}
+
+.points-card__ribbon {
+  position: absolute;
+  top: 16rpx;
+  right: 16rpx;
+  z-index: 1;
+  padding: 4rpx 16rpx;
+  border-radius: 999rpx;
+  font-size: 20rpx;
+  font-weight: 800;
+  line-height: 1.6;
+}
+
+.points-card__ribbon--avail {
+  background: rgba(44, 74, 57, 0.12);
+  color: var(--green);
+}
+
+.points-card__ribbon--done {
+  background: rgba(138, 135, 127, 0.16);
+  color: #8a877f;
+}
+
+.points-card__ribbon--lack {
+  background: rgba(198, 95, 45, 0.12);
+  color: var(--orange);
 }
 
 .points-card__cover {
@@ -82,9 +234,10 @@
   height: 164rpx;
   flex: 0 0 164rpx;
   background: linear-gradient(150deg, #e8ddc7, #d8e1d0);
-  display: grid;
-  place-items: center;
-  border-radius: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 22rpx;
   overflow: hidden;
 }
 
@@ -93,8 +246,9 @@
   height: 86rpx;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.7);
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .points-card__body {
@@ -107,10 +261,7 @@
 }
 
 .points-card__top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12rpx;
+  padding-right: 92rpx;
 }
 
 .points-card__title-box {
@@ -122,7 +273,7 @@
 }
 
 .points-card__title {
-  font-size: 26rpx;
+  font-size: 27rpx;
   font-weight: 800;
   color: #222;
   line-height: 1.35;
@@ -139,18 +290,6 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 1;
   overflow: hidden;
-}
-
-.points-card__tag {
-  flex: 0 0 auto;
-  height: 36rpx;
-  padding: 0 12rpx;
-  border-radius: 999rpx;
-  background: #edf5e9;
-  color: #2c4a39;
-  font-size: 18rpx;
-  line-height: 36rpx;
-  font-weight: 800;
 }
 
 .points-card__footer {
@@ -179,18 +318,60 @@
 }
 
 .points-card__btn {
-  min-width: 120rpx;
-  height: 60rpx;
-  padding: 0 16rpx;
+  min-width: 128rpx;
+  height: 62rpx;
+  padding: 0 18rpx;
   border-radius: 999rpx;
-  background: var(--green);
+  background: linear-gradient(135deg, #3f6f44, #2c4a39);
+  box-shadow: 0 8rpx 16rpx rgba(44, 74, 57, 0.25);
   color: #fff;
   font-size: 22rpx;
   font-weight: 800;
-  line-height: 60rpx;
+  line-height: 62rpx;
   text-align: center;
 }
 
 .points-card__btn--disabled {
   background: #d7d7d7;
+  box-shadow: none;
+}
+
+// ==================== 底部权益条 ====================
+
+.points-features {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 32rpx;
+  padding: 28rpx 8rpx;
+  border-radius: 24rpx;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.points-feature {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.points-feature__icon {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  background: rgba(44, 74, 57, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.points-feature__title {
+  font-size: 22rpx;
+  font-weight: 700;
+  color: #333;
+}
+
+.points-feature__sub {
+  font-size: 18rpx;
+  color: #9a978d;
 }

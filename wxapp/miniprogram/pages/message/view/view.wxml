@@ -1,49 +1,82 @@
-﻿<view class="phone-page message-view-page" style="{{pageStyle}}">
-  <page-nav title="详情" theme="solid" />
+<view class="phone-page mv-page" style="{{pageStyle}}">
+  <page-nav title="消息详情" theme="solid" />
 
-  <view wx:if="{{message}}" class="detail-card">
-    <view class="publisher-row">
-      <view class="publisher-row__avatar">
-        <image
-          wx:if="{{showSenderAvatarImage}}"
-          class="publisher-row__avatar-img"
-          src="{{senderAvatarSrc}}"
-          mode="aspectFill"
-          binderror="handleAvatarError"
-        ></image>
-        <t-icon wx:else name="{{senderFallbackIconName}}" size="36rpx" opacity="0.9"></t-icon>
+  <scroll-view wx:if="{{message}}" scroll-y class="mv-scroll" enhanced show-scrollbar="{{false}}">
+    <view class="mv-hero">
+      <view class="mv-hero__row">
+        <text class="mv-badge mv-badge--{{tone}}">{{typeLabel}}</text>
+        <text class="mv-status {{message.isRead ? '' : 'is-unread'}}">{{message.isRead ? '已读' : '未读'}}</text>
       </view>
-      <view class="publisher-row__meta">
-        <text class="publisher-row__name">{{publisherName}}</text>
-        <text wx:if="{{publishTimeText}}" class="publisher-row__date">{{publishTimeText}}</text>
-      </view>
-    </view>
-
-    <view class="detail-body">
-      <text wx:if="{{displayTitle}}" class="detail-title">{{displayTitle}}</text>
-      <text wx:if="{{summaryText && summaryText !== displayTitle}}" class="detail-summary">{{summaryText}}</text>
-
-      <view wx:for="{{blocks}}" wx:key="index" class="detail-block">
-        <text wx:if="{{item.type === 'text' && item.value}}" class="detail-text">{{item.value}}</text>
-        <view
-          wx:elif="{{item.type === 'image' && item.url}}"
-          class="detail-image-wrap"
-          bindtap="previewImage"
-          data-url="{{item.url}}"
-        >
-          <image class="detail-image" src="{{item.url}}" mode="widthFix"></image>
+      <text class="mv-hero__title">{{displayTitle}}</text>
+      <view class="mv-hero__meta">
+        <view class="mv-publisher">
+          <view class="mv-publisher__avatar mv-publisher__avatar--{{tone}}">
+            <image
+              wx:if="{{showSenderAvatarImage}}"
+              class="mv-publisher__img"
+              src="{{senderAvatarSrc}}"
+              mode="aspectFill"
+              binderror="handleAvatarError"
+            />
+            <t-icon wx:else name="{{senderFallbackIconName}}" size="28rpx" color="{{iconColor}}"></t-icon>
+          </view>
+          <view class="mv-publisher__copy">
+            <text class="mv-publisher__name">{{publisherName}}</text>
+            <text wx:if="{{publishTimeText}}" class="mv-publisher__time">{{publishTimeText}}</text>
+          </view>
         </view>
       </view>
     </view>
+
+    <view class="mv-article">
+      <text wx:if="{{summaryText && summaryText !== displayTitle}}" class="mv-lead">{{summaryText}}</text>
+
+      <view wx:for="{{blocks}}" wx:key="index" class="mv-block">
+        <text wx:if="{{item.type === 'text' && item.value}}" class="mv-text">{{item.value}}</text>
+        <view
+          wx:elif="{{item.type === 'image' && item.url}}"
+          class="mv-image-wrap"
+          bindtap="previewImage"
+          data-url="{{item.url}}"
+        >
+          <image class="mv-image" src="{{item.url}}" mode="widthFix"></image>
+          <text wx:if="{{item.alt}}" class="mv-image__alt">{{item.alt}}</text>
+        </view>
+      </view>
+
+      <view wx:if="{{linkUrl}}" class="mv-link" bindtap="openLink">
+        <view class="mv-link__copy">
+          <text class="mv-link__label">相关链接</text>
+          <text class="mv-link__title">{{linkLabel}}</text>
+        </view>
+        <view class="mv-link__btn">
+          <text>去看看</text>
+          <t-icon name="chevronRight" size="22rpx" color="#ffffff"></t-icon>
+        </view>
+      </view>
+    </view>
+
+    <view class="mv-footer">
+      <view class="mv-footer__mark"></view>
+      <text>湾源农仓 · 官方消息</text>
+    </view>
+
+    <view class="mv-spacer"></view>
+  </scroll-view>
+
+  <view wx:elif="{{loading}}" class="mv-empty">
+    <view class="mv-empty__orb">
+      <t-icon name="bell" size="56rpx" color="#2c4a39"></t-icon>
+    </view>
+    <text class="mv-empty__title">正在加载详情</text>
+    <text class="mv-empty__desc">请稍候…</text>
   </view>
 
-  <view wx:elif="{{loading}}" class="empty-state">
-    <text class="empty-state__text">加载中</text>
+  <view wx:else class="mv-empty">
+    <view class="mv-empty__orb">
+      <t-icon name="messageInfo" size="56rpx" color="#2c4a39"></t-icon>
+    </view>
+    <text class="mv-empty__title">消息不存在</text>
+    <text class="mv-empty__desc">可能已被删除或链接失效</text>
   </view>
-
-  <view wx:else class="empty-state">
-    <text class="empty-state__text">暂无公告</text>
-  </view>
-
-  <view class="safe-bottom"></view>
 </view>

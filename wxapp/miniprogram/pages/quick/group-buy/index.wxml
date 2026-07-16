@@ -1,37 +1,60 @@
-<view class="phone-page zone-page zone-page--group-list" style="{{pageStyle}}">
-  <page-nav title="{{pageTitle}}" theme="solid" />
-
-  <view wx:if="{{products.length}}" class="product-list">
-    <view
-      wx:for="{{products}}"
-      wx:key="productId"
-      class="product-item"
-      data-product-id="{{item.productId}}"
-      data-sku-id="{{item.skuId}}"
-      catchtap="joinGroup"
-    >
-      <view class="product-item__img-wrap">
-        <image wx:if="{{item.coverUrl}}" class="product-item__img" src="{{item.coverUrl}}" mode="aspectFill"/>
-        <view wx:else class="product-item__img {{item.imageClass}}"></view>
-      </view>
-      <view class="product-item__info">
-        <view class="product-item__title">{{item.title}}</view>
-        <view class="product-item__desc">{{item.subtitle}}</view>
-        <view class="product-item__bottom">
-          <view>
-            <text class="product-item__price">¥{{item.groupPrice}}</text>
-            <text class="product-item__old">¥{{item.originPrice}}</text>
-          </view>
-          <text class="product-item__needed">{{item.needed}}人团</text>
-          <button class="product-item__btn" data-product-id="{{item.productId}}" data-sku-id="{{item.skuId}}" catchtap="joinGroup">去拼团</button>
-        </view>
-      </view>
+<view class="phone-page phf-near" style="{{pageStyle}}">
+  <view class="phf-near__top">
+    <page-nav title="{{pageTitle}}" theme="transparent" />
+    <view class="phf-near__hint">
+      <text class="phf-near__hint-title">附近正在拼</text>
+      <text class="phf-near__hint-desc">跟团更省，满员成团即享拼团价</text>
     </view>
   </view>
 
-  <view wx:elif="{{!loading}}" class="empty-block">
-    <text class="empty-hint">暂无拼团商品</text>
+  <view wx:if="{{loading}}" class="phf-near__empty">
+    <text>正在加载附近拼单…</text>
   </view>
-  <text wx:if="{{loading}}" class="empty-hint" style="margin-top: 120rpx;">加载中…</text>
-  <view class="safe-bottom"></view>
+  <view wx:elif="{{!products.length}}" class="phf-near__empty">
+    <text class="phf-near__empty-title">暂无附近拼单</text>
+    <text class="phf-near__empty-desc">可以回去开一个新团</text>
+  </view>
+
+  <scroll-view wx:else class="phf-near__list" scroll-y enhanced show-scrollbar="{{false}}">
+    <view
+      wx:for="{{products}}"
+      wx:key="groupId"
+      class="phf-near-item"
+      data-product-id="{{item.productId}}"
+      data-sku-id="{{item.skuId}}"
+      data-group-id="{{item.groupId}}"
+      catchtap="joinGroup"
+    >
+      <view class="phf-near-item__cover">
+        <image wx:if="{{item.coverUrl}}" class="phf-near-item__img" src="{{item.coverUrl}}" mode="aspectFill" />
+        <view wx:else class="phf-near-item__img {{item.imageClass}}"></view>
+        <text class="phf-near-item__remain">还差{{item.remain}}人</text>
+      </view>
+      <view class="phf-near-item__main">
+        <text class="phf-near-item__title">{{item.title}}</text>
+        <text class="phf-near-item__area">{{item.area}}</text>
+        <view class="phf-near-item__progress">
+          <view class="phf-near-item__bar">
+            <view class="phf-near-item__fill" style="width: {{item.percent}}%;"></view>
+          </view>
+          <text class="phf-near-item__members">{{item.memberCount}}/{{item.needed}}人</text>
+        </view>
+        <view class="phf-near-item__foot">
+          <view class="phf-near-item__price-wrap">
+            <text class="phf-near-item__yen">¥</text>
+            <text class="phf-near-item__price">{{item.groupPrice}}</text>
+            <text class="phf-near-item__old">¥{{item.originPrice}}</text>
+          </view>
+          <button
+            class="phf-near-item__btn"
+            data-product-id="{{item.productId}}"
+            data-sku-id="{{item.skuId}}"
+            data-group-id="{{item.groupId}}"
+            catchtap="joinGroup"
+          >去跟团</button>
+        </view>
+      </view>
+    </view>
+    <view class="safe-bottom"></view>
+  </scroll-view>
 </view>

@@ -72,6 +72,7 @@ export const navItems: NavItem[] = [
   { key: 'exchangeCoupons', label: '兑换券管理', to: '/exchange/coupons', icon: 'redPacket' },
   { key: 'exchangeProducts', label: '兑换商品管理', to: '/exchange/products', icon: 'shopBag' },
   { key: 'activities', label: '活动管理', to: '/activities', icon: 'flash' },
+  { key: 'groupBuys', label: '拼团管理', to: '/group-buys', icon: 'group' },
   { key: 'banners', label: '轮播广告', to: '/banners', icon: 'image' },
   { key: 'messages', label: '公告管理', to: '/messages', icon: 'bell' },
 
@@ -87,7 +88,7 @@ export const navItems: NavItem[] = [
 export const navGroups: NavGroup[] = [
   { key: 'dashboard', label: '运营大盘', icon: 'home', items: navItems.filter((i) => ['dashboard', 'analytics'].includes(i.key)) },
   { key: 'core', label: '核心电商', icon: 'shopBag', items: navItems.filter((i) => ['merchants', 'products', 'categories', 'orders', 'logistics', 'refunds', 'withdraws'].includes(i.key)) },
-  { key: 'marketing', label: '营销中心', icon: 'gift', items: navItems.filter((i) => ['coupons', 'activities', 'banners', 'messages'].includes(i.key)) },
+  { key: 'marketing', label: '营销中心', icon: 'gift', items: navItems.filter((i) => ['coupons', 'activities', 'groupBuys', 'banners', 'messages'].includes(i.key)) },
   { key: 'exchange', label: '兑换中心', icon: 'redPacket', items: navItems.filter((i) => ['exchangeCoupons', 'exchangeProducts'].includes(i.key)) },
   { key: 'support', label: '客户服务', icon: 'support', items: navItems.filter((i) => ['chat'].includes(i.key)) },
   { key: 'leader', label: '社区团长', icon: 'group', items: navItems.filter((i) => ['leaders', 'pickup-points', 'commissions'].includes(i.key)) },

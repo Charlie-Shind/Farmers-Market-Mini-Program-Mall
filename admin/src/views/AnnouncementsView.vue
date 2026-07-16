@@ -159,30 +159,6 @@
             </div>
           </div>
         </div>
-
-        <!-- Quick Stats Breakdown Card -->
-        <div class="stats-breakdown-card">
-          <h4 class="section-inline-title">
-            <el-icon><DataAnalysis /></el-icon>
-            <span>投递结构分析</span>
-          </h4>
-          <div class="breakdown-grid">
-            <div class="breakdown-item">
-              <span class="label">全员广播比</span>
-              <strong class="value">{{ broadcastPercentage }}%</strong>
-              <div class="progress-bar">
-                <span class="progress-fill gold" :style="{ width: `${broadcastPercentage}%` }"></span>
-              </div>
-            </div>
-            <div class="breakdown-item">
-              <span class="label">定向投递比</span>
-              <strong class="value">{{ targetedPercentage }}%</strong>
-              <div class="progress-bar">
-                <span class="progress-fill blue" :style="{ width: `${targetedPercentage}%` }"></span>
-              </div>
-            </div>
-          </div>
-        </div>
       </aside>
     </div>
 
@@ -463,7 +439,6 @@ import {
   Bell,
   Box,
   Close,
-  DataAnalysis,
   Notification,
   Present,
   Setting,
@@ -654,19 +629,6 @@ const filteredMessages = computed(() => {
     }
     return true;
   });
-});
-
-// Operations ratios
-const broadcastPercentage = computed(() => {
-  if (!total.value) return 0;
-  const count = messages.value.filter(m => m.broadcast).length;
-  return Math.round((count / messages.value.length) * 100);
-});
-
-const targetedPercentage = computed(() => {
-  if (!total.value) return 0;
-  const count = messages.value.filter(m => !m.broadcast).length;
-  return Math.round((count / messages.value.length) * 100);
 });
 
 // Functions
@@ -1332,63 +1294,6 @@ function previewLink(msg: AdminMessage | null) {
   padding: 1px 4px;
   border-radius: 4px;
   color: var(--warn);
-}
-
-/* Stats breakdown card */
-.stats-breakdown-card {
-  background: #fff;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  padding: 20px;
-  box-shadow: var(--shadow);
-}
-
-.stats-breakdown-card h4 {
-  margin: 0 0 14px 0;
-  font-size: 13px;
-  color: var(--green);
-  font-weight: 800;
-}
-
-.breakdown-grid {
-  display: grid;
-  gap: 14px;
-}
-
-.breakdown-item {
-  display: grid;
-  gap: 6px;
-}
-
-.breakdown-item .label {
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.breakdown-item .value {
-  font-size: 18px;
-  font-weight: 800;
-}
-
-.progress-bar {
-  height: 8px;
-  background: #f0ede5;
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-.progress-fill {
-  display: block;
-  height: 100%;
-  border-radius: 999px;
-}
-
-.progress-fill.gold {
-  background: linear-gradient(90deg, #d9d9d9, #9e9e9e);
-}
-
-.progress-fill.blue {
-  background: linear-gradient(90deg, #bdbdbd, #7a7a7a);
 }
 
 /* 弹窗 — 使用全局 overlays.css，不在此覆盖 */

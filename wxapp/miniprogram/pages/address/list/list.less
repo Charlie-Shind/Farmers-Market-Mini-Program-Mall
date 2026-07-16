@@ -1,23 +1,37 @@
 .address-list-page {
-  padding: 0 32rpx 140rpx;
+  /* 覆盖全局 .phone-page { min-height: 90vh !important }，避免空态仍整页滚动 */
+  height: 100vh !important;
+  max-height: 100vh !important;
+  min-height: 0 !important;
+  overflow: hidden;
+  padding: 0;
   background-color: #fbf8ef;
-  min-height: 100vh;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.address-list-page__body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  padding: 0 32rpx;
   box-sizing: border-box;
 }
 
 .address-scroll {
-  flex: 1;
-  height: calc(100vh - var(--page-top, 48px) - var(--nav-height, 44px) - 140rpx);
-  margin-top: 10rpx;
+  height: 100%;
+  box-sizing: border-box;
 }
 
 .scroll-spacer {
-  height: 80rpx;
+  height: 24rpx;
 }
 
 .address-list {
   display: grid;
   gap: 24rpx;
+  padding-top: 10rpx;
 }
 
 .address-card {
@@ -86,14 +100,16 @@
   flex-shrink: 0;
 }
 
-/* Empty State */
 .empty-state-box {
+  height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 120rpx 40rpx;
+  padding: 40rpx 40rpx 80rpx;
   text-align: center;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .empty-icon-box {
@@ -118,15 +134,12 @@
   color: var(--muted, #8a7a5f);
 }
 
-/* Bottom Button */
 .bottom-button-wrap {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 24rpx 32rpx env(safe-area-inset-bottom);
+  flex-shrink: 0;
+  padding: 16rpx 32rpx calc(24rpx + env(safe-area-inset-bottom));
   background: rgba(251, 248, 239, 0.96);
-  z-index: 99;
+  box-sizing: border-box;
+  margin-bottom: 50px;
 }
 
 .add-address-btn {
@@ -141,4 +154,8 @@
   box-shadow: 0 16rpx 32rpx rgba(44, 74, 57, 0.18);
   border: none !important;
   margin: 0;
+}
+
+.add-address-btn::after {
+  border: none;
 }

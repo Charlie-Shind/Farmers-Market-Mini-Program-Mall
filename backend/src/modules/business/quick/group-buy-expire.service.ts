@@ -133,16 +133,72 @@ export class GroupBuyExpireService implements OnModuleInit, OnModuleDestroy {
             data: { status: 'RECEIVED', usedAt: null, orderNo: null },
           });
 
-          // 标记订单为已取消
+          // 标记订单为已取消+已退款（模拟退款：库存/积分/优惠券已在上方回滚）
           await tx.order.update({
             where: { id: order.id },
             data: {
               orderStatus: 4,
               payStatus: 0,
-              cancelReason: '拼团失败自动取消',
+              refundStatus: 3,
+              cancelReason: '拼团失败自动退款',
             },
           });
           refundedOrders += 1;
+        }
+
+        // 团已失败：同时清理该团下"还未支付"的订单，及时释放锁定库存，
+        // 不必等它们各自的下单超时定时器（OrderExpireService）再来处理
+        const pendingOrders = await tx.order.findMany({
+          where: {
+            groupBuyId: groupId,
+            payStatus: 0,
+            orderStatus: 1,
+          },
+          include: { items: true },
+        });
+
+        for (const order of pendingOrders) {
+          for (const oi of order.items) {
+            await tx.productSku.update({
+              where: { id: oi.skuId },
+              data: {
+                stock: { increment: oi.quantity },
+                lockedStock: { decrement: oi.quantity },
+              },
+            });
+          }
+
+          const pointsDeductLog = await tx.pointLog.findFirst({
+            where: { sourceNo: order.orderNo, changeType: 'DEDUCT' },
+          });
+          if (pointsDeductLog) {
+            const refundPoints = Math.abs(Number(pointsDeductLog.points));
+            if (refundPoints > 0) {
+              await tx.pointLog.create({
+                data: {
+                  userId: order.userId,
+                  changeType: 'REFUND',
+                  points: refundPoints,
+                  sourceType: 'ORDER',
+                  sourceNo: order.orderNo,
+                  remark: '拼团失败退还积分',
+                },
+              });
+            }
+          }
+
+          await tx.userCoupon.updateMany({
+            where: { orderNo: order.orderNo, status: 'USED' },
+            data: { status: 'RECEIVED', usedAt: null, orderNo: null },
+          });
+
+          await tx.order.update({
+            where: { id: order.id },
+            data: {
+              orderStatus: 4,
+              cancelReason: '拼团失败自动取消（未支付）',
+            },
+          });
         }
       });
     } catch (err) {

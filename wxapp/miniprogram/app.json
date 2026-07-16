@@ -89,6 +89,7 @@
       "pages": [
         "flash-sale/index",
         "group-buy/index",
+        "group-buy/mine/mine",
         "group-buy-products/index",
         "gift-zone/index",
         "origin-zone/index"

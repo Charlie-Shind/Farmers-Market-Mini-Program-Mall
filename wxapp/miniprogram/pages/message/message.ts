@@ -7,12 +7,22 @@ import {
 import { buildPageTopStyle } from '../../utils/page-layout';
 import { ensureCustomerAccess, navigateBackOrHome } from '../../utils/auth-route';
 
+type MessageTone = 'green' | 'orange' | 'gold';
+
+type TypeMeta = {
+  tone: MessageTone;
+  icon: string;
+  iconColor: string;
+  label: string;
+};
+
 type MessageRow = {
   receiptId: number;
   type: string;
   typeLabel: string;
   title: string;
   summary: string;
+  showSummary: boolean;
   imageUrl: string;
   showImage: boolean;
   timeText: string;
@@ -21,23 +31,38 @@ type MessageRow = {
   avatarSrc: string;
   showAvatarImage: boolean;
   fallbackIconName: string;
+  tone: MessageTone;
+  iconColor: string;
+  channelKey: string;
 };
 
-type ConversationRow = {
+type ChannelRow = {
   key: string;
-  type: string;
-  typeLabel: string;
-  latestTitle: string;
-  latestSummary: string;
-  showSummary: boolean;
-  latestTimeText: string;
-  latestTimestamp: number;
-  unreadCount: number;
-  totalCount: number;
-  avatarSrc: string;
-  showAvatarImage: boolean;
-  fallbackIconName: string;
+  label: string;
+  icon: string;
+  iconColor: string;
+  tone: MessageTone;
+  unread: number;
 };
+
+const TYPE_META: Record<string, TypeMeta> = {
+  NOTICE: { tone: 'green', icon: 'bell', iconColor: '#2c4a39', label: '公告' },
+  SYSTEM: { tone: 'green', icon: 'shield', iconColor: '#3f6f44', label: '系统' },
+  ACTIVITY: { tone: 'orange', icon: 'gift', iconColor: '#c65f2d', label: '活动' },
+  ORDER: { tone: 'orange', icon: 'truck', iconColor: '#c65f2d', label: '订单' },
+  DEFAULT: { tone: 'gold', icon: 'message', iconColor: '#8a6a3d', label: '消息' },
+};
+
+function resolveTypeMeta(type: string, typeLabel: string): TypeMeta {
+  const key = String(type || '').toUpperCase();
+  if (TYPE_META[key]) return TYPE_META[key];
+  const label = typeLabel || '消息';
+  if (/订单|物流|售后/.test(label)) return { ...TYPE_META.ORDER, label };
+  if (/活动|营销|优惠/.test(label)) return { ...TYPE_META.ACTIVITY, label };
+  if (/系统|安全/.test(label)) return { ...TYPE_META.SYSTEM, label };
+  if (/公告|通知/.test(label)) return { ...TYPE_META.NOTICE, label };
+  return { ...TYPE_META.DEFAULT, label };
+}
 
 function getTimestamp(value?: string | null): number {
   if (!value) return 0;
@@ -70,7 +95,11 @@ function readContentJson(item: any): any | null {
   const json = item?.contentJson;
   if (!json) return null;
   if (typeof json === 'string') {
-    try { return JSON.parse(json); } catch { return null; }
+    try {
+      return JSON.parse(json);
+    } catch {
+      return null;
+    }
   }
   return json;
 }
@@ -89,13 +118,17 @@ function readImageUrl(item: any): string {
     imageBlock?.url ||
     imageBlock?.value ||
     ''
-  ).toString().trim();
+  )
+    .toString()
+    .trim();
 }
 
 function readSummary(item: any): string {
   const contentJson = readContentJson(item);
   const blocks = Array.isArray(contentJson?.blocks) ? contentJson.blocks : [];
-  const textBlock = blocks.find((block: any) => block?.type === 'text' && (block?.value || block?.text || block?.content));
+  const textBlock = blocks.find(
+    (block: any) => block?.type === 'text' && (block?.value || block?.text || block?.content),
+  );
   const text =
     item?.summary ||
     contentJson?.summary ||
@@ -117,16 +150,20 @@ function mapMessage(item: AppMessageListItem): MessageRow {
   const anyItem = item as any;
   const type = String(anyItem.type || 'DEFAULT');
   const typeLabel = String(anyItem.typeLabel || anyItem.categoryName || '');
+  const meta = resolveTypeMeta(type, typeLabel);
   const imageUrl = readImageUrl(anyItem);
   const summary = readSummary(anyItem);
   const publishAt = readPublishAt(anyItem);
+  const title = String(anyItem.title || '').trim() || summary;
+  const channelKey = type || typeLabel || 'DEFAULT';
 
   return {
     receiptId: Number(anyItem.receiptId || anyItem.id || 0),
     type,
-    typeLabel,
-    title: String(anyItem.title || '').trim(),
+    typeLabel: typeLabel || meta.label,
+    title,
     summary,
+    showSummary: Boolean(summary) && summary !== title,
     imageUrl,
     showImage: Boolean(imageUrl),
     timeText: formatRowTime(publishAt),
@@ -134,44 +171,49 @@ function mapMessage(item: AppMessageListItem): MessageRow {
     isRead: !!anyItem.isRead,
     avatarSrc: imageUrl,
     showAvatarImage: Boolean(imageUrl),
-    fallbackIconName: 'bell',
+    fallbackIconName: meta.icon,
+    tone: meta.tone,
+    iconColor: meta.iconColor,
+    channelKey,
   };
 }
 
-function buildConversations(messages: MessageRow[]): ConversationRow[] {
-  const groupMap = new Map<string, ConversationRow>();
-  const sorted = [...messages].sort((a, b) => b.timestamp - a.timestamp);
+function buildChannels(messages: MessageRow[]): ChannelRow[] {
+  const allUnread = messages.reduce((sum, m) => sum + (m.isRead ? 0 : 1), 0);
+  const channels: ChannelRow[] = [
+    {
+      key: 'all',
+      label: '全部',
+      icon: 'message',
+      iconColor: '#2c4a39',
+      tone: 'green',
+      unread: allUnread,
+    },
+  ];
 
-  sorted.forEach((message) => {
-    const key = message.type || message.typeLabel || 'DEFAULT';
-    const existing = groupMap.get(key);
+  const seen = new Map<string, ChannelRow>();
+  messages.forEach((message) => {
+    const existing = seen.get(message.channelKey);
     if (existing) {
-      existing.unreadCount += message.isRead ? 0 : 1;
-      existing.totalCount += 1;
-      if (!existing.showAvatarImage && message.showImage) {
-        existing.avatarSrc = message.avatarSrc;
-        existing.showAvatarImage = true;
-      }
+      existing.unread += message.isRead ? 0 : 1;
       return;
     }
-    groupMap.set(key, {
-      key,
-      type: message.type,
-      typeLabel: message.typeLabel || message.type || '公告',
-      latestTitle: message.title || message.summary || '',
-      latestSummary: message.summary || message.title || '',
-      showSummary: Boolean(message.summary) && message.summary !== message.title,
-      latestTimeText: message.timeText,
-      latestTimestamp: message.timestamp,
-      unreadCount: message.isRead ? 0 : 1,
-      totalCount: 1,
-      avatarSrc: message.avatarSrc,
-      showAvatarImage: message.showImage,
-      fallbackIconName: 'bell',
+    seen.set(message.channelKey, {
+      key: message.channelKey,
+      label: message.typeLabel,
+      icon: message.fallbackIconName,
+      iconColor: message.iconColor,
+      tone: message.tone,
+      unread: message.isRead ? 0 : 1,
     });
   });
 
-  return Array.from(groupMap.values()).sort((a, b) => b.latestTimestamp - a.latestTimestamp);
+  return channels.concat(Array.from(seen.values()));
+}
+
+function filterMessages(messages: MessageRow[], channel: string): MessageRow[] {
+  if (!channel || channel === 'all') return messages;
+  return messages.filter((m) => m.channelKey === channel);
 }
 
 Component({
@@ -181,13 +223,15 @@ Component({
     loading: false,
     loadingMore: false,
     loadingAction: false,
-    groups: [] as ConversationRow[],
+    messages: [] as MessageRow[],
+    displayMessages: [] as MessageRow[],
+    channels: [] as ChannelRow[],
+    activeChannel: 'all',
     totalUnread: 0,
     footerName: '湾源农仓',
-    footerType: '小程序',
-    emptyText: '暂无公告',
+    emptyText: '暂无消息',
     page: 1,
-    pageSize: 80,
+    pageSize: 20,
     total: 0,
     noMore: false,
   },
@@ -202,9 +246,13 @@ Component({
     },
   },
   methods: {
-    onLoad() {
+    onLoad(this: any, options?: { type?: string }) {
       if (!ensureCustomerAccess('/pages/message/message')) {
         return;
+      }
+      const type = String(options?.type || '').trim();
+      if (type) {
+        this.setData({ activeChannel: type });
       }
     },
     async loadMessages(this: any, reset = true) {
@@ -224,32 +272,51 @@ Component({
 
         const messages = (response.items ?? [])
           .map(mapMessage)
-          .filter((item) => item.receiptId);
+          .filter((item) => item.receiptId)
+          .sort((a, b) => b.timestamp - a.timestamp);
 
-        const mergedMessages = reset ? messages : [...this.data.messages, ...messages];
-        const groups = buildConversations(mergedMessages);
+        const mergedMessages = reset
+          ? messages
+          : [...this.data.messages, ...messages].sort((a, b) => b.timestamp - a.timestamp);
+
+        const channels = buildChannels(mergedMessages);
+        const activeChannel = this.data.activeChannel;
         const computedUnread = mergedMessages.reduce((sum, item) => sum + (item.isRead ? 0 : 1), 0);
 
         this.setData({
-          groups,
+          messages: mergedMessages,
+          channels,
+          displayMessages: filterMessages(mergedMessages, activeChannel),
           totalUnread: response.unreadCount ?? computedUnread,
           total: response.total ?? mergedMessages.length,
           page: page + 1,
           noMore:
-            mergedMessages.length >= (response.total ?? mergedMessages.length) ||
-            messages.length < this.data.pageSize,
+            messages.length === 0 ||
+            messages.length < (Number((response as any).pageSize) || this.data.pageSize) ||
+            (Number.isFinite(Number(response.total)) &&
+              Number(response.total) >= 0 &&
+              mergedMessages.length >= Number(response.total)),
           loading: false,
           loadingMore: false,
         });
       } catch {
         this.setData({
-          groups: [],
+          messages: [],
+          displayMessages: [],
+          channels: buildChannels([]),
           totalUnread: 0,
           noMore: true,
           loading: false,
           loadingMore: false,
         });
       }
+    },
+    selectChannel(e: WechatMiniprogram.BaseEvent) {
+      const key = String((e.currentTarget.dataset as { key?: string }).key || 'all');
+      this.setData({
+        activeChannel: key,
+        displayMessages: filterMessages(this.data.messages, key),
+      });
     },
     async clearUnread(this: any) {
       if (this.data.loadingAction || this.data.totalUnread <= 0) {
@@ -269,27 +336,33 @@ Component({
       }
       void this.loadMessages(false);
     },
-    openConversation(e: WechatMiniprogram.BaseEvent) {
-      const { type, typeLabel } = (e.currentTarget.dataset as { type?: string; typeLabel?: string }) || {};
-      if (!type && !typeLabel) {
-        return;
-      }
+    openMessage(e: WechatMiniprogram.BaseEvent) {
+      const { receiptId } = (e.currentTarget.dataset as { receiptId?: number | string }) || {};
+      const id = Number(receiptId || 0);
+      if (!id) return;
       wx.navigateTo({
-        url: `/pages/message/history/history?type=${encodeURIComponent(type || '')}&typeLabel=${encodeURIComponent(typeLabel || '')}`,
+        url: `/pages/message/view/view?receiptId=${id}`,
       });
     },
     goBack() {
       navigateBackOrHome();
     },
     handleAvatarError(this: any, e: WechatMiniprogram.BaseEvent) {
-      const { key } = (e.currentTarget.dataset as { key?: string }) || {};
-      if (!key) return;
-      const index = this.data.groups.findIndex((group: ConversationRow) => group.key === key);
-      if (index < 0) return;
-      this.setData({
-        [`groups[${index}].avatarSrc`]: '',
-        [`groups[${index}].showAvatarImage`]: false,
-      });
+      const { receiptId } = (e.currentTarget.dataset as { receiptId?: number | string }) || {};
+      const id = Number(receiptId || 0);
+      if (!id) return;
+
+      const patch = (list: MessageRow[], field: string) => {
+        const index = list.findIndex((item) => item.receiptId === id);
+        if (index < 0) return;
+        this.setData({
+          [`${field}[${index}].avatarSrc`]: '',
+          [`${field}[${index}].showAvatarImage`]: false,
+        });
+      };
+
+      patch(this.data.messages, 'messages');
+      patch(this.data.displayMessages, 'displayMessages');
     },
   },
 });

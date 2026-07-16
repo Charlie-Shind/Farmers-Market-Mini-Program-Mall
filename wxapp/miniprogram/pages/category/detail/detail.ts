@@ -167,7 +167,9 @@ Component({
       const routeCategoryId = options.categoryId ? String(options.categoryId) : '';
       const routeCategoryName = options.categoryName ? decodeURIComponent(options.categoryName) : '';
       const activeKey = options.cat ? String(options.cat) : '';
+      const bannerId = options.bannerId ? Number(options.bannerId) : null;
       const numericCategoryId = Number(routeCategoryId);
+      const loadKey = `${routeCategoryId}|${activeKey}|${bannerId || ''}`;
 
       if (!routeCategoryId || !Number.isFinite(numericCategoryId) || numericCategoryId <= 0) {
         wx.showToast({ title: '分类未找到', icon: 'none' });
@@ -175,7 +177,11 @@ Component({
         return;
       }
 
-      const bannerId = options.bannerId ? Number(options.bannerId) : null;
+      // 从商品详情返回时跳过重载，避免闪屏与筛选被重置
+      if ((this as any)._loadedKey === loadKey) {
+        return;
+      }
+
       let bannerInfo = null;
       if (bannerId != null && bannerId > 0) {
         try {
@@ -248,6 +254,7 @@ Component({
         this.setData({
           loading: false,
         });
+        (this as any)._loadedKey = loadKey;
       }
     },
     async addToCart(e: WechatMiniprogram.BaseEvent & { detail?: { skuId?: number; product?: any } }) {

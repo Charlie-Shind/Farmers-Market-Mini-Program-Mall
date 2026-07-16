@@ -95,8 +95,12 @@ export class WechatAuthService {
 
   async resolveWechatCodeSession(code: string): Promise<WechatCodeSession> {
     if (this.isDevelopmentWechatCodeSessionBypassEnabled()) {
-      this.logger.warn(`Using development fallback openid for WeChat code session: wechat_${code.slice(0, 8)}...`);
-      return { openid: `wechat_${code}` };
+      // 开发环境必须返回稳定 openid：登录与 phone-bind 会各调一次 wx.login，
+      // 若按 code 生成 openid，第二次必然找不到第一次创建的用户。
+      const configured = this.configService.get<string>('WECHAT_DEV_OPENID', '').trim();
+      const openid = configured || 'wechat_dev_local_user';
+      this.logger.warn(`Using development fallback openid for WeChat code session: ${openid}`);
+      return { openid, sessionKey: 'dev_session_key' };
     }
 
     const { appId, secret } = this.getWechatMiniProgramCredentials();

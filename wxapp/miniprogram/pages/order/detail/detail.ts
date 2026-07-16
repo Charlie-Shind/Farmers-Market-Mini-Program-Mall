@@ -482,6 +482,22 @@ Component({
     },
     mapOrderStatus() {
       const order = this.data.order;
+      const groupBuy = order.groupBuy;
+
+      // 计算拼团进度数据（无论后端是否直接返回状态文案，都需要展示）
+      let groupBuyProgress: { percent: number; memberCount: number; needed: number; remaining: number; expireAt: string | null } | null = null;
+      const groupInviteCode = String(groupBuy?.inviteCode ?? '').trim();
+      if (groupBuy) {
+        const { memberCount, needed, remaining } = getGroupBuyStats(groupBuy);
+        groupBuyProgress = {
+          percent: Math.min(memberCount / needed, 1),
+          memberCount,
+          needed,
+          remaining,
+          expireAt: groupBuy.expireAt,
+        };
+      }
+
       const backendStatusLabel = String((order as any).statusLabel || order.status || '').trim();
       const backendActionButtons = Array.isArray((order as any).actionButtons) ? (order as any).actionButtons : [];
       if (backendStatusLabel) {
@@ -507,6 +523,8 @@ Component({
           statusProgressWidth: getStatusProgressWidth(statusSteps),
           hasActionButtons: backendActionButtons.length > 0 || normalizedBackendStatusLabel === '售后中' || normalizedBackendStatusLabel === '退款申请中',
           actionButtons: backendActionButtons,
+          groupBuyProgress,
+          groupInviteCode,
         });
         return;
       }
@@ -514,7 +532,6 @@ Component({
       const payStatus = Number(order.payStatus);
       const deliveryStatus = Number(order.deliveryStatus);
       const refundStatus = Number(order.afterSaleStatus ?? order.refundStatus ?? 0);
-      const groupBuy = order.groupBuy;
       const statusCode = String(order.orderStatus || '').toUpperCase();
       const statusText = String(order.status || '').trim();
 
@@ -645,20 +662,6 @@ Component({
           statusIcon = 'close';
           statusColorClass = 'banner--gray';
         }
-      }
-
-      // 计算拼团进度数据
-      let groupBuyProgress: { percent: number; memberCount: number; needed: number; remaining: number; expireAt: string | null } | null = null;
-      const groupInviteCode = String(groupBuy?.inviteCode ?? '').trim();
-      if (groupBuy) {
-        const { memberCount, needed, remaining } = getGroupBuyStats(groupBuy);
-        groupBuyProgress = {
-          percent: Math.min(memberCount / needed, 1),
-          memberCount,
-          needed,
-          remaining,
-          expireAt: groupBuy.expireAt,
-        };
       }
 
       const statusSteps = buildStatusSteps(order, statusLabel);

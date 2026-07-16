@@ -2,6 +2,7 @@
   "navigationStyle": "custom",
   "navigationBarTitleText": "搜索",
   "usingComponents": {
+    "page-nav": "../../components/base/page-nav/page-nav",
     "product-card": "../../components/business/product-card/product-card",
     "t-icon": "../../components/base/t-icon/t-icon"
   }

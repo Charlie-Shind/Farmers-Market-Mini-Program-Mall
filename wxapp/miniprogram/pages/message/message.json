@@ -1,5 +1,8 @@
 {
   "usingComponents": {
+    "page-nav": "../../components/base/page-nav/page-nav",
     "t-icon": "../../components/base/t-icon/t-icon"
-  }
+  },
+  "navigationStyle": "custom",
+  "disableScroll": true
 }

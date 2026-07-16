@@ -2,6 +2,39 @@
   <page-nav title="卡券包" theme="solid" />
 
   <view class="coupon-content">
+    <view class="coupon-hero">
+      <view class="coupon-hero__glow coupon-hero__glow--one"></view>
+      <view class="coupon-hero__glow coupon-hero__glow--two"></view>
+      <view class="coupon-hero__main">
+        <view class="coupon-hero__info">
+          <text class="coupon-hero__label">可使用卡券</text>
+          <view class="coupon-hero__value-row">
+            <text class="coupon-hero__value">{{summary.available}}</text>
+            <text class="coupon-hero__unit">张</text>
+          </view>
+        </view>
+        <view class="coupon-hero__icon">
+          <t-icon name="coupon" size="48rpx" color="#ffffff"></t-icon>
+        </view>
+      </view>
+      <view class="coupon-hero__stats">
+        <view class="coupon-hero__stat">
+          <text class="coupon-hero__stat-value">{{summary.total}}</text>
+          <text class="coupon-hero__stat-label">全部</text>
+        </view>
+        <view class="coupon-hero__stat-line"></view>
+        <view class="coupon-hero__stat">
+          <text class="coupon-hero__stat-value">{{summary.used}}</text>
+          <text class="coupon-hero__stat-label">已使用</text>
+        </view>
+        <view class="coupon-hero__stat-line"></view>
+        <view class="coupon-hero__stat">
+          <text class="coupon-hero__stat-value">{{summary.expired}}</text>
+          <text class="coupon-hero__stat-label">已过期</text>
+        </view>
+      </view>
+    </view>
+
     <scroll-view scroll-x="true" class="coupon-tabs" show-scrollbar="{{false}}">
       <view class="coupon-tabs__row">
         <button
@@ -21,31 +54,33 @@
       <view
         wx:for="{{visibleCoupons}}"
         wx:key="userCouponId"
-        class="coupon-card"
+        class="coupon-card {{item.statusTone}}"
         bindtap="showCouponDetail"
         data-index="{{index}}"
       >
-        <view class="coupon-card__left">
+        <view class="coupon-card__main">
+          <text class="coupon-card__badge">{{item.name}}</text>
           <view class="coupon-card__amount-row">
-            <text class="coupon-card__currency">¥</text>
             <text class="coupon-card__amount">{{item.discountAmount}}</text>
+            <text class="coupon-card__unit">元</text>
           </view>
-          <text class="coupon-card__label">优惠券</text>
+          <text class="coupon-card__meta-title">满{{item.thresholdAmount}}元可用 · {{item.periodText}}</text>
         </view>
-        <view class="coupon-card__body">
-          <view class="coupon-card__head">
-            <text class="coupon-card__title">{{item.name}}</text>
-            <text class="coupon-status {{item.statusTone}}">{{item.statusLabel}}</text>
-          </view>
-          <text class="coupon-card__desc">满 {{item.thresholdAmount}} 元可用</text>
-          <text class="coupon-card__meta">{{item.periodText}}</text>
-          <text class="coupon-card__hint">{{item.usableHint}}</text>
+        <view class="coupon-card__gap">
+          <view class="coupon-card__notch coupon-card__notch--top"></view>
+          <view class="coupon-card__dash"></view>
+          <view class="coupon-card__notch coupon-card__notch--bottom"></view>
         </view>
-        <t-icon name="chevronRight" size="24rpx" opacity="0.48"></t-icon>
+        <view class="coupon-card__footer">
+          <text class="coupon-card__action-text">{{item.statusLabel}}</text>
+        </view>
       </view>
     </view>
 
     <view wx:else class="coupon-empty">
+      <view class="coupon-empty__icon">
+        <t-icon name="coupon" size="52rpx" color="#c7bfa8"></t-icon>
+      </view>
       <text class="coupon-empty__title">暂无卡券</text>
       <text class="coupon-empty__desc">当前筛选条件下没有可展示的卡券。</text>
     </view>

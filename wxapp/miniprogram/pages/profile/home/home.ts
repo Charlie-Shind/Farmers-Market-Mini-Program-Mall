@@ -41,6 +41,7 @@ Component({
     activeTab: 'main', // 'main' | 'info' | 'action'
     merchantProducts: [] as MerchantProduct[],
     userCoupons: [] as AppUserCoupon[],
+    scrollTop: 0,
   },
   lifetimes: {
     attached() {
@@ -305,11 +306,19 @@ Component({
     },
     switchTab(e: WechatMiniprogram.BaseEvent) {
       const { tab } = (e.currentTarget.dataset as { tab?: string }) || {};
-      if (tab) {
-        this.setData({
-          activeTab: tab,
-        });
+      if (!tab || tab === this.data.activeTab) {
+        return;
       }
+
+      this.setData({ activeTab: tab });
+      // 不同 Tab 的内容高度差异很大，切换后 scroll-view 的原生滚动位置不会自动回到顶部，
+      // 若之前滚动过会导致内容较短的 Tab 底部出现"看不见但能滑动"的空白区域，这里强制归零一次。
+      this.resetProfileScroll();
+    },
+    resetProfileScroll() {
+      this.setData({ scrollTop: 1 }, () => {
+        this.setData({ scrollTop: 0 });
+      });
     },
     handleProfileAvatarError() {
       if (this.data.profile.avatarUrl === iconPaths.defaultAvatar) {

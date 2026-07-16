@@ -90,7 +90,7 @@ Component({
     },
     cartItemCount: 0,
     checkedItemCount: 0,
-    loading: false,
+    isAllChecked: false,
     loadError: false,
     icons: iconPaths,
     pageStyle: '',
@@ -106,8 +106,6 @@ Component({
       this.setData({
         pageStyle: buildPageTopStyle(0),
       });
-
-      this.loadCartData();
     },
   },
   pageLifetimes: {
@@ -115,7 +113,7 @@ Component({
       this.setData({
         pageStyle: buildPageTopStyle(0),
       });
-      this.loadCartData();
+      void this.loadCartData();
 
       const tabBar = (this as any).getTabBar?.();
       if (tabBar) {
@@ -129,8 +127,11 @@ Component({
   },
   methods: {
     async loadCartData() {
+      if ((this as any)._cartLoading) {
+        return;
+      }
+      (this as any)._cartLoading = true;
       this.setData({
-        loading: true,
         loadError: false,
       });
 
@@ -162,12 +163,12 @@ Component({
           cart: {
             address: address
               ? {
-                  title: `收货地址：${address.province}${address.city}${address.district} ${address.detailAddress}`,
+                  title: `${address.province}${address.city}${address.district} ${address.detailAddress}`,
                   desc: `${address.receiverName} ${address.receiverMobile}${address.isDefault ? ' · 默认地址' : ''}`,
                 }
               : {
-                  title: '收货地址：未设置',
-                  desc: '请先添加真实收货地址',
+                  title: '请选择收货地址',
+                  desc: '添加地址后，可更精准为您推荐商品',
                 },
             promo: {
               text: promoText,
@@ -193,6 +194,7 @@ Component({
           },
           cartItemCount: items.reduce((sum, item) => sum + item.quantity, 0),
           checkedItemCount: checkedItems.reduce((sum, item) => sum + item.quantity, 0),
+          isAllChecked: items.length > 0 && checkedItems.length === items.length,
         });
 
         const tabBar = (this as any).getTabBar?.();
@@ -204,9 +206,7 @@ Component({
           loadError: true,
         });
       } finally {
-        this.setData({
-          loading: false,
-        });
+        (this as any)._cartLoading = false;
       }
     },
     async toggleItem(e: WechatMiniprogram.BaseEvent) {
@@ -225,6 +225,32 @@ Component({
         this.loadCartData();
       } catch {
         wx.showToast({ title: '更新失败', icon: 'none' });
+      }
+    },
+    async toggleSelectAll() {
+      if (!ensureCustomerAccess('/pages/cart/cart')) {
+        return;
+      }
+
+      const items = this.data.cart.items;
+      if (!items.length) {
+        return;
+      }
+
+      const nextChecked = !this.data.isAllChecked;
+
+      wx.showLoading({ title: '处理中...', mask: true });
+      try {
+        await Promise.all(
+          items
+            .filter((item) => item.checked !== nextChecked)
+            .map((item) => updateCartItem(item.cartId, { checked: nextChecked })),
+        );
+        await this.loadCartData();
+      } catch {
+        wx.showToast({ title: '操作失败，请重试', icon: 'none' });
+      } finally {
+        wx.hideLoading();
       }
     },
     async increaseItem(e: WechatMiniprogram.BaseEvent) {
@@ -267,6 +293,39 @@ Component({
       } catch {
         wx.showToast({ title: '更新失败', icon: 'none' });
       }
+    },
+    removeItem(e: WechatMiniprogram.BaseEvent) {
+      if (!ensureCustomerAccess('/pages/cart/cart')) {
+        return;
+      }
+
+      const { cartId, title } = (e.currentTarget.dataset as { cartId?: string; title?: string }) || {};
+      if (!cartId) {
+        return;
+      }
+
+      wx.showModal({
+        title: '删除商品',
+        content: title ? `确定要将「${title}」从购物车删除吗？` : '确定要删除这件商品吗？',
+        confirmColor: '#c65f2d',
+        success: (res) => {
+          if (!res.confirm) {
+            return;
+          }
+
+          wx.showLoading({ title: '删除中...', mask: true });
+          removeCartItem(Number(cartId))
+            .then(() => {
+              wx.hideLoading();
+              wx.showToast({ title: '已删除', icon: 'success' });
+              this.loadCartData();
+            })
+            .catch(() => {
+              wx.hideLoading();
+              wx.showToast({ title: '删除失败', icon: 'none' });
+            });
+        },
+      });
     },
     openProductDetail(e: WechatMiniprogram.BaseEvent) {
       const { id } = (e.currentTarget.dataset as { id?: string }) || {};

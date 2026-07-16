@@ -12,28 +12,36 @@
       </view>
     </view>
 
-    <view wx:if="{{loadingCoupons}}" class="coupon-row">
+    <scroll-view wx:if="{{loadingCoupons}}" class="coupon-scroll" scroll-x enhanced show-scrollbar="{{false}}">
       <view class="coupon coupon--skel" wx:for="{{[1,2,3]}}" wx:key="*this"></view>
-    </view>
+    </scroll-view>
 
-    <view wx:elif="{{coupons.length}}" class="coupon-row">
+    <scroll-view wx:elif="{{coupons.length}}" class="coupon-scroll" scroll-x enhanced show-scrollbar="{{false}}">
       <view
         wx:for="{{coupons}}"
         wx:key="id"
-        class="coupon {{item.received ? 'coupon--received' : ''}}"
+        class="coupon {{index === 0 && !item.received ? 'coupon--featured' : ''}} {{item.received ? 'coupon--received' : ''}}"
         data-coupon-id="{{item.couponId}}"
         catchtap="receiveCoupon"
       >
-        <view class="coupon__top">
-          <text class="coupon__badge">{{item.tag}}</text>
+        <view class="coupon__main">
+          <text class="coupon__badge">{{item.tag || '平台通用券'}}</text>
+          <view class="coupon__amount-row">
+            <text class="coupon__amount">{{item.amount}}</text>
+            <text class="coupon__unit">元</text>
+          </view>
+          <text class="coupon__meta-title">{{item.thresholdText}}</text>
         </view>
-        <text class="coupon__amount">{{item.amount}}</text>
-        <text class="coupon__cond">{{item.condition}}</text>
-        <view class="coupon__btn {{item.received ? 'coupon__btn--done' : ''}}">
-          <text>{{item.received ? '已领取' : '新人专享'}}</text>
+        <view class="coupon__gap">
+          <view class="coupon__notch coupon__notch--top"></view>
+          <view class="coupon__dash"></view>
+          <view class="coupon__notch coupon__notch--bottom"></view>
+        </view>
+        <view class="coupon__footer {{item.received ? 'coupon__footer--done' : ''}}">
+          <text class="coupon__action-text">{{item.received ? '已领取' : '去领取'}}</text>
         </view>
       </view>
-    </view>
+    </scroll-view>
 
     <view wx:else class="mkt-empty">暂无优惠券</view>
   </view>
@@ -121,6 +129,8 @@
         wx:if="{{groupProducts.length}}"
         class="group-tile group-tile--featured"
         data-product-id="{{groupProducts[0].productId}}"
+        data-sku-id="{{groupProducts[0].skuId}}"
+        data-group-id="{{groupProducts[0].groupId}}"
         bindtap="openGroupDetail"
         hover-class="group-tile--hover"
       >

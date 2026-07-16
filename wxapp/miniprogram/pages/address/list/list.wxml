@@ -1,22 +1,38 @@
-﻿<view class="phone-page address-list-page" style="{{pageStyle}}">
+<view class="phone-page address-list-page" style="{{pageStyle}}">
   <page-nav title="收货地址" theme="solid" />
 
-  <scroll-view scroll-y="true" class="address-scroll" enhanced="true" show-scrollbar="{{false}}">
-    <view wx:if="{{addresses.length}}" class="address-list">
-      <view wx:for="{{addresses}}" wx:key="id" class="address-card" data-index="{{index}}" bindtap="handleAddressTap">
-        <view class="address-main">
-          <view class="user-info">
-            <text class="user-name">{{item.receiverName}}</text>
-            <text class="user-phone">{{item.receiverMobile}}</text>
-            <text class="tag default-tag" wx:if="{{item.isDefault}}">默认</text>
+  <view class="address-list-page__body">
+    <scroll-view
+      wx:if="{{addresses.length}}"
+      scroll-y="{{true}}"
+      class="address-scroll"
+      enhanced="{{true}}"
+      show-scrollbar="{{false}}"
+    >
+      <view class="address-list">
+        <view
+          wx:for="{{addresses}}"
+          wx:key="id"
+          class="address-card"
+          data-index="{{index}}"
+          bindtap="handleAddressTap"
+        >
+          <view class="address-main">
+            <view class="user-info">
+              <text class="user-name">{{item.receiverName}}</text>
+              <text class="user-phone">{{item.receiverMobile}}</text>
+              <text class="tag default-tag" wx:if="{{item.isDefault}}">默认</text>
+            </view>
+            <text class="address-detail">{{item.province}}{{item.city}}{{item.district}} {{item.detailAddress}}</text>
           </view>
-          <text class="address-detail">{{item.province}}{{item.city}}{{item.district}} {{item.detailAddress}}</text>
-        </view>
-        <view class="address-edit-btn" data-id="{{item.id}}" catchtap="navToEdit">
-          <t-icon name="settings" size="28rpx" opacity="0.6"></t-icon>
+          <view class="address-edit-btn" data-id="{{item.id}}" catchtap="navToEdit">
+            <t-icon name="settings" size="28rpx" opacity="0.6"></t-icon>
+          </view>
         </view>
       </view>
-    </view>
+      <view class="scroll-spacer"></view>
+    </scroll-view>
+
     <view wx:else class="empty-state-box">
       <view class="empty-icon-box">
         <t-icon name="location" size="80rpx" opacity="0.25"></t-icon>
@@ -24,11 +40,8 @@
       <text class="empty-text">您还没有添加收货地址</text>
       <text class="empty-sub">添加地址即可快速完成下单结算</text>
     </view>
+  </view>
 
-    <view class="scroll-spacer"></view>
-  </scroll-view>
-
-  <!-- Bottom Add Button -->
   <view class="bottom-button-wrap">
     <button class="add-address-btn" bindtap="navToCreate">新增收货地址</button>
   </view>

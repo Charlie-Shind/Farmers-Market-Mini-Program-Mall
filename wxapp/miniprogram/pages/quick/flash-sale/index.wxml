@@ -1,73 +1,112 @@
-<view class="phone-page zone-page zone-page--flash" style="{{pageStyle}}">
-  <page-nav title="{{pageTitle}}" theme="transparent" />
+<view class="phone-page pdd-flash" style="{{pageStyle}}">
+  <view class="pdd-flash__top">
+    <page-nav title="限时秒杀" theme="transparent" />
 
-  <view class="flash-hero-bg">
-    <image class="flash-hero-bg__img" src="/assets/images/flash/flash-hero.jpg" mode="aspectFill"/>
-    <view class="flash-hero-bg__mask"></view>
-  </view>
-
-  <view class="flash-hero">
-    <view wx:if="{{activeWindow}}" class="countdown-panel">
-      <view class="countdown-panel__badge">
-        <text class="countdown-panel__badge-dot"></text>
-        <text class="countdown-panel__badge-text">限时抢购</text>
+    <!-- 拼团入口条 -->
+    <view class="pdd-banner" bindtap="openGroupBuy">
+      <view class="pdd-banner__left">
+        <text class="pdd-banner__tag">万人拼</text>
+        <text class="pdd-banner__title">产地好货一起拼</text>
       </view>
-      <view class="countdown-row">
-        <text class="countdown-row__label">{{activeWindow.statusLabel}}</text>
-        <view class="countdown-row__timer">
-          <view class="time-box">{{activeWindow.countdownParts.hh}}</view>
-          <text class="time-colon">:</text>
-          <view class="time-box">{{activeWindow.countdownParts.mm}}</view>
-          <text class="time-colon">:</text>
-          <view class="time-box">{{activeWindow.countdownParts.ss}}</view>
+      <view class="pdd-banner__right">
+        <text class="pdd-banner__cta">去拼单</text>
+        <t-icon name="chevronRight" size="22rpx" color="#ffffff"></t-icon>
+      </view>
+    </view>
+
+    <!-- 三列补贴/券 -->
+    <view class="pdd-grid">
+      <view class="pdd-grid__cell" bindtap="focusSubsidy">
+        <text class="pdd-grid__title">专属补贴</text>
+        <text class="pdd-grid__sub">1元起抢</text>
+        <view class="pdd-grid__thumbs" wx:if="{{subsidyItems.length}}">
+          <view wx:for="{{subsidyItems}}" wx:key="id" class="pdd-grid__thumb-wrap">
+            <image class="pdd-grid__thumb" src="{{item.coverUrl}}" mode="aspectFill" />
+            <text class="pdd-grid__price">¥{{item.price}}</text>
+          </view>
+        </view>
+        <view wx:else class="pdd-grid__empty">更多补贴加载中</view>
+      </view>
+      <view class="pdd-grid__cell" bindtap="openCoupons">
+        <text class="pdd-grid__title">秒杀神券</text>
+        <text class="pdd-grid__sub">最高减50</text>
+        <view class="pdd-grid__coupon">
+          <text class="pdd-grid__coupon-num">¥20</text>
+          <text class="pdd-grid__coupon-btn">去领取</text>
+        </view>
+      </view>
+      <view class="pdd-grid__cell" bindtap="openCoupons">
+        <text class="pdd-grid__title">限时券</text>
+        <text class="pdd-grid__sub">无门槛</text>
+        <view class="pdd-grid__coupon pdd-grid__coupon--hot">
+          <text class="pdd-grid__coupon-num">¥5</text>
+          <text class="pdd-grid__coupon-btn pdd-grid__coupon-btn--hot">待领取</text>
         </view>
       </view>
     </view>
   </view>
 
-  <view class="flash-body">
-    <view wx:if="{{windows.length}}" class="session-card">
+  <view class="pdd-flash__body">
+    <!-- 场次 Tab -->
+    <scroll-view
+      wx:if="{{windows.length}}"
+      class="pdd-sessions"
+      scroll-x
+      enhanced
+      show-scrollbar="{{false}}"
+      scroll-into-view="{{activeWindowId}}"
+    >
       <view
         wx:for="{{windows}}"
         wx:key="id"
-        class="session-item {{index === activeWindowIndex ? 'session-item--active' : ''}}"
+        id="flash-window-{{item.id}}"
+        class="pdd-session {{index === activeWindowIndex ? 'is-active' : ''}}"
         data-index="{{index}}"
         bindtap="selectWindow"
       >
-        <text class="session-item__time">{{item.startTime}}</text>
-        <text class="session-item__status">{{item.statusLabel}}</text>
+        <text class="pdd-session__time">{{item.startTime}}场</text>
+        <text class="pdd-session__state">{{item.tabLabel}}</text>
       </view>
-    </view>
+    </scroll-view>
 
-    <view wx:if="{{!loading && windows.length === 0}}" class="empty">
-      <image class="empty__illus" src="/assets/illustrations/empty.svg" mode="aspectFit"/>
-      <text class="empty__title">暂未发布限时秒杀活动</text>
-      <text class="empty__desc">请关注平台活动公告</text>
-    </view>
+    <!-- 分类 Tab -->
+    <scroll-view class="pdd-cats" scroll-x enhanced show-scrollbar="{{false}}">
+      <view
+        wx:for="{{categoryTabs}}"
+        wx:key="key"
+        class="pdd-cat {{activeCategory === item.key ? 'is-active' : ''}}"
+        data-key="{{item.key}}"
+        bindtap="selectCategory"
+      >
+        <text>{{item.label}}</text>
+      </view>
+    </scroll-view>
 
-    <view wx:elif="{{!loading && windows.length > 0 && products.length === 0}}" class="empty">
-      <image class="empty__illus" src="/assets/illustrations/empty.svg" mode="aspectFit"/>
-      <text class="empty__title">当前时间段暂无秒杀商品</text>
-      <text class="empty__desc">切换上方时间段查看其它场次的商品</text>
+    <view wx:if="{{loading}}" class="pdd-empty">
+      <text>正在加载秒杀商品…</text>
     </view>
-
-    <view wx:elif="{{loading}}" class="empty">
-      <text class="empty__title">加载中…</text>
+    <view wx:elif="{{!windows.length}}" class="pdd-empty">
+      <text class="pdd-empty__title">暂无秒杀活动</text>
+      <text class="pdd-empty__desc">稍后再来看看</text>
+    </view>
+    <view wx:elif="{{!displayProducts.length}}" class="pdd-empty">
+      <text class="pdd-empty__title">本场/分类暂无商品</text>
+      <text class="pdd-empty__desc">切换场次或分类再看看</text>
     </view>
 
     <scroll-view
-      wx:if="{{!loading && windows.length > 0 && products.length}}"
-      class="product-scroll"
-      scroll-y="true"
-      enhanced="true"
+      wx:else
+      class="pdd-list"
+      scroll-y
+      enhanced
       show-scrollbar="{{false}}"
       bindscrolltolower="loadMore"
     >
-      <view class="product-list">
+      <view class="pdd-list__inner">
         <view
-          wx:for="{{products}}"
+          wx:for="{{displayProducts}}"
           wx:key="id"
-          class="product-card"
+          class="pdd-card"
           data-item-id="{{item.itemId}}"
           data-title="{{item.title}}"
           data-subtitle="{{item.subtitle}}"
@@ -75,53 +114,79 @@
           data-origin-price="{{item.originPrice}}"
           bindtap="openProductDetail"
         >
-          <view class="product-card__media">
-            <image
-              wx:if="{{item.coverUrl}}"
-              class="product-card__img"
-              src="{{item.coverUrl}}"
-              mode="aspectFill"
-            ></image>
-            <view wx:else class="product-card__img card-image--placeholder"></view>
-            <text wx:if="{{item.discount}}" class="product-card__discount">{{item.discount}}</text>
+          <view class="pdd-card__media">
+            <image wx:if="{{item.coverUrl}}" class="pdd-card__img" src="{{item.coverUrl}}" mode="aspectFill" />
+            <view wx:else class="pdd-card__img pdd-card__img--empty"></view>
+            <view class="pdd-card__promo">{{item.promoLabel}}</view>
+            <view class="pdd-card__countdown">
+              <text>秒杀专享 | 仅剩 {{countdownText}}</text>
+            </view>
           </view>
 
-          <view class="product-card__body">
-            <view class="product-card__head">
-              <text class="product-card__title">{{item.title}}</text>
+          <view class="pdd-card__body">
+            <view class="pdd-card__tags">
+              <text wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this" class="pdd-tag">{{tag}}</text>
             </view>
-            <text wx:if="{{item.subtitle}}" class="product-card__subtitle">{{item.subtitle}}</text>
+            <text class="pdd-card__title">{{item.title}}</text>
+            <text class="pdd-card__proof">{{item.proofText}}</text>
+            <view class="pdd-card__pills" wx:if="{{item.sold > 0}}">
+              <text class="pdd-pill">已抢{{item.sold}}件</text>
+              <text wx:if="{{item.discount}}" class="pdd-pill pdd-pill--hot">{{item.discount}}</text>
+            </view>
 
-            <view class="product-card__price-row">
-              <view class="price">
-                <text class="price__symbol">¥</text>
-                <text class="price__num">{{item.price}}</text>
-                <text wx:if="{{item.originPrice}}" class="price__origin">¥{{item.originPrice}}</text>
+            <view class="pdd-card__foot">
+              <view class="pdd-card__price-col">
+                <text wx:if="{{item.saveAmount}}" class="pdd-card__save">券后立减 ¥{{item.saveAmount}}</text>
+                <view class="pdd-price">
+                  <text class="pdd-price__label">秒杀价</text>
+                  <text class="pdd-price__yen">¥</text>
+                  <text class="pdd-price__int">{{item.priceInt}}</text>
+                  <text wx:if="{{item.priceFrac}}" class="pdd-price__frac">.{{item.priceFrac}}</text>
+                  <text wx:if="{{item.originPrice}}" class="pdd-price__origin">¥{{item.originPrice}}</text>
+                </view>
               </view>
-              <text class="sold">
-                已抢 <text class="sold-num">{{item.sold}}</text> 件
-              </text>
               <button
-                wx:if="{{item.itemId}}"
-                class="buy-btn"
+                class="pdd-grab {{item.stockLeft <= 0 ? 'is-soldout' : ''}}"
                 data-item-id="{{item.itemId}}"
                 data-title="{{item.title}}"
                 data-subtitle="{{item.subtitle}}"
                 data-cover-url="{{item.coverUrl}}"
                 data-origin-price="{{item.originPrice}}"
                 catchtap="buyFlashSale"
-              >立即抢</button>
+              >{{item.stockLeft <= 0 ? '已抢光' : '立即抢'}}</button>
             </view>
           </view>
         </view>
-      </view>
 
-      <view wx:if="{{loadingMore}}" class="load-more">
-        <text>加载中…</text>
-      </view>
-      <view wx:if="{{noMore}}" class="load-more load-more--end">
-        <text>已加载全部</text>
+        <view wx:if="{{loadingMore}}" class="pdd-more">加载中…</view>
+        <view wx:elif="{{noMore}}" class="pdd-more">— 没有更多了 —</view>
       </view>
     </scroll-view>
+  </view>
+
+  <!-- 底部快捷入口 -->
+  <view class="pdd-dock">
+    <view class="pdd-dock__item is-active">
+      <t-icon name="flash" size="40rpx" color="#e02e24"></t-icon>
+      <text>秒杀</text>
+    </view>
+    <view class="pdd-dock__item" bindtap="openGroupBuy">
+      <t-icon name="group" size="40rpx" color="#666666"></t-icon>
+      <text>拼团</text>
+    </view>
+    <view class="pdd-dock__item pdd-dock__item--center" bindtap="openGiftZone">
+      <view class="pdd-dock__fab">
+        <t-icon name="gift" size="44rpx" color="#ffffff"></t-icon>
+      </view>
+      <text>礼盒</text>
+    </view>
+    <view class="pdd-dock__item" bindtap="openOriginZone">
+      <t-icon name="origin" size="40rpx" color="#666666"></t-icon>
+      <text>产地</text>
+    </view>
+    <view class="pdd-dock__item" bindtap="openCoupons">
+      <t-icon name="coupon" size="40rpx" color="#666666"></t-icon>
+      <text>卡券</text>
+    </view>
   </view>
 </view>

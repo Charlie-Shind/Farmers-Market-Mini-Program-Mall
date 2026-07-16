@@ -11,6 +11,7 @@ export default defineConfig(({ mode }) => {
   const adminBase = env.ADMIN_BASE || '/admin/';
   const adminPort = Number(env.ADMIN_PORT || 6007);
   const adminHost = env.ADMIN_HOST || '0.0.0.0';
+  // const backendApiUrl = env.BACKEND_API_URL || 'https://xn--5mqs1ehx3beeb.cn';
   const backendApiUrl = env.BACKEND_API_URL || 'http://127.0.0.1:6002';
 
   return {

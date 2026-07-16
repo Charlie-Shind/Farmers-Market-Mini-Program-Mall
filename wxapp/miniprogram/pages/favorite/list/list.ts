@@ -47,33 +47,57 @@ Component({
   },
   pageLifetimes: {
     show() {
-      void this.loadFavorites(true);
+      // 已有列表时静默刷新（详情页取消收藏可同步），不置 loading 避免闪屏
+      const silent = (this as any)._hasLoaded === true;
+      void this.loadFavorites(true, silent);
     },
   },
   methods: {
-    async loadFavorites(reset = true) {
-      if (this.data.loading || this.data.loadingMore) {
+    async loadFavorites(reset = true, silent = false) {
+      if (!silent && (this.data.loading || this.data.loadingMore)) {
+        return;
+      }
+      if (silent && (this as any)._silentRefreshing) {
         return;
       }
 
       const page = reset ? 1 : this.data.page;
-      this.setData({ [reset ? 'loading' : 'loadingMore']: true } as any);
+      if (silent) {
+        (this as any)._silentRefreshing = true;
+      } else {
+        this.setData({ [reset ? 'loading' : 'loadingMore']: true } as any);
+      }
       try {
         const response = await fetchFavorites({ page, pageSize: this.data.pageSize });
         const mapped = (response.items || []).map((item) => ({
           ...item,
           createdAtLabel: formatDateTime(item.createdAt),
         }));
+        const mergedCount = reset ? mapped.length : this.data.favorites.length + mapped.length;
+        const serverPageSize = Number((response as any).pageSize) || this.data.pageSize;
+        const total = Number(response.total);
+        const noMore =
+          mapped.length === 0 ||
+          mapped.length < serverPageSize ||
+          (Number.isFinite(total) && total >= 0 && mergedCount >= total);
+
         this.setData({
           favorites: reset ? mapped : [...this.data.favorites, ...mapped],
-          total: response.total ?? (reset ? mapped.length : this.data.favorites.length + mapped.length),
+          total: Number.isFinite(total) ? total : mergedCount,
           page: page + 1,
-          noMore: ((reset ? mapped.length : this.data.favorites.length + mapped.length) >= (response.total ?? 0)) || mapped.length < this.data.pageSize,
+          noMore,
         });
+        (this as any)._hasLoaded = true;
       } catch {
-        wx.showToast({ title: '加载收藏失败', icon: 'none' });
+        if (!silent) {
+          wx.showToast({ title: '加载收藏失败', icon: 'none' });
+        }
       } finally {
-        this.setData({ loading: false, loadingMore: false });
+        if (silent) {
+          (this as any)._silentRefreshing = false;
+        } else {
+          this.setData({ loading: false, loadingMore: false });
+        }
       }
     },
     loadMore() {
@@ -81,7 +105,7 @@ Component({
         return;
       }
 
-      void this.loadFavorites(false);
+      void this.loadFavorites(false, false);
     },
     goBack() {
       navigateBackOrHome();

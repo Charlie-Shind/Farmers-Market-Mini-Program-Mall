@@ -1,92 +1,108 @@
-﻿<view class="phone-page search-page" style="{{pageStyle}}">
-  <page-nav title="{{pageTitle}}" theme="solid" />
+<view class="phone-page pl-page pl-page--{{sceneTone}}" style="{{pageStyle}}">
+  <view class="pl-page__top">
+    <page-nav title="{{pageTitle}}" theme="{{navTheme}}" />
 
-  <view class="search-landing">
-    <view class="panel search-panel">
-      <view class="section-title">
-        <text class="section-title__title">{{pageDesc}}</text>
-        <text class="section-title__meta">
-          {{loading ? '加载中' : loadingMore ? '加载更多中' : '共 ' + products.length + ' 件'}}
-        </text>
+    <view class="pl-hero">
+      <view class="pl-hero__copy">
+        <text class="pl-hero__eyebrow">{{pageEyebrow}}</text>
+        <text class="pl-hero__title">{{pageTitle}}</text>
+        <text class="pl-hero__desc">{{pageDesc}}</text>
       </view>
-      <view class="chip-row">
-        <view
-          wx:for="{{filters}}"
-          wx:key="value"
-          class="chip {{activeFilter === item.value ? 'chip--active' : ''}}"
-          data-filter="{{item.value}}"
-          bindtap="changeFilter"
-        >
-          {{item.label}}
-        </view>
+      <view class="pl-hero__stat">
+        <text class="pl-hero__stat-num">{{loading ? '--' : products.length}}</text>
+        <text class="pl-hero__stat-label">件好物</text>
       </view>
     </view>
 
-    <view wx:if="{{activeFilter === 'origin' && originPlaces.length > 0}}" class="panel origin-panel">
-      <view class="section-title">
-        <text class="section-title__title">产地筛选</text>
-        <text class="section-title__meta">选择具体产地继续缩小范围</text>
+    <scroll-view class="pl-filters" scroll-x enhanced show-scrollbar="{{false}}">
+      <view
+        wx:for="{{filters}}"
+        wx:key="value"
+        class="pl-filter {{activeFilter === item.value ? 'is-active' : ''}}"
+        data-filter="{{item.value}}"
+        bindtap="changeFilter"
+      >
+        <t-icon wx:if="{{item.icon}}" name="{{item.icon}}" size="24rpx" color="{{activeFilter === item.value ? '#ffffff' : item.iconColor}}"></t-icon>
+        <text>{{item.label}}</text>
       </view>
-      <view class="chip-row">
-        <view
-          class="chip {{selectedOrigin === '' ? 'chip--active' : ''}}"
-          data-origin=""
-          bindtap="selectOrigin"
-        >
-          全部产地
-        </view>
-        <view
-          wx:for="{{originPlaces}}"
-          wx:key="*this"
-          class="chip {{selectedOrigin === item ? 'chip--active' : ''}}"
-          data-origin="{{item}}"
-          bindtap="selectOrigin"
-        >
-          {{item}}
-        </view>
-      </view>
-    </view>
+    </scroll-view>
 
     <scroll-view
-      class="product-scroll"
-      scroll-y="true"
-      enhanced="true"
+      wx:if="{{activeFilter === 'origin' && originPlaces.length}}"
+      class="pl-origins"
+      scroll-x
+      enhanced
       show-scrollbar="{{false}}"
-      bindscrolltolower="loadMore"
     >
-      <view wx:if="{{products.length}}" class="search-grid">
-        <view
-          wx:for="{{products}}"
-          wx:key="id"
-          class="search-card"
-          data-product-id="{{item.id}}"
-          bindtap="openProductDetail"
-        >
-          <view class="search-card__img {{item.imageClass}}" style="{{item.imageStyle}}"></view>
-          <view class="search-card__body">
-            <text class="search-card__title">{{item.title}}</text>
-            <text class="search-card__desc">{{item.desc}}</text>
-            <view class="search-card__tags">
-              <text wx:for="{{item.tags}}" wx:key="*this" class="search-card__tag">{{item}}</text>
+      <view
+        class="pl-origin {{selectedOrigin === '' ? 'is-active' : ''}}"
+        data-origin=""
+        bindtap="selectOrigin"
+      >全部产地</view>
+      <view
+        wx:for="{{originPlaces}}"
+        wx:key="*this"
+        class="pl-origin {{selectedOrigin === item ? 'is-active' : ''}}"
+        data-origin="{{item}}"
+        bindtap="selectOrigin"
+      >{{item}}</view>
+    </scroll-view>
+  </view>
+
+  <scroll-view
+    class="pl-scroll"
+    scroll-y
+    enhanced
+    show-scrollbar="{{false}}"
+    bindscrolltolower="loadMore"
+  >
+    <view wx:if="{{products.length}}" class="pl-grid {{scene === 'hot' ? 'pl-grid--rank' : ''}}">
+      <view
+        wx:for="{{products}}"
+        wx:key="id"
+        class="pl-card {{scene === 'hot' ? 'pl-card--rank' : ''}}"
+        data-product-id="{{item.id}}"
+        bindtap="openProductDetail"
+      >
+        <view class="pl-card__cover">
+          <view class="pl-card__img {{item.imageClass}}" style="{{item.imageStyle}}"></view>
+          <text wx:if="{{scene === 'hot'}}" class="pl-card__rank pl-card__rank--{{item.rankTone}}">{{item.rankNo}}</text>
+          <text wx:elif="{{scene === 'new' && item.isNew}}" class="pl-card__badge">NEW</text>
+        </view>
+        <view class="pl-card__body">
+          <text class="pl-card__title">{{item.title}}</text>
+          <text class="pl-card__desc">{{item.desc}}</text>
+          <view class="pl-card__tags">
+            <text wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this" class="pl-card__tag">{{tag}}</text>
+          </view>
+          <view class="pl-card__foot">
+            <view class="pl-card__price-wrap">
+              <text class="pl-card__price">{{item.price}}</text>
+              <text wx:if="{{scene === 'hot'}}" class="pl-card__sales">已售 {{item.saleCount}}</text>
             </view>
-            <view class="search-card__foot">
-              <text class="search-card__price">{{item.price}}</text>
-              <view class="search-card__action">去看看</view>
-            </view>
+            <view class="pl-card__cta">{{ctaLabel}}</view>
           </view>
         </view>
       </view>
+    </view>
 
-      <view wx:else class="empty-hint">
-        {{loading ? '正在加载商品…' : '暂无商品数据，后台配置后会展示在这里'}}
+    <view wx:elif="{{!loading}}" class="pl-empty">
+      <view class="pl-empty__orb">
+        <t-icon name="{{sceneIcon}}" size="56rpx" color="#2c4a39"></t-icon>
       </view>
+      <text class="pl-empty__title">暂无相关商品</text>
+      <text class="pl-empty__desc">切换筛选条件或稍后再来看看</text>
+    </view>
 
-      <view wx:if="{{products.length}}" class="load-more-area">
-        <text wx:if="{{loadingMore}}" class="load-more-area__text">正在继续加载…</text>
-        <text wx:elif="{{noMore}}" class="load-more-area__text">已经到底了</text>
-        <view wx:else class="load-more-area__button">下滑加载更多</view>
-      </view>
-      <view class="safe-bottom"></view>
-    </scroll-view>
-  </view>
+    <view wx:if="{{loading}}" class="pl-loading">正在挑选好物…</view>
+
+    <view wx:if="{{products.length && (loadingMore || noMore)}}" class="pl-end">
+      <view class="pl-end__line"></view>
+      <text wx:if="{{loadingMore}}">加载中</text>
+      <text wx:else>已经到底了</text>
+      <view class="pl-end__line"></view>
+    </view>
+
+    <view class="pl-spacer"></view>
+  </scroll-view>
 </view>

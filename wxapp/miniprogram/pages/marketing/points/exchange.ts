@@ -35,7 +35,6 @@ Component({
       this.setData({
         pageStyle: buildPageTopStyle(0),
       });
-      void this.loadPoints();
     },
   },
   pageLifetimes: {
@@ -43,7 +42,9 @@ Component({
       this.setData({
         pageStyle: buildPageTopStyle(0),
       });
-      void this.loadPoints();
+      if (!(this as any)._hasLoaded) {
+        void this.loadPoints();
+      }
     },
   },
   methods: {
@@ -84,6 +85,7 @@ Component({
           pointsBalance: Number(result.balance || 0),
           pointsGoods: goods,
         });
+        (this as any)._hasLoaded = true;
       } catch {
         this.setData({
           pointsBalance: 0,

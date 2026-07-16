@@ -1,7 +1,9 @@
 {
   "navigationStyle": "custom",
   "navigationBarTitleText": "社区团长申请",
+  "disableScroll": true,
   "usingComponents": {
+    "page-nav": "../../../components/base/page-nav/page-nav",
     "toast": "../../../components/base/toast/toast",
     "loading": "../../../components/base/loading/loading",
     "t-icon": "../../../components/base/t-icon/t-icon"

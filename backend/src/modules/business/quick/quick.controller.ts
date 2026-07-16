@@ -67,6 +67,21 @@ export class QuickZoneController {
   }
 
   @Public()
+  @Get('group-buy/detail')
+  groupBuyDetail(@Query() query: Record<string, string>) {
+    return this.platformDataService.getQuickGroupBuyDetail({
+      groupId: query.groupId != null ? Number(query.groupId) : undefined,
+      inviteCode: query.inviteCode || undefined,
+    });
+  }
+
+  @Roles(RoleCode.USER, RoleCode.GUEST, RoleCode.MERCHANT)
+  @Get('group-buy/mine')
+  myGroupBuys(@CurrentUser() user: AuthUser) {
+    return this.platformDataService.getMyGroupBuys(user);
+  }
+
+  @Public()
   @Get('gift-zone/items')
   giftZoneItems(@Query() query: Record<string, string>) {
     return this.platformDataService.getQuickGiftZoneItems({

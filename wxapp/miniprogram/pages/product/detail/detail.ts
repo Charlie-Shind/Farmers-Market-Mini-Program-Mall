@@ -7,7 +7,7 @@ import {
   fetchCartItemCount,
   type AppProductDetail,
 } from '../../../services/app';
-import { joinGroupBuy } from '../../../services/quick';
+import { joinGroupBuy, isAlreadyJoinedGroupError, navigateToJoinedGroupProgress } from '../../../services/quick';
 import { buildPageTopStyle } from '../../../utils/page-layout';
 import { navigateBackOrHome } from '../../../utils/auth-route';
 import { getAuthTokenType } from '../../../services/token';
@@ -610,6 +610,11 @@ Component({
           skuId: skuInfo.id,
           ...(groupBuyId > 0 ? { groupId: groupBuyId } : {}),
         });
+        if (res.alreadyJoined) {
+          wx.hideLoading();
+          await navigateToJoinedGroupProgress({ groupId: res.groupId || groupBuyId, orderNo: res.orderNo });
+          return;
+        }
         const gbId = Number((res as any).groupId || (res as any).groupBuyId || groupBuyId);
         wx.hideLoading();
         wx.navigateTo({
@@ -617,6 +622,10 @@ Component({
         });
       } catch (err: any) {
         wx.hideLoading();
+        if (isAlreadyJoinedGroupError(err)) {
+          await navigateToJoinedGroupProgress({ groupId: groupBuyId > 0 ? groupBuyId : undefined });
+          return;
+        }
         wx.showToast({ title: err?.message || '拼团发起失败', icon: 'none' });
       }
     },

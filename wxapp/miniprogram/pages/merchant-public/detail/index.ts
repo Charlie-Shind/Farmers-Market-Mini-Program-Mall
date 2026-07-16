@@ -3,27 +3,39 @@ import {
   fetchMerchantDetail,
   fetchMerchantPublicProducts,
   fetchMerchantCoupons,
+  receiveCoupon,
+  fetchChatSupportTarget,
+  openChatConversation,
   type AppMerchantCoupon,
   type AppMerchantProduct,
   type AppMerchantSummary,
 } from '../../../services/app';
-import { receiveCoupon } from '../../../services/app';
 import { buildPageTopStyle } from '../../../utils/page-layout';
-import { ensureCustomerAccess, navigateBackOrHome, redirectMerchantAwayFromCustomerRoute } from '../../../utils/auth-route';
+import {
+  ensureCustomerAccess,
+  navigateBackOrHome,
+  redirectMerchantAwayFromCustomerRoute,
+} from '../../../utils/auth-route';
 
 const PAGE_SIZE = 12;
-const COUPON_PREVIEW_COUNT = 2;
 
-function buildCouponPreview(coupons: AppMerchantCoupon[], showAll: boolean) {
-  const list = Array.isArray(coupons) ? coupons : [];
-  const visibleCoupons = showAll ? list : list.slice(0, COUPON_PREVIEW_COUNT);
-  const moreCouponsCount = Math.max(list.length - visibleCoupons.length, 0);
+type SortKey = 'default' | 'sales' | 'price';
 
-  return {
-    visibleCoupons,
-    moreCouponsCount,
-    couponMoreText: showAll ? '收起' : `更多 ${moreCouponsCount} 张`,
-  };
+const SORT_TABS: Array<{ key: SortKey; label: string }> = [
+  { key: 'default', label: '综合' },
+  { key: 'sales', label: '销量' },
+  { key: 'price', label: '价格' },
+];
+
+function sortProducts(products: AppMerchantProduct[], sort: SortKey) {
+  const list = [...products];
+  if (sort === 'sales') {
+    return list.sort((a, b) => Number(b.saleCount || 0) - Number(a.saleCount || 0));
+  }
+  if (sort === 'price') {
+    return list.sort((a, b) => Number(a.minPrice || 0) - Number(b.minPrice || 0));
+  }
+  return list;
 }
 
 Component({
@@ -32,26 +44,24 @@ Component({
     pageStyle: '',
     merchantId: 0,
     shop: null as AppMerchantSummary | null,
-    shopInitial: '商',
     coupons: [] as AppMerchantCoupon[],
-    visibleCoupons: [] as AppMerchantCoupon[],
-    moreCouponsCount: 0,
-    couponMoreText: '更多',
-    showAllCoupons: false,
     products: [] as AppMerchantProduct[],
+    displayProducts: [] as AppMerchantProduct[],
+    sortTabs: SORT_TABS,
+    productSort: 'default' as SortKey,
     page: 1,
     total: 0,
     loading: false,
     loadingMore: false,
     noMore: false,
     hasLoaded: false,
+    scrollIntoView: '',
   },
   lifetimes: {
     attached() {
       if (redirectMerchantAwayFromCustomerRoute('/pages/merchant-public/detail/index')) {
         return;
       }
-
       this.setData({
         pageStyle: buildPageTopStyle(0),
       });
@@ -82,9 +92,7 @@ Component({
       }
 
       if (merchantId !== this.data.merchantId) {
-        this.setData({
-          merchantId,
-        });
+        this.setData({ merchantId });
       }
 
       if (!this.data.hasLoaded && !this.data.loading) {
@@ -96,8 +104,7 @@ Component({
     async loadShop(this: any, merchantId = this.data.merchantId) {
       try {
         const shop = await fetchMerchantDetail(merchantId);
-        const shopInitial = (shop.storeName || '商').trim().charAt(0) || '商';
-        this.setData({ shop, shopInitial });
+        this.setData({ shop });
       } catch {
         this.setData({ shop: null });
       }
@@ -105,15 +112,9 @@ Component({
     async loadCoupons(this: any, merchantId = this.data.merchantId) {
       try {
         const coupons = await fetchMerchantCoupons(merchantId);
-        this.setData({
-          coupons,
-          ...buildCouponPreview(coupons, this.data.showAllCoupons),
-        });
+        this.setData({ coupons: Array.isArray(coupons) ? coupons : [] });
       } catch {
-        this.setData({
-          coupons: [],
-          ...buildCouponPreview([], this.data.showAllCoupons),
-        });
+        this.setData({ coupons: [] });
       }
     },
     async loadProducts(this: any, reset: boolean, merchantId = this.data.merchantId) {
@@ -132,6 +133,7 @@ Component({
         const noMore = merged.length >= result.total || items.length < PAGE_SIZE;
         this.setData({
           products: merged,
+          displayProducts: sortProducts(merged, this.data.productSort),
           total: result.total,
           page: page + 1,
           noMore,
@@ -139,11 +141,27 @@ Component({
         });
       } catch {
         if (reset) {
-          this.setData({ products: [], total: 0, noMore: true, hasLoaded: true });
+          this.setData({
+            products: [],
+            displayProducts: [],
+            total: 0,
+            noMore: true,
+            hasLoaded: true,
+          });
         }
       } finally {
         this.setData({ loading: false, loadingMore: false });
       }
+    },
+    selectSort(e: WechatMiniprogram.BaseEvent) {
+      const { key } = (e.currentTarget.dataset as { key?: SortKey }) || {};
+      if (!key || key === this.data.productSort) {
+        return;
+      }
+      this.setData({
+        productSort: key,
+        displayProducts: sortProducts(this.data.products, key),
+      });
     },
     loadMore() {
       if (this.data.noMore || this.data.loadingMore || this.data.loading) {
@@ -189,20 +207,42 @@ Component({
         const next = this.data.coupons.map((c) =>
           c.couponId === Number(couponId) ? { ...c, received: true } : c,
         );
-        this.setData({
-          coupons: next,
-          ...buildCouponPreview(next, this.data.showAllCoupons),
-        });
+        this.setData({ coupons: next });
       } catch {
         wx.showToast({ title: '领取失败，请重试', icon: 'none' });
       }
     },
-    toggleCoupons(this: any) {
-      const showAllCoupons = !this.data.showAllCoupons;
-      this.setData({
-        showAllCoupons,
-        ...buildCouponPreview(this.data.coupons, showAllCoupons),
-      });
+    scrollToCoupons() {
+      this.setData({ scrollIntoView: 'shop-coupons' });
+      setTimeout(() => this.setData({ scrollIntoView: '' }), 400);
+    },
+    scrollToProducts() {
+      this.setData({ scrollIntoView: 'shop-products' });
+      setTimeout(() => this.setData({ scrollIntoView: '' }), 400);
+    },
+    async contactShop() {
+      if (!ensureCustomerAccess('/pages/merchant-public/detail/index')) {
+        return;
+      }
+      try {
+        const merchantId = this.data.merchantId;
+        const target = await fetchChatSupportTarget();
+        const opened = await openChatConversation({
+          merchantId: merchantId || target.merchantId,
+          sceneType: 'GENERAL',
+          sceneLabel: this.data.shop?.storeName || '店铺咨询',
+          sceneSource: '店铺主页',
+        });
+        if (opened && (opened as any).conversationId) {
+          wx.navigateTo({
+            url: `/pages/chat/chat?conversationId=${(opened as any).conversationId}`,
+          });
+          return;
+        }
+        wx.showToast({ title: '客服暂不可用', icon: 'none' });
+      } catch {
+        wx.showToast({ title: '客服暂不可用，请稍后再试', icon: 'none' });
+      }
     },
     goBack() {
       navigateBackOrHome();

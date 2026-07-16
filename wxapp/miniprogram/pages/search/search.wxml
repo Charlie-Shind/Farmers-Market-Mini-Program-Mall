@@ -1,8 +1,7 @@
 <view class="search-page" style="{{pageStyle}}">
+  <page-nav title="搜索" theme="solid" />
+
   <view class="search-header">
-    <view class="search-header__back" bindtap="goBack" hover-class="search-header__back--hover">
-      <t-icon name="chevronLeft" size="36rpx" color="#25372d"></t-icon>
-    </view>
     <view class="search-header__bar">
       <t-icon name="search" size="32rpx" opacity="0.45"></t-icon>
       <input

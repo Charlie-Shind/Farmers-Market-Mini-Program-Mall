@@ -14,6 +14,9 @@ import {
   fetchFlashSaleItems,
   fetchFlashSaleWindows,
   fetchGroupBuyNearby,
+  joinGroupBuy,
+  isAlreadyJoinedGroupError,
+  navigateToJoinedGroupProgress,
   type FlashSaleItem,
   type FlashSaleWindow,
   type GroupBuyItem,
@@ -28,11 +31,17 @@ type CouponView = {
   id: string;
   couponId: number;
   amount: string;
-  condition: string;
+  threshold: string;
+  thresholdText: string;
   tag: string;
   received: boolean;
   canReceive: boolean;
 };
+
+function buildThresholdText(threshold: string): string {
+  const value = Number(threshold);
+  return Number.isFinite(value) && value > 0 ? `满${threshold}元可用` : '无门槛券';
+}
 
 type FlashView = {
   id: string;
@@ -50,6 +59,7 @@ type FlashView = {
 type GroupView = {
   groupId: string;
   productId: string;
+  skuId?: number;
   title: string;
   groupPrice: string;
   originPrice: string;
@@ -162,6 +172,7 @@ function mapGroup(item: GroupBuyItem): GroupView {
   return {
     groupId: String(item.groupId),
     productId: String(item.productId),
+    skuId: item.skuId ?? undefined,
     title: item.title,
     groupPrice: `¥${item.groupPrice}`,
     originPrice: `¥${item.originPrice}`,
@@ -180,25 +191,33 @@ function mapCoupons(
   const recIds = new Set(recommended.map((c) => c.couponId));
   const extra = available.filter((c) => !recIds.has(c.couponId)).slice(0, 3 - recommended.length);
 
-  const fromRec: CouponView[] = recommended.map((c) => ({
-    id: String(c.couponId),
-    couponId: c.couponId,
-    amount: `¥${c.discountAmount}`,
-    condition: `满${c.thresholdAmount}可用`,
-    tag: c.matchReason || (c.received ? '已领取' : '限时领取'),
-    received: Boolean(c.received),
-    canReceive: !c.received,
-  }));
+  const fromRec: CouponView[] = recommended.map((c) => {
+    const threshold = String(c.thresholdAmount);
+    return {
+      id: String(c.couponId),
+      couponId: c.couponId,
+      amount: String(c.discountAmount),
+      threshold,
+      thresholdText: buildThresholdText(threshold),
+      tag: c.matchReason || (c.received ? '已领取' : '限时领取'),
+      received: Boolean(c.received),
+      canReceive: !c.received,
+    };
+  });
 
-  const fromAvail: CouponView[] = extra.map((c) => ({
-    id: String(c.couponId),
-    couponId: c.couponId,
-    amount: `¥${c.discountAmount}`,
-    condition: `满${c.thresholdAmount}可用`,
-    tag: c.received ? '已领取' : '限时领取',
-    received: Boolean(c.received),
-    canReceive: !c.received && c.stock > 0,
-  }));
+  const fromAvail: CouponView[] = extra.map((c) => {
+    const threshold = String(c.thresholdAmount);
+    return {
+      id: String(c.couponId),
+      couponId: c.couponId,
+      amount: String(c.discountAmount),
+      threshold,
+      thresholdText: buildThresholdText(threshold),
+      tag: c.received ? '已领取' : '限时领取',
+      received: Boolean(c.received),
+      canReceive: !c.received && c.stock > 0,
+    };
+  });
 
   return [...fromRec, ...fromAvail].slice(0, 3);
 }
@@ -241,7 +260,6 @@ Component({
   lifetimes: {
     attached() {
       this.setData({ pageStyle: buildPageTopStyle(0) });
-      void this.loadAll();
       void this.syncCartBadge();
     },
     detached() {
@@ -252,8 +270,16 @@ Component({
   pageLifetimes: {
     show() {
       this.setData({ pageStyle: buildPageTopStyle(0) });
-      void this.loadAll();
       void this.syncCartBadge();
+
+      // 首次加载；从详情/其他页返回时不重拉，避免骨架闪屏
+      if ((this as any)._hasLoaded) {
+        if (this.data.flashEndAt) {
+          this._startCountdown(this.data.flashEndAt);
+        }
+      } else {
+        void this.loadAll();
+      }
 
       const tabBar = (this as any).getTabBar?.();
       if (tabBar) {
@@ -303,6 +329,7 @@ Component({
         this.loadCoupons(),
         this.loadPoints(),
       ]);
+      (this as any)._hasLoaded = true;
     },
 
     async loadFlash() {
@@ -502,7 +529,7 @@ Component({
     },
 
     goToGroupBuy() {
-      wx.navigateTo({ url: '/pages/quick/group-buy/index?title=拼团专区' });
+      wx.navigateTo({ url: '/pages/quick/group-buy-products/index?title=拼团专区' });
     },
 
     goToOriginZone() {
@@ -522,9 +549,48 @@ Component({
       if (id) wx.navigateTo({ url: `/pages/product/detail/detail?productId=${id}` });
     },
 
-    openGroupDetail(e: WechatMiniprogram.BaseEvent) {
-      const { productId } = (e.currentTarget.dataset as { productId?: string }) || {};
-      if (productId) wx.navigateTo({ url: `/pages/product/detail/detail?productId=${productId}` });
+    async openGroupDetail(e: WechatMiniprogram.BaseEvent) {
+      if (!ensureCustomerAccess('/pages/marketing/marketing')) {
+        return;
+      }
+      const { productId, skuId, groupId } = (e.currentTarget.dataset as {
+        productId?: string;
+        skuId?: string;
+        groupId?: string;
+      }) || {};
+      if (!productId) {
+        return;
+      }
+
+      try {
+        wx.showLoading({ title: '加入拼团…', mask: true });
+        const res = await joinGroupBuy({
+          productId: Number(productId),
+          skuId: skuId ? Number(skuId) : undefined,
+          groupId: groupId ? Number(groupId) : undefined,
+        });
+        // 已经是该团的付费成员：不再报错打断，直接带去订单详情看拼团进度
+        if (res.alreadyJoined) {
+          await navigateToJoinedGroupProgress({ groupId: res.groupId || groupId, orderNo: res.orderNo });
+          return;
+        }
+        const gid = Number((res as any).groupId || (res as any).groupBuyId || groupId || 0);
+        if (!gid) {
+          throw new Error('拼团加入失败');
+        }
+        wx.navigateTo({
+          url: `/pages/checkout/checkout?mode=groupBuy&groupBuyId=${gid}&productId=${productId}&skuId=${res.skuId || skuId || 0}`,
+        });
+      } catch (err: any) {
+        // 兼容远程旧后端仍返回「你已在该团中」的情况
+        if (isAlreadyJoinedGroupError(err)) {
+          await navigateToJoinedGroupProgress({ groupId });
+          return;
+        }
+        wx.showToast({ title: err?.message || '拼团加入失败', icon: 'none' });
+      } finally {
+        wx.hideLoading();
+      }
     },
 
     goToSelectLocation() {
