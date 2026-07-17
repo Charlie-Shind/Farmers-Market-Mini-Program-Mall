@@ -4,7 +4,7 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../common/prisma/prisma.service';
 import { PlatformDataService } from '../../../common/services/platform-data.service';
 
-const SCAN_INTERVAL_MS = 60_000;
+const SCAN_INTERVAL_MS = 20_000;
 
 @Injectable()
 export class GroupBuyExpireService implements OnModuleInit, OnModuleDestroy {

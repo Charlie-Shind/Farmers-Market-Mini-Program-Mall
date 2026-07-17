@@ -37,16 +37,17 @@
 
     <scroll-view scroll-x="true" class="coupon-tabs" show-scrollbar="{{false}}">
       <view class="coupon-tabs__row">
-        <button
-          plain="true"
+        <view
           wx:for="{{filterTabs}}"
           wx:key="key"
           class="coupon-tab {{activeFilter === item.key ? 'coupon-tab--active' : ''}}"
           data-key="{{item.key}}"
           bindtap="switchFilter"
+          hover-class="coupon-tab--hover"
         >
-          {{item.label}}<text class="coupon-tab__count">({{item.count}})</text>
-        </button>
+          <text class="coupon-tab__label">{{item.label}}</text>
+          <text class="coupon-tab__count">{{item.count}}</text>
+        </view>
       </view>
     </scroll-view>
 
@@ -64,7 +65,8 @@
             <text class="coupon-card__amount">{{item.discountAmount}}</text>
             <text class="coupon-card__unit">元</text>
           </view>
-          <text class="coupon-card__meta-title">满{{item.thresholdAmount}}元可用 · {{item.periodText}}</text>
+          <text class="coupon-card__meta-title">满{{item.thresholdAmount}}元可用</text>
+          <text class="coupon-card__period">{{item.periodText}}</text>
         </view>
         <view class="coupon-card__gap">
           <view class="coupon-card__notch coupon-card__notch--top"></view>

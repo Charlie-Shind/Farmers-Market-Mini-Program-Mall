@@ -4,7 +4,7 @@ import { buildPageTopStyle } from '../../../../utils/page-layout';
 import { navigateBackOrHome, redirectMerchantAwayFromCustomerRoute } from '../../../../utils/auth-route';
 
 type StatusView = {
-  key: 'OPEN' | 'COMPLETED' | 'FAILED';
+  key: 'OPEN' | 'PENDING' | 'COMPLETED' | 'FAILED';
   label: string;
   className: string;
 };
@@ -31,6 +31,7 @@ const IMAGE_CLASSES = ['img-orange', 'img-rice', 'img-gift', 'img-egg', 'img-mea
 
 const STATUS_MAP: Record<string, StatusView> = {
   OPEN: { key: 'OPEN', label: '进行中', className: 'is-open' },
+  PENDING: { key: 'PENDING', label: '待支付', className: 'is-pending' },
   COMPLETED: { key: 'COMPLETED', label: '已成团', className: 'is-completed' },
   FAILED: { key: 'FAILED', label: '已失败', className: 'is-failed' },
 };
@@ -48,6 +49,12 @@ function mapGroup(item: MyGroupBuyItem, index: number): GroupView {
     orderNo = item.orderNo;
   }
 
+  // 拼团中心已创建（有 groupId），但一个付款成员都还没有：本质上是"我还没付款"，
+  // 而不是真的有人在"进行中"，这里单独用「待支付」区分，避免误导。
+  const statusView = item.status === 'OPEN' && item.memberCount === 0
+    ? STATUS_MAP.PENDING
+    : STATUS_MAP[item.status] || STATUS_MAP.OPEN;
+
   return {
     groupId: item.groupId,
     productId: item.productId,
@@ -59,7 +66,7 @@ function mapGroup(item: MyGroupBuyItem, index: number): GroupView {
     percent,
     groupPrice: item.groupPrice,
     originPrice: item.originPrice,
-    status: STATUS_MAP[item.status] || STATUS_MAP.OPEN,
+    status: statusView,
     roleLabel: item.isInitiator ? '我发起的' : '我参加的',
     actionLabel: actionKind === 'pay' ? '继续支付' : actionKind === 'view' ? '查看订单' : '去下单',
     actionKind,

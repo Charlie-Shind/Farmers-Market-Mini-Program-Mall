@@ -1,14 +1,53 @@
 <view class="phone-page mkt-page" style="{{pageStyle}}">
   <page-nav title="营销中心" show-back="{{true}}" theme="solid" />
 
-  <view class="panel mkt-block">
-    <view class="section-title">
-      <view class="section-title__stack">
-        <text class="section-title__title">新人专享券</text>
+  <view class="mkt-hero">
+    <view class="mkt-hero__glow mkt-hero__glow--1"></view>
+    <view class="mkt-hero__glow mkt-hero__glow--2"></view>
+    <view class="mkt-hero__copy">
+      <text class="mkt-hero__title">惊喜好价 · 天天有券</text>
+      <text class="mkt-hero__desc">新人券、限时秒杀、邻里拼团、积分兑换一站直达</text>
+    </view>
+    <view class="mkt-hero__nav">
+      <view class="mkt-hero__nav-item" bindtap="goToGiftZone" hover-class="mkt-hero__nav-item--hover">
+        <view class="mkt-hero__nav-icon mkt-hero__nav-icon--gold">
+          <t-icon name="coupon" size="30rpx" color="#8b5e22"></t-icon>
+        </view>
+        <text>领券</text>
       </view>
-      <view class="section-more mkt-more" bindtap="goToGiftZone">
+      <view class="mkt-hero__nav-item" bindtap="goToFlashSale" hover-class="mkt-hero__nav-item--hover">
+        <view class="mkt-hero__nav-icon mkt-hero__nav-icon--red">
+          <t-icon name="flash" size="30rpx" color="#c9483f"></t-icon>
+        </view>
+        <text>秒杀</text>
+      </view>
+      <view class="mkt-hero__nav-item" bindtap="goToGroupBuy" hover-class="mkt-hero__nav-item--hover">
+        <view class="mkt-hero__nav-icon mkt-hero__nav-icon--green">
+          <t-icon name="group" size="30rpx" color="#2c4a39"></t-icon>
+        </view>
+        <text>拼团</text>
+      </view>
+      <view class="mkt-hero__nav-item" bindtap="goToPointsExchange" hover-class="mkt-hero__nav-item--hover">
+        <view class="mkt-hero__nav-icon mkt-hero__nav-icon--blue">
+          <t-icon name="points" size="30rpx" color="#3a6b8a"></t-icon>
+        </view>
+        <text>积分</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="mkt-section">
+    <view class="mkt-section__head">
+      <view class="mkt-section__badge mkt-section__badge--gold">
+        <t-icon name="coupon" size="26rpx" color="#8b5e22"></t-icon>
+      </view>
+      <view class="mkt-section__heading">
+        <text class="mkt-section__title">新人专享券</text>
+        <text class="mkt-section__sub">首单立减，先领先享</text>
+      </view>
+      <view class="mkt-section__more" bindtap="goToGiftZone">
         <text>更多</text>
-        <t-icon name="chevronRight" size="22rpx" opacity="0.72"></t-icon>
+        <t-icon name="chevronRight" size="20rpx" opacity="0.5"></t-icon>
       </view>
     </view>
 
@@ -43,24 +82,31 @@
       </view>
     </scroll-view>
 
-    <view wx:else class="mkt-empty">暂无优惠券</view>
+    <view wx:else class="mkt-empty">
+      <t-icon name="coupon" size="52rpx" color="#c9bda4"></t-icon>
+      <text>暂无优惠券</text>
+    </view>
   </view>
 
-  <view class="panel mkt-block">
-    <view class="section-title">
-      <view class="section-title__stack section-title__stack--flash">
-        <text class="section-title__title">限时秒杀</text>
-        <view class="flash-clock">
-          <view class="flash-clock__seg">{{flashCountdownParts[0]}}</view>
-          <text class="flash-clock__sep">:</text>
-          <view class="flash-clock__seg">{{flashCountdownParts[1]}}</view>
-          <text class="flash-clock__sep">:</text>
-          <view class="flash-clock__seg">{{flashCountdownParts[2]}}</view>
+  <view class="mkt-section">
+    <view class="mkt-section__head">
+      <view class="mkt-section__badge mkt-section__badge--red">
+        <t-icon name="flash" size="26rpx" color="#c9483f"></t-icon>
+      </view>
+      <view class="mkt-section__heading">
+        <text class="mkt-section__title">限时秒杀</text>
+        <view class="mkt-countdown">
+          <text class="mkt-countdown__label">{{flashCountdownLabel}}</text>
+          <view class="mkt-countdown__seg">{{flashCountdownParts[0]}}</view>
+          <text class="mkt-countdown__colon">:</text>
+          <view class="mkt-countdown__seg">{{flashCountdownParts[1]}}</view>
+          <text class="mkt-countdown__colon">:</text>
+          <view class="mkt-countdown__seg">{{flashCountdownParts[2]}}</view>
         </view>
       </view>
-      <view class="section-more mkt-more" bindtap="goToFlashSale">
+      <view class="mkt-section__more" bindtap="goToFlashSale">
         <text>更多</text>
-        <t-icon name="chevronRight" size="22rpx" opacity="0.72"></t-icon>
+        <t-icon name="chevronRight" size="20rpx" opacity="0.5"></t-icon>
       </view>
     </view>
 
@@ -69,6 +115,7 @@
     </view>
 
     <view wx:elif="{{flashEmpty}}" class="mkt-empty">
+      <t-icon name="flash" size="52rpx" color="#c9bda4"></t-icon>
       <text>暂无秒杀活动</text>
       <text class="mkt-empty__sub">记得关注下次开场</text>
     </view>
@@ -84,34 +131,46 @@
       >
         <view class="flash-tile__cover" style="{{item.imageStyle}}">
           <view wx:if="{{!item.imageStyle}}" class="cover-fallback">
-            <t-icon name="gift" size="48rpx" color="#9e8c6a"></t-icon>
+            <t-icon name="gift" size="44rpx" color="#9e8c6a"></t-icon>
           </view>
+          <text wx:if="{{item.discount}}" class="flash-tile__ribbon">{{item.discount}}</text>
         </view>
         <text class="flash-tile__title">{{item.title}}</text>
-        <text class="flash-tile__desc">{{item.desc}}</text>
         <view class="flash-tile__prices">
           <text class="flash-tile__price">{{item.price}}</text>
           <text class="flash-tile__origin">{{item.originPrice}}</text>
+        </view>
+        <view class="flash-tile__stock">
+          <view class="flash-tile__stock-bar">
+            <view class="flash-tile__stock-fill" style="width: {{item.stockProgress}}%;"></view>
+          </view>
+          <text class="flash-tile__stock-text">仅剩{{item.stockLeft}}件</text>
         </view>
       </view>
     </view>
   </view>
 
-  <view class="panel mkt-block">
-    <view class="section-title">
-      <view class="section-title__stack">
-        <text class="section-title__title">邻里拼团</text>
+  <view class="mkt-section">
+    <view class="mkt-section__head">
+      <view class="mkt-section__badge mkt-section__badge--green">
+        <t-icon name="group" size="26rpx" color="#2c4a39"></t-icon>
       </view>
-      <view class="section-more mkt-more" bindtap="goToGroupBuy">
+      <view class="mkt-section__heading">
+        <text class="mkt-section__title">邻里拼团</text>
+        <text class="mkt-section__sub">左邻右舍拼单，人多更省</text>
+      </view>
+      <view class="mkt-section__more" bindtap="goToGroupBuy">
         <text>更多</text>
-        <t-icon name="chevronRight" size="22rpx" opacity="0.72"></t-icon>
+        <t-icon name="chevronRight" size="20rpx" opacity="0.5"></t-icon>
       </view>
     </view>
 
     <view wx:if="{{groupNoLocation}}" class="mkt-location-tip">
-      <t-icon name="location" size="40rpx" color="#F2994A"></t-icon>
-      <text class="mkt-location-tip__title">需要定位才能查看附近拼团</text>
-      <text class="mkt-location-tip__sub">开启位置权限，发现更多周边好货</text>
+      <view class="mkt-location-tip__icon">
+        <t-icon name="location" size="40rpx" color="#c65f2d"></t-icon>
+      </view>
+      <text class="mkt-location-tip__title">开启定位查看附近拼团</text>
+      <text class="mkt-location-tip__sub">授权位置权限，发现更多周边好货</text>
       <button class="mkt-location-btn" bindtap="goToSelectLocation">选择位置</button>
     </view>
 
@@ -120,6 +179,7 @@
     </view>
 
     <view wx:elif="{{groupEmpty}}" class="mkt-empty">
+      <t-icon name="group" size="52rpx" color="#c9bda4"></t-icon>
       <text>暂无附近拼团活动</text>
       <text class="mkt-empty__sub">去秒杀区看看其他好货</text>
     </view>
@@ -141,7 +201,14 @@
         </view>
         <view class="group-tile__body">
           <text class="group-tile__title">{{groupProducts[0].title}}</text>
-          <text class="group-tile__meta">{{groupProducts[0].memberText}} · {{groupProducts[0].expireText}}</text>
+          <view class="group-tile__progress-bar">
+            <view class="group-tile__progress-fill" style="width: {{groupProducts[0].progress}}%;"></view>
+          </view>
+          <view class="group-tile__meta-row">
+            <text class="group-tile__meta">{{groupProducts[0].memberText}}</text>
+            <text class="group-tile__meta-dot">·</text>
+            <text class="group-tile__meta">{{groupProducts[0].expireText}}</text>
+          </view>
           <view class="group-tile__prices">
             <text class="group-tile__price">拼团价 {{groupProducts[0].groupPrice}}</text>
             <text class="group-tile__origin">{{groupProducts[0].originPrice}}</text>
@@ -154,14 +221,18 @@
     </view>
   </view>
 
-  <view class="panel mkt-block">
-    <view class="section-title">
-      <view class="section-title__stack">
-        <text class="section-title__title">积分兑换</text>
+  <view class="mkt-section">
+    <view class="mkt-section__head">
+      <view class="mkt-section__badge mkt-section__badge--blue">
+        <t-icon name="points" size="26rpx" color="#3a6b8a"></t-icon>
       </view>
-      <view class="section-more mkt-more" bindtap="goToPointsExchange">
+      <view class="mkt-section__heading">
+        <text class="mkt-section__title">积分兑换</text>
+        <text class="mkt-section__sub">我的积分 <text class="mkt-section__sub-strong">{{pointsBalance}}</text></text>
+      </view>
+      <view class="mkt-section__more" bindtap="goToPointsExchange">
         <text>更多</text>
-        <t-icon name="chevronRight" size="22rpx" opacity="0.72"></t-icon>
+        <t-icon name="chevronRight" size="20rpx" opacity="0.5"></t-icon>
       </view>
     </view>
 
@@ -169,7 +240,10 @@
       <view class="pts-item pts-item--skel" wx:for="{{[1,2,3,4]}}" wx:key="*this"></view>
     </view>
 
-    <view wx:elif="{{!pointsGoods.length}}" class="mkt-empty">暂无可兑换商品</view>
+    <view wx:elif="{{!pointsGoods.length}}" class="mkt-empty">
+      <t-icon name="points" size="52rpx" color="#c9bda4"></t-icon>
+      <text>暂无可兑换商品</text>
+    </view>
 
     <view wx:else class="pts-grid">
       <view
@@ -180,6 +254,13 @@
         catchtap="redeemPoints"
         hover-class="pts-item--hover"
       >
+        <view wx:if="{{item.received}}" class="pts-item__tag pts-item__tag--done">
+          <t-icon name="check" size="16rpx" color="#fff"></t-icon>
+          <text>已兑换</text>
+        </view>
+        <view wx:elif="{{item.canRedeem}}" class="pts-item__tag pts-item__tag--avail">
+          <text>可兑换</text>
+        </view>
         <view class="pts-cover" style="{{item.imageStyle}}">
           <view wx:if="{{!item.imageStyle}}" class="cover-fallback cover-fallback--points">
             <t-icon name="gift" size="40rpx" color="#8f7f64"></t-icon>
@@ -187,7 +268,8 @@
         </view>
         <text class="pts-name">{{item.title}}</text>
         <view class="pts-footer">
-          <text class="pts-cost">{{item.pointsCost}} 积分</text>
+          <t-icon name="points" size="20rpx" color="#c65f2d"></t-icon>
+          <text class="pts-cost">{{item.pointsCost}}</text>
         </view>
       </view>
     </view>

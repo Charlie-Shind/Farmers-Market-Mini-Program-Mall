@@ -177,10 +177,6 @@ Component({
       wx.navigateTo({ url: `/pages/product/detail/detail?productId=${id}` });
     },
 
-    onShare() {
-      // 分享：预留，后续接微信分享接口
-    },
-
     onPhotoMore() {},
 
     onHeroError() {

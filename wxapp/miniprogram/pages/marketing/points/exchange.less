@@ -1,377 +1,298 @@
-.points-page {
-  padding: 0 32rpx 44rpx;
-  display: flex;
-  flex-direction: column;
-}
-
-// ==================== 顶部积分 Hero ====================
-
-.points-hero {
-  position: relative;
-  overflow: hidden;
-  border-radius: 32rpx;
-  padding: 32rpx 28rpx 28rpx;
-  margin-bottom: 28rpx;
-  background: linear-gradient(135deg, #1f3629 0%, #2c4a39 55%, #3e684f 100%);
-  box-shadow: 0 20rpx 40rpx rgba(31, 54, 41, 0.22);
+.px-page {
+  min-height: 100vh;
+  padding: 0 24rpx 0;
   box-sizing: border-box;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(216, 169, 120, 0.12), transparent 28%),
+    linear-gradient(180deg, #f7f3ea 0%, #f3efe4 100%);
 }
 
-.points-hero__glow {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(10px);
-  pointer-events: none;
-}
-
-.points-hero__glow--one {
-  top: -80rpx;
-  right: -60rpx;
-  width: 220rpx;
-  height: 220rpx;
-  background: radial-gradient(circle, rgba(214, 166, 101, 0.5) 0%, transparent 75%);
-}
-
-.points-hero__glow--two {
-  bottom: -100rpx;
-  left: -80rpx;
-  width: 240rpx;
-  height: 240rpx;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, transparent 80%);
-}
-
-.points-hero__brand {
-  position: relative;
-  z-index: 1;
-  display: inline-flex;
-  align-items: center;
-  gap: 8rpx;
-  font-size: 22rpx;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.72);
-  letter-spacing: 1rpx;
-  margin-bottom: 22rpx;
-}
-
-.points-hero__main {
-  position: relative;
-  z-index: 1;
+.px-balance {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 20rpx;
+  margin: 8rpx 0 22rpx;
+  padding: 22rpx 24rpx;
+  border-radius: 28rpx;
+  background: #fffdf8;
+  border: 1rpx solid rgba(44, 74, 57, 0.08);
+  box-shadow: 0 10rpx 24rpx rgba(44, 74, 57, 0.05);
 }
 
-.points-hero__info {
+.px-balance__left {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  min-width: 0;
+}
+
+.px-balance__icon {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 22rpx;
+  background: linear-gradient(160deg, #fff3dc, #f0d4a0);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.px-balance__meta {
+  min-width: 0;
   display: flex;
   flex-direction: column;
+  gap: 4rpx;
+}
+
+.px-balance__label {
+  font-size: 22rpx;
+  color: #8b8880;
+}
+
+.px-balance__value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 4rpx;
+}
+
+.px-balance__value {
+  font-size: 44rpx;
+  font-weight: 900;
+  color: #1f2f26;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.px-balance__unit {
+  font-size: 20rpx;
+  font-weight: 700;
+  color: #8b8880;
+}
+
+.px-balance__tip {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6rpx;
+  font-size: 18rpx;
+  color: #9a978d;
+  line-height: 1.3;
+}
+
+.px-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 16rpx;
+  padding: 0 4rpx;
+}
+
+.px-head__main {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.px-head__title {
+  font-size: 32rpx;
+  font-weight: 900;
+  color: #1f2f26;
+}
+
+.px-head__sub {
+  font-size: 22rpx;
+  color: #8b8880;
+}
+
+.px-state {
+  padding: 80rpx 24rpx;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: 10rpx;
 }
 
-.points-hero__label {
-  font-size: 24rpx;
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.points-hero__value-row {
-  display: flex;
-  align-items: baseline;
-  gap: 6rpx;
-}
-
-.points-hero__value {
-  font-size: 64rpx;
-  font-weight: 900;
-  color: #ffffff;
-  line-height: 1;
-  font-family: "Avenir Next", "Segoe UI", Arial, sans-serif;
-  font-variant-numeric: tabular-nums lining-nums;
-}
-
-.points-hero__unit {
-  font-size: 24rpx;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.75);
-}
-
-.points-hero__hint {
-  display: inline-flex;
-  align-items: center;
-  gap: 6rpx;
-  font-size: 21rpx;
-  color: rgba(255, 255, 255, 0.65);
-}
-
-.points-hero__gift-box {
-  flex: 0 0 auto;
-  width: 108rpx;
-  height: 108rpx;
-  border-radius: 28rpx;
-  background: rgba(255, 255, 255, 0.14);
-  border: 1rpx solid rgba(255, 255, 255, 0.22);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-// ==================== 分区标题 ====================
-
-.points-section-title {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16rpx;
-  margin: 4rpx 0 20rpx;
-}
-
-.points-section-title text {
-  font-size: 26rpx;
-  font-weight: 800;
-  color: #4f5f54;
-  letter-spacing: 2rpx;
-}
-
-.points-section-title__line {
-  width: 64rpx;
-  height: 1rpx;
-  background: linear-gradient(90deg, transparent, rgba(44, 74, 57, 0.32));
-}
-
-.points-section-title__line:last-child {
-  background: linear-gradient(90deg, rgba(44, 74, 57, 0.32), transparent);
-}
-
-// ==================== 加载 / 空态 ====================
-
-.points-loading,
-.points-empty {
-  padding: 60rpx 20rpx 72rpx;
-  text-align: center;
-}
-
-.points-empty__icon {
-  width: 116rpx;
-  height: 116rpx;
-  margin: 0 auto 20rpx;
+.px-state__icon {
+  width: 112rpx;
+  height: 112rpx;
+  margin-bottom: 8rpx;
   border-radius: 50%;
-  background: #f1eee3;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: rgba(255, 255, 255, 0.72);
+  display: grid;
+  place-items: center;
 }
 
-.points-loading__title,
-.points-empty__title {
-  display: block;
+.px-state__title {
   font-size: 30rpx;
   font-weight: 800;
   color: #24362c;
 }
 
-.points-loading__desc,
-.points-empty__desc {
-  display: block;
-  margin-top: 12rpx;
+.px-state__desc {
   font-size: 24rpx;
-  color: #7d7d7d;
-  line-height: 1.6;
+  color: #8a877f;
+  line-height: 1.5;
 }
 
-// ==================== 兑换列表 ====================
+.px-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16rpx;
+}
 
-.points-list {
+.px-card {
   display: flex;
   flex-direction: column;
-  gap: 20rpx;
-}
-
-.points-card {
-  position: relative;
+  border-radius: 24rpx;
   overflow: hidden;
-  border-radius: 28rpx;
   background: #fffdf8;
   border: 1rpx solid rgba(44, 74, 57, 0.08);
-  box-shadow: 0 14rpx 30rpx rgba(44, 74, 57, 0.06);
-  display: flex;
-  gap: 18rpx;
-  padding: 18rpx;
+  box-shadow: 0 10rpx 22rpx rgba(44, 74, 57, 0.05);
   box-sizing: border-box;
 }
 
-.points-card--done {
-  opacity: 0.68;
+.px-card--done {
+  opacity: 0.72;
 }
 
-.points-card__ribbon {
-  position: absolute;
-  top: 16rpx;
-  right: 16rpx;
-  z-index: 1;
-  padding: 4rpx 16rpx;
-  border-radius: 999rpx;
-  font-size: 20rpx;
-  font-weight: 800;
-  line-height: 1.6;
+.px-card--lack {
+  filter: saturate(0.92);
 }
 
-.points-card__ribbon--avail {
-  background: rgba(44, 74, 57, 0.12);
-  color: var(--green);
-}
-
-.points-card__ribbon--done {
-  background: rgba(138, 135, 127, 0.16);
-  color: #8a877f;
-}
-
-.points-card__ribbon--lack {
-  background: rgba(198, 95, 45, 0.12);
-  color: var(--orange);
-}
-
-.points-card__cover {
-  width: 164rpx;
-  height: 164rpx;
-  flex: 0 0 164rpx;
-  background: linear-gradient(150deg, #e8ddc7, #d8e1d0);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 22rpx;
+.px-card__cover {
+  position: relative;
+  height: 180rpx;
+  background:
+    radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.7), transparent 42%),
+    linear-gradient(160deg, #efe4ce 0%, #d9c4a0 100%);
   overflow: hidden;
 }
 
-.points-card__cover-fallback {
-  width: 86rpx;
-  height: 86rpx;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.7);
-  display: flex;
+.px-card__cover-fallback {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+}
+
+.px-card__tag {
+  position: absolute;
+  left: 12rpx;
+  top: 12rpx;
+  height: 36rpx;
+  padding: 0 12rpx;
+  border-radius: 999rpx;
+  font-size: 18rpx;
+  font-weight: 800;
+  line-height: 36rpx;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
 }
 
-.points-card__body {
-  flex: 1;
-  min-width: 0;
+.px-card__tag--avail {
+  background: rgba(44, 74, 57, 0.9);
+  color: #fff;
+}
+
+.px-card__tag--done {
+  background: rgba(138, 135, 127, 0.88);
+  color: #fff;
+}
+
+.px-card__tag--lack {
+  background: rgba(198, 95, 45, 0.9);
+  color: #fff;
+}
+
+.px-card__body {
+  padding: 16rpx 14rpx 14rpx;
   display: flex;
   flex-direction: column;
-  gap: 10rpx;
-  justify-content: space-between;
-}
-
-.points-card__top {
-  padding-right: 92rpx;
-}
-
-.points-card__title-box {
+  gap: 8rpx;
   flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6rpx;
 }
 
-.points-card__title {
-  font-size: 27rpx;
+.px-card__title {
+  font-size: 25rpx;
   font-weight: 800;
   color: #222;
   line-height: 1.35;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.points-card__desc {
-  font-size: 22rpx;
-  color: #8b8880;
-  line-height: 1.4;
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 1;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   overflow: hidden;
+  min-height: 68rpx;
 }
 
-.points-card__footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12rpx;
-}
-
-.points-card__cost-box {
-  display: flex;
-  flex-direction: column;
-  gap: 2rpx;
-}
-
-.points-card__cost-label {
-  font-size: 18rpx;
+.px-card__desc {
+  font-size: 20rpx;
   color: #8b8880;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.points-card__cost {
-  font-size: 34rpx;
-  font-weight: 900;
-  color: var(--orange);
-  line-height: 1;
-}
-
-.points-card__btn {
-  min-width: 128rpx;
-  height: 62rpx;
-  padding: 0 18rpx;
-  border-radius: 999rpx;
-  background: linear-gradient(135deg, #3f6f44, #2c4a39);
-  box-shadow: 0 8rpx 16rpx rgba(44, 74, 57, 0.25);
-  color: #fff;
-  font-size: 22rpx;
-  font-weight: 800;
-  line-height: 62rpx;
-  text-align: center;
-}
-
-.points-card__btn--disabled {
-  background: #d7d7d7;
-  box-shadow: none;
-}
-
-// ==================== 底部权益条 ====================
-
-.points-features {
+.px-card__foot {
+  margin-top: auto;
+  padding-top: 8rpx;
   display: flex;
-  justify-content: space-between;
-  margin-top: 32rpx;
-  padding: 28rpx 8rpx;
-  border-radius: 24rpx;
-  background: rgba(255, 255, 255, 0.55);
-}
-
-.points-feature {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
   align-items: center;
+  justify-content: space-between;
   gap: 8rpx;
 }
 
-.points-feature__icon {
-  width: 64rpx;
-  height: 64rpx;
-  border-radius: 50%;
-  background: rgba(44, 74, 57, 0.08);
-  display: flex;
+.px-card__cost {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
+  gap: 4rpx;
+  min-width: 0;
 }
 
-.points-feature__title {
+.px-card__cost-num {
+  font-size: 28rpx;
+  font-weight: 900;
+  color: #c65f2d;
+  line-height: 1;
+}
+
+.px-card__btn {
+  flex-shrink: 0;
+  min-width: 88rpx;
+  height: 52rpx;
+  padding: 0 16rpx;
+  border-radius: 999rpx;
+  background: linear-gradient(135deg, #3f6f44, #2c4a39);
+  color: #fff;
   font-size: 22rpx;
-  font-weight: 700;
-  color: #333;
+  font-weight: 800;
+  line-height: 52rpx;
+  text-align: center;
+  box-shadow: 0 6rpx 14rpx rgba(44, 74, 57, 0.22);
 }
 
-.points-feature__sub {
-  font-size: 18rpx;
-  color: #9a978d;
+.px-card__btn--disabled {
+  background: #d8d4cb;
+  box-shadow: none;
+  color: #fff;
+}
+
+.px-safe {
+  height: calc(48rpx + env(safe-area-inset-bottom));
+}
+
+@media (max-width: 360px) {
+  .px-card__cover {
+    height: 160rpx;
+  }
+
+  .px-card__title {
+    font-size: 23rpx;
+    min-height: 62rpx;
+  }
 }

@@ -1033,6 +1033,19 @@ export class PlatformDataService {
     return buttons;
   }
 
+  /**
+   * 读时兜底修正拼团状态：数据库里的 status 字段依赖 GroupBuyExpireService 的定时扫描
+   * （默认每隔一段时间才会把过期的 OPEN 团标记为 FAILED），在扫描间隔内直接读库会看到
+   * 已经过期、但仍显示"进行中"的旧状态。这里在返回给前端之前统一按 expireAt 兜底纠正，
+   * 确保任何时刻读到的状态都是准确的，不依赖后台扫描的时间差。
+   */
+  private resolveGroupBuyStatus(status: string, expireAt: Date): 'OPEN' | 'COMPLETED' | 'FAILED' {
+    if (status === 'OPEN' && expireAt.getTime() < Date.now()) {
+      return 'FAILED';
+    }
+    return status as 'OPEN' | 'COMPLETED' | 'FAILED';
+  }
+
   private async getOrderGroupBuySummary(groupBuyId: bigint | null | undefined) {
     if (groupBuyId == null) {
       return null;
@@ -1051,7 +1064,7 @@ export class PlatformDataService {
       groupId: this.toNumber(group.id),
       groupNo: group.groupNo,
       inviteCode: group.inviteCode,
-      status: group.status as 'OPEN' | 'COMPLETED' | 'FAILED',
+      status: this.resolveGroupBuyStatus(group.status, group.expireAt),
       needed: group.needed,
       memberCount: group.members.length,
       expireAt: this.toIso(group.expireAt),
@@ -10701,7 +10714,7 @@ export class PlatformDataService {
       completedAt: group.completedAt ? group.completedAt.toISOString() : null,
       groupPrice: Number(group.groupPrice).toFixed(2),
       originPrice: Number(group.originPrice).toFixed(2),
-      status: group.status as 'OPEN' | 'COMPLETED' | 'FAILED',
+      status: this.resolveGroupBuyStatus(group.status, group.expireAt),
     };
   }
 
@@ -10747,7 +10760,7 @@ export class PlatformDataService {
           skuId: this.toNumber(g.skuId),
           title: g.product.title,
           coverUrl: this.resolvePublicUrl(g.product.coverUrl) ?? '',
-          status: g.status as 'OPEN' | 'COMPLETED' | 'FAILED',
+          status: this.resolveGroupBuyStatus(g.status, g.expireAt),
           needed: g.needed,
           memberCount: g.members.length,
           isInitiator: this.toNumber(g.initiatorId) === this.toNumber(user.id),

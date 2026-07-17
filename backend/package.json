@@ -23,7 +23,8 @@
     "scenario:test:message": "ts-node --project tsconfig.scripts.json scripts/scenario-test-data.ts --flow=message",
     "scenario:flash:inject": "ts-node --project tsconfig.scripts.json scripts/inject-flash-sale.ts",
     "scenario:flash:verify": "ts-node --project tsconfig.scripts.json scripts/verify-flash-sale.ts",
-    "scenario:group:inject": "ts-node --project tsconfig.scripts.json scripts/inject-group-buy.ts"
+    "scenario:group:inject": "ts-node --project tsconfig.scripts.json scripts/inject-group-buy.ts",
+    "scenario:group:inspect": "ts-node --project tsconfig.scripts.json scripts/inspect-group-buys.ts"
   },
   "prisma": {
     "seed": "ts-node --project tsconfig.scripts.json prisma/seed.ts"

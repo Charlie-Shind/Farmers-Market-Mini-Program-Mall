@@ -648,66 +648,6 @@
   }
 }
 
-// 常用功能 Tab
-.quick-tools-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24rpx;
-
-  .quick-tool-card {
-    background: #ffffff;
-    border-radius: 28rpx;
-    border: 2rpx solid rgba(44, 74, 57, 0.04) !important;
-    padding: 36rpx 0 !important;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20rpx;
-    box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.01);
-    margin: 0 !important;
-    width: auto !important;
-
-    &:active {
-      background: #fafaf5;
-    }
-
-    .tool-icon-circle {
-      width: 96rpx;
-      height: 96rpx;
-      border-radius: 50%;
-      display: grid;
-      place-items: center;
-      transition: transform 0.2s ease;
-    }
-
-    &:active .tool-icon-circle {
-      transform: scale(0.95);
-    }
-
-    .bg-light-green {
-      background: rgba(101, 216, 139, 0.12);
-    }
-
-    .bg-light-gold {
-      background: rgba(214, 166, 101, 0.12);
-    }
-
-    .bg-light-blue {
-      background: rgba(71, 119, 86, 0.08);
-    }
-
-    .bg-light-red {
-      background: rgba(201, 75, 75, 0.08);
-    }
-
-    .tool-label-text {
-      font-size: 26rpx;
-      font-weight: 800;
-      color: var(--text);
-    }
-  }
-}
-
 // 页面通用空白态
 .profile-empty-state {
   display: flex;

@@ -75,10 +75,6 @@
           <text>档案资料</text>
           <view class="tab-slider-line" wx:if="{{activeTab === 'info'}}"></view>
         </view>
-        <view class="tab-btn-item {{activeTab === 'action' ? 'tab-btn-item--active' : ''}}" data-tab="action" bindtap="switchTab">
-          <text>常用功能</text>
-          <view class="tab-slider-line" wx:if="{{activeTab === 'action'}}"></view>
-        </view>
       </view>
 
       <!-- Tab内容区 -->
@@ -167,35 +163,6 @@
           </view>
         </view>
 
-        <!-- 3. 常用功能 Tab -->
-        <view class="tab-panel-item" wx:if="{{activeTab === 'action'}}">
-          <view class="quick-tools-grid">
-            <button class="quick-tool-card" plain="true" data-key="nickname" data-label="修改昵称" bindtap="openAction">
-              <view class="tool-icon-circle bg-light-green">
-                <t-icon name="edit" size="22px" color="#2c4a39" />
-              </view>
-              <text class="tool-label-text">修改昵称</text>
-            </button>
-            <button class="quick-tool-card" plain="true" data-key="avatar" data-label="修改头像" bindtap="openAction">
-              <view class="tool-icon-circle bg-light-gold">
-                <t-icon name="camera" size="22px" color="#8b5e22" />
-              </view>
-              <text class="tool-label-text">修改头像</text>
-            </button>
-            <button class="quick-tool-card" plain="true" data-key="info" data-label="修改资料" bindtap="openAction">
-              <view class="tool-icon-circle bg-light-blue">
-                <t-icon name="settings" size="22px" color="#2c4a39" />
-              </view>
-              <text class="tool-label-text">修改资料</text>
-            </button>
-            <button class="quick-tool-card" plain="true" data-key="share" data-label="分享资料" bindtap="openAction">
-              <view class="tool-icon-circle bg-light-red">
-                <t-icon name="share" size="22px" color="#c94b4b" />
-              </view>
-              <text class="tool-label-text">分享资料</text>
-            </button>
-          </view>
-        </view>
       </view>
     </view>
   </view>

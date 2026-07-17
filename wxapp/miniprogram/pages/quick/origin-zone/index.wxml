@@ -1,9 +1,5 @@
 <view class="phone-page zone-page zone-page--origin" style="{{pageStyle}}">
-  <page-nav title="{{pageTitle}}" theme="solid">
-    <button slot="right" class="page-nav-action" bindtap="onShare">
-      <t-icon name="share" size="32rpx" color="#111111"></t-icon>
-    </button>
-  </page-nav>
+  <page-nav title="{{pageTitle}}" theme="solid" />
 
   <!-- Banner + 保障卡片 -->
   <view class="origin-main-card">

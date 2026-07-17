@@ -38,7 +38,7 @@ Component({
     bioText: '',
     baseInfo: [] as Array<{ label: string; value: string }>,
     metrics: [] as ProfileMetric[],
-    activeTab: 'main', // 'main' | 'info' | 'action'
+    activeTab: 'main', // 'main' | 'info'
     merchantProducts: [] as MerchantProduct[],
     userCoupons: [] as AppUserCoupon[],
     scrollTop: 0,
@@ -266,25 +266,6 @@ Component({
           wx.showToast({ title: '请点击右上角 ··· 转发', icon: 'none' });
         },
       });
-    },
-    openAction(e: WechatMiniprogram.BaseEvent) {
-      const { key } = (e.currentTarget.dataset as { key?: string }) || {};
-
-      if (!this.ensureAccess()) {
-        return;
-      }
-
-      if (key === 'nickname' || key === 'avatar' || key === 'info') {
-        this.goEdit();
-        return;
-      }
-
-      if (key === 'share') {
-        this.shareProfile();
-        return;
-      }
-
-      wx.navigateTo({ url: '/pages/profile/edit/edit' });
     },
     onMetricTap(e: WechatMiniprogram.BaseEvent) {
       const { key } = (e.currentTarget.dataset as { key?: string }) || {};
