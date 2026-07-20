@@ -26,6 +26,52 @@
   max-height: none;
 }
 
+.export-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  cursor: pointer;
+}
+
+.export-option:has(input:checked) {
+  border-color: var(--brand-700);
+  background: color-mix(in srgb, var(--brand-700) 6%, #fff);
+}
+
+.export-option input {
+  margin-top: 3px;
+}
+
+.export-option strong {
+  display: block;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.export-option span {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.export-range {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.export-hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
 .action-card--wide {
   width: min(920px, 100%);
 }
@@ -57,6 +103,7 @@
 
 .action-card__head .text-btn,
 .action-card__head .ghost-btn {
+  width: 70px;
   height: 30px;
   padding: 0 10px;
   background: rgba(255, 255, 255, 0.1);

@@ -18,11 +18,11 @@
         </div>
 
         <label class="form-field">
-          <span>用户名</span>
+          <span>用户名 / 手机号</span>
           <input
             v-model.trim="form.username"
             type="text"
-            placeholder="请输入用户名"
+            placeholder="用户名或手机号"
             autocomplete="username"
             maxlength="64"
           />
@@ -125,7 +125,7 @@ async function loadCaptcha() {
 
 async function handleSubmit() {
   if (!form.username || !form.password) {
-    loginError.value = '请输入用户名和密码';
+    loginError.value = '请输入用户名/手机号和密码';
     return;
   }
   if (!captchaId.value || !form.captchaCode) {

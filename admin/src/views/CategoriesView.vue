@@ -38,10 +38,7 @@
         </el-table-column>
         <el-table-column label="名称" min-width="180">
           <template #default="{ row }">
-            <div class="name-cell">
-              <el-image v-if="row.iconUrl" :src="row.iconUrl" fit="cover" class="icon-thumb" />
-              <span :class="{ 'child-name': !row.isTag }">{{ row.isTag ? row.name : `└ ${row.name}` }}</span>
-            </div>
+            <span :class="{ 'child-name': !row.isTag }">{{ row.isTag ? row.name : `└ ${row.name}` }}</span>
           </template>
         </el-table-column>
         <el-table-column label="类型" width="110">
@@ -88,14 +85,6 @@
             <el-option v-for="tag in tagOptions" :key="tag.id" :label="tag.name" :value="tag.id" />
           </el-select>
         </el-form-item>
-        <el-form-item label="图标">
-          <el-input v-model="form.iconUrl" placeholder="图标 URL 或上传图片" style="margin-bottom: 8px" />
-          <el-button type="primary" plain :loading="imageUploading" @click="triggerFileInput" style="color: #fff;">上传图标</el-button>
-          <input ref="fileInputRef" type="file" accept="image/*" style="display: none" @change="handleUpload" />
-          <div v-if="form.iconUrl" class="icon-preview">
-            <el-image :src="form.iconUrl" fit="cover" />
-          </div>
-        </el-form-item>
         <el-form-item label="排序">
           <el-input-number v-model="form.sortOrder" :min="0" :max="9999" />
         </el-form-item>
@@ -123,7 +112,6 @@ import {
   deleteCategory,
   getAdminCategories,
   updateCategory,
-  uploadFile,
   type AdminCategoryRow,
 } from '@/api/admin';
 import StatGrid from '@/components/StatGrid.vue';
@@ -134,10 +122,8 @@ const refreshApi = inject<{
 
 const loading = ref(false);
 const saving = ref(false);
-const imageUploading = ref(false);
 const categories = ref<AdminCategoryRow[]>([]);
 const selectedIds = ref<number[]>([]);
-const fileInputRef = ref<HTMLInputElement | null>(null);
 
 const isAllSelected = computed(() => {
   if (!categories.value.length) return false;
@@ -154,7 +140,6 @@ const form = reactive({
   name: '',
   kind: 'tag' as 'tag' | 'child',
   parentId: null as number | null,
-  iconUrl: '',
   sortOrder: 0,
   status: 1,
 });
@@ -213,7 +198,6 @@ function resetForm() {
   form.name = '';
   form.kind = 'tag';
   form.parentId = null;
-  form.iconUrl = '';
   form.sortOrder = 0;
   form.status = 1;
 }
@@ -231,35 +215,9 @@ function openEditModal(row: AdminCategoryRow) {
   form.name = row.name;
   form.kind = row.isTag ? 'tag' : 'child';
   form.parentId = row.parentId;
-  form.iconUrl = row.iconUrl;
   form.sortOrder = row.sortOrder;
   form.status = row.status;
   dialog.open = true;
-}
-
-function triggerFileInput() {
-  fileInputRef.value?.click();
-}
-
-async function handleUpload(event: Event) {
-  const target = event.target as HTMLInputElement;
-  const file = target.files?.[0];
-  if (!file) return;
-  if (!file.type.startsWith('image/')) {
-    ElMessage.error('只能上传图片文件');
-    return;
-  }
-  imageUploading.value = true;
-  try {
-    const res = await uploadFile(file);
-    form.iconUrl = res.url;
-    ElMessage.success('图标上传成功');
-  } catch (error: any) {
-    ElMessage.error(error.message || '图标上传失败');
-  } finally {
-    imageUploading.value = false;
-    target.value = '';
-  }
 }
 
 async function submitForm() {
@@ -276,7 +234,7 @@ async function submitForm() {
   const payload = {
     name: form.name.trim(),
     parentId: form.kind === 'child' ? form.parentId : null,
-    iconUrl: form.iconUrl.trim(),
+    iconUrl: '',
     sortOrder: form.sortOrder,
     status: form.status,
   };
@@ -345,27 +303,7 @@ async function batchDelete() {
 </script>
 
 <style scoped>
-.name-cell {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.icon-thumb {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-}
-
 .child-name {
   color: #5f685f;
-}
-
-.icon-preview {
-  margin-top: 12px;
-  width: 72px;
-  height: 72px;
-  border-radius: 12px;
-  overflow: hidden;
 }
 </style>

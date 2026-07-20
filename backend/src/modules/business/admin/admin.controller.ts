@@ -110,13 +110,18 @@ export class AdminController {
   }
 
   @Get('admin-accounts')
-  listAdminAccounts(@Query() query: Record<string, string>) {
-    return this.platformDataService.listAdminAccounts(query);
+  listAdminAccounts(@CurrentUser() user: AuthUser, @Query() query: Record<string, string>) {
+    return this.platformDataService.listAdminAccounts(query, user);
   }
 
   @Post('admin-accounts')
   createAdminAccount(@CurrentUser() user: AuthUser, @Body() body: Record<string, unknown>) {
     return this.platformDataService.createAdminAccount(body, user);
+  }
+
+  @Post('admin-accounts/sync-merchants')
+  syncMerchantsAdminAccounts(@CurrentUser() user: AuthUser) {
+    return this.platformDataService.syncMerchantsAdminAccounts(user);
   }
 
   @Put('admin-accounts/:adminUserId')
@@ -182,8 +187,8 @@ export class AdminController {
   }
 
   @Get('merchants')
-  listMerchants(@Query() query: Record<string, string>) {
-    return this.platformDataService.listAdminMerchants(query);
+  listMerchants(@CurrentUser() user: AuthUser, @Query() query: Record<string, string>) {
+    return this.platformDataService.listAdminMerchants(query, user);
   }
 
   @Get('merchants/:merchantId/summary')
@@ -205,6 +210,15 @@ export class AdminController {
     return this.platformDataService.updateAdminMerchant(Number(merchantId), body, user);
   }
 
+  @Post('merchants/:merchantId/profile-audit')
+  auditMerchantProfile(
+    @CurrentUser() user: AuthUser,
+    @Param('merchantId') merchantId: string,
+    @Body() body: Record<string, unknown>,
+  ) {
+    return this.platformDataService.auditMerchantProfile(Number(merchantId), body, user);
+  }
+
   @Delete('merchants/:merchantId')
   deleteAdminMerchant(
     @CurrentUser() user: AuthUser,
@@ -214,8 +228,8 @@ export class AdminController {
   }
 
   @Get('products')
-  listProducts(@Query() query: Record<string, string>) {
-    return this.platformDataService.listAdminProducts(query);
+  listProducts(@CurrentUser() user: AuthUser, @Query() query: Record<string, string>) {
+    return this.platformDataService.listAdminProducts(query, user);
   }
 
   @Post('products')
@@ -243,8 +257,12 @@ export class AdminController {
   }
 
   @Post('products/:productId/takedown')
-  takedownProduct(@CurrentUser() user: AuthUser, @Param('productId') productId: string) {
-    return this.platformDataService.takedownAdminProduct(Number(productId), user);
+  takedownProduct(
+    @CurrentUser() user: AuthUser,
+    @Param('productId') productId: string,
+    @Body() body: Record<string, unknown>,
+  ) {
+    return this.platformDataService.takedownAdminProduct(Number(productId), user, body);
   }
 
   @Post('products/:productId/restore')
@@ -465,8 +483,8 @@ export class AdminController {
   }
 
   @Get('orders')
-  listOrders(@Query() query: Record<string, string>) {
-    return this.platformDataService.listAdminOrders(query);
+  listOrders(@CurrentUser() user: AuthUser, @Query() query: Record<string, string>) {
+    return this.platformDataService.listAdminOrders(query, user);
   }
 
   @Get('group-buys')
@@ -475,13 +493,22 @@ export class AdminController {
   }
 
   @Get('orders/:orderNo')
-  getOrder(@Param('orderNo') orderNo: string) {
-    return this.platformDataService.getAdminOrderDetail(orderNo);
+  getOrder(@CurrentUser() user: AuthUser, @Param('orderNo') orderNo: string) {
+    return this.platformDataService.getAdminOrderDetail(orderNo, user);
+  }
+
+  @Post('orders/:orderNo/ship')
+  shipOrder(
+    @CurrentUser() user: AuthUser,
+    @Param('orderNo') orderNo: string,
+    @Body() body: Record<string, unknown>,
+  ) {
+    return this.platformDataService.shipAdminOrder(orderNo, body, user);
   }
 
   @Get('refunds')
-  listRefunds(@Query() query: Record<string, string>) {
-    return this.platformDataService.listAdminRefunds(query);
+  listRefunds(@CurrentUser() user: AuthUser, @Query() query: Record<string, string>) {
+    return this.platformDataService.listAdminRefunds(query, user);
   }
 
   @Get('logistics')
@@ -514,8 +541,8 @@ export class AdminController {
   }
 
   @Get('withdraws')
-  listWithdraws(@Query() query: Record<string, string>) {
-    return this.platformDataService.listAdminWithdraws(query);
+  listWithdraws(@CurrentUser() user: AuthUser, @Query() query: Record<string, string>) {
+    return this.platformDataService.listAdminWithdraws(query, user);
   }
 
   @Get('settings')

@@ -132,6 +132,24 @@ async function main() {
     create: { code: 'SUPER_ADMIN', name: '超级管理员', permissionJson: { all: true }, status: 1 },
     update: { permissionJson: { all: true }, status: 1 },
   });
+  await prisma.adminRole.upsert({
+    where: { code: 'MERCHANT_ADMIN' },
+    create: {
+      code: 'MERCHANT_ADMIN',
+      name: '商户管理员',
+      permissionJson: {
+        permissionKeys: ['orders', 'products', 'withdraws', 'refunds', 'merchants'],
+      },
+      status: 1,
+    },
+    update: {
+      name: '商户管理员',
+      permissionJson: {
+        permissionKeys: ['orders', 'products', 'withdraws', 'refunds', 'merchants'],
+      },
+      status: 1,
+    },
+  });
   const admin = await prisma.adminUser.upsert({
     where: { username: 'admin' },
     create: {
@@ -160,6 +178,7 @@ async function main() {
     update: {},
   });
   console.log('✅ 平台管理员已就绪 (admin / admin123456)');
+  console.log('✅ 商户管理员角色已就绪 (MERCHANT_ADMIN)');
 
   // 3. 普通用户
   const user1 = await prisma.user.upsert({

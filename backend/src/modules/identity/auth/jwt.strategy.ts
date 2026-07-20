@@ -45,10 +45,23 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('Invalid token payload');
     }
 
+    const merchantIdRaw = payload.merchantId;
+    const merchantId =
+      typeof merchantIdRaw === 'number' && Number.isFinite(merchantIdRaw)
+        ? merchantIdRaw
+        : typeof merchantIdRaw === 'string' && merchantIdRaw.trim()
+          ? Number(merchantIdRaw)
+          : null;
+    const accountType = payload.accountType === 'MERCHANT' || (merchantId != null && !Number.isNaN(merchantId))
+      ? 'MERCHANT'
+      : 'PLATFORM';
+
     return {
       sub,
       role,
       tokenType,
+      merchantId: merchantId != null && !Number.isNaN(merchantId) ? merchantId : null,
+      accountType,
     };
   }
 }

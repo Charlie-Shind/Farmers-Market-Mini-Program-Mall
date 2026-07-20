@@ -64,6 +64,7 @@ const LUCIDE_ALIAS: Record<string, keyof typeof LucideIcons> = {
   signin: 'LogIn',
   thumbUp: 'ThumbsUp',
   redPacket: 'Gift',
+  coupon: 'TicketPercent',
   sidebarCollapse: 'PanelLeftClose',
   sidebarExpand: 'PanelLeftOpen',
   category: 'LayoutGrid',

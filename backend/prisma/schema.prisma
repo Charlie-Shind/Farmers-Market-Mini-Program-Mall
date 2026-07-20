@@ -239,6 +239,11 @@ model Merchant {
   commissionRate Decimal?  @map("commission_rate") @db.Decimal(10, 4)
   settledAt      DateTime? @map("settled_at") @db.Timestamp(6)
 
+  /// 0无变更 / 1资料变更待审 / 2最近一次通过 / 3最近一次驳回
+  profileAuditStatus Int       @default(0) @map("profile_audit_status") @db.SmallInt
+  pendingProfileJson Json?     @map("pending_profile_json")
+  profileAuditRemark String?   @map("profile_audit_remark") @db.VarChar(255)
+
   createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
   updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamp(6)
   deletedAt      DateTime? @map("deleted_at") @db.Timestamp(6)
@@ -253,6 +258,7 @@ model Merchant {
   withdrawApplies WithdrawApply[]
   refunds         RefundApply[]
   productReviews  ProductReview[]
+  adminUsers      AdminUser[]
 
   @@map("merchant")
 }
@@ -657,8 +663,12 @@ model AdminUser {
   username     String    @unique @db.VarChar(64)
   accountNo    String?   @unique @map("account_no") @db.VarChar(32)
   passwordHash String    @map("password_hash") @db.VarChar(255)
+  /// 供平台管理员查看/复制的登录明文密码（创建或重置时写入）
+  loginPassword String?  @map("login_password") @db.VarChar(64)
   nickname     String    @db.VarChar(64)
   mobile       String?   @db.VarChar(20)
+  /// 绑定商户后，该后台账号仅能访问本店数据
+  merchantId   BigInt?   @unique @map("merchant_id")
   status       Int       @default(1) @db.SmallInt
   lastLoginAt  DateTime? @map("last_login_at") @db.Timestamp(6)
 
@@ -666,6 +676,7 @@ model AdminUser {
   updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamp(6)
   deletedAt    DateTime? @map("deleted_at") @db.Timestamp(6)
 
+  merchant      Merchant? @relation(fields: [merchantId], references: [id])
   roles        AdminUserRole[]
   operationLogs AdminOperationLog[]
   withdrawApplies WithdrawApply[]

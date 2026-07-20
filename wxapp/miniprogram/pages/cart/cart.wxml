@@ -4,7 +4,7 @@
   <view class="cart-head">
     <view class="cart-address-card" data-label="收货地址" bindtap="openSection" hover-class="cart-address-card--hover">
       <view class="cart-address-card__icon">
-        <t-icon name="location" size="34rpx" color="#2c4a39"></t-icon>
+        <t-icon name="location" size="44rpx" color="#2c4a39"></t-icon>
       </view>
       <view class="cart-address-card__body">
         <text class="cart-address-card__title">{{cart.address.title}}</text>
@@ -45,12 +45,12 @@
           <view class="cart-line">
             <text class="cart-price">{{item.price}}</text>
             <view class="qty">
-              <button data-cart-id="{{item.id}}" data-quantity="{{item.quantity}}" bindtap="decreaseItem">
-                <t-icon name="minus" size="24rpx"></t-icon>
+              <button class="qty__btn" data-cart-id="{{item.id}}" data-quantity="{{item.quantity}}" bindtap="decreaseItem">
+                <t-icon name="minus" size="28rpx" color="#2c4a39"></t-icon>
               </button>
-              <text>{{item.quantity}}</text>
-              <button data-cart-id="{{item.id}}" data-quantity="{{item.quantity}}" bindtap="increaseItem">
-                <t-icon name="plus" size="24rpx"></t-icon>
+              <text class="qty__num">{{item.quantity}}</text>
+              <button class="qty__btn qty__btn--plus" data-cart-id="{{item.id}}" data-quantity="{{item.quantity}}" bindtap="increaseItem">
+                <t-icon name="plus" size="28rpx" color="#ffffff"></t-icon>
               </button>
             </view>
           </view>

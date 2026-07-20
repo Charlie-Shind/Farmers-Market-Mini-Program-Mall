@@ -33,6 +33,9 @@
             >
               批量删除
             </button>
+            <button class="ghost-btn" type="button" :disabled="accountSaving" @click="handleSyncMerchants">
+              同步商户账号
+            </button>
             <button class="primary-btn" type="button" @click="createAccountDialog.visible = true">
               新增管理员
             </button>
@@ -49,6 +52,7 @@
                 <th>账号</th>
                 <th>昵称</th>
                 <th>手机号</th>
+                <th>登录密码</th>
                 <th>角色</th>
                 <th>状态</th>
                 <th>最近登录</th>
@@ -71,6 +75,20 @@
                 </td>
                 <td data-label="昵称">{{ account.nickname }}</td>
                 <td data-label="手机号">{{ account.mobile || '-' }}</td>
+                <td data-label="登录密码">
+                  <div class="row-actions">
+                    <code v-if="account.loginPassword">{{ account.loginPassword }}</code>
+                    <span v-else>—</span>
+                    <button
+                      v-if="account.loginPassword"
+                      class="ghost-btn"
+                      type="button"
+                      @click="copyText(account.loginPassword, '密码已复制')"
+                    >
+                      复制
+                    </button>
+                  </div>
+                </td>
                 <td data-label="角色">
                   <span class="tag">{{ formatRoleNames(account) }}</span>
                 </td>
@@ -104,7 +122,7 @@
                 </td>
               </tr>
               <tr v-if="adminAccounts.length === 0">
-                <td colspan="8" class="empty-hint">暂无管理员账号</td>
+                <td colspan="9" class="empty-hint">暂无管理员账号</td>
               </tr>
             </tbody>
           </table>
@@ -288,7 +306,7 @@
         </label>
         <label class="form-field">
           <span>初始密码</span>
-          <input v-model.trim="accountForm.password" type="password" placeholder="请输入初始密码（至少 6 位）" />
+          <input v-model.trim="accountForm.password" type="password" placeholder="选填；不填则随机生成 6 位" />
         </label>
 
         <div class="form-field">
@@ -398,6 +416,7 @@ import {
   getLogs,
   getSettings,
   resetAdminPassword,
+  syncMerchantsAdminAccounts,
   updateAdminAccount,
   updateAdminRole,
   deleteAdminAccount,
@@ -415,6 +434,9 @@ type AdminAccount = {
   username: string;
   nickname: string;
   mobile: string;
+  loginPassword?: string;
+  merchantId?: number | null;
+  accountType?: 'PLATFORM' | 'MERCHANT';
   status: 'NORMAL' | 'DISABLED';
   lastLoginAt: string;
   roleCodes: string[];
@@ -689,11 +711,7 @@ async function handleCreateAdminAccount() {
     ElMessage.warning('请输入正确的11位手机号');
     return;
   }
-  if (!password) {
-    ElMessage.warning('请输入初始密码');
-    return;
-  }
-  if (password.length < 6) {
+  if (password && password.length < 6) {
     ElMessage.warning('初始密码长度不能少于 6 位');
     return;
   }
@@ -705,20 +723,86 @@ async function handleCreateAdminAccount() {
   const rolesToSend = accountForm.roleCodes.length > 0 ? accountForm.roleCodes : ['ADMIN'];
 
   try {
-    await createAdminAccount({
+    const created = await createAdminAccount({
       username,
       nickname,
       mobile: mobile || undefined,
-      password,
+      password: password || undefined,
       roleCodes: rolesToSend,
     });
     reloadAdminForm();
     await loadSystemData();
-    ElMessage.success('管理员账号已创建');
     createAccountDialog.visible = false;
+    if (created.initialPassword) {
+      await ElMessageBox.alert(
+        `账号：${created.username}\n初始密码：${created.initialPassword}\n\n密码也会显示在列表「登录密码」列。`,
+        '账号已创建',
+        { confirmButtonText: '我已复制', type: 'success' },
+      );
+    } else {
+      ElMessage.success('管理员账号已创建');
+    }
   } catch (error) {
     accountError.value = error instanceof Error ? error.message : '创建管理员账号失败';
     ElMessage.error(accountError.value);
+  } finally {
+    accountSaving.value = false;
+  }
+}
+
+async function copyText(text: string, successMessage = '已复制') {
+  const value = String(text ?? '').trim();
+  if (!value) {
+    ElMessage.warning('暂无可复制内容');
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(value);
+    ElMessage.success(successMessage);
+  } catch {
+    ElMessage.error('复制失败，请手动选择文本');
+  }
+}
+
+async function handleSyncMerchants() {
+  try {
+    await ElMessageBox.confirm(
+      '将为所有已通过商户补齐后台账号（商户管理员角色），并确保可查看登录密码。是否继续？',
+      '同步商户账号',
+      { type: 'warning', confirmButtonText: '开始同步', cancelButtonText: '取消' },
+    );
+  } catch {
+    return;
+  }
+
+  accountSaving.value = true;
+  try {
+    const result = await syncMerchantsAdminAccounts();
+    await loadSystemData();
+    const accounts = result.accounts?.length
+      ? result.accounts
+      : [...(result.created || []), ...(result.ensured || [])];
+    if (!accounts.length) {
+      ElMessage.success(
+        `同步完成：新建 ${result.createdCount || 0} 个，已有 ${result.ensuredCount || 0} 个，跳过 ${result.skippedCount || 0} 个`,
+      );
+      return;
+    }
+    const lines = accounts
+      .map(
+        (item) =>
+          `${item.storeName} | ${item.username || item.mobile} | ${item.initialPassword}`,
+      )
+      .join('\n');
+    await ElMessageBox.alert(
+      `新建 ${result.createdCount || 0} 个，已有账号 ${result.ensuredCount || 0} 个，跳过 ${result.skippedCount || 0} 个\n\n店铺 | 登录账号 | 密码\n${lines}\n\n密码也会显示在管理员列表「登录密码」列，可随时复制。`,
+      '商户账号同步结果',
+      { confirmButtonText: '我已复制', type: 'success', customClass: 'sync-merchant-password-dialog' },
+    );
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error(error instanceof Error ? error.message : '同步商户账号失败');
+    }
   } finally {
     accountSaving.value = false;
   }
@@ -790,23 +874,35 @@ async function handleSaveAccountRoles() {
 
 async function handleResetPassword(account: AdminAccount) {
   try {
-    const { value: password } = await ElMessageBox.prompt(`请输入管理员 [${account.username}] 的新密码：`, '重置密码', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      inputPlaceholder: '请输入至少 6 位的新密码',
-      inputType: 'password',
-      inputValidator: (val) => {
-        if (!val || val.trim().length < 6) {
-          return '密码长度不能少于 6 位';
-        }
-        return true;
+    const { value: password } = await ElMessageBox.prompt(
+      `为管理员 [${account.username}] 设置新密码。留空则随机生成 6 位密码。`,
+      '重置密码',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        inputPlaceholder: '选填；不填则随机生成',
+        inputType: 'password',
+        inputValidator: (val) => {
+          if (val && val.trim().length > 0 && val.trim().length < 6) {
+            return '密码长度不能少于 6 位';
+          }
+          return true;
+        },
       },
-    });
+    );
 
-    if (!password) return;
-
-    await resetAdminPassword(account.id, password.trim());
-    ElMessage.success(`管理员 [${account.username}] 的密码已重置成功`);
+    const result = await resetAdminPassword(account.id, password?.trim() || undefined);
+    if (result.initialPassword) {
+      await ElMessageBox.alert(
+        `账号：${result.username || account.username}\n新密码：${result.initialPassword}\n\n密码也会显示在列表「登录密码」列。`,
+        '密码已重置',
+        { confirmButtonText: '我已复制', type: 'success' },
+      );
+      await loadSystemData();
+    } else {
+      ElMessage.success(`管理员 [${account.username}] 的密码已重置成功`);
+      await loadSystemData();
+    }
   } catch (error) {
     if (error !== 'cancel') {
       ElMessage.error(error instanceof Error ? error.message : '重置密码失败');

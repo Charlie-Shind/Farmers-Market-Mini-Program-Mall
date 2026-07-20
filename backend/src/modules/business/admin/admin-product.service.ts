@@ -31,8 +31,8 @@ export class AdminProductService {
     return this.platformDataService.deleteAdminProduct(productId, user);
   }
 
-  takedownProduct(user: AuthUser, productId: number) {
-    return this.platformDataService.takedownAdminProduct(productId, user);
+  takedownProduct(user: AuthUser, productId: number, body: Record<string, unknown> = {}) {
+    return this.platformDataService.takedownAdminProduct(productId, user, body);
   }
 
   restoreProduct(user: AuthUser, productId: number) {

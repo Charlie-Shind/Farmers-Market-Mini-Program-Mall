@@ -354,7 +354,10 @@ const pendingRefundCount = computed(
 const toShipCount = computed(
   () =>
     ordersData.value.filter(
-      (item) => item.status === 'TO_SHIP' && item.payStatus === 1 && item.deliveryStatus === 0,
+      (item) =>
+        (item.status === 'TO_SHIP' || item.status === '待发货') &&
+        item.payStatus === 1 &&
+        item.deliveryStatus === 0,
     ).length,
 );
 

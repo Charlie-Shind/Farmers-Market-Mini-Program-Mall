@@ -71,6 +71,7 @@ type AdminProductRow = {
   merchantName: string;
   categoryName: string;
   auditStatus: string;
+  auditRemark?: string;
   status: string;
   minPrice: string;
   salesCount: number;
@@ -114,6 +115,10 @@ type AdminOrderRow = {
 type AdminOrderDetailRow = AdminOrderRow & {
   remark?: string;
   addressSnapshot?: any;
+  logisticsCompany?: string;
+  trackingNo?: string;
+  shippedAt?: string | null;
+  canShip?: boolean;
   items: Array<{
     orderItemId: number;
     productId: number;
@@ -162,6 +167,9 @@ type AdminAccountRow = {
   username: string;
   nickname: string;
   mobile: string;
+  loginPassword?: string;
+  merchantId?: number | null;
+  accountType?: 'PLATFORM' | 'MERCHANT';
   status: 'NORMAL' | 'DISABLED';
   lastLoginAt: string;
   roleCodes: string[];
@@ -307,6 +315,8 @@ const adminStorageKeys = [
   'farm-admin-permissions',
   'farm-admin-name',
   'farm-admin-account',
+  'farm-admin-account-type',
+  'farm-admin-merchant-id',
 ] as const;
 
 function clearAdminSession() {
@@ -407,6 +417,11 @@ export async function login(
     roleNames: string[];
     permissionKeys: string[];
     accountNo: string;
+    merchantId?: number | null;
+    accountType?: 'PLATFORM' | 'MERCHANT';
+    nickname?: string;
+    username?: string;
+    mobile?: string;
   }>('/auth/login', {
     method: 'POST',
     body: JSON.stringify({
@@ -423,6 +438,12 @@ export async function login(
   localStorage.setItem('farm-admin-role-codes', JSON.stringify(data.roleCodes ?? []));
   localStorage.setItem('farm-admin-role-names', JSON.stringify(data.roleNames ?? []));
   localStorage.setItem('farm-admin-permissions', JSON.stringify(data.permissionKeys ?? []));
+  localStorage.setItem('farm-admin-account-type', data.accountType ?? 'PLATFORM');
+  if (data.merchantId != null) {
+    localStorage.setItem('farm-admin-merchant-id', String(data.merchantId));
+  } else {
+    localStorage.removeItem('farm-admin-merchant-id');
+  }
 
   return data;
 }
@@ -601,6 +622,8 @@ export async function getOrders(query: QueryParams = {}) {
       pageSize: query.pageSize ?? 20,
       keyword: query.keyword,
       status: query.status,
+      payStatus: query.payStatus,
+      deliveryStatus: query.deliveryStatus,
     })}`,
   );
 }
@@ -639,6 +662,22 @@ export async function getGroupBuys(query: QueryParams = {}) {
 
 export async function getOrderDetail(orderNo: string) {
   return request<AdminOrderDetailRow>(`/orders/${orderNo}`);
+}
+
+export async function shipOrder(
+  orderNo: string,
+  body: { trackingNo: string; logisticsCompany?: string },
+) {
+  return request<{
+    orderNo: string;
+    trackingNo: string;
+    logisticsCompany: string;
+    deliveryStatus: number;
+    status: string;
+  }>(`/orders/${orderNo}/ship`, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
 }
 
 export async function getRefunds(query: QueryParams = {}) {
@@ -893,6 +932,12 @@ export async function takedownProduct(productId: number, reason: string) {
   });
 }
 
+export async function restoreProduct(productId: number) {
+  return request(`/products/${productId}/restore`, {
+    method: 'POST',
+  });
+}
+
 export async function createBanner(payload: Record<string, unknown>) {
   return request<BannerItem>('/banners', {
     method: 'POST',
@@ -1057,7 +1102,7 @@ export async function getAdminAccounts(query: QueryParams = {}) {
   return request<PageResponse<AdminAccountRow>>(
     `/admin-accounts${buildQueryString({
       page: query.page ?? 1,
-      pageSize: query.pageSize ?? 20,
+      pageSize: query.pageSize ?? 200,
       keyword: query.keyword,
       status: query.status,
     })}`,
@@ -1068,17 +1113,65 @@ export async function createAdminAccount(payload: {
   username: string;
   nickname: string;
   mobile?: string;
-  password: string;
+  password?: string;
   roleCodes: string[];
 }) {
-  const passwordHash = await sha256Hex(payload.password);
-  return request<AdminAccountRow>('/admin-accounts', {
+  const rawPassword = String(payload.password ?? '').trim();
+  const body: Record<string, unknown> = {
+    username: payload.username,
+    nickname: payload.nickname,
+    mobile: payload.mobile,
+    roleCodes: payload.roleCodes,
+  };
+  if (rawPassword) {
+    // 明文下发，后端同时写入 hash 与可查看的 loginPassword
+    body.password = rawPassword;
+  }
+
+  return request<AdminAccountRow & { initialPassword?: string }>('/admin-accounts', {
     method: 'POST',
-    body: JSON.stringify({
-      ...payload,
-      password: passwordHash,
-      passwordHashed: true,
-    }),
+    body: JSON.stringify(body),
+  });
+}
+
+export async function syncMerchantsAdminAccounts() {
+  return request<{
+    created: Array<{
+      merchantId: number;
+      mobile: string;
+      storeName: string;
+      username?: string;
+      initialPassword: string;
+      adminUserId: number;
+    }>;
+    ensured: Array<{
+      merchantId: number;
+      mobile: string;
+      storeName: string;
+      username?: string;
+      initialPassword: string;
+      adminUserId: number;
+    }>;
+    accounts: Array<{
+      merchantId: number;
+      mobile: string;
+      storeName: string;
+      username?: string;
+      initialPassword: string;
+      adminUserId: number;
+    }>;
+    skipped: Array<{
+      merchantId: number;
+      mobile: string;
+      storeName: string;
+      reason: string;
+    }>;
+    createdCount: number;
+    ensuredCount: number;
+    skippedCount: number;
+  }>('/admin-accounts/sync-merchants', {
+    method: 'POST',
+    body: JSON.stringify({}),
   });
 }
 
@@ -1097,12 +1190,37 @@ export async function updateAdminAccount(
   });
 }
 
-export async function resetAdminPassword(adminUserId: number, password: string) {
-  const passwordHash = await sha256Hex(password);
-  return request<{ success: boolean }>(`/admin-accounts/${adminUserId}/reset-password`, {
+export async function resetAdminPassword(adminUserId: number, password?: string) {
+  const rawPassword = String(password ?? '').trim();
+  const body: Record<string, unknown> = {};
+  if (rawPassword) {
+    // 明文下发，后端同时写入 hash 与可查看的 loginPassword
+    body.password = rawPassword;
+  }
+  return request<{
+    success: boolean;
+    initialPassword?: string;
+    loginPassword?: string;
+    username?: string;
+    mobile?: string;
+  }>(`/admin-accounts/${adminUserId}/reset-password`, {
     method: 'POST',
-    body: JSON.stringify({ password: passwordHash, passwordHashed: true }),
+    body: JSON.stringify(body),
   });
+}
+
+export async function auditMerchantProfile(
+  merchantId: number,
+  action: 'approve' | 'reject',
+  remark?: string,
+) {
+  return request<{ success: boolean; profileAuditStatus: number }>(
+    `/merchants/${merchantId}/profile-audit`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ action, remark }),
+    },
+  );
 }
 
 export async function getAdminRoles(query: QueryParams = {}) {

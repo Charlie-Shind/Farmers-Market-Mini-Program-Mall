@@ -1253,7 +1253,7 @@
         <header class="action-card__head">
           <div>
             <h3 style="color: var(--danger);">{{ dangerConfirm.title }}</h3>
-            <p>{{ dangerConfirm.description }}</p>
+            <p style="white-space: pre-line;">{{ dangerConfirm.description }}</p>
           </div>
           <button type="button" class="text-btn" @click="closeDangerConfirm">取消</button>
         </header>
@@ -1269,6 +1269,86 @@
           <button type="button" class="ghost-btn" @click="closeDangerConfirm">我再想想</button>
           <button type="button" class="primary-btn danger-btn" @click="confirmDangerAction">
             确认执行 — {{ dangerConfirm.actionLabel }}
+          </button>
+        </footer>
+      </section>
+    </div>
+
+    <div v-if="exportModal.open" class="action-modal" @click.self="closeExportModal">
+      <section class="action-card action-card--narrow" role="dialog" aria-modal="true" aria-label="导出数据">
+        <header class="action-card__head">
+          <div>
+            <h3>导出 {{ config.title }}</h3>
+            <p>按当前筛选条件导出 CSV，可选择全部、当前页或指定页码范围。</p>
+          </div>
+          <button type="button" class="text-btn" :disabled="exportModal.loading" @click="closeExportModal">关闭</button>
+        </header>
+
+        <div class="action-card__body">
+          <div v-if="exportModal.error" class="panel-banner warn">
+            <strong>提示</strong>
+            <span>{{ exportModal.error }}</span>
+          </div>
+
+          <div class="panel-banner success">
+            <strong>当前筛选</strong>
+            <span>{{ searchSummary || '全部' }} · 共 {{ total }} 条 · 每页 {{ pageSize }} 条 · 共 {{ totalPages }} 页</span>
+          </div>
+
+          <label class="export-option">
+            <input v-model="exportModal.mode" type="radio" value="current" :disabled="exportModal.loading" />
+            <div>
+              <strong>导出当前页</strong>
+              <span>第 {{ currentPage }} 页，约 {{ visibleRows.length }} 条</span>
+            </div>
+          </label>
+
+          <label class="export-option">
+            <input v-model="exportModal.mode" type="radio" value="all" :disabled="exportModal.loading" />
+            <div>
+              <strong>导出全部</strong>
+              <span>当前筛选下全部 {{ total }} 条</span>
+            </div>
+          </label>
+
+          <label class="export-option">
+            <input v-model="exportModal.mode" type="radio" value="range" :disabled="exportModal.loading" />
+            <div>
+              <strong>导出指定页码</strong>
+              <span>按列表分页，从第几页导出到第几页</span>
+            </div>
+          </label>
+
+          <div v-if="exportModal.mode === 'range'" class="export-range">
+            <label class="form-field">
+              <span>起始页</span>
+              <input
+                v-model.number="exportModal.fromPage"
+                type="number"
+                min="1"
+                :max="totalPages"
+                :disabled="exportModal.loading"
+              />
+            </label>
+            <label class="form-field">
+              <span>结束页</span>
+              <input
+                v-model.number="exportModal.toPage"
+                type="number"
+                min="1"
+                :max="totalPages"
+                :disabled="exportModal.loading"
+              />
+            </label>
+          </div>
+
+          <p class="export-hint">预计导出约 {{ exportEstimateCount }} 条记录</p>
+        </div>
+
+        <footer class="action-card__foot">
+          <button type="button" class="ghost-btn" :disabled="exportModal.loading" @click="closeExportModal">取消</button>
+          <button type="button" class="primary-btn" :disabled="exportModal.loading" @click="confirmExport">
+            {{ exportModal.loading ? '导出中…' : '开始导出' }}
           </button>
         </footer>
       </section>
@@ -1600,6 +1680,7 @@ import { Check, Clock, Loading, Promotion, Star } from '@element-plus/icons-vue'
 
 import {
   auditMerchant,
+  auditMerchantProfile,
   auditProduct,
   arbitrateRefund,
   createAdminProduct,
@@ -1635,6 +1716,7 @@ import {
   issueCoupon,
   adjustAdminUserPoints,
   takedownProduct,
+  restoreProduct,
   pauseActivity,
   publishActivity,
   updateActivity,
@@ -2480,6 +2562,52 @@ function confirmDangerAction() {
   dangerConfirm.onConfirm();
 }
 
+const exportModal = reactive({
+  open: false,
+  mode: 'current' as 'current' | 'all' | 'range',
+  fromPage: 1,
+  toPage: 1,
+  loading: false,
+  error: '',
+});
+
+const exportEstimateCount = computed(() => {
+  if (exportModal.mode === 'current' || !supportsPagination.value) {
+    return visibleRows.value.length;
+  }
+  if (exportModal.mode === 'all') {
+    return total.value;
+  }
+  const from = Math.min(Math.max(1, Math.floor(Number(exportModal.fromPage) || 1)), totalPages.value);
+  const to = Math.min(Math.max(from, Math.floor(Number(exportModal.toPage) || from)), totalPages.value);
+  let count = 0;
+  for (let page = from; page <= to; page += 1) {
+    if (page === totalPages.value) {
+      count += Math.max(0, total.value - (page - 1) * pageSize.value);
+    } else {
+      count += Math.min(pageSize.value, Math.max(0, total.value - (page - 1) * pageSize.value));
+    }
+  }
+  return count;
+});
+
+function openExportModal() {
+  exportModal.open = true;
+  exportModal.mode = 'current';
+  exportModal.fromPage = currentPage.value;
+  exportModal.toPage = currentPage.value;
+  exportModal.loading = false;
+  exportModal.error = '';
+}
+
+function closeExportModal() {
+  if (exportModal.loading) {
+    return;
+  }
+  exportModal.open = false;
+  exportModal.error = '';
+}
+
 // ——— Quick-lookup profile drawer ———
 type ProfileEntry = { label: string; value: string; highlight?: boolean };
 
@@ -2733,11 +2861,15 @@ const activeFilterValues = computed<Record<string, string>>(() => {
 const hasAnyFilters = computed(
   () => Boolean(keyword.value) || filterDefs.value.some((filter) => Boolean(activeFilterValues.value[filter.key])),
 );
-const visibleRows = computed(() =>
-  rows.value.filter((row) =>
+const visibleRows = computed(() => {
+  // 分页列表已由服务端按筛选条件查询，避免客户端二次过滤把结果误伤为空
+  if (supportsPagination.value) {
+    return rows.value;
+  }
+  return rows.value.filter((row) =>
     filterDefs.value.every((filter) => matchesFilter(row, filter.key, activeFilterValues.value[filter.key])),
-  ),
-);
+  );
+});
 
 function getSelectableId(row: any): string | number | null {
   if (props.resourceKey === 'orders') return row.orderNo ?? null;
@@ -2868,7 +3000,7 @@ const summaryCards = computed(() => {
     ['PENDING_AUDIT', 'PENDING_REVIEW', 'PENDING_ARBITRATION'].includes(String(item.auditStatus ?? item.status)),
   ).length;
   const okCount = visibleRows.value.filter((item) =>
-    ['APPROVED', 'NORMAL', 'ON_SHELF', 'RUNNING', 'PUBLISHED', 'TO_SHIP', 'COMPLETED', true].includes(
+    ['APPROVED', 'NORMAL', 'ON_SHELF', 'RUNNING', 'PUBLISHED', 'TO_SHIP', 'COMPLETED', '待发货', '已完成', true].includes(
       item.auditStatus ?? item.status ?? item.active,
     ),
   ).length;
@@ -2973,68 +3105,9 @@ async function loadRows(): Promise<boolean> {
   selectedIds.value = [];
 
   try {
-    const query = buildServerQuery();
-
-    switch (props.resourceKey) {
-      case 'users': {
-        const data = await getUsers(query);
-        rows.value = data.items;
-        total.value = data.total;
-        break;
-      }
-      case 'merchants': {
-        const data = await getMerchants(query);
-        rows.value = data.items;
-        total.value = data.total;
-        break;
-      }
-      case 'products': {
-        const data = await getProducts(query);
-        rows.value = data.items;
-        total.value = data.total;
-        break;
-      }
-      case 'coupons': {
-        const data = await getCoupons(query);
-        rows.value = data.items;
-        total.value = data.total;
-        break;
-      }
-      case 'activities': {
-        const data = await getActivities(query);
-        rows.value = data;
-        total.value = data.length;
-        break;
-      }
-      case 'orders': {
-        const data = await getOrders(query);
-        rows.value = data.items;
-        total.value = data.total;
-        break;
-      }
-      case 'refunds': {
-        const data = await getRefunds(query);
-        rows.value = data.items;
-        total.value = data.total;
-        break;
-      }
-      case 'withdraws': {
-        const data = await getWithdraws(query);
-        rows.value = data.items;
-        total.value = data.total;
-        break;
-      }
-      case 'logistics': {
-        const data = await getLogisticsRules(query);
-        rows.value = data;
-        total.value = data.length;
-        break;
-      }
-
-      default:
-        rows.value = [];
-        total.value = 0;
-    }
+    const data = await fetchResourcePage(buildServerQuery());
+    rows.value = data.items;
+    total.value = data.total;
 
     if (supportsPagination.value && total.value > 0) {
       const lastPage = Math.max(1, Math.ceil(total.value / pageSize.value));
@@ -3050,6 +3123,84 @@ async function loadRows(): Promise<boolean> {
   } finally {
     loading.value = false;
   }
+}
+
+async function fetchResourcePage(
+  query: Record<string, string | number | boolean>,
+): Promise<{ items: any[]; total: number }> {
+  switch (props.resourceKey) {
+    case 'users': {
+      const data = await getUsers(query);
+      return { items: data.items, total: data.total };
+    }
+    case 'merchants': {
+      const data = await getMerchants(query);
+      return { items: data.items, total: data.total };
+    }
+    case 'products': {
+      const data = await getProducts(query);
+      return { items: data.items, total: data.total };
+    }
+    case 'coupons': {
+      const data = await getCoupons(query);
+      return { items: data.items, total: data.total };
+    }
+    case 'activities': {
+      const data = await getActivities(query);
+      return { items: data, total: data.length };
+    }
+    case 'orders': {
+      const data = await getOrders(query);
+      return { items: data.items, total: data.total };
+    }
+    case 'refunds': {
+      const data = await getRefunds(query);
+      return { items: data.items, total: data.total };
+    }
+    case 'withdraws': {
+      const data = await getWithdraws(query);
+      return { items: data.items, total: data.total };
+    }
+    case 'logistics': {
+      const data = await getLogisticsRules(query);
+      return { items: data, total: data.length };
+    }
+    default:
+      return { items: [], total: 0 };
+  }
+}
+
+async function fetchRowsForExport(): Promise<any[]> {
+  if (!supportsPagination.value || exportModal.mode === 'current') {
+    return [...visibleRows.value];
+  }
+
+  const baseQuery = { ...buildServerQuery() };
+  let fromPage = 1;
+  let toPage = 1;
+  let exportPageSize = pageSize.value;
+
+  if (exportModal.mode === 'all') {
+    exportPageSize = 100;
+    toPage = Math.max(1, Math.ceil(total.value / exportPageSize));
+  } else {
+    fromPage = Math.min(Math.max(1, Math.floor(Number(exportModal.fromPage) || 1)), totalPages.value);
+    toPage = Math.min(Math.max(fromPage, Math.floor(Number(exportModal.toPage) || fromPage)), totalPages.value);
+  }
+
+  const items: any[] = [];
+  for (let page = fromPage; page <= toPage; page += 1) {
+    const data = await fetchResourcePage({
+      ...baseQuery,
+      page,
+      pageSize: exportPageSize,
+    });
+    items.push(...data.items);
+    if (!data.items.length) {
+      break;
+    }
+  }
+  return items;
 }
 
 function handleReload() {
@@ -3101,12 +3252,66 @@ function goToPage(page: number) {
 }
 
 async function handleSecondaryAction() {
+  if (config.value.secondaryAction === '刷新') {
+    handleReload();
+    return;
+  }
+
+  if (config.value.secondaryAction === '导出') {
+    if (!supportsPagination.value) {
+      try {
+        downloadRowsAsCsv(visibleRows.value);
+        actionMessage.value = `已导出 ${visibleRows.value.length} 条记录为 CSV`;
+        actionError.value = '';
+      } catch (error) {
+        actionError.value = error instanceof Error ? error.message : '导出失败';
+      }
+      return;
+    }
+    openExportModal();
+    return;
+  }
+
   try {
-    await downloadRowsAsCsv();
+    downloadRowsAsCsv(visibleRows.value);
     actionMessage.value = `${config.value.secondaryAction} 已导出为 CSV`;
     actionError.value = '';
   } catch (error) {
     actionError.value = error instanceof Error ? error.message : '导出失败';
+  }
+}
+
+async function confirmExport() {
+  if (exportModal.loading) {
+    return;
+  }
+
+  if (exportModal.mode === 'range') {
+    const from = Math.floor(Number(exportModal.fromPage) || 0);
+    const to = Math.floor(Number(exportModal.toPage) || 0);
+    if (from < 1 || to < 1 || from > totalPages.value || to > totalPages.value || from > to) {
+      exportModal.error = `请输入有效页码范围（1 ~ ${totalPages.value}，且起始页 ≤ 结束页）`;
+      return;
+    }
+  }
+
+  exportModal.loading = true;
+  exportModal.error = '';
+
+  try {
+    const exportRows = await fetchRowsForExport();
+    if (!exportRows.length) {
+      exportModal.error = '没有可导出的数据';
+      return;
+    }
+    downloadRowsAsCsv(exportRows);
+    actionMessage.value = `已导出 ${exportRows.length} 条记录为 CSV`;
+    actionError.value = '';
+    exportModal.open = false;
+  } catch (error) {
+    exportModal.error = error instanceof Error ? error.message : '导出失败';
+  } finally {
+    exportModal.loading = false;
   }
 }
 
@@ -3211,7 +3416,7 @@ function rowKey(row: any) {
 }
 
 function isStatusCell(key: string) {
-  return ['status', 'auditStatus', 'payStatus', 'deliveryStatus', 'active'].includes(key);
+  return ['status', 'auditStatus', 'payStatus', 'deliveryStatus', 'active', 'profileAuditLabel'].includes(key);
 }
 
 function isProfileLink(key: string, row: any) {
@@ -3288,6 +3493,21 @@ function formatCell(key: string, row: any) {
     return statusLabel(String(value));
   }
 
+  if (key === 'profileAuditLabel') {
+    if (Number(row.profileAuditStatus) === 1) return '资料变更待审';
+    if (Number(row.profileAuditStatus) === 3) return row.profileAuditRemark ? `已驳回：${row.profileAuditRemark}` : '资料已驳回';
+    return value ? String(value) : '—';
+  }
+
+  if (key === 'adminUsername') {
+    if (row.hasAdminAccount === false) return '未开通';
+    return value ? String(value) : '—';
+  }
+
+  if (key === 'adminPassword') {
+    return value ? String(value) : (row.hasAdminAccount ? '—' : '未开通');
+  }
+
   if (key === 'activityType') {
     return ACTIVITY_TYPE_MAP[String(value)] ?? value ?? '-';
   }
@@ -3303,11 +3523,18 @@ function formatCell(key: string, row: any) {
   }
 
   if (key === 'payStatus') {
-    return value === 1 ? '已支付' : '待支付';
+    const n = Number(value);
+    if (n === 1) return '已支付';
+    if (n === 0) return '待支付';
+    return value == null || value === '' ? '-' : String(value);
   }
 
   if (key === 'deliveryStatus') {
-    return value === 2 ? '已发货' : value === 1 ? '待发货' : '未发货';
+    const n = Number(value);
+    if (n === 2) return '已发货';
+    if (n === 1) return '待发货';
+    if (n === 0) return '未发货';
+    return value == null || value === '' ? '-' : String(value);
   }
 
   if (key === 'remainingStock') {
@@ -3353,7 +3580,10 @@ function statusLabel(value: string) {
     ENDED: '已结束',
     PENDING_PAY: '待支付',
     TO_SHIP: '待发货',
+    SHIPPED: '已发货',
     COMPLETED: '已完成',
+    CANCELLED: '已取消',
+    CANCELED: '已取消',
     PENDING_ARBITRATION: '待仲裁',
     MERCHANT_REPLIED: '商家回复',
     REVOKED: '已撤回',
@@ -3366,15 +3596,18 @@ function statusLabel(value: string) {
 function statusClass(key: string, row: any) {
   const value = String(row[key]);
 
-  if (['NORMAL', 'APPROVED', 'ON_SHELF', 'RUNNING', 'PUBLISHED', 'COMPLETED', 'TO_SHIP', 'ENABLED'].includes(value) || row[key] === true) {
+  if (
+    ['NORMAL', 'APPROVED', 'ON_SHELF', 'RUNNING', 'PUBLISHED', 'COMPLETED', 'TO_SHIP', 'ENABLED', '已完成', '待发货', '已发货', '已支付'].includes(value)
+    || row[key] === true
+  ) {
     return 'ok';
   }
 
-  if (['PENDING_AUDIT', 'PENDING_PAY', 'PENDING_ARBITRATION', 'MERCHANT_REPLIED', 'PAUSED'].includes(value)) {
+  if (['PENDING_AUDIT', 'PENDING_PAY', 'PENDING_ARBITRATION', 'MERCHANT_REPLIED', 'PAUSED', '待支付', '待审核', '待仲裁', '资料变更待审'].includes(value)) {
     return 'warn';
   }
 
-  if (['DISABLED', 'REJECTED', 'OFF_SHELF', 'DRAFT', 'REVOKED'].includes(value) || row[key] === false) {
+  if (['DISABLED', 'REJECTED', 'OFF_SHELF', 'DRAFT', 'REVOKED', 'CANCELLED', 'CANCELED', '已取消', '已拒绝', '已下架'].includes(value) || row[key] === false) {
     return 'danger';
   }
 
@@ -3389,33 +3622,47 @@ function rowActions(row: any) {
         { key: 'toggle', label: '切换状态' },
       ];
     case 'merchants': {
+      const isMerchantAccount = localStorage.getItem('farm-admin-account-type') === 'MERCHANT';
       const actions = [
         { key: 'view', label: '详情' },
         { key: 'edit', label: '编辑' },
-        { key: 'delete', label: '删除' },
       ];
-      if (String(row.auditStatus) === 'PENDING_AUDIT') {
+      if (!isMerchantAccount) {
+        actions.push({ key: 'delete', label: '删除' });
+      }
+      if (!isMerchantAccount && Number(row.profileAuditStatus) === 1) {
+        return [
+          { key: 'profileApprove', label: '通过资料' },
+          { key: 'profileReject', label: '驳回资料' },
+          ...actions,
+        ];
+      }
+      if (!isMerchantAccount && String(row.auditStatus) === 'PENDING_AUDIT') {
         return [
           { key: 'audit', label: '审核' },
           { key: 'reject', label: '拒绝' },
           ...actions,
         ];
       }
-      if (String(row.auditStatus) === 'APPROVED') {
+      if (!isMerchantAccount && String(row.auditStatus) === 'APPROVED') {
         return [
           ...actions,
+          ...(row.adminPassword
+            ? [{ key: 'copyAdminPassword', label: '复制密码' }]
+            : []),
           { key: 'revoke', label: '撤回' },
         ];
       }
       return actions;
     }
     case 'products': {
+      const isMerchantAccount = localStorage.getItem('farm-admin-account-type') === 'MERCHANT';
       const actions = [
         { key: 'view', label: '详情' },
         { key: 'edit', label: '编辑' },
         { key: 'delete', label: '删除' },
       ];
-      if (String(row.auditStatus) === 'PENDING_AUDIT') {
+      if (!isMerchantAccount && String(row.auditStatus) === 'PENDING_AUDIT') {
         return [
           { key: 'audit', label: '审核' },
           { key: 'reject', label: '拒绝' },
@@ -3427,6 +3674,8 @@ function rowActions(row: any) {
         approvedActions.push({ key: 'revoke', label: '撤回' });
         if (String(row.status) === 'ON_SHELF') {
           approvedActions.push({ key: 'takedown', label: '下架' });
+        } else {
+          approvedActions.push({ key: 'restore', label: '重新上架' });
         }
         return approvedActions;
       }
@@ -3451,7 +3700,8 @@ function rowActions(row: any) {
       return actions;
     }
     case 'orders': {
-      const isCompleted = String(row.status) === 'COMPLETED' || Number(row.deliveryStatus) === 2;
+      const status = String(row.status);
+      const isCompleted = status === 'COMPLETED' || status === '已完成' || Number(row.deliveryStatus) === 2;
       if (isCompleted) {
         return [{ key: 'detail', label: '详情' }];
       }
@@ -3504,10 +3754,38 @@ async function handleRowAction(action: string, row: any) {
   actionError.value = '';
 
   try {
+    if (props.resourceKey === 'merchants' && action === 'copyAdminPassword') {
+      const password = String(row.adminPassword ?? '').trim();
+      if (!password) {
+        ElMessage.warning('该商户暂无后台登录密码，请先同步商户账号或重置密码');
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(
+          `店铺：${row.storeName}\n账号：${row.adminUsername || row.mobile}\n密码：${password}`,
+        );
+        ElMessage.success('已复制后台账号与密码');
+      } catch {
+        await ElMessageBox.alert(
+          `店铺：${row.storeName}\n账号：${row.adminUsername || row.mobile}\n密码：${password}`,
+          '后台登录信息',
+          { confirmButtonText: '关闭' },
+        );
+      }
+      return;
+    }
+
     if (props.resourceKey === 'merchants' && action === 'audit') {
-      await auditMerchant(row.id);
-      actionMessage.value = `商户「${row.storeName ?? row.name ?? row.id}」已通过审核`;
-      await loadRows();
+      openDangerConfirm(
+        '确认审核通过',
+        `确认通过商户「${row.storeName ?? row.name ?? row.id}」的入驻审核？通过后商户将获得经营权限。`,
+        '通过审核',
+        async () => {
+          await auditMerchant(row.id);
+          actionMessage.value = `商户「${row.storeName ?? row.name ?? row.id}」已通过审核`;
+          await loadRows();
+        },
+      );
       return;
     }
 
@@ -3529,6 +3807,40 @@ async function handleRowAction(action: string, row: any) {
         async () => {
           await auditMerchant(row.id, 2, '管理员撤回审核');
           actionMessage.value = `商户「${row.storeName ?? row.name ?? row.id}」已撤回审核，状态已重置`;
+          await loadRows();
+        },
+      );
+      return;
+    }
+
+    if (props.resourceKey === 'merchants' && action === 'profileApprove') {
+      openDangerConfirm(
+        '通过商户资料变更',
+        `确认通过商户「${row.storeName ?? row.id}」提交的资料变更？通过后将更新正式店铺信息。`,
+        '通过资料',
+        async () => {
+          await auditMerchantProfile(row.id, 'approve');
+          actionMessage.value = `商户「${row.storeName ?? row.id}」资料变更已通过`;
+          await loadRows();
+        },
+      );
+      return;
+    }
+
+    if (props.resourceKey === 'merchants' && action === 'profileReject') {
+      openDangerConfirm(
+        '驳回商户资料变更',
+        `即将驳回商户「${row.storeName ?? row.id}」的资料变更申请。`,
+        '驳回资料',
+        async () => {
+          const { value } = await ElMessageBox.prompt('请填写驳回原因', '驳回资料变更', {
+            confirmButtonText: '确认驳回',
+            cancelButtonText: '取消',
+            inputPlaceholder: '例如：联系方式不规范',
+          }).catch(() => ({ value: '' }));
+          if (!value) return;
+          await auditMerchantProfile(row.id, 'reject', String(value));
+          actionMessage.value = `商户「${row.storeName ?? row.id}」资料变更已驳回`;
           await loadRows();
         },
       );
@@ -3596,6 +3908,24 @@ async function handleRowAction(action: string, row: any) {
         `即将下架商品「${row.title ?? row.name ?? row.id}」，下架后商品将在C端不可见。`,
         '下架商品',
         () => openRejectModal('下架商品', '请填写下架原因，该信息将推送给商家', 'products', row, 'takedown'),
+      );
+      return;
+    }
+
+    if (props.resourceKey === 'products' && action === 'restore') {
+      const reason = String(row.auditRemark ?? '').trim();
+      const reasonText = reason
+        ? `下架原因：${reason}`
+        : '未记录下架原因（可能为商户自行下架或历史数据）。';
+      openDangerConfirm(
+        '确认重新上架',
+        `商品「${row.title ?? row.name ?? row.id}」当前为下架状态。\n${reasonText}\n\n确认后商品将重新在 C 端可见，是否继续上架？`,
+        '确认上架',
+        async () => {
+          await restoreProduct(Number(row.id));
+          actionMessage.value = `商品「${row.title ?? row.name ?? row.id}」已重新上架`;
+          await loadRows();
+        },
       );
       return;
     }
@@ -3852,6 +4182,7 @@ function actionLabel(action: string) {
     edit: '编辑',
     forceEnd: '强制下线',
     takedown: '下架',
+    restore: '重新上架',
   };
 
   return map[action] ?? action;
@@ -4303,11 +4634,11 @@ function goActionRoute() {
   }
 }
 
-async function downloadRowsAsCsv() {
+function downloadRowsAsCsv(exportRows: any[]) {
   const headers = config.value.columns.filter((column) => column.key !== 'actions');
   const lines = [
     headers.map((column) => escapeCsv(column.label)).join(','),
-    ...visibleRows.value.map((row) =>
+    ...exportRows.map((row) =>
       headers
         .map((column) => {
           const rawValue = formatCell(column.key, row);
@@ -4317,11 +4648,17 @@ async function downloadRowsAsCsv() {
     ),
   ];
 
-  const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const blob = new Blob([`\uFEFF${lines.join('\n')}`], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement('a');
   anchor.href = url;
-  anchor.download = `farm-admin-${props.resourceKey}-${Date.now()}.csv`;
+  const modeTag =
+    exportModal.mode === 'all'
+      ? 'all'
+      : exportModal.mode === 'range'
+        ? `p${exportModal.fromPage}-${exportModal.toPage}`
+        : `p${currentPage.value}`;
+  anchor.download = `farm-admin-${props.resourceKey}-${modeTag}-${Date.now()}.csv`;
   document.body.appendChild(anchor);
   anchor.click();
   anchor.remove();
@@ -5701,6 +6038,7 @@ function getUserTierClass(orderCount: number | string): string {
   border: 1px solid var(--line);
   border-radius: 12px;
   padding: 14px;
+  margin: 10px 0;
 }
 
 .meta-grid {
@@ -5827,6 +6165,7 @@ function getUserTierClass(orderCount: number | string): string {
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 8px;
+  margin-bottom: 10px;
 }
 
 .sku-preview-img {
@@ -6033,6 +6372,7 @@ function getUserTierClass(orderCount: number | string): string {
   border: 1px solid var(--line);
   border-radius: 12px;
   padding: 14px;
+  margin: 10px 0;
 }
 
 .status-rejected {

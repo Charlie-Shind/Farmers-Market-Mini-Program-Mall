@@ -13,4 +13,8 @@ export class AdminOrderService {
   getOrder(orderNo: string) {
     return this.platformDataService.getAdminOrderDetail(orderNo);
   }
+
+  shipOrder(orderNo: string, body: Record<string, unknown>) {
+    return this.platformDataService.shipAdminOrder(orderNo, body);
+  }
 }

@@ -156,8 +156,11 @@ export const resourceConfigs: Record<ResourceKey, ResourceConfig> = {
       { key: 'storeName', label: '店铺名称' },
       { key: 'contactName', label: '联系人' },
       { key: 'mobile', label: '手机号' },
+      { key: 'adminUsername', label: '后台账号' },
+      { key: 'adminPassword', label: '登录密码' },
       { key: 'region', label: '区域' },
-      { key: 'auditStatus', label: '审核状态' },
+      { key: 'auditStatus', label: '入驻审核' },
+      { key: 'profileAuditLabel', label: '资料变更' },
       { key: 'productCount', label: '商品数' },
       { key: 'walletAmount', label: '钱包余额' },
       { key: 'actions', label: '操作' },
@@ -170,6 +173,7 @@ export const resourceConfigs: Record<ResourceKey, ResourceConfig> = {
           { label: '待审核', value: 'PENDING_AUDIT' },
           { label: '已通过', value: 'APPROVED' },
           { label: '已拒绝', value: 'REJECTED' },
+          { label: '资料变更待审', value: 'PROFILE_PENDING' },
         ],
       },
     ],
@@ -207,12 +211,11 @@ export const resourceConfigs: Record<ResourceKey, ResourceConfig> = {
         options: [
           { label: '已上架', value: 'ON_SHELF' },
           { label: '已下架', value: 'OFF_SHELF' },
-          { label: '草稿', value: 'DRAFT' },
         ],
       },
       {
         key: 'productNature',
-        label: '有机认证',
+        label: '商品属性',
         options: [
           { label: '仅看有机认证', value: '有机' },
         ],
@@ -339,7 +342,9 @@ export const resourceConfigs: Record<ResourceKey, ResourceConfig> = {
         options: [
           { label: '待支付', value: 'PENDING_PAY' },
           { label: '待发货', value: 'TO_SHIP' },
+          { label: '已发货', value: 'SHIPPED' },
           { label: '已完成', value: 'COMPLETED' },
+          { label: '已取消', value: 'CANCELLED' },
         ],
       },
       {

@@ -93,6 +93,14 @@ type TraceTimelineItemView = {
 
 type AccountScope = 'USER' | 'ADMIN';
 
+const MERCHANT_ADMIN_PERMISSION_KEYS = [
+  'orders',
+  'products',
+  'withdraws',
+  'refunds',
+  'merchants',
+] as const;
+
 const ADMIN_PERMISSION_KEYS = [
   'dashboard',
   'analytics',
@@ -141,6 +149,19 @@ export class PlatformDataService {
       return Array.from(new Set(value.map((item) => String(item).trim()).filter((item) => this.adminPermissionKeySet.has(item))));
     }
 
+    if (value && typeof value === 'object') {
+      const record = value as Record<string, unknown>;
+      if (record.all === true) {
+        return [...ADMIN_PERMISSION_KEYS];
+      }
+      if (Array.isArray(record.permissionKeys)) {
+        return this.normalizeAdminPermissionKeys(record.permissionKeys);
+      }
+      if (Array.isArray(record.keys)) {
+        return this.normalizeAdminPermissionKeys(record.keys);
+      }
+    }
+
     if (typeof value === 'string') {
       const trimmed = value.trim();
       if (!trimmed) {
@@ -185,11 +206,77 @@ export class PlatformDataService {
       return this.expandAdminPermissionKeys(permissionKeys);
     }
 
-    if (roleCode === 'ADMIN') {
+    if (roleCode === 'MERCHANT_ADMIN') {
+      return [...MERCHANT_ADMIN_PERMISSION_KEYS];
+    }
+
+    if (roleCode === 'ADMIN' || roleCode === 'SUPER_ADMIN') {
       return [...ADMIN_PERMISSION_KEYS];
     }
 
     return [...ADMIN_PERMISSION_KEYS];
+  }
+
+  private generateRandomPassword(length = 6): string {
+    const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
+    let result = '';
+    for (let i = 0; i < length; i += 1) {
+      result += alphabet[Math.floor(Math.random() * alphabet.length)];
+    }
+    return result;
+  }
+
+  /** 平台管理员返回 null；商户后台账号返回绑定的 merchantId */
+  private async resolveAdminMerchantScope(authUser?: AuthUser | null): Promise<number | null> {
+    if (!authUser || authUser.role !== RoleCode.ADMIN) {
+      return null;
+    }
+    if (authUser.merchantId != null && Number.isFinite(Number(authUser.merchantId))) {
+      return Number(authUser.merchantId);
+    }
+    const adminId = this.parseAdminIdFromAuth(authUser);
+    if (adminId == null) {
+      return null;
+    }
+    const admin = await this.prisma.adminUser.findFirst({
+      where: { id: BigInt(adminId), deletedAt: null },
+      select: { merchantId: true },
+    });
+    return admin?.merchantId != null ? this.toNumber(admin.merchantId) : null;
+  }
+
+  private parseAdminIdFromAuth(authUser?: AuthUser | null): number | null {
+    if (!authUser?.sub) {
+      return null;
+    }
+    const matched = String(authUser.sub).match(/^admin_(\d+)$/i);
+    if (!matched) {
+      return null;
+    }
+    const id = Number(matched[1]);
+    return Number.isFinite(id) ? id : null;
+  }
+
+  private assertPlatformAdmin(merchantScope: number | null, message = '商户账号无权执行此操作') {
+    if (merchantScope != null) {
+      throw new ForbiddenException(message);
+    }
+  }
+
+  private async ensureMerchantAdminRole() {
+    await this.prisma.adminRole.upsert({
+      where: { code: 'MERCHANT_ADMIN' },
+      create: {
+        code: 'MERCHANT_ADMIN',
+        name: '商户管理员',
+        permissionJson: { permissionKeys: [...MERCHANT_ADMIN_PERMISSION_KEYS] },
+        status: 1,
+      },
+      update: {
+        name: '商户管理员',
+        status: 1,
+      },
+    });
   }
 
   private findMockImagesDir(): string | null {
@@ -1254,20 +1341,35 @@ export class PlatformDataService {
     };
   }
 
-  private getAdminOrderStatusLabel(orderStatus: number): string {
-    if (orderStatus === 1) {
-      return 'PENDING_PAY';
-    }
-
-    if (orderStatus === 2) {
-      return 'TO_SHIP';
+  private getAdminOrderStatusLabel(orderStatus: number, deliveryStatus?: number, payStatus?: number): string {
+    if (orderStatus === 4) {
+      return '已取消';
     }
 
     if (orderStatus === 3) {
-      return 'COMPLETED';
+      return '已完成';
     }
 
-    return 'CANCELLED';
+    // 已支付：按物流进度展示，避免 orderStatus 仍为待接单(1) 时误显示「待支付」
+    if (payStatus === 1) {
+      if (deliveryStatus != null && deliveryStatus >= 2) {
+        return '已发货';
+      }
+      return '待发货';
+    }
+
+    if (orderStatus === 1 || payStatus === 0) {
+      return '待支付';
+    }
+
+    if (orderStatus === 2) {
+      if (deliveryStatus != null && deliveryStatus >= 2) {
+        return '已发货';
+      }
+      return '待发货';
+    }
+
+    return '已取消';
   }
 
   private getRefundStatusLabel(status: number): string {
@@ -2437,11 +2539,14 @@ export class PlatformDataService {
         accountNo: await this.generateAccountNo('ADMIN'),
         username: 'admin',
         passwordHash: this.hashPassword('admin123456'),
+        loginPassword: 'admin123456',
         nickname: '平台管理员',
         mobile: '13800000001',
         status: 1,
       },
-      update: {},
+      update: {
+        loginPassword: 'admin123456',
+      },
     });
 
     const adminRoleSeedCount = await this.prisma.adminRole.count();
@@ -2452,9 +2557,17 @@ export class PlatformDataService {
           { code: 'OPERATOR', name: '运营', status: 1 },
           { code: 'AUDITOR', name: '审核员', status: 1 },
           { code: 'CS', name: '客服', status: 1 },
+          {
+            code: 'MERCHANT_ADMIN',
+            name: '商户管理员',
+            permissionJson: { permissionKeys: [...MERCHANT_ADMIN_PERMISSION_KEYS] },
+            status: 1,
+          },
         ],
       });
     }
+
+    await this.ensureMerchantAdminRole();
 
     const adminRole = await this.prisma.adminRole.findUnique({ where: { code: 'ADMIN' } });
     if (adminRole) {
@@ -6754,7 +6867,13 @@ export class PlatformDataService {
 
   async createAdminProduct(body: Record<string, unknown>, authUser?: AuthUser) {
     await this.withSeed();
-    const merchant = await this.ensurePlatformMerchant();
+    const merchantScope = await this.resolveAdminMerchantScope(authUser);
+    const merchant = merchantScope != null
+      ? await this.prisma.merchant.findFirst({ where: { id: BigInt(merchantScope), deletedAt: null } })
+      : await this.ensurePlatformMerchant();
+    if (!merchant) {
+      throw new NotFoundException('Merchant not found');
+    }
     const categories = await this.prisma.category.findMany({ orderBy: { sortOrder: 'asc' } });
     const categoryId = body.categoryId ? Number(body.categoryId) : this.toNumber(categories[0]?.id ?? 0);
     if (!categoryId) {
@@ -6773,7 +6892,12 @@ export class PlatformDataService {
     const serviceTags = this.normalizeProductServiceTags(body.serviceTags, Number(body.deliveryType ?? 1));
     const traceInfo = body.traceInfo ?? body.trace;
     const defaultPrice = String(body.price ?? '0.00');
-    const publishImmediately = body.publishImmediately == null ? true : Boolean(body.publishImmediately);
+    const isMerchantEditor = merchantScope != null;
+    const publishImmediately = isMerchantEditor
+      ? false
+      : body.publishImmediately == null
+        ? true
+        : Boolean(body.publishImmediately);
     const groupBuyConfig = this.normalizeGroupBuyConfig(
       body.groupBuyConfig as Prisma.JsonValue | Record<string, unknown> | null | undefined,
     );
@@ -6988,6 +7112,11 @@ export class PlatformDataService {
       throw new NotFoundException('Product not found');
     }
 
+    const merchantScope = await this.resolveAdminMerchantScope(authUser);
+    if (merchantScope != null && this.toNumber(oldProduct.merchantId) !== merchantScope) {
+      throw new ForbiddenException('只能修改本店商品');
+    }
+
     const categories = await this.prisma.category.findMany({ orderBy: { sortOrder: 'asc' } });
     const categoryId = body.categoryId ? Number(body.categoryId) : this.toNumber(categories[0]?.id ?? 0);
     if (!categoryId) {
@@ -7006,7 +7135,13 @@ export class PlatformDataService {
     const serviceTags = this.normalizeProductServiceTags(body.serviceTags, Number(body.deliveryType ?? oldProduct.deliveryType ?? 1));
     const traceInfo = body.traceInfo ?? body.trace;
     const defaultPrice = String(body.price ?? '0.00');
-    const publishImmediately = body.publishImmediately == null ? (oldProduct.status === 1) : Boolean(body.publishImmediately);
+    // 商户改任意信息必须回待审；平台管理员可直接发布
+    const isMerchantEditor = merchantScope != null;
+    const publishImmediately = isMerchantEditor
+      ? false
+      : body.publishImmediately == null
+        ? oldProduct.status === 1
+        : Boolean(body.publishImmediately);
     const groupBuyConfig = this.normalizeGroupBuyConfig(
       body.groupBuyConfig as Prisma.JsonValue | Record<string, unknown> | null | undefined,
       oldProduct.groupBuyConfig ?? null,
@@ -7332,9 +7467,19 @@ export class PlatformDataService {
 
   async updateProductStatus(productId: number, body: Record<string, unknown>, authUser?: AuthUser) {
     const where: Prisma.ProductWhereInput = { id: BigInt(productId) };
+    let isMerchantActor = false;
     if (authUser) {
-      const merchant = await this.ensureCurrentMerchant(authUser);
-      where.merchantId = merchant.id;
+      if (authUser.role === RoleCode.MERCHANT || authUser.role === RoleCode.USER) {
+        const merchant = await this.ensureCurrentMerchant(authUser);
+        where.merchantId = merchant.id;
+        isMerchantActor = true;
+      } else if (authUser.role === RoleCode.ADMIN) {
+        const merchantScope = await this.resolveAdminMerchantScope(authUser);
+        if (merchantScope != null) {
+          where.merchantId = BigInt(merchantScope);
+          isMerchantActor = true;
+        }
+      }
     }
 
     const newStatus = String(body.status ?? 'ON_SHELF') === 'ON_SHELF' ? 1 : 0;
@@ -7362,9 +7507,16 @@ export class PlatformDataService {
       }
     }
 
+    // 商户自行上下架：上架也需重新审核
     const result = await this.prisma.product.updateMany({
       where,
-      data: { status: newStatus },
+      data: isMerchantActor
+        ? {
+            status: 0,
+            auditStatus: 1,
+            auditRemark: newStatus === 1 ? '商户申请上架，待平台审核' : '商户已下架，待平台确认',
+          }
+        : { status: newStatus },
     });
 
     if (result.count === 0) {
@@ -8189,14 +8341,16 @@ export class PlatformDataService {
     }));
   }
 
-  async listAdminWithdraws(query: Record<string, string>) {
+  async listAdminWithdraws(query: Record<string, string>, authUser?: AuthUser) {
     await this.withSeed();
     const page = this.normalizePage(query.page);
     const pageSize = this.normalizePageSize(query.pageSize);
     const status = query.status ? Number(query.status) : undefined;
     const keyword = String(query.keyword ?? '').trim();
+    const merchantScope = await this.resolveAdminMerchantScope(authUser);
 
     const where: Prisma.WithdrawApplyWhereInput = {
+      ...(merchantScope != null ? { merchantId: BigInt(merchantScope) } : {}),
       ...(status != null ? { status } : {}),
       ...(keyword
           ? {
@@ -8425,27 +8579,32 @@ export class PlatformDataService {
 
   async adminLogin(body: Record<string, unknown>, clientIp = 'unknown') {
     await this.withSeed();
+    await this.ensureMerchantAdminRole();
 
-    const username = String(body.username ?? '').trim();
+    const loginId = String(body.username ?? body.mobile ?? body.account ?? '').trim();
     const password = String(body.password ?? '');
     const passwordHashed = Boolean(body.passwordHashed);
     const captchaId = String(body.captchaId ?? '').trim();
     const captchaCode = String(body.captchaCode ?? '').trim();
 
-    await this.adminAuthSecurityService.assertLoginAllowed(clientIp, username);
+    await this.adminAuthSecurityService.assertLoginAllowed(clientIp, loginId);
 
     const captchaOk = await this.adminAuthSecurityService.verifyCaptcha(captchaId, captchaCode);
     if (!captchaOk) {
-      await this.adminAuthSecurityService.recordLoginFailure(clientIp, username);
+      await this.adminAuthSecurityService.recordLoginFailure(clientIp, loginId);
       throw this.adminAuthSecurityService.buildInvalidCaptchaError();
     }
 
     const passwordHash = this.resolvePasswordHash(password, passwordHashed);
     const admin = await this.prisma.adminUser.findFirst({
       where: {
-        username,
         passwordHash,
         status: 1,
+        deletedAt: null,
+        OR: [
+          { username: loginId },
+          { mobile: loginId },
+        ],
       },
       include: {
         roles: {
@@ -8457,11 +8616,11 @@ export class PlatformDataService {
     });
 
     if (!admin) {
-      await this.adminAuthSecurityService.recordLoginFailure(clientIp, username);
+      await this.adminAuthSecurityService.recordLoginFailure(clientIp, loginId);
       throw this.adminAuthSecurityService.buildInvalidCredentialsError();
     }
 
-    await this.adminAuthSecurityService.clearLoginFailures(clientIp, username);
+    await this.adminAuthSecurityService.clearLoginFailures(clientIp, loginId);
 
     await this.prisma.adminUser.update({
       where: { id: admin.id },
@@ -8469,30 +8628,38 @@ export class PlatformDataService {
     });
 
     const accountNo = await this.backfillAdminAccountNo(admin.id);
+    const merchantId = admin.merchantId != null ? this.toNumber(admin.merchantId) : null;
+    const accountType = merchantId != null ? 'MERCHANT' : 'PLATFORM';
 
     await this.recordAdminOperation(
         {
           sub: `admin_${String(admin.id)}`,
           role: RoleCode.ADMIN,
           tokenType: TokenType.ACCESS,
+          merchantId,
+          accountType,
         },
         'LOGIN',
         '系统',
         admin.id,
-        { username: admin.username },
+        { username: admin.username, mobile: admin.mobile, accountType },
     );
 
     const payload: AuthUser = {
       sub: `admin_${String(admin.id)}`,
       role: RoleCode.ADMIN,
       tokenType: TokenType.ACCESS,
+      merchantId,
+      accountType,
     };
     const activeRoles = admin.roles.map((item) => item.adminRole).filter((role) => role.status === 1);
     const roleCodes = activeRoles.map((role) => role.code);
     const roleNames = activeRoles.map((role) => role.name);
     const permissionKeys = activeRoles.length > 0
       ? Array.from(new Set(activeRoles.flatMap((role) => this.resolveAdminPermissionKeys((role as any).permissionJson, role.code))))
-      : [...ADMIN_PERMISSION_KEYS];
+      : accountType === 'MERCHANT'
+        ? [...MERCHANT_ADMIN_PERMISSION_KEYS]
+        : [...ADMIN_PERMISSION_KEYS];
     const accessToken = await this.jwtService.signAsync(payload, {
       secret: requireConfigValue(this.configService, 'JWT_SECRET'),
       expiresIn: this.configService.get<string>('JWT_ACCESS_EXPIRES_IN', '7d') as any,
@@ -8506,6 +8673,11 @@ export class PlatformDataService {
       roleNames,
       permissionKeys,
       accountNo,
+      merchantId,
+      accountType,
+      nickname: admin.nickname,
+      username: admin.username,
+      mobile: admin.mobile ?? '',
       input: body,
     };
   }
@@ -8605,8 +8777,10 @@ export class PlatformDataService {
     };
   }
 
-  async listAdminAccounts(query: Record<string, string>) {
+  async listAdminAccounts(query: Record<string, string>, authUser?: AuthUser) {
     await this.withSeed();
+    const merchantScope = await this.resolveAdminMerchantScope(authUser);
+    this.assertPlatformAdmin(merchantScope, '商户账号无权查看管理员列表');
     const keyword = String(query.keyword ?? '').trim();
     const page = this.normalizePage(query.page);
     const pageSize = this.normalizePageSize(query.pageSize);
@@ -8663,6 +8837,9 @@ export class PlatformDataService {
           username: admin.username,
           nickname: admin.nickname,
           mobile: admin.mobile ?? '',
+          loginPassword: admin.loginPassword ?? '',
+          merchantId: admin.merchantId != null ? this.toNumber(admin.merchantId) : null,
+          accountType: admin.merchantId != null ? 'MERCHANT' : 'PLATFORM',
           status: this.mapAdminStatus(admin.status),
           lastLoginAt: this.toIso(admin.lastLoginAt),
           roleCodes: roles.map((role) => role.code),
@@ -8674,13 +8851,19 @@ export class PlatformDataService {
 
   async createAdminAccount(body: Record<string, unknown>, authUser?: AuthUser) {
     await this.withSeed();
+    const merchantScope = await this.resolveAdminMerchantScope(authUser);
+    this.assertPlatformAdmin(merchantScope);
 
     const username = String(body.username ?? '').trim();
     const nickname = String(body.nickname ?? '').trim();
     const mobile = String(body.mobile ?? '').trim();
-    const password = String(body.password ?? '').trim();
+    const rawPassword = String(body.password ?? '').trim();
     const passwordHashed = Boolean(body.passwordHashed);
     const roleCodes = this.normalizeAdminRoleCodes(body.roleCodes ?? body.roleCode ?? 'ADMIN');
+    const initialPassword = rawPassword
+      ? (passwordHashed ? '' : rawPassword)
+      : this.generateRandomPassword(6);
+    const passwordForHash = rawPassword || initialPassword;
 
     if (!username) {
       throw new BadRequestException('Username is required');
@@ -8688,7 +8871,7 @@ export class PlatformDataService {
     if (!nickname) {
       throw new BadRequestException('Nickname is required');
     }
-    if (!password) {
+    if (!passwordForHash) {
       throw new BadRequestException('Password is required');
     }
     if (roleCodes.length === 0) {
@@ -8701,19 +8884,21 @@ export class PlatformDataService {
     }
 
     if (mobile) {
-      const mobileConflict = await this.prisma.adminUser.findFirst({ where: { mobile } });
+      const mobileConflict = await this.prisma.adminUser.findFirst({ where: { mobile, deletedAt: null } });
       if (mobileConflict) {
         throw new BadRequestException('Mobile already exists');
       }
     }
 
+    const plainPassword = passwordHashed ? null : (initialPassword || rawPassword || null);
     const admin = await this.prisma.adminUser.create({
       data: {
         accountNo: await this.generateAccountNo('ADMIN'),
         username,
         nickname,
         mobile: mobile || null,
-        passwordHash: this.resolvePasswordHash(password, passwordHashed),
+        passwordHash: this.resolvePasswordHash(passwordForHash, Boolean(rawPassword) && passwordHashed),
+        loginPassword: plainPassword,
         status: 1,
       },
     });
@@ -8738,9 +8923,11 @@ export class PlatformDataService {
       username: admin.username,
       nickname: admin.nickname,
       mobile: admin.mobile ?? '',
+      loginPassword: plainPassword ?? '',
       status: this.mapAdminStatus(admin.status),
       roleCodes,
       roleNames: roles.map((role) => role.name),
+      initialPassword: initialPassword || undefined,
     };
   }
 
@@ -8824,12 +9011,15 @@ export class PlatformDataService {
 
   async resetAdminPassword(adminUserId: number, body: Record<string, unknown>, authUser?: AuthUser) {
     await this.withSeed();
+    const merchantScope = await this.resolveAdminMerchantScope(authUser);
+    this.assertPlatformAdmin(merchantScope);
 
-    const password = String(body.password ?? '').trim();
+    const rawPassword = String(body.password ?? '').trim();
     const passwordHashed = Boolean(body.passwordHashed);
-    if (!password) {
-      throw new BadRequestException('Password is required');
-    }
+    const initialPassword = rawPassword
+      ? (passwordHashed ? '' : rawPassword)
+      : this.generateRandomPassword(6);
+    const passwordForHash = rawPassword || initialPassword;
 
     const id = BigInt(adminUserId);
     const admin = await this.prisma.adminUser.findUnique({ where: { id } });
@@ -8837,9 +9027,13 @@ export class PlatformDataService {
       throw new NotFoundException('Admin account not found');
     }
 
+    const plainPassword = passwordHashed ? null : (initialPassword || rawPassword || null);
     await this.prisma.adminUser.update({
       where: { id },
-      data: { passwordHash: this.resolvePasswordHash(password, passwordHashed) },
+      data: {
+        passwordHash: this.resolvePasswordHash(passwordForHash, Boolean(rawPassword) && passwordHashed),
+        ...(plainPassword ? { loginPassword: plainPassword } : {}),
+      },
     });
 
     await this.recordAdminOperation(authUser, 'RESET_ADMIN_PASSWORD', '平台账号', id, {
@@ -8848,7 +9042,11 @@ export class PlatformDataService {
 
     return {
       id: this.toNumber(admin.id),
+      username: admin.username,
+      mobile: admin.mobile ?? '',
       success: true,
+      initialPassword: initialPassword || undefined,
+      loginPassword: plainPassword || undefined,
     };
   }
 
@@ -8881,6 +9079,199 @@ export class PlatformDataService {
     return {
       id: adminUserId,
       success: true,
+    };
+  }
+
+  /**
+   * 为已通过审核的商户创建后台账号（手机号登录），返回一次性明文密码。
+   * 若已存在绑定账号则补齐商户角色；缺明文密码时重新生成以便后台可查看。
+   */
+  async createMerchantAdminAccount(merchantId: number | bigint): Promise<{
+    created: boolean;
+    updated?: boolean;
+    skipped?: boolean;
+    reason?: string;
+    merchantId: number;
+    mobile: string;
+    storeName: string;
+    username?: string;
+    initialPassword?: string;
+    adminUserId?: number;
+  }> {
+    await this.ensureMerchantAdminRole();
+    const merchant = await this.prisma.merchant.findFirst({
+      where: { id: BigInt(merchantId), deletedAt: null },
+    });
+    if (!merchant) {
+      return {
+        created: false,
+        skipped: true,
+        reason: '商户不存在',
+        merchantId: Number(merchantId),
+        mobile: '',
+        storeName: '',
+      };
+    }
+
+    const mobile = String(merchant.contactMobile ?? '').trim();
+    const storeName = merchant.storeName;
+    const mid = this.toNumber(merchant.id);
+
+    const bound = await this.prisma.adminUser.findFirst({
+      where: { merchantId: merchant.id, deletedAt: null },
+    });
+    if (bound) {
+      await this.ensureAdminRoleAssignments(bound.id, ['MERCHANT_ADMIN']);
+      let loginPassword = String(bound.loginPassword ?? '').trim();
+      let updated = false;
+      if (!loginPassword) {
+        loginPassword = this.generateRandomPassword(6);
+        await this.prisma.adminUser.update({
+          where: { id: bound.id },
+          data: {
+            passwordHash: this.hashPassword(loginPassword),
+            loginPassword,
+          },
+        });
+        updated = true;
+      }
+      return {
+        created: false,
+        updated,
+        skipped: !updated,
+        reason: updated ? '已补齐可查看密码' : '已绑定后台账号',
+        merchantId: mid,
+        mobile: bound.mobile ?? mobile,
+        storeName,
+        username: bound.username,
+        initialPassword: loginPassword,
+        adminUserId: this.toNumber(bound.id),
+      };
+    }
+
+    if (!mobile) {
+      return {
+        created: false,
+        skipped: true,
+        reason: '商户无联系手机号',
+        merchantId: mid,
+        mobile: '',
+        storeName,
+      };
+    }
+
+    let username = mobile;
+    const usernameConflict = await this.prisma.adminUser.findFirst({
+      where: { username, deletedAt: null },
+    });
+    if (usernameConflict) {
+      username = `m${mid}`;
+    }
+
+    const mobileOwner = await this.prisma.adminUser.findFirst({
+      where: { mobile, deletedAt: null },
+    });
+    const mobileForCreate = mobileOwner ? null : mobile;
+
+    const initialPassword = this.generateRandomPassword(6);
+    const admin = await this.prisma.adminUser.create({
+      data: {
+        accountNo: await this.generateAccountNo('ADMIN'),
+        username,
+        nickname: storeName.slice(0, 64) || `商户${mid}`,
+        mobile: mobileForCreate,
+        merchantId: merchant.id,
+        passwordHash: this.hashPassword(initialPassword),
+        loginPassword: initialPassword,
+        status: 1,
+      },
+    });
+    await this.ensureAdminRoleAssignments(admin.id, ['MERCHANT_ADMIN']);
+
+    return {
+      created: true,
+      merchantId: mid,
+      mobile: mobileForCreate ?? mobile,
+      storeName,
+      username: admin.username,
+      initialPassword,
+      adminUserId: this.toNumber(admin.id),
+    };
+  }
+
+  async syncMerchantsAdminAccounts(authUser?: AuthUser) {
+    await this.withSeed();
+    const merchantScope = await this.resolveAdminMerchantScope(authUser);
+    this.assertPlatformAdmin(merchantScope);
+
+    const merchants = await this.prisma.merchant.findMany({
+      where: { status: 1, deletedAt: null },
+      orderBy: { id: 'asc' },
+    });
+
+    const created: Array<{
+      merchantId: number;
+      mobile: string;
+      storeName: string;
+      username: string;
+      initialPassword: string;
+      adminUserId: number;
+    }> = [];
+    const ensured: Array<{
+      merchantId: number;
+      mobile: string;
+      storeName: string;
+      username: string;
+      initialPassword: string;
+      adminUserId: number;
+    }> = [];
+    const skipped: Array<{
+      merchantId: number;
+      mobile: string;
+      storeName: string;
+      reason: string;
+    }> = [];
+
+    for (const merchant of merchants) {
+      const result = await this.createMerchantAdminAccount(merchant.id);
+      if (result.initialPassword && result.adminUserId != null && result.username) {
+        const row = {
+          merchantId: result.merchantId,
+          mobile: result.mobile,
+          storeName: result.storeName,
+          username: result.username,
+          initialPassword: result.initialPassword,
+          adminUserId: result.adminUserId,
+        };
+        if (result.created) {
+          created.push(row);
+        } else {
+          ensured.push(row);
+        }
+      } else {
+        skipped.push({
+          merchantId: result.merchantId,
+          mobile: result.mobile,
+          storeName: result.storeName,
+          reason: result.reason ?? '已跳过',
+        });
+      }
+    }
+
+    await this.recordAdminOperation(authUser, 'SYNC_MERCHANT_ADMIN_ACCOUNTS', '平台账号', undefined, {
+      createdCount: created.length,
+      ensuredCount: ensured.length,
+      skippedCount: skipped.length,
+    });
+
+    return {
+      created,
+      ensured,
+      skipped,
+      createdCount: created.length,
+      ensuredCount: ensured.length,
+      skippedCount: skipped.length,
+      accounts: [...created, ...ensured],
     };
   }
 
@@ -9342,11 +9733,12 @@ export class PlatformDataService {
   }
 
 
-  async listAdminMerchants(query: Record<string, string>) {
+  async listAdminMerchants(query: Record<string, string>, authUser?: AuthUser) {
     await this.withSeed();
     const keyword = String(query.keyword ?? '').trim();
     const page = this.normalizePage(query.page);
     const pageSize = this.normalizePageSize(query.pageSize);
+    const merchantScope = await this.resolveAdminMerchantScope(authUser);
 
     const rawAuditStatus = String(query.auditStatus ?? '').trim().toUpperCase();
     const statusFilter = (() => {
@@ -9355,10 +9747,16 @@ export class PlatformDataService {
       if (rawAuditStatus === 'REJECTED' || rawAuditStatus === '3') return 3;
       return undefined;
     })();
+    const profilePendingOnly =
+      rawAuditStatus === 'PROFILE_PENDING' ||
+      rawAuditStatus === 'PROFILE_AUDIT' ||
+      String(query.profileAuditStatus ?? '').trim() === '1';
 
     const where: Prisma.MerchantWhereInput = {
       deletedAt: null,
-      ...(statusFilter !== undefined ? { status: statusFilter } : {}),
+      ...(merchantScope != null ? { id: BigInt(merchantScope) } : {}),
+      ...(profilePendingOnly ? { profileAuditStatus: 1 } : {}),
+      ...(statusFilter !== undefined && !profilePendingOnly ? { status: statusFilter } : {}),
       ...(keyword
           ? {
             OR: [
@@ -9370,10 +9768,38 @@ export class PlatformDataService {
           : {}),
     };
 
+    // 平台管理员：为全部已通过商户补齐后台账号与可查看密码
+    if (merchantScope == null) {
+      const approvedMerchants = await this.prisma.merchant.findMany({
+        where: { status: 1, deletedAt: null },
+        select: {
+          id: true,
+          adminUsers: {
+            where: { deletedAt: null },
+            select: { id: true, loginPassword: true },
+            take: 1,
+          },
+        },
+      });
+      for (const merchant of approvedMerchants) {
+        const admin = merchant.adminUsers[0];
+        if (!admin || !String(admin.loginPassword ?? '').trim()) {
+          await this.createMerchantAdminAccount(merchant.id);
+        }
+      }
+    }
+
     const [total, merchants] = await Promise.all([
       this.prisma.merchant.count({ where }),
       this.prisma.merchant.findMany({
         where,
+        include: {
+          adminUsers: {
+            where: { deletedAt: null },
+            take: 1,
+            orderBy: { id: 'asc' },
+          },
+        },
         orderBy: { createdAt: 'desc' },
         skip: (Math.max(page, 1) - 1) * Math.max(pageSize, 1),
         take: Math.max(pageSize, 1),
@@ -9384,17 +9810,34 @@ export class PlatformDataService {
       page: Math.max(page, 1),
       pageSize: Math.max(pageSize, 1),
       total,
-      items: merchants.map((merchant) => ({
-        id: this.toNumber(merchant.id),
-        storeName: merchant.storeName,
-        contactName: merchant.contactName,
-        mobile: merchant.contactMobile,
-        region: '全国',
-        auditStatus: merchant.status === 1 ? 'APPROVED' : (merchant.status === 3 ? 'REJECTED' : 'PENDING_AUDIT'),
-        productCount: 0,
-        walletAmount: '0.00',
-        createdAt: merchant.createdAt.toISOString().slice(0, 16).replace('T', ' '),
-      })),
+      items: merchants.map((merchant) => {
+        const adminAccount = merchant.adminUsers[0];
+        const canViewLoginSecret = merchantScope == null;
+        return {
+          id: this.toNumber(merchant.id),
+          storeName: merchant.storeName,
+          contactName: merchant.contactName,
+          mobile: merchant.contactMobile,
+          region: '全国',
+          auditStatus: merchant.status === 1 ? 'APPROVED' : (merchant.status === 3 ? 'REJECTED' : 'PENDING_AUDIT'),
+          profileAuditStatus: merchant.profileAuditStatus ?? 0,
+          profileAuditLabel:
+            merchant.profileAuditStatus === 1
+              ? '资料变更待审'
+              : merchant.profileAuditStatus === 3
+                ? '资料已驳回'
+                : '',
+          profileAuditRemark: merchant.profileAuditRemark ?? '',
+          pendingProfile: merchant.pendingProfileJson ?? null,
+          hasAdminAccount: Boolean(adminAccount),
+          adminUserId: adminAccount ? this.toNumber(adminAccount.id) : null,
+          adminUsername: canViewLoginSecret ? (adminAccount?.username ?? '') : '',
+          adminPassword: canViewLoginSecret ? (adminAccount?.loginPassword ?? '') : '',
+          productCount: 0,
+          walletAmount: '0.00',
+          createdAt: merchant.createdAt.toISOString().slice(0, 16).replace('T', ' '),
+        };
+      }),
     };
   }
 
@@ -9472,12 +9915,42 @@ export class PlatformDataService {
 
   async updateAdminMerchant(merchantId: number, body: Record<string, any>, user: AuthUser) {
     await this.withSeed();
+    const merchantScope = await this.resolveAdminMerchantScope(user);
+    if (merchantScope != null && merchantScope !== merchantId) {
+      throw new ForbiddenException('只能修改自己的商户信息');
+    }
+
     const merchant = await this.prisma.merchant.findFirst({
       where: { id: BigInt(merchantId), deletedAt: null },
     });
 
     if (!merchant) {
       throw new NotFoundException('Merchant not found');
+    }
+
+    // 商户账号改资料：写入待审草稿，不直接覆盖正式字段
+    if (merchantScope != null) {
+      const pendingProfile = {
+        storeName: body.storeName !== undefined ? String(body.storeName) : merchant.storeName,
+        storeLogo: body.storeLogo !== undefined ? String(body.storeLogo) : merchant.storeLogo,
+        contactName: body.contactName !== undefined ? String(body.contactName) : merchant.contactName,
+        contactMobile: body.contactMobile !== undefined ? String(body.contactMobile) : merchant.contactMobile,
+      };
+      await this.prisma.merchant.update({
+        where: { id: merchant.id },
+        data: {
+          pendingProfileJson: pendingProfile as Prisma.InputJsonValue,
+          profileAuditStatus: 1,
+          profileAuditRemark: null,
+        },
+      });
+      await this.recordAdminOperation(user, 'SUBMIT_MERCHANT_PROFILE', '商户管理', merchant.id, pendingProfile);
+      return {
+        success: true,
+        id: this.toNumber(merchant.id),
+        profileAuditStatus: 1,
+        message: '资料已提交，等待超级管理员审核',
+      };
     }
 
     let status = merchant.status;
@@ -9506,8 +9979,71 @@ export class PlatformDataService {
     return { success: true, id: this.toNumber(updated.id) };
   }
 
+  async auditMerchantProfile(merchantId: number, body: Record<string, unknown>, authUser?: AuthUser) {
+    await this.withSeed();
+    const merchantScope = await this.resolveAdminMerchantScope(authUser);
+    this.assertPlatformAdmin(merchantScope, '仅平台管理员可审核商户资料');
+
+    const action = String(body.action ?? body.auditStatus ?? '').trim().toLowerCase();
+    const isApprove =
+      action === 'approve' ||
+      action === 'approved' ||
+      action === '3' ||
+      Number(body.auditStatus) === 3;
+    const remark = String(body.remark ?? '').trim();
+
+    const merchant = await this.prisma.merchant.findFirst({
+      where: { id: BigInt(merchantId), deletedAt: null },
+    });
+    if (!merchant) {
+      throw new NotFoundException('Merchant not found');
+    }
+    if (merchant.profileAuditStatus !== 1) {
+      throw new BadRequestException('当前没有待审核的资料变更');
+    }
+
+    if (isApprove) {
+      const pending = (merchant.pendingProfileJson ?? {}) as Record<string, unknown>;
+      await this.prisma.merchant.update({
+        where: { id: merchant.id },
+        data: {
+          storeName: typeof pending.storeName === 'string' ? pending.storeName : merchant.storeName,
+          storeLogo: typeof pending.storeLogo === 'string' ? pending.storeLogo : merchant.storeLogo,
+          contactName: typeof pending.contactName === 'string' ? pending.contactName : merchant.contactName,
+          contactMobile: typeof pending.contactMobile === 'string' ? pending.contactMobile : merchant.contactMobile,
+          pendingProfileJson: Prisma.JsonNull,
+          profileAuditStatus: 2,
+          profileAuditRemark: null,
+        },
+      });
+    } else {
+      await this.prisma.merchant.update({
+        where: { id: merchant.id },
+        data: {
+          pendingProfileJson: Prisma.JsonNull,
+          profileAuditStatus: 3,
+          profileAuditRemark: remark || '资料变更已驳回',
+        },
+      });
+    }
+
+    await this.recordAdminOperation(authUser, 'AUDIT_MERCHANT_PROFILE', '商户管理', merchant.id, {
+      action: isApprove ? 'approve' : 'reject',
+      remark,
+    });
+
+    return {
+      merchantId,
+      profileAuditStatus: isApprove ? 2 : 3,
+      success: true,
+    };
+  }
+
   async deleteAdminMerchant(merchantId: number, user: AuthUser) {
     await this.withSeed();
+    const merchantScope = await this.resolveAdminMerchantScope(user);
+    this.assertPlatformAdmin(merchantScope, '商户账号不可删除商户');
+
     const merchant = await this.prisma.merchant.findFirst({
       where: { id: BigInt(merchantId), deletedAt: null },
     });
@@ -9526,35 +10062,56 @@ export class PlatformDataService {
     return { success: true };
   }
 
-  async listAdminProducts(query: Record<string, string>) {
+  async listAdminProducts(query: Record<string, string>, authUser?: AuthUser) {
     await this.withSeed();
     const page = this.normalizePage(query.page);
     const pageSize = this.normalizePageSize(query.pageSize);
     const keyword = String(query.keyword ?? '').trim();
+    const productNature = String(query.productNature ?? '').trim();
+    const deliveryType = query.deliveryType ? Number(query.deliveryType) : undefined;
+    const merchantScope = await this.resolveAdminMerchantScope(authUser);
 
     const rawAuditStatus = String(query.auditStatus ?? '').trim().toUpperCase();
     const auditStatus = (() => {
       if (rawAuditStatus === 'PENDING_AUDIT' || rawAuditStatus === '1') return 1;
       if (rawAuditStatus === 'APPROVED' || rawAuditStatus === '2') return 2;
+      if (rawAuditStatus === 'REJECTED' || rawAuditStatus === '3' || rawAuditStatus === '4') return 3;
       return undefined;
     })();
 
     const rawStatus = String(query.status ?? '').trim().toUpperCase();
+    // 商品上下架：1=上架，0=下架（历史错误把 OFF_SHELF 映射成了 2）
     const status = (() => {
       if (rawStatus === 'ON_SHELF' || rawStatus === '1') return 1;
-      if (rawStatus === 'OFF_SHELF' || rawStatus === '2') return 2;
+      if (rawStatus === 'OFF_SHELF' || rawStatus === '0' || rawStatus === '2') return 0;
+      if (rawStatus === 'DRAFT') return 0;
       return undefined;
     })();
 
     const where: Prisma.ProductWhereInput = {
       deletedAt: null,
+      ...(merchantScope != null ? { merchantId: BigInt(merchantScope) } : {}),
       ...(auditStatus !== undefined ? { auditStatus } : {}),
-      ...(status !== undefined ? { status } : {}),
+      ...(status !== undefined
+        ? rawStatus === 'DRAFT'
+          ? { status: 0, auditStatus: 1 }
+          : { status }
+        : {}),
+      ...(Number.isFinite(deliveryType) && deliveryType! > 0 ? { deliveryType } : {}),
+      ...(productNature
+        ? {
+            productNature: {
+              contains: productNature,
+            },
+          }
+        : {}),
       ...(keyword
           ? {
             OR: [
               { title: { contains: keyword } },
               { subtitle: { contains: keyword } },
+              { merchant: { storeName: { contains: keyword } } },
+              { category: { name: { contains: keyword } } },
             ],
           }
           : {}),
@@ -9570,7 +10127,10 @@ export class PlatformDataService {
           merchantId: true,
           categoryId: true,
           auditStatus: true,
+          auditRemark: true,
           status: true,
+          productNature: true,
+          deliveryType: true,
           updatedAt: true,
           skus: {
             select: {
@@ -9587,7 +10147,8 @@ export class PlatformDataService {
 
     const merchantIds = [...new Set(products.map((product) => product.merchantId.toString()))].map((value) => BigInt(value));
     const categoryIds = [...new Set(products.map((product) => product.categoryId.toString()))].map((value) => BigInt(value));
-    const [merchants, categories] = await Promise.all([
+    const productIds = products.map((product) => product.id);
+    const [merchants, categories, salesRows] = await Promise.all([
       merchantIds.length
         ? this.prisma.merchant.findMany({
             where: { id: { in: merchantIds } },
@@ -9600,9 +10161,19 @@ export class PlatformDataService {
             select: { id: true, name: true },
           })
         : Promise.resolve([]),
+      productIds.length
+        ? this.prisma.orderItem.groupBy({
+            by: ['productId'],
+            where: { productId: { in: productIds } },
+            _sum: { quantity: true },
+          })
+        : Promise.resolve([]),
     ]);
     const merchantMap = new Map(merchants.map((merchant) => [merchant.id.toString(), merchant.storeName]));
     const categoryMap = new Map(categories.map((category) => [category.id.toString(), category.name]));
+    const salesMap = new Map(
+      salesRows.map((row) => [row.productId.toString(), Number(row._sum.quantity ?? 0)]),
+    );
 
     return {
       page: Math.max(page, 1),
@@ -9613,20 +10184,29 @@ export class PlatformDataService {
         title: product.title,
         merchantName: merchantMap.get(product.merchantId.toString()) ?? '未知商户',
         categoryName: categoryMap.get(product.categoryId.toString()) ?? '未知类目',
-        auditStatus: product.auditStatus === 1 ? 'PENDING_AUDIT' : 'APPROVED',
+        productNature: product.productNature ?? '',
+        deliveryType: product.deliveryType ?? 1,
+        auditStatus:
+          product.auditStatus === 1
+            ? 'PENDING_AUDIT'
+            : product.auditStatus === 2
+              ? 'APPROVED'
+              : 'REJECTED',
+        auditRemark: product.auditRemark ?? '',
         status: product.status === 1 ? 'ON_SHELF' : 'OFF_SHELF',
         minPrice: product.skus[0] ? this.computeDisplayPrice(product.skus[0]) : '0.00',
-        salesCount: 0,
+        salesCount: salesMap.get(product.id.toString()) ?? 0,
         updatedAt: product.updatedAt.toISOString().slice(0, 16).replace('T', ' '),
       })),
     };
   }
 
-  async listAdminRefunds(query: Record<string, string>) {
+  async listAdminRefunds(query: Record<string, string>, authUser?: AuthUser) {
     await this.withSeed();
     const page = this.normalizePage(query.page);
     const pageSize = this.normalizePageSize(query.pageSize);
     const keyword = String(query.keyword ?? '').trim();
+    const merchantScope = await this.resolveAdminMerchantScope(authUser);
 
     const rawStatus = String(query.status ?? '').trim().toUpperCase();
     const status = (() => {
@@ -9639,6 +10219,7 @@ export class PlatformDataService {
 
     const where: Prisma.RefundApplyWhereInput = {
       deletedAt: null,
+      ...(merchantScope != null ? { merchantId: BigInt(merchantScope) } : {}),
       ...(status !== undefined ? { status } : {}),
       ...(keyword
           ? {
@@ -9684,18 +10265,42 @@ export class PlatformDataService {
     };
   }
 
-  async listAdminOrders(query: Record<string, string>) {
+  async listAdminOrders(query: Record<string, string>, authUser?: AuthUser) {
     await this.withSeed();
     const page = this.normalizePage(query.page);
     const pageSize = this.normalizePageSize(query.pageSize);
     const keyword = String(query.keyword ?? '').trim();
+    const merchantScope = await this.resolveAdminMerchantScope(authUser);
 
     const rawStatus = String(query.status ?? '').trim().toUpperCase();
-    const orderStatus = (() => {
-      if (rawStatus === 'PENDING_PAY' || rawStatus === '1') return 1;
-      if (rawStatus === 'TO_SHIP' || rawStatus === '2') return 2;
-      if (rawStatus === 'COMPLETED' || rawStatus === '3') return 3;
-      return undefined;
+    const orderStatusFilter = (() => {
+      if (rawStatus === 'PENDING_PAY' || rawStatus === '1' || rawStatus === '待支付') {
+        return {
+          orderStatus: { in: [1, 2] },
+          payStatus: 0 as const,
+        };
+      }
+      if (rawStatus === 'TO_SHIP' || rawStatus === '待发货') {
+        return {
+          payStatus: 1 as const,
+          orderStatus: { in: [1, 2] },
+          deliveryStatus: { lt: 2 },
+        };
+      }
+      if (rawStatus === 'SHIPPED' || rawStatus === '已发货') {
+        return {
+          payStatus: 1 as const,
+          orderStatus: { in: [1, 2] },
+          deliveryStatus: { gte: 2 },
+        };
+      }
+      if (rawStatus === 'COMPLETED' || rawStatus === '3' || rawStatus === '已完成') {
+        return { orderStatus: 3 as const };
+      }
+      if (rawStatus === 'CANCELLED' || rawStatus === 'CANCELED' || rawStatus === '4' || rawStatus === '已取消') {
+        return { orderStatus: 4 as const };
+      }
+      return {};
     })();
 
     const payStatus = query.payStatus ? Number(query.payStatus) : undefined;
@@ -9704,9 +10309,14 @@ export class PlatformDataService {
 
     const where: Prisma.OrderWhereInput = {
       deletedAt: null,
-      ...(orderStatus !== undefined ? { orderStatus } : {}),
-      ...(payStatus !== undefined && !Number.isNaN(payStatus) ? { payStatus } : {}),
-      ...(deliveryStatus !== undefined && !Number.isNaN(deliveryStatus) ? { deliveryStatus } : {}),
+      ...(merchantScope != null ? { merchantId: BigInt(merchantScope) } : {}),
+      ...orderStatusFilter,
+      ...(payStatus !== undefined && !Number.isNaN(payStatus) && !('payStatus' in orderStatusFilter)
+        ? { payStatus }
+        : {}),
+      ...(deliveryStatus !== undefined && !Number.isNaN(deliveryStatus) && !('deliveryStatus' in orderStatusFilter)
+        ? { deliveryStatus }
+        : {}),
       ...(isGroupBuyOrder ? { groupBuyId: { not: null } } : {}),
       ...(keyword
           ? {
@@ -9743,7 +10353,7 @@ export class PlatformDataService {
         orderNo: order.orderNo,
         merchantName: order.merchant.storeName,
         userName: order.user.nickname ?? order.user.mobile ?? '用户',
-        status: this.getAdminOrderStatusLabel(order.orderStatus),
+        status: this.getAdminOrderStatusLabel(order.orderStatus, order.deliveryStatus, order.payStatus),
         payStatus: order.payStatus,
         deliveryStatus: order.deliveryStatus,
         afterSaleStatus: order.refundStatus,
@@ -10246,14 +10856,23 @@ export class PlatformDataService {
     };
   }
 
-  async getAdminOrderDetail(orderNo: string) {
+  async getAdminOrderDetail(orderNo: string, authUser?: AuthUser) {
     await this.withSeed();
+    const merchantScope = await this.resolveAdminMerchantScope(authUser);
     const order = await this.prisma.order.findFirst({
-      where: { orderNo, deletedAt: null },
+      where: {
+        orderNo,
+        deletedAt: null,
+        ...(merchantScope != null ? { merchantId: BigInt(merchantScope) } : {}),
+      },
       include: {
         merchant: true,
         items: true,
         user: true,
+        deliveries: {
+          orderBy: { id: 'desc' },
+          take: 1,
+        },
       },
     });
 
@@ -10261,12 +10880,14 @@ export class PlatformDataService {
       throw new NotFoundException('Order not found');
     }
 
+    const delivery = order.deliveries[0];
+
     return {
       orderNo: order.orderNo,
       merchantId: this.toNumber(order.merchantId),
       merchantName: order.merchant.storeName,
       userName: order.user.nickname ?? order.user.mobile ?? '用户',
-      status: this.getAdminOrderStatusLabel(order.orderStatus),
+      status: this.getAdminOrderStatusLabel(order.orderStatus, order.deliveryStatus, order.payStatus),
       payStatus: order.payStatus,
       deliveryStatus: order.deliveryStatus,
       afterSaleStatus: order.refundStatus,
@@ -10276,6 +10897,16 @@ export class PlatformDataService {
       payAmount: this.toMoney(order.payAmount),
       remark: order.remark ?? '',
       addressSnapshot: order.addressSnapshot,
+      logisticsCompany: delivery?.logisticsCompany ?? '',
+      trackingNo: delivery?.trackingNo ?? '',
+      shippedAt: delivery?.shippedAt ? this.toIso(delivery.shippedAt) : null,
+      canShip:
+        order.payStatus === PlatformDataService.PAY_STATUS.PAID &&
+        order.orderStatus !== PlatformDataService.ORDER_STATUS.CANCELLED &&
+        order.orderStatus !== PlatformDataService.ORDER_STATUS.COMPLETED &&
+        order.deliveryStatus < PlatformDataService.DELIVERY_STATUS.SHIPPED &&
+        order.refundStatus !== PlatformDataService.REFUND_STATUS.PENDING_MERCHANT &&
+        order.refundStatus !== PlatformDataService.REFUND_STATUS.PROCESSING,
       items: order.items.map((item) => ({
         orderItemId: this.toNumber(item.id),
         productId: this.toNumber(item.productId),
@@ -10290,7 +10921,103 @@ export class PlatformDataService {
     };
   }
 
+  async shipAdminOrder(orderNo: string, body: Record<string, unknown>, authUser?: AuthUser) {
+    await this.withSeed();
+    const trackingNo = String(body.trackingNo ?? '').trim();
+    if (!trackingNo) {
+      throw new BadRequestException('请填写快递单号');
+    }
+    const logisticsCompany = String(body.logisticsCompany ?? '').trim() || '默认物流';
+    const merchantScope = await this.resolveAdminMerchantScope(authUser);
+
+    const order = await this.prisma.order.findFirst({
+      where: {
+        orderNo,
+        deletedAt: null,
+        isParent: false,
+        ...(merchantScope != null ? { merchantId: BigInt(merchantScope) } : {}),
+      },
+      select: {
+        id: true,
+        merchantId: true,
+        orderStatus: true,
+        payStatus: true,
+        deliveryStatus: true,
+        refundStatus: true,
+        groupBuyId: true,
+      },
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    if (order.payStatus !== PlatformDataService.PAY_STATUS.PAID) {
+      throw new BadRequestException('订单未支付，无法发货');
+    }
+    if (order.orderStatus === PlatformDataService.ORDER_STATUS.CANCELLED) {
+      throw new BadRequestException('订单已取消，无法发货');
+    }
+    if (order.orderStatus === PlatformDataService.ORDER_STATUS.COMPLETED) {
+      throw new BadRequestException('订单已完成，无法发货');
+    }
+    if (order.deliveryStatus >= PlatformDataService.DELIVERY_STATUS.SHIPPED) {
+      throw new BadRequestException('订单已发货');
+    }
+    if (
+      order.refundStatus === PlatformDataService.REFUND_STATUS.PENDING_MERCHANT ||
+      order.refundStatus === PlatformDataService.REFUND_STATUS.PROCESSING
+    ) {
+      throw new BadRequestException('售后处理中，暂不可发货');
+    }
+
+    await this.assertGroupBuyFulfillable(order.groupBuyId);
+
+    await this.prisma.order.update({
+      where: { id: order.id },
+      data: {
+        deliveryStatus: PlatformDataService.DELIVERY_STATUS.SHIPPED,
+        orderStatus: PlatformDataService.ORDER_STATUS.ACCEPTED,
+      },
+    });
+
+    const existingDelivery = await this.prisma.deliveryRecord.findFirst({ where: { orderId: order.id } });
+    if (existingDelivery) {
+      await this.prisma.deliveryRecord.update({
+        where: { id: existingDelivery.id },
+        data: {
+          logisticsCompany,
+          trackingNo,
+          deliveryStatus: PlatformDataService.DELIVERY_STATUS.SHIPPED,
+          shippedAt: this.now(),
+        },
+      });
+    } else {
+      await this.prisma.deliveryRecord.create({
+        data: {
+          orderId: order.id,
+          merchantId: order.merchantId,
+          logisticsCompany,
+          trackingNo,
+          deliveryStatus: PlatformDataService.DELIVERY_STATUS.SHIPPED,
+          shippedAt: this.now(),
+        },
+      });
+    }
+
+    return {
+      orderNo,
+      trackingNo,
+      logisticsCompany,
+      deliveryStatus: PlatformDataService.DELIVERY_STATUS.SHIPPED,
+      status: '已发货',
+    };
+  }
+
   async auditMerchant(merchantId: number, body: Record<string, unknown>, authUser?: AuthUser) {
+    const merchantScope = await this.resolveAdminMerchantScope(authUser);
+    this.assertPlatformAdmin(merchantScope, '仅平台管理员可审核商户入驻');
+
     const auditStatus = Number(body.auditStatus ?? 3);
     const isReject = auditStatus === 4;
 
@@ -10354,6 +11081,8 @@ export class PlatformDataService {
           },
           update: {},
         });
+        // 自动创建后台商户账号（手机号登录），密码可在「同步商户账号/重置密码」中获取
+        await this.createMerchantAdminAccount(merchant.id);
       }
     }
 
@@ -10373,15 +11102,22 @@ export class PlatformDataService {
   }
 
   async auditProduct(productId: number, body: Record<string, unknown>, authUser?: AuthUser) {
+    const merchantScope = await this.resolveAdminMerchantScope(authUser);
+    this.assertPlatformAdmin(merchantScope, '仅平台管理员可审核商品');
+
     const auditStatus = Number(body.auditStatus ?? 3);
-    const isReject = auditStatus === 1;
-    const newAuditStatus = auditStatus === 3 ? 2 : 1;
+    // 与商户审核约定一致：3=通过，4=驳回；兼容旧值 1=驳回
+    const isReject = auditStatus === 4 || auditStatus === 1;
+    const isApprove = auditStatus === 3 || auditStatus === 2;
+    const newAuditStatus = isApprove ? 2 : isReject ? 3 : 1;
+    const remark = typeof body.remark === 'string' ? body.remark.trim() : '';
 
     await this.prisma.product.updateMany({
       where: { id: BigInt(productId) },
       data: {
         auditStatus: newAuditStatus,
-        ...(isReject ? { status: 0 } : {}),
+        ...(isReject ? { status: 0, auditRemark: remark || '商品审核未通过' } : {}),
+        ...(isApprove ? { status: 1, auditRemark: remark || '商品审核通过' } : {}),
       },
     });
 
@@ -10396,13 +11132,13 @@ export class PlatformDataService {
           data: {
             type: 'NOTIFICATION',
             title: '商品审核未通过',
-            summary: `您的商品「${product.title}」未通过平台审核${typeof body.remark === 'string' && body.remark ? `，原因：${body.remark}` : ''}`,
+            summary: `您的商品「${product.title}」未通过平台审核${remark ? `，原因：${remark}` : ''}`,
             contentType: 'TEXT',
             contentJson: {
               productId,
               productTitle: product.title,
               auditStatus: newAuditStatus,
-              reason: typeof body.remark === 'string' ? body.remark : null,
+              reason: remark || null,
               auditedAt: this.now().toISOString(),
             } as Prisma.InputJsonValue,
             senderType: 'SYSTEM',
@@ -10428,13 +11164,13 @@ export class PlatformDataService {
         'AUDIT_PRODUCT',
         '商品管理',
         productId,
-        { auditStatus, remark: body.remark ?? '' },
+        { auditStatus: newAuditStatus, remark },
     );
 
     return {
       productId,
-      auditStatus,
-      remark: body.remark ?? 'approved',
+      auditStatus: newAuditStatus,
+      remark: remark || (isApprove ? 'approved' : 'rejected'),
     };
   }
 
@@ -14998,13 +15734,80 @@ export class PlatformDataService {
 
   // ====== 后台商品强制下架/恢复 ======
 
-  async takedownAdminProduct(productId: number, authUser: AuthUser) {
-    await this.prisma.product.update({ where: { id: BigInt(productId) }, data: { status: 0 } });
-    return { success: true };
+  async takedownAdminProduct(productId: number, authUser: AuthUser, body: Record<string, unknown> = {}) {
+    const reason = typeof body.reason === 'string' ? body.reason.trim() : '';
+    const product = await this.prisma.product.findUnique({
+      where: { id: BigInt(productId) },
+      include: { merchant: true },
+    });
+    if (!product || product.deletedAt) {
+      throw new NotFoundException('商品不存在');
+    }
+
+    await this.prisma.product.update({
+      where: { id: BigInt(productId) },
+      data: {
+        status: 0,
+        auditRemark: reason ? `【平台下架】${reason}` : product.auditRemark,
+      },
+    });
+
+    if (product.merchant && reason) {
+      const message = await this.prisma.systemMessage.create({
+        data: {
+          type: 'NOTIFICATION',
+          title: '商品已被平台下架',
+          summary: `您的商品「${product.title}」已被平台下架，原因：${reason}`,
+          contentType: 'TEXT',
+          contentJson: {
+            productId,
+            productTitle: product.title,
+            reason,
+            takedownAt: this.now().toISOString(),
+          } as Prisma.InputJsonValue,
+          senderType: 'SYSTEM',
+          bizType: 'PRODUCT_TAKEDOWN',
+          bizId: String(productId),
+          publishAt: this.now(),
+          status: 'PUBLISHED',
+        },
+      });
+      await this.prisma.userMessage.create({
+        data: {
+          userId: product.merchant.userId,
+          messageId: message.id,
+          isRead: false,
+          deliveredAt: this.now(),
+        },
+      });
+    }
+
+    await this.recordAdminOperation(authUser, 'TAKEDOWN_PRODUCT', '商品管理', BigInt(productId), {
+      reason,
+    });
+
+    return { success: true, reason };
   }
 
   async restoreAdminProduct(productId: number, authUser: AuthUser) {
-    await this.prisma.product.update({ where: { id: BigInt(productId) }, data: { status: 1 } });
+    const product = await this.prisma.product.findUnique({ where: { id: BigInt(productId) } });
+    if (!product || product.deletedAt) {
+      throw new NotFoundException('商品不存在');
+    }
+    if (product.auditStatus !== 2) {
+      throw new BadRequestException('仅审核通过的商品可重新上架，请先完成审核');
+    }
+
+    await this.prisma.product.update({
+      where: { id: BigInt(productId) },
+      data: {
+        status: 1,
+        auditRemark: '平台恢复上架',
+      },
+    });
+
+    await this.recordAdminOperation(authUser, 'RESTORE_PRODUCT', '商品管理', BigInt(productId), {});
+
     return { success: true };
   }
 
