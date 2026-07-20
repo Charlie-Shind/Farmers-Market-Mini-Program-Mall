@@ -7,7 +7,7 @@ import {
   fetchCartItemCount,
   type AppProductDetail,
 } from '../../../services/app';
-import { joinGroupBuy, isAlreadyJoinedGroupError, navigateToJoinedGroupProgress } from '../../../services/quick';
+import { joinGroupBuy, isAlreadyJoinedGroupError, navigateToJoinedGroupProgress, buildGroupBuyCheckoutUrl } from '../../../services/quick';
 import { buildPageTopStyle } from '../../../utils/page-layout';
 import { navigateBackOrHome } from '../../../utils/auth-route';
 import { getAuthTokenType } from '../../../services/token';
@@ -618,7 +618,11 @@ Component({
         const gbId = Number((res as any).groupId || (res as any).groupBuyId || groupBuyId);
         wx.hideLoading();
         wx.navigateTo({
-          url: `/pages/checkout/checkout?mode=groupBuy&groupBuyId=${gbId}&productId=${product.id}&skuId=${skuInfo.id}`,
+          url: buildGroupBuyCheckoutUrl({
+            productId: product.id,
+            skuId: skuInfo.id,
+            groupId: gbId,
+          }),
         });
       } catch (err: any) {
         wx.hideLoading();

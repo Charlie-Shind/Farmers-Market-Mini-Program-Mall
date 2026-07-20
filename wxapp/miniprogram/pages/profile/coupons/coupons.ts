@@ -183,23 +183,5 @@ Component({
 
       this.applyFilter(key);
     },
-    showCouponDetail(e: WechatMiniprogram.BaseEvent) {
-      const index = Number((e.currentTarget.dataset as { index?: number }).index ?? -1);
-      const coupon = this.data.visibleCoupons[index];
-      if (!coupon) {
-        return;
-      }
-
-      wx.showModal({
-        title: coupon.name,
-        content: [
-          `面额：¥${coupon.discountAmount}`,
-          `门槛：满 ${coupon.thresholdAmount} 元`,
-          `状态：${coupon.statusLabel}`,
-          coupon.periodText,
-        ].join('\n'),
-        showCancel: false,
-      });
-    },
   },
 });

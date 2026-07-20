@@ -62,6 +62,7 @@
 }
 
 .logo-wrapper {
+  position: relative;
   width: 160rpx;
   height: 160rpx;
   border-radius: 50%;
@@ -72,11 +73,39 @@
   box-shadow: none;
 }
 
+.logo-wrapper--choose {
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+  border: 4rpx solid rgba(255, 255, 255, 0.9);
+  box-sizing: border-box;
+  box-shadow: 0 10rpx 28rpx rgba(44, 74, 57, 0.18);
+}
+
+.logo-wrapper--choose::after {
+  border: 0;
+}
+
 .logo-image {
   width: 100%;
   height: 100%;
   border-radius: 50%;
   display: block;
+}
+
+.avatar-edit {
+  position: absolute;
+  right: -4rpx;
+  bottom: -4rpx;
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #2c4a39;
+  border: 3rpx solid #ffffff;
+  box-sizing: border-box;
 }
 
 .app-name {

@@ -11,6 +11,14 @@
           </div>
           <div class="top-actions">
             <RefreshDataButton :loading="loading" label="刷新" @refresh="handleRefreshData" />
+            <el-button
+              type="danger"
+              plain
+              :disabled="!selectedIds.length || saving"
+              @click="batchDelete"
+            >
+              批量删除
+            </el-button>
             <el-button type="primary" @click="openCreateDialog">{{ createButtonLabel }}</el-button>
           </div>
         </div>
@@ -48,6 +56,18 @@
       </el-tabs>
 
       <el-table v-loading="loading" :data="visibleRows" stripe border class="exchange-table">
+        <el-table-column width="48" align="center">
+          <template #header>
+            <input type="checkbox" :checked="isAllSelected" @change="toggleSelectAll" />
+          </template>
+          <template #default="{ row }">
+            <input
+              type="checkbox"
+              :checked="selectedIds.includes(row.id)"
+              @change="toggleSelect(row.id)"
+            />
+          </template>
+        </el-table-column>
         <el-table-column prop="name" label="名称" min-width="180" />
         <el-table-column label="兑换类型" width="120">
           <template #default="{ row }">
@@ -242,6 +262,7 @@ const refreshApi = inject<{
 const loading = ref(false);
 const saving = ref(false);
 const rows = ref<ExchangeRow[]>([]);
+const selectedIds = ref<number[]>([]);
 const searchKeyword = ref('');
 const statusFilter = ref('');
 const kindFilter = ref('');
@@ -317,6 +338,11 @@ const visibleRows = computed(() => {
   return list.sort((a, b) => Number(b.id) - Number(a.id));
 });
 
+const isAllSelected = computed(() => {
+  if (!visibleRows.value.length) return false;
+  return visibleRows.value.every((item) => selectedIds.value.includes(item.id));
+});
+
 const pointsPreview = computed(() => {
   return Math.max(Math.ceil(Number(form.discountAmount || 0) * redeemRate.value), redeemRate.value);
 });
@@ -368,12 +394,31 @@ async function loadData(): Promise<boolean> {
   try {
     const data = await getExchangeCoupons({ page: 1, pageSize: 100 });
     rows.value = (data.items ?? []).filter((item) => String(item.type ?? '').toUpperCase() === 'CASHBACK');
+    selectedIds.value = [];
     return true;
   } catch (error: any) {
     ElMessage.error(error.message || '加载兑换中心失败');
     return false;
   } finally {
     loading.value = false;
+  }
+}
+
+function toggleSelect(id: number) {
+  const idx = selectedIds.value.indexOf(id);
+  if (idx > -1) {
+    selectedIds.value.splice(idx, 1);
+  } else {
+    selectedIds.value.push(id);
+  }
+}
+
+function toggleSelectAll() {
+  const visibleIds = visibleRows.value.map((item) => item.id);
+  if (isAllSelected.value) {
+    selectedIds.value = selectedIds.value.filter((id) => !visibleIds.includes(id));
+  } else {
+    selectedIds.value = Array.from(new Set([...selectedIds.value, ...visibleIds]));
   }
 }
 
@@ -593,6 +638,34 @@ async function removeItem(row: ExchangeRow) {
     await loadData();
   } catch {
     // ignore cancel
+  }
+}
+
+async function batchDelete() {
+  if (!selectedIds.value.length) return;
+  try {
+    await ElMessageBox.confirm(
+      `确定要批量删除已选的 ${selectedIds.value.length} 个兑换项吗？`,
+      '批量删除确认',
+      { confirmButtonText: '确定删除', cancelButtonText: '取消', type: 'warning' },
+    );
+    saving.value = true;
+    const results = await Promise.allSettled(selectedIds.value.map((id) => deleteExchangeCoupon(id)));
+    const successCount = results.filter((r) => r.status === 'fulfilled').length;
+    const failCount = results.length - successCount;
+    selectedIds.value = [];
+    await loadData();
+    if (failCount === 0) {
+      ElMessage.success(`成功删除 ${successCount} 个兑换项`);
+    } else {
+      ElMessage.warning(`删除完成：成功 ${successCount} 个，失败 ${failCount} 个`);
+    }
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      ElMessage.error(error.message || '批量删除失败');
+    }
+  } finally {
+    saving.value = false;
   }
 }
 

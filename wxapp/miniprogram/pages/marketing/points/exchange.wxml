@@ -1,78 +1,126 @@
 ﻿<view class="phone-page px-page" style="{{pageStyle}}">
-  <page-nav title="积分兑换" theme="solid" />
+  <image class="px-page__top-art" src="/assets/images/points/bg-top.jpg" mode="widthFix" />
+  <page-nav title="积分兑换" theme="light" />
 
-  <view class="px-balance">
-    <view class="px-balance__left">
-      <view class="px-balance__icon">
-        <t-icon name="points" size="36rpx" color="#8b5e22"></t-icon>
+  <view class="px-content">
+    <view class="px-brand">
+      <view>
+        <view class="px-brand__title-row">
+          <text class="px-brand__name">浔源农仓</text>
+          <image class="px-brand__leaf" src="/assets/images/points/leaf-cut.png" mode="aspectFit" />
+          <text class="px-brand__seal">源</text>
+        </view>
+        <text class="px-brand__slogan">源于自然 · 归于健康</text>
       </view>
-      <view class="px-balance__meta">
-        <text class="px-balance__label">可用积分</text>
-        <view class="px-balance__value-row">
-          <text class="px-balance__value">{{pointsBalance}}</text>
-          <text class="px-balance__unit">分</text>
+      <image class="px-brand__house" src="/assets/images/points/house-cut.png" mode="aspectFit" />
+    </view>
+
+    <view class="px-hero">
+      <view class="px-hero__shade"></view>
+      <view class="px-hero__copy">
+        <text class="px-hero__label">当前可用积分</text>
+        <view class="px-hero__value-row">
+          <text class="px-hero__value">{{pointsBalance}}</text>
+          <text class="px-hero__unit">分</text>
+        </view>
+        <view class="px-hero__note">
+          <t-icon name="coupon" size="24rpx" color="rgba(255,255,255,.82)"></t-icon>
+          <text>积分可用于兑换优惠券与好物</text>
         </view>
       </view>
+      <image class="px-hero__gift" src="/assets/images/points/gift-cut.png" mode="aspectFit" />
     </view>
-    <view class="px-balance__tip">
-      <text>下单可得积分</text>
-      <text>积分兑券立减</text>
+
+    <view class="px-tabs">
+      <view class="px-tab {{activeKind === 'COUPON' ? 'is-active' : ''}}" data-kind="COUPON" bindtap="switchKind">兑换卡券</view>
+      <view class="px-tab {{activeKind === 'PRODUCT' ? 'is-active' : ''}}" data-kind="PRODUCT" bindtap="switchKind">兑换商品</view>
     </view>
-  </view>
 
-  <view class="px-head">
-    <view class="px-head__main">
-      <text class="px-head__title">兑换好物</text>
-      <text class="px-head__sub">共 {{pointsGoods.length}} 件可兑权益</text>
+    <view class="px-section">
+      <view class="px-section__line"></view>
+      <image class="px-section__leaf px-section__leaf--left" src="/assets/images/points/leaf-cut.png" mode="aspectFit" />
+      <text class="px-section__title">精选兑换</text>
+      <image class="px-section__leaf" src="/assets/images/points/leaf-cut.png" mode="aspectFit" />
+      <view class="px-section__line"></view>
     </view>
-  </view>
 
-  <view wx:if="{{loading}}" class="px-state">
-    <text class="px-state__title">{{loadingText}}</text>
-    <text class="px-state__desc">正在同步可兑换内容</text>
-  </view>
-
-  <view wx:elif="{{!pointsGoods.length}}" class="px-state">
-    <view class="px-state__icon">
-      <t-icon name="gift" size="52rpx" color="#c7bfa8"></t-icon>
+    <view wx:if="{{loading}}" class="px-state">
+      <text class="px-state__title">{{loadingText}}</text>
     </view>
-    <text class="px-state__title">暂无可兑换商品</text>
-    <text class="px-state__desc">平台还在补充积分权益，过一会再来看看</text>
-  </view>
 
-  <view wx:else class="px-grid">
-    <view
-      wx:for="{{pointsGoods}}"
-      wx:key="id"
-      class="px-card {{item.received ? 'px-card--done' : ''}} {{!item.received && !item.canRedeem ? 'px-card--lack' : ''}}"
-    >
-      <view class="px-card__cover" style="{{item.imageStyle}}">
-        <view wx:if="{{!item.imageStyle}}" class="px-card__cover-fallback">
-          <t-icon name="gift" size="48rpx" color="#9a8660"></t-icon>
+    <view wx:elif="{{!displayGoods.length}}" class="px-state">
+      <t-icon name="gift" size="54rpx" color="#9eab83"></t-icon>
+      <text class="px-state__title">暂无可兑换{{activeKind === 'PRODUCT' ? '商品' : '卡券'}}</text>
+    </view>
+
+    <view wx:else class="px-list">
+      <view
+        wx:for="{{displayGoods}}"
+        wx:key="id"
+        wx:for-index="index"
+        class="px-card {{item.received ? 'px-card--done' : ''}}"
+      >
+        <view class="px-card__stub">
+          <image
+            wx:if="{{item.exchangeKind === 'PRODUCT' && item.coverUrl}}"
+            class="px-card__product"
+            src="{{item.coverUrl}}"
+            mode="aspectFill"
+          />
+          <block wx:else>
+            <text class="px-card__amount"><text class="px-card__yen">¥</text>{{item.discountAmount}}</text>
+            <text class="px-card__stub-label">{{item.exchangeKind === 'PRODUCT' ? '兑换好物' : '优惠券'}}</text>
+          </block>
+          <image
+            class="px-card__deco {{index % 2 ? 'px-card__deco--basket' : ''}}"
+            src="{{index % 2 ? '/assets/images/points/basket-cut.png' : '/assets/images/points/wheat-cut.png'}}"
+            mode="aspectFit"
+          />
         </view>
-        <view class="px-card__tag {{item.received ? 'px-card__tag--done' : item.canRedeem ? 'px-card__tag--avail' : 'px-card__tag--lack'}}">
-          {{item.received ? '已兑换' : item.canRedeem ? '可兑换' : '积分不足'}}
-        </view>
-      </view>
-      <view class="px-card__body">
-        <text class="px-card__title">{{item.title}}</text>
-        <text class="px-card__desc">{{item.desc}}</text>
-        <view class="px-card__foot">
-          <view class="px-card__cost">
-            <t-icon name="points" size="22rpx" color="#c65f2d"></t-icon>
-            <text class="px-card__cost-num">{{item.pointsCost}}</text>
+
+        <view class="px-card__main">
+          <view class="px-card__top">
+            <text class="px-card__title">{{item.title}}</text>
+            <text class="px-card__status {{item.canRedeem ? 'is-ready' : ''}}">
+              {{item.received ? '已兑换' : item.canRedeem ? '可兑换' : '积分不足'}}
+            </text>
           </view>
-          <view
-            class="px-card__btn {{item.received || !item.canRedeem ? 'px-card__btn--disabled' : ''}}"
-            data-coupon-id="{{item.couponId}}"
-            bindtap="redeemPoints"
-          >
-            {{item.received ? '已兑' : item.canRedeem ? '兑换' : '不足'}}
+          <text class="px-card__desc">{{item.desc}}</text>
+          <view class="px-card__foot">
+            <view class="px-card__cost">
+              <text class="px-card__cost-label">所需积分</text>
+              <text class="px-card__cost-num">{{item.pointsCost}}</text>
+            </view>
+            <view
+              class="px-card__btn {{item.received || !item.canRedeem ? 'is-disabled' : ''}}"
+              data-coupon-id="{{item.couponId}}"
+              bindtap="redeemPoints"
+            >{{item.received ? '已兑换' : item.canRedeem ? '立即兑换' : '积分不足'}}</view>
           </view>
         </view>
       </view>
     </view>
+
+    <view class="px-trust">
+      <view class="px-trust__item">
+        <view class="px-trust__icon"><t-icon name="shield" size="36rpx" color="#788867"></t-icon></view>
+        <text class="px-trust__title">安全可靠</text><text class="px-trust__desc">品质保障</text>
+      </view>
+      <view class="px-trust__item">
+        <view class="px-trust__icon"><t-icon name="origin" size="36rpx" color="#788867"></t-icon></view>
+        <text class="px-trust__title">绿色健康</text><text class="px-trust__desc">天然无害</text>
+      </view>
+      <view class="px-trust__item">
+        <view class="px-trust__icon"><t-icon name="favorite" size="36rpx" color="#788867"></t-icon></view>
+        <text class="px-trust__title">用心优选</text><text class="px-trust__desc">精选好物</text>
+      </view>
+      <view class="px-trust__item">
+        <view class="px-trust__icon"><t-icon name="gift" size="36rpx" color="#788867"></t-icon></view>
+        <text class="px-trust__title">更多好礼</text><text class="px-trust__desc">敬请期待</text>
+      </view>
+    </view>
   </view>
 
+  <image class="px-page__bottom-art" src="/assets/images/points/bg-bottom.jpg" mode="widthFix" />
   <view class="px-safe"></view>
 </view>

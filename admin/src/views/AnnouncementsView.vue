@@ -13,6 +13,18 @@
             <p class="section-desc">展示当前系统内已发布的所有公告、活动或订单消息，支持条件筛选及撤回操作。</p>
           </div>
           <div class="feed-filters">
+            <label class="batch-select-all">
+              <input type="checkbox" :checked="isAllSelected" @change="toggleSelectAll" />
+              <span>全选</span>
+            </label>
+            <button
+              type="button"
+              class="action-btn-danger"
+              :disabled="!selectedIds.length || saving"
+              @click="batchDelete"
+            >
+              批量删除
+            </button>
             <select v-model="filterType" class="filter-select">
               <option value="">所有分类</option>
               <option value="NOTICE">公告 (NOTICE)</option>
@@ -50,7 +62,15 @@
             v-for="msg in filteredMessages"
             :key="msg.id"
             class="announcement-feed-card"
+            :class="{ 'is-selected': selectedIds.includes(msg.id) }"
           >
+            <label class="card-check" @click.stop>
+              <input
+                type="checkbox"
+                :checked="selectedIds.includes(msg.id)"
+                @change="toggleSelect(msg.id)"
+              />
+            </label>
             <!-- Card Thumbnail / Icon -->
             <div class="card-image-area">
               <img
@@ -445,6 +465,7 @@ import {
   Tickets,
   WarningFilled,
 } from '@element-plus/icons-vue';
+import { ElMessage, ElMessageBox } from 'element-plus';
 
 import {
   getAdminMessages,
@@ -500,6 +521,7 @@ const saving = ref(false);
 const imageUploading = ref(false);
 const createModalOpen = ref(false);
 const previewOpen = ref(false);
+const selectedIds = ref<number[]>([]);
 
 const actionError = ref('');
 const actionMessage = ref('');
@@ -631,6 +653,11 @@ const filteredMessages = computed(() => {
   });
 });
 
+const isAllSelected = computed(() => {
+  if (!filteredMessages.value.length) return false;
+  return filteredMessages.value.every((item) => selectedIds.value.includes(item.id));
+});
+
 // Functions
 async function loadMessages() {
   loading.value = true;
@@ -643,10 +670,29 @@ async function loadMessages() {
     });
     messages.value = res.items;
     total.value = res.total;
+    selectedIds.value = [];
   } catch (error) {
     actionError.value = error instanceof Error ? error.message : '获取公告列表失败';
   } finally {
     loading.value = false;
+  }
+}
+
+function toggleSelect(id: number) {
+  const idx = selectedIds.value.indexOf(id);
+  if (idx > -1) {
+    selectedIds.value.splice(idx, 1);
+  } else {
+    selectedIds.value.push(id);
+  }
+}
+
+function toggleSelectAll() {
+  const visibleIds = filteredMessages.value.map((item) => item.id);
+  if (isAllSelected.value) {
+    selectedIds.value = selectedIds.value.filter((id) => !visibleIds.includes(id));
+  } else {
+    selectedIds.value = Array.from(new Set([...selectedIds.value, ...visibleIds]));
   }
 }
 
@@ -842,6 +888,34 @@ function confirmDelete(msg: AdminMessage) {
   openDeleteModal(msg);
 }
 
+async function batchDelete() {
+  if (!selectedIds.value.length) return;
+  try {
+    await ElMessageBox.confirm(
+      `确定要批量撤回已选的 ${selectedIds.value.length} 条公告吗？此操作不可恢复。`,
+      '批量删除确认',
+      { confirmButtonText: '确定撤回', cancelButtonText: '取消', type: 'warning' },
+    );
+    saving.value = true;
+    const results = await Promise.allSettled(selectedIds.value.map((id) => deleteAdminMessage(id)));
+    const successCount = results.filter((r) => r.status === 'fulfilled').length;
+    const failCount = results.length - successCount;
+    selectedIds.value = [];
+    await loadMessages();
+    if (failCount === 0) {
+      ElMessage.success(`成功撤回 ${successCount} 条公告`);
+    } else {
+      ElMessage.warning(`撤回完成：成功 ${successCount} 条，失败 ${failCount} 条`);
+    }
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      ElMessage.error(error?.message || '批量删除失败');
+    }
+  } finally {
+    saving.value = false;
+  }
+}
+
 // Helpers
 function typeIconComponent(type: string) {
   const map: Record<string, any> = {
@@ -955,6 +1029,23 @@ function previewLink(msg: AdminMessage | null) {
   color: var(--muted);
 }
 
+.feed-filters {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.batch-select-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--muted);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
 .feed-filters .filter-select {
   height: 38px;
   border: 1px solid var(--line);
@@ -984,6 +1075,26 @@ function previewLink(msg: AdminMessage | null) {
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
+}
+
+.announcement-feed-card.is-selected {
+  border-color: #409eff;
+  box-shadow: 0 0 0 1px rgba(64, 158, 255, 0.2);
+}
+
+.card-check {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 5;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
 }
 
 .announcement-feed-card:hover {

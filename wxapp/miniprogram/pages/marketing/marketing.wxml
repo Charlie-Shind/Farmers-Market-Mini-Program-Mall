@@ -1,52 +1,17 @@
 <view class="phone-page mkt-page" style="{{pageStyle}}">
   <page-nav title="营销中心" show-back="{{true}}" theme="solid" />
 
-  <view class="mkt-hero">
-    <view class="mkt-hero__glow mkt-hero__glow--1"></view>
-    <view class="mkt-hero__glow mkt-hero__glow--2"></view>
-    <view class="mkt-hero__copy">
-      <text class="mkt-hero__title">惊喜好价 · 天天有券</text>
-      <text class="mkt-hero__desc">新人券、限时秒杀、邻里拼团、积分兑换一站直达</text>
-    </view>
-    <view class="mkt-hero__nav">
-      <view class="mkt-hero__nav-item" bindtap="goToGiftZone" hover-class="mkt-hero__nav-item--hover">
-        <view class="mkt-hero__nav-icon mkt-hero__nav-icon--gold">
-          <t-icon name="coupon" size="30rpx" color="#8b5e22"></t-icon>
-        </view>
-        <text>领券</text>
-      </view>
-      <view class="mkt-hero__nav-item" bindtap="goToFlashSale" hover-class="mkt-hero__nav-item--hover">
-        <view class="mkt-hero__nav-icon mkt-hero__nav-icon--red">
-          <t-icon name="flash" size="30rpx" color="#c9483f"></t-icon>
-        </view>
-        <text>秒杀</text>
-      </view>
-      <view class="mkt-hero__nav-item" bindtap="goToGroupBuy" hover-class="mkt-hero__nav-item--hover">
-        <view class="mkt-hero__nav-icon mkt-hero__nav-icon--green">
-          <t-icon name="group" size="30rpx" color="#2c4a39"></t-icon>
-        </view>
-        <text>拼团</text>
-      </view>
-      <view class="mkt-hero__nav-item" bindtap="goToPointsExchange" hover-class="mkt-hero__nav-item--hover">
-        <view class="mkt-hero__nav-icon mkt-hero__nav-icon--blue">
-          <t-icon name="points" size="30rpx" color="#3a6b8a"></t-icon>
-        </view>
-        <text>积分</text>
-      </view>
-    </view>
-  </view>
-
   <view class="mkt-section">
     <view class="mkt-section__head">
-      <view class="mkt-section__badge mkt-section__badge--gold">
-        <t-icon name="coupon" size="26rpx" color="#8b5e22"></t-icon>
-      </view>
       <view class="mkt-section__heading">
-        <text class="mkt-section__title">新人专享券</text>
+        <view class="mkt-section__title-row">
+          <t-icon name="mktCoupon" size="34rpx" color="#2c4a39" strokeWidth="{{1.75}}"></t-icon>
+          <text class="mkt-section__title">新人专享券</text>
+        </view>
         <text class="mkt-section__sub">首单立减，先领先享</text>
       </view>
       <view class="mkt-section__more" bindtap="goToGiftZone">
-        <text>更多</text>
+        <text>更多卡卷</text>
         <t-icon name="chevronRight" size="20rpx" opacity="0.5"></t-icon>
       </view>
     </view>
@@ -90,11 +55,11 @@
 
   <view class="mkt-section">
     <view class="mkt-section__head">
-      <view class="mkt-section__badge mkt-section__badge--red">
-        <t-icon name="flash" size="26rpx" color="#c9483f"></t-icon>
-      </view>
       <view class="mkt-section__heading">
-        <text class="mkt-section__title">限时秒杀</text>
+        <view class="mkt-section__title-row">
+          <t-icon name="mktFlash" size="34rpx" color="#2c4a39" strokeWidth="{{1.75}}"></t-icon>
+          <text class="mkt-section__title">限时秒杀</text>
+        </view>
         <view class="mkt-countdown">
           <text class="mkt-countdown__label">{{flashCountdownLabel}}</text>
           <view class="mkt-countdown__seg">{{flashCountdownParts[0]}}</view>
@@ -105,7 +70,7 @@
         </view>
       </view>
       <view class="mkt-section__more" bindtap="goToFlashSale">
-        <text>更多</text>
+        <text>更多福利</text>
         <t-icon name="chevronRight" size="20rpx" opacity="0.5"></t-icon>
       </view>
     </view>
@@ -133,7 +98,6 @@
           <view wx:if="{{!item.imageStyle}}" class="cover-fallback">
             <t-icon name="gift" size="44rpx" color="#9e8c6a"></t-icon>
           </view>
-          <text wx:if="{{item.discount}}" class="flash-tile__ribbon">{{item.discount}}</text>
         </view>
         <text class="flash-tile__title">{{item.title}}</text>
         <view class="flash-tile__prices">
@@ -152,15 +116,14 @@
 
   <view class="mkt-section">
     <view class="mkt-section__head">
-      <view class="mkt-section__badge mkt-section__badge--green">
-        <t-icon name="group" size="26rpx" color="#2c4a39"></t-icon>
-      </view>
       <view class="mkt-section__heading">
-        <text class="mkt-section__title">邻里拼团</text>
-        <text class="mkt-section__sub">左邻右舍拼单，人多更省</text>
+        <view class="mkt-section__title-row">
+          <t-icon name="mktGroup" size="34rpx" color="#2c4a39" strokeWidth="{{1.75}}"></t-icon>
+          <text class="mkt-section__title">邻里拼团</text>
+        </view>
       </view>
       <view class="mkt-section__more" bindtap="goToGroupBuy">
-        <text>更多</text>
+        <text>更多拼团</text>
         <t-icon name="chevronRight" size="20rpx" opacity="0.5"></t-icon>
       </view>
     </view>
@@ -174,8 +137,8 @@
       <button class="mkt-location-btn" bindtap="goToSelectLocation">选择位置</button>
     </view>
 
-    <view wx:elif="{{loadingGroup}}" class="group-stack">
-      <view class="group-tile group-tile--skel" wx:for="{{[1,2]}}" wx:key="*this"></view>
+    <view wx:elif="{{loadingGroup}}" class="gb-list">
+      <view class="gb-row gb-row--skel" wx:for="{{[1,2]}}" wx:key="*this"></view>
     </view>
 
     <view wx:elif="{{groupEmpty}}" class="mkt-empty">
@@ -184,54 +147,49 @@
       <text class="mkt-empty__sub">去秒杀区看看其他好货</text>
     </view>
 
-    <view wx:else class="group-stack">
+    <view wx:else class="gb-list">
       <view
-        wx:if="{{groupProducts.length}}"
-        class="group-tile group-tile--featured"
-        data-product-id="{{groupProducts[0].productId}}"
-        data-sku-id="{{groupProducts[0].skuId}}"
-        data-group-id="{{groupProducts[0].groupId}}"
+        wx:for="{{groupProducts}}"
+        wx:key="groupId"
+        class="gb-row"
+        data-product-id="{{item.productId}}"
+        data-sku-id="{{item.skuId}}"
+        data-group-id="{{item.groupId}}"
         bindtap="openGroupDetail"
-        hover-class="group-tile--hover"
+        hover-class="gb-row--hover"
       >
-        <view class="group-tile__cover" style="{{groupProducts[0].imageStyle}}">
-          <view wx:if="{{!groupProducts[0].imageStyle}}" class="cover-fallback cover-fallback--group">
-            <t-icon name="gift" size="44rpx" color="#8f7f64"></t-icon>
+        <view class="gb-row__cover" style="{{item.imageStyle}}">
+          <view wx:if="{{!item.imageStyle}}" class="cover-fallback cover-fallback--group">
+            <t-icon name="gift" size="40rpx" color="#8f7f64"></t-icon>
           </view>
         </view>
-        <view class="group-tile__body">
-          <text class="group-tile__title">{{groupProducts[0].title}}</text>
-          <view class="group-tile__progress-bar">
-            <view class="group-tile__progress-fill" style="width: {{groupProducts[0].progress}}%;"></view>
+        <view class="gb-row__body">
+          <text class="gb-row__title">{{item.title}}</text>
+          <view class="gb-row__mid">
+            <text class="gb-row__badge">{{item.needBadge}}</text>
+            <view class="gb-row__price">
+              <text class="gb-row__yen">¥</text>
+              <text class="gb-row__num">{{item.groupPrice}}</text>
+            </view>
           </view>
-          <view class="group-tile__meta-row">
-            <text class="group-tile__meta">{{groupProducts[0].memberText}}</text>
-            <text class="group-tile__meta-dot">·</text>
-            <text class="group-tile__meta">{{groupProducts[0].expireText}}</text>
-          </view>
-          <view class="group-tile__prices">
-            <text class="group-tile__price">拼团价 {{groupProducts[0].groupPrice}}</text>
-            <text class="group-tile__origin">{{groupProducts[0].originPrice}}</text>
-          </view>
+          <text class="gb-row__joined">{{item.joinedText}}</text>
         </view>
-        <view class="group-tile__action">
-          <view class="group-tile__btn">去拼团</view>
-        </view>
+        <view class="gb-row__cta {{item.isFull ? 'gb-row__cta--disabled' : ''}}" catchtap="openGroupDetail" data-product-id="{{item.productId}}" data-sku-id="{{item.skuId}}" data-group-id="{{item.groupId}}">{{item.isFull ? '已满员' : '去拼团'}}</view>
       </view>
     </view>
   </view>
 
   <view class="mkt-section">
     <view class="mkt-section__head">
-      <view class="mkt-section__badge mkt-section__badge--blue">
-        <t-icon name="points" size="26rpx" color="#3a6b8a"></t-icon>
-      </view>
       <view class="mkt-section__heading">
-        <text class="mkt-section__title">积分兑换</text>
+        <view class="mkt-section__title-row">
+          <t-icon name="mktPoints" size="34rpx" color="#2c4a39" strokeWidth="{{1.75}}"></t-icon>
+          <text class="mkt-section__title">积分兑换</text>
+        </view>
         <text class="mkt-section__sub">我的积分 <text class="mkt-section__sub-strong">{{pointsBalance}}</text></text>
       </view>
       <view class="mkt-section__more" bindtap="goToPointsExchange">
-        <text>更多</text>
+        <text>更多兑换</text>
         <t-icon name="chevronRight" size="20rpx" opacity="0.5"></t-icon>
       </view>
     </view>

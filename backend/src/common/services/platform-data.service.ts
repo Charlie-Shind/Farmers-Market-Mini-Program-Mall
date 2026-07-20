@@ -226,6 +226,10 @@ export class PlatformDataService {
     return this.configService.get<string>('DEMO_SHARE_BASE_URL', `${this.getDemoCdnBaseUrl()}/share`).replace(/\/+$/, '');
   }
 
+  toPublicUrl(url: string | null | undefined): string {
+    return this.resolvePublicUrl(url) ?? '';
+  }
+
   private resolvePublicUrl(url: string | null | undefined): string | null {
     if (!url) return null;
 
@@ -392,6 +396,155 @@ export class PlatformDataService {
     return value ? value.toISOString() : '';
   }
 
+  /** 按 Asia/Shanghai 格式化为 YYYY-MM-DD HH:mm[:ss]，避免 UTC 与编辑时间差 8 小时 */
+  private formatChinaDateTime(value: Date | null | undefined, withSeconds = true): string {
+    if (!value) {
+      return '';
+    }
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Shanghai',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    }).formatToParts(value);
+    const pick = (type: Intl.DateTimeFormatPartTypes) =>
+      parts.find((part) => part.type === type)?.value ?? '00';
+    const base = `${pick('year')}-${pick('month')}-${pick('day')} ${pick('hour')}:${pick('minute')}`;
+    return withSeconds ? `${base}:${pick('second')}` : base;
+  }
+
+  /** 无时区的时间字符串按中国时区解析，避免存库偏移 */
+  private parseChinaDateTime(value: unknown): Date | null {
+    if (value == null || value === '') {
+      return null;
+    }
+    if (value instanceof Date) {
+      return Number.isNaN(value.getTime()) ? null : value;
+    }
+    const raw = String(value).trim();
+    if (!raw) {
+      return null;
+    }
+    if (/[zZ]|[+-]\d{2}:?\d{2}$/.test(raw)) {
+      const parsed = new Date(raw);
+      return Number.isNaN(parsed.getTime()) ? null : parsed;
+    }
+    const normalized = raw.includes('T') ? raw : raw.replace(' ', 'T');
+    const withSeconds = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(normalized)
+      ? `${normalized}:00`
+      : normalized;
+    const parsed = new Date(`${withSeconds}+08:00`);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  private getChinaYmd(date: Date): { year: number; month: number; day: number; key: number } {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Shanghai',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).formatToParts(date);
+    const pick = (type: Intl.DateTimeFormatPartTypes) =>
+      Number(parts.find((part) => part.type === type)?.value ?? 0);
+    const year = pick('year');
+    const month = pick('month');
+    const day = pick('day');
+    return {
+      year,
+      month,
+      day,
+      key: year * 10000 + month * 100 + day,
+    };
+  }
+
+  private getChinaDayBounds(dayKey: number): { start: Date; end: Date } | null {
+    const key = String(Math.floor(dayKey));
+    if (!/^\d{8}$/.test(key)) {
+      return null;
+    }
+    const year = key.slice(0, 4);
+    const month = key.slice(4, 6);
+    const day = key.slice(6, 8);
+    const start = new Date(`${year}-${month}-${day}T00:00:00+08:00`);
+    const end = new Date(`${year}-${month}-${day}T23:59:59.999+08:00`);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+      return null;
+    }
+    return { start, end };
+  }
+
+  private buildFlashSaleDayTabs(now = new Date()) {
+    const today = this.getChinaYmd(now);
+    const tabs: Array<{
+      id: number;
+      label: string;
+      startAt: string;
+      endAt: string;
+      status: 'ONGOING' | 'UPCOMING' | 'ENDED';
+    }> = [];
+
+    const baseNoon = new Date(
+      `${today.year}-${String(today.month).padStart(2, '0')}-${String(today.day).padStart(2, '0')}T12:00:00+08:00`,
+    );
+
+    for (let offset = 0; offset < 5; offset += 1) {
+      const cursor = new Date(baseNoon.getTime() + offset * 24 * 60 * 60 * 1000);
+      const ymd = this.getChinaYmd(cursor);
+      const bounds = this.getChinaDayBounds(ymd.key);
+      if (!bounds) {
+        continue;
+      }
+      tabs.push({
+        id: ymd.key,
+        label: `${ymd.month}月${ymd.day}日`,
+        startAt: bounds.start.toISOString(),
+        endAt: bounds.end.toISOString(),
+        status: offset === 0 ? 'ONGOING' : 'UPCOMING',
+      });
+    }
+
+    return tabs;
+  }
+
+  private resolveFlashSalePrices(input: {
+    activityPrice?: unknown;
+    originalPrice?: unknown;
+    skuPrice?: unknown;
+    skuOriginalPrice?: unknown;
+  }) {
+    const skuPrice = Number(input.skuPrice ?? 0);
+    const skuOriginal = Number(input.skuOriginalPrice ?? 0);
+    const formFlash = Number(input.activityPrice ?? 0);
+    const formOrigin = Number(input.originalPrice ?? 0);
+
+    const flashPrice = formFlash > 0 ? formFlash : Math.max(skuPrice, 0);
+    let originPrice =
+      formOrigin > flashPrice
+        ? formOrigin
+        : skuOriginal > flashPrice
+          ? skuOriginal
+          : skuPrice > flashPrice
+            ? skuPrice
+            : formOrigin > 0
+              ? formOrigin
+              : skuOriginal > 0
+                ? skuOriginal
+                : Math.max(skuPrice, flashPrice);
+
+    if (originPrice < flashPrice) {
+      originPrice = flashPrice;
+    }
+
+    return {
+      flashPrice: Math.max(flashPrice, 0),
+      originPrice: Math.max(originPrice, 0),
+    };
+  }
+
   private parseDate(value: unknown): Date | null {
     if (value == null) {
       return null;
@@ -399,6 +552,12 @@ export class PlatformDataService {
 
     if (value instanceof Date) {
       return Number.isNaN(value.getTime()) ? null : value;
+    }
+
+    // 活动/后台表单常见本地时间：优先按中国时区解析
+    const asChina = this.parseChinaDateTime(value);
+    if (asChina) {
+      return asChina;
     }
 
     const parsed = new Date(String(value));
@@ -1053,7 +1212,16 @@ export class PlatformDataService {
     const group = await this.prisma.groupBuy.findUnique({
       where: { id: groupBuyId },
       include: {
-        members: { select: { id: true, userId: true, isInitiator: true, joinedAt: true } },
+        members: {
+          select: {
+            id: true,
+            userId: true,
+            isInitiator: true,
+            joinedAt: true,
+            user: { select: { nickname: true, avatarUrl: true } },
+          },
+          orderBy: [{ isInitiator: 'desc' }, { joinedAt: 'asc' }],
+        },
         product: { select: { id: true, title: true, coverUrl: true } },
       },
     });
@@ -1080,6 +1248,8 @@ export class PlatformDataService {
         userId: this.toNumber(m.userId),
         isInitiator: m.isInitiator,
         joinedAt: m.joinedAt.toISOString(),
+        nickname: m.user?.nickname || '',
+        avatarUrl: this.resolvePublicUrl(m.user?.avatarUrl ?? null) ?? '',
       })),
     };
   }
@@ -1262,6 +1432,100 @@ export class PlatformDataService {
       earnRate,
       redeemRate,
     };
+  }
+
+  /**
+   * 按实付金额发放订单积分（幂等：同一订单号只会发放一次）。
+   * 默认 earnRate=1，即支付 1 元返还 1 积分。
+   */
+  private async awardOrderEarnPoints(
+    client: Prisma.TransactionClient | PrismaService,
+    params: {
+      userId: bigint;
+      orderNo: string;
+      payAmount: Prisma.Decimal | number;
+      remark?: string;
+    },
+  ) {
+    const existing = await client.pointLog.findFirst({
+      where: {
+        userId: params.userId,
+        sourceNo: params.orderNo,
+        changeType: 'EARN',
+        sourceType: 'ORDER',
+      },
+      select: { id: true },
+    });
+    if (existing) {
+      return 0;
+    }
+
+    const pointRule = await this.getPointRuleConfig();
+    const points = Math.max(Math.floor(Number(params.payAmount) * pointRule.earnRate), 0);
+    if (points <= 0) {
+      return 0;
+    }
+
+    await client.pointLog.create({
+      data: {
+        userId: params.userId,
+        changeType: 'EARN',
+        points,
+        sourceType: 'ORDER',
+        sourceNo: params.orderNo,
+        remark: params.remark ?? '订单支付奖励',
+      },
+    });
+    return points;
+  }
+
+  /** 退款/拼团失败时扣回该订单已发放的支付奖励积分（幂等）。 */
+  private async clawBackOrderEarnPoints(
+    tx: Prisma.TransactionClient,
+    params: { userId: bigint; orderNo: string; remark: string },
+  ) {
+    const earnLog = await tx.pointLog.findFirst({
+      where: {
+        userId: params.userId,
+        sourceNo: params.orderNo,
+        changeType: 'EARN',
+        sourceType: 'ORDER',
+      },
+      select: { points: true },
+    });
+    if (!earnLog) {
+      return;
+    }
+
+    const earnPoints = Math.abs(Number(earnLog.points));
+    if (earnPoints <= 0) {
+      return;
+    }
+
+    const alreadyClawed = await tx.pointLog.findFirst({
+      where: {
+        userId: params.userId,
+        sourceNo: params.orderNo,
+        changeType: 'DEDUCT',
+        sourceType: 'ORDER',
+        remark: params.remark,
+      },
+      select: { id: true },
+    });
+    if (alreadyClawed) {
+      return;
+    }
+
+    await tx.pointLog.create({
+      data: {
+        userId: params.userId,
+        changeType: 'DEDUCT',
+        points: -earnPoints,
+        sourceType: 'ORDER',
+        sourceNo: params.orderNo,
+        remark: params.remark,
+      },
+    });
   }
 
   private isCouponUserLifecycleEligible(
@@ -2675,7 +2939,7 @@ export class PlatformDataService {
           user.openid,
           authUser.role === RoleCode.GUEST ? '游客用户' : '微信用户',
       ),
-      avatarUrl: resolveProfileText(user.avatarUrl, ''),
+      avatarUrl: this.resolvePublicUrl(resolveProfileText(user.avatarUrl, '')) ?? '',
       mobile: resolveProfileText(user.mobile, ''),
       status: user.status,
       lastLoginAt: user.lastLoginAt ? user.lastLoginAt.toISOString() : '',
@@ -2750,7 +3014,7 @@ export class PlatformDataService {
           updatedUser.openid,
           '微信用户',
       ),
-      avatarUrl: resolveProfileText(updatedUser.avatarUrl, ''),
+      avatarUrl: this.resolvePublicUrl(resolveProfileText(updatedUser.avatarUrl, '')) ?? '',
       mobile: resolveProfileText(updatedUser.mobile, ''),
       status: updatedUser.status,
       lastLoginAt: updatedUser.lastLoginAt ? updatedUser.lastLoginAt.toISOString() : '',
@@ -3030,6 +3294,8 @@ export class PlatformDataService {
     const mobile = await this.wechatAuthService.resolveWechatPhoneNumberForLogin(phoneCode);
     const session = await this.wechatAuthService.resolveWechatCodeSession(loginCode);
     const openid = session.openid;
+    const avatarUrl = resolveProfileText(body.avatarUrl, '');
+    const nickname = resolveProfileText(body.nickName ?? body.nickname, '');
     let user = await this.prisma.user.findUnique({ where: { openid } });
 
     // 开发态或异常情况下，login 与 bind 可能短暂拿不到同一用户；
@@ -3065,6 +3331,8 @@ export class PlatformDataService {
               .update({
                 where: { id: existingMobileOwner.id },
                 data: {
+                  ...(avatarUrl ? { avatarUrl } : {}),
+                  ...(nickname ? { nickname } : {}),
                   lastLoginAt: this.now(),
                 },
               })
@@ -3079,6 +3347,8 @@ export class PlatformDataService {
               where: { id: user.id },
               data: {
                 ...(mobile ? { mobile } : {}),
+                ...(avatarUrl ? { avatarUrl } : {}),
+                ...(nickname ? { nickname } : {}),
                 lastLoginAt: this.now(),
               },
             })
@@ -4623,7 +4893,10 @@ export class PlatformDataService {
       groups.set(merchantId, group);
     }
 
-    return [...groups.values()];
+    return {
+      groups: [...groups.values()],
+      freightPromo: await this.getPublicFreightPromo(),
+    };
   }
 
   async updateCartItem(authUser: AuthUser, cartId: number, body: Record<string, unknown>) {
@@ -4868,6 +5141,175 @@ export class PlatformDataService {
     const groupBuyId = body.groupBuyId != null ? Number(body.groupBuyId) : 0;
     const groupProductId = body.productId != null ? Number(body.productId) : 0;
     const groupSkuId = body.skuId != null ? Number(body.skuId) : 0;
+    const isGroupBuyMode = String(body.orderMode ?? '').trim().toUpperCase() === 'GROUP_BUY';
+
+    // 开新团下单：此时还没有 groupBuyId，提交订单时才创建 GroupBuy 容器并挂上订单。
+    // 成员名额仍要等支付成功（settleGroupBuyOrderPayment）才写入。
+    if (isGroupBuyMode && !(groupBuyId > 0) && groupProductId > 0 && groupSkuId > 0) {
+      const product = await this.prisma.product.findUnique({
+        where: { id: BigInt(groupProductId) },
+        include: { skus: { where: { id: BigInt(groupSkuId) }, take: 1 } },
+      });
+      if (!product) {
+        throw new BadRequestException('商品不存在');
+      }
+      const sku = product.skus[0] || (await this.prisma.productSku.findUnique({ where: { id: BigInt(groupSkuId) } }));
+      if (!sku || this.toNumber(sku.productId) !== groupProductId) {
+        throw new BadRequestException('SKU 不存在');
+      }
+      const groupConfig = this.normalizeGroupBuyConfig(product.groupBuyConfig);
+      if (!groupConfig?.enabled) {
+        throw new BadRequestException('该商品暂不支持拼团');
+      }
+
+      const quantity = Math.max(Number(body.quantity ?? 1) || 1, 1);
+      if (quantity !== 1) {
+        throw new BadRequestException('拼团商品仅支持单件下单');
+      }
+      if (sku.stock < quantity) {
+        throw new BadRequestException('该拼团商品库存不足');
+      }
+
+      const originPrice = Number(sku.price);
+      const groupPrice = Number((originPrice * Number(groupConfig.discountRate)).toFixed(2));
+      const goodsAmount = groupPrice * quantity;
+      const addressSnapshot = await this.resolveOrderAddressSnapshot(authUser, body);
+      const province = (addressSnapshot as Record<string, unknown> | null)?.province;
+      const freightAmount = await this.calculateFreight(String(province ?? '全国'), goodsAmount);
+      const couponId = body.couponId != null ? Number(body.couponId) : null;
+      const coupon = couponId ? await this.prisma.coupon.findUnique({ where: { id: BigInt(couponId) } }) : null;
+      const userCoupon = couponId
+        ? await this.prisma.userCoupon.findUnique({
+            where: {
+              userId_couponId: {
+                userId: user.id,
+                couponId: BigInt(couponId),
+              },
+            },
+          })
+        : null;
+      const categoryIds = [this.toNumber(product.categoryId)];
+      const couponUsage = this.evaluateCouponUsage(coupon, userCoupon, goodsAmount, {
+        merchantId: this.toNumber(product.merchantId),
+        categoryIds,
+      });
+      if (couponId != null && !couponUsage.usable) {
+        throw new BadRequestException(couponUsage.reason ?? '优惠券不可用');
+      }
+      const couponDiscount = couponUsage.usable ? couponUsage.discountAmount : 0;
+      const pointRule = await this.getPointRuleConfig();
+      const pointsSum = await this.prisma.pointLog.aggregate({
+        where: { userId: user.id },
+        _sum: { points: true },
+      });
+      const availablePoints = Math.max(Number(pointsSum._sum.points ?? 0), 0);
+      const usePoints = Math.min(Math.max(Number(body.usePoints ?? 0), 0), availablePoints);
+      if (usePoints > 0 && !pointRule.redeemEnabled) {
+        throw new BadRequestException('积分抵扣已关闭');
+      }
+      const pointsDiscount = usePoints > 0 ? Math.min(usePoints / pointRule.redeemRate, Math.max(goodsAmount - couponDiscount, 0)) : 0;
+      const payAmount = Math.max(goodsAmount + freightAmount - couponDiscount - pointsDiscount, 0);
+      const orderNo = `NO${randomUUID().replace(/-/g, '').slice(0, 12)}`;
+
+      const order = await this.prisma.$transaction(async (tx) => {
+        const lockedSku = await tx.productSku.updateMany({
+          where: { id: sku.id, stock: { gte: quantity } },
+          data: { stock: { decrement: quantity }, lockedStock: { increment: quantity } },
+        });
+        if (lockedSku.count === 0) {
+          throw new BadRequestException('该拼团商品库存不足');
+        }
+
+        const groupNo = `GB${randomUUID().replace(/-/g, '').slice(0, 14).toUpperCase()}`;
+        const inviteCode = await this.generateUniqueInviteCode(tx);
+        const expireGroupAt = new Date(Date.now() + Number(groupConfig.expireHours) * 60 * 60 * 1000);
+        const group = await tx.groupBuy.create({
+          data: {
+            groupNo,
+            inviteCode,
+            productId: product.id,
+            skuId: sku.id,
+            initiatorId: user.id,
+            groupPrice: new Prisma.Decimal(groupPrice.toFixed(2)),
+            originPrice: new Prisma.Decimal(originPrice.toFixed(2)),
+            needed: Number(groupConfig.needed),
+            status: 'OPEN',
+            expireAt: expireGroupAt,
+            roughArea: '附近',
+            latitude: null,
+            longitude: null,
+          },
+        });
+
+        const created = await tx.order.create({
+          data: {
+            orderNo,
+            userId: user.id,
+            merchantId: product.merchantId,
+            groupBuyId: group.id,
+            addressSnapshot,
+            goodsAmount: new Prisma.Decimal(goodsAmount.toFixed(2)),
+            freightAmount: new Prisma.Decimal(freightAmount.toFixed(2)),
+            discountAmount: new Prisma.Decimal((couponDiscount + pointsDiscount).toFixed(2)),
+            payAmount: new Prisma.Decimal(payAmount.toFixed(2)),
+            orderStatus: 1,
+            payStatus: 0,
+            deliveryStatus: 0,
+            refundStatus: 0,
+            expireAt,
+            remark: typeof body.remark === 'string' ? body.remark : null,
+            items: {
+              create: [
+                {
+                  productId: product.id,
+                  skuId: sku.id,
+                  productTitle: product.title,
+                  skuName: sku.skuName,
+                  productImage: product.coverUrl,
+                  unitPrice: new Prisma.Decimal(groupPrice.toFixed(2)),
+                  quantity,
+                  lineAmount: new Prisma.Decimal((groupPrice * quantity).toFixed(2)),
+                },
+              ],
+            },
+          },
+          include: { items: true },
+        });
+
+        if (usePoints > 0) {
+          await tx.pointLog.create({
+            data: {
+              userId: user.id,
+              changeType: 'DEDUCT',
+              points: -usePoints,
+              sourceType: 'ORDER',
+              sourceNo: orderNo,
+              remark: '拼团订单抵扣积分',
+            },
+          });
+        }
+
+        if (couponId != null && coupon && userCoupon && couponUsage.usable) {
+          await tx.userCoupon.update({
+            where: {
+              userId_couponId: {
+                userId: user.id,
+                couponId: BigInt(couponId),
+              },
+            },
+            data: {
+              status: 'USED',
+              usedAt: this.now(),
+              orderNo,
+            },
+          });
+        }
+
+        return created;
+      });
+
+      return { orderNo: order.orderNo, status: 'PENDING', childOrderNos: [order.orderNo], payAmount: payAmount.toFixed(2) };
+    }
 
     // 秒杀订单
     const flashSaleItemId = body.flashSaleItemId != null ? Number(body.flashSaleItemId) : 0;
@@ -4931,7 +5373,6 @@ export class PlatformDataService {
           include: { items: true },
         });
 
-        // 关联秒杀 claim
         await tx.flashSaleClaim.updateMany({
           where: { itemId: flashItem.id, userId: user.id, orderNo: null },
           data: { orderNo: created.orderNo, status: 'CONVERTED' },
@@ -5637,20 +6078,13 @@ export class PlatformDataService {
       data: { orderStatus: 3, deliveryStatus: 2, completedAt: this.now() },
     });
 
-    const pointRule = await this.getPointRuleConfig();
-    const points = Math.max(Math.floor(Number(order.payAmount) * pointRule.earnRate), 0);
-    if (points > 0) {
-      await this.prisma.pointLog.create({
-        data: {
-          userId: user.id,
-          changeType: 'EARN',
-          points,
-          sourceType: 'ORDER',
-          sourceNo: order.orderNo,
-          remark: '订单完成奖励',
-        },
-      });
-    }
+    // 积分主流程已改为支付成功时发放；此处仅对历史已支付但未发积分的订单做一次补发（幂等）。
+    await this.awardOrderEarnPoints(this.prisma, {
+      userId: user.id,
+      orderNo: order.orderNo,
+      payAmount: order.payAmount,
+      remark: '订单完成奖励',
+    });
 
     const commissionRate = Number(order.merchant.commissionRate ?? 0.05);
     const commissionAmount = Number(order.payAmount) * commissionRate;
@@ -5896,7 +6330,7 @@ export class PlatformDataService {
           })
         : [];
 
-    await this.prisma.$transaction(async (tx) => {
+    const overflowRefunded = await this.prisma.$transaction(async (tx) => {
       // 父订单/普通订单本体置为已支付
       await tx.order.updateMany({
         where: { orderNo, payStatus: { not: 1 } },
@@ -5931,14 +6365,14 @@ export class PlatformDataService {
       // P0：拼团订单支付成功后才真正占用成团名额，若此时团已满员/已结束（并发竞态），
       // 则这笔钱直接走自动退款，不进入商家钱包，避免"钱付了但没入团、商家却已收到货款"。
       if (order.groupBuyId != null) {
-        const overflowRefunded = await this.settleGroupBuyOrderPayment(tx, {
+        const refunded = await this.settleGroupBuyOrderPayment(tx, {
           orderId: order.id,
           orderNo,
           groupBuyId: order.groupBuyId,
           userId: order.userId,
         });
-        if (overflowRefunded) {
-          return;
+        if (refunded) {
+          return true;
         }
       }
 
@@ -5981,11 +6415,21 @@ export class PlatformDataService {
           },
         });
       }
+
+      // 支付成功即按实付金额返还积分（同一订单幂等，不重复发放）
+      await this.awardOrderEarnPoints(tx, {
+        userId: order.userId,
+        orderNo,
+        payAmount: order.payAmount,
+        remark: '订单支付奖励',
+      });
+
+      return false;
     });
 
     return {
       received: true,
-      processed: true,
+      processed: !overflowRefunded,
     };
   }
 
@@ -6061,8 +6505,13 @@ export class PlatformDataService {
       });
     }
 
+    // 仅退还下单时抵扣的积分，避免误把「扣回支付奖励」的 DEDUCT 再退回去
     const pointsDeductLog = await tx.pointLog.findFirst({
-      where: { sourceNo: order.orderNo, changeType: 'DEDUCT' },
+      where: {
+        sourceNo: order.orderNo,
+        changeType: 'DEDUCT',
+        remark: { in: ['订单抵扣积分', '拼团订单抵扣积分'] },
+      },
     });
     if (pointsDeductLog) {
       const refundPoints = Math.abs(Number(pointsDeductLog.points));
@@ -6079,6 +6528,13 @@ export class PlatformDataService {
         });
       }
     }
+
+    // 若该订单已发放支付奖励积分，一并扣回
+    await this.clawBackOrderEarnPoints(tx, {
+      userId: order.userId,
+      orderNo: order.orderNo,
+      remark: '订单退款扣回支付奖励积分',
+    });
 
     await tx.userCoupon.updateMany({
       where: { orderNo: order.orderNo, status: 'USED' },
@@ -7545,8 +8001,8 @@ export class PlatformDataService {
             type: activity.activityType,
             status: activity.status,
             desc: `${activity.activityType} · 商品数 ${activity.productCount}`,
-            startAt: activity.startAt ? activity.startAt.toISOString().slice(0, 16).replace('T', ' ') : '',
-            endAt: activity.endAt ? activity.endAt.toISOString().slice(0, 16).replace('T', ' ') : '',
+            startAt: this.formatChinaDateTime(activity.startAt),
+            endAt: this.formatChinaDateTime(activity.endAt),
             productCount: activity.productCount,
             coupon: couponInfo,
           };
@@ -10084,105 +10540,89 @@ export class PlatformDataService {
 
   async getQuickFlashSaleActive() {
     await this.withSeed();
-
+    const syncedWindowIds = await this.ensurePublishedSeckillFlashSalesSynced();
     const now = new Date();
+    const dayTabs = this.buildFlashSaleDayTabs(now);
+    const todayTab = dayTabs[0] ?? null;
 
-    const dbWindows = await this.prisma.flashSaleWindow.findMany({
+    if (!todayTab || syncedWindowIds.length === 0) {
+      return {
+        windows: dayTabs,
+        items: [],
+        generatedAt: now.toISOString(),
+      };
+    }
+
+    const bounds = this.getChinaDayBounds(todayTab.id);
+    if (!bounds) {
+      return {
+        windows: dayTabs,
+        items: [],
+        generatedAt: now.toISOString(),
+      };
+    }
+
+    const overlappingWindows = await this.prisma.flashSaleWindow.findMany({
       where: {
-        startAt: { lte: new Date(now.getTime() + 12 * 60 * 60 * 1000) },
-        endAt: { gte: new Date(now.getTime() - 2 * 60 * 60 * 1000) },
+        id: { in: syncedWindowIds.map((id) => BigInt(id)) },
+        startAt: { lte: bounds.end },
+        endAt: { gte: bounds.start },
       },
       orderBy: { startAt: 'asc' },
       take: 3,
     });
 
-    let windows: Array<{ id: number; label: string; startAt: string; endAt: string; status: 'ONGOING' | 'UPCOMING' | 'ENDED' }>;
-    let itemsQueryWindowIds: bigint[] = [];
+    const windows = overlappingWindows.map((w) => ({
+      id: this.toNumber(w.id),
+      label: w.label,
+      startAt: w.startAt.toISOString(),
+      endAt: w.endAt.toISOString(),
+      status: this.computeFlashSaleStatus(w.startAt, w.endAt, now),
+    }));
 
-    if (dbWindows.length > 0) {
-      windows = dbWindows.map((w) => ({
-        id: this.toNumber(w.id),
-        label: w.label,
-        startAt: w.startAt.toISOString(),
-        endAt: w.endAt.toISOString(),
-        status: this.computeFlashSaleStatus(w.startAt, w.endAt, now),
-      }));
-      itemsQueryWindowIds = dbWindows.map((w) => w.id);
-    } else {
-      const currentHour = now.getHours();
-      const makeWindow = (hour: number, status: 'ONGOING' | 'UPCOMING' | 'ENDED') => {
-        const start = new Date(now);
-        start.setHours(hour, 0, 0, 0);
-        const end = new Date(start);
-        end.setHours(start.getHours() + 2);
-        return {
-          id: hour,
-          label: `${String(hour).padStart(2, '0')}:00 限时秒杀`,
-          startAt: start.toISOString(),
-          endAt: end.toISOString(),
-          status,
-        };
-      };
-      windows = [
-        makeWindow(currentHour, 'ONGOING'),
-        makeWindow((currentHour + 4) % 24, 'UPCOMING'),
-        makeWindow((currentHour + 10) % 24, 'UPCOMING'),
-      ];
-    }
-
+    const itemsQueryWindowIds = overlappingWindows.map((w) => w.id);
     let items: any[] = [];
     if (itemsQueryWindowIds.length > 0) {
       const dbItems = await this.prisma.flashSaleItem.findMany({
         where: { windowId: { in: itemsQueryWindowIds }, stockLeft: { gt: 0 } },
-        include: { product: { include: { skus: { orderBy: { id: 'asc' } } } }, sku: true },
-        orderBy: { id: 'asc' },
+        include: { product: true, sku: true },
+        orderBy: [{ flashPrice: 'asc' }, { id: 'asc' }],
         take: 8,
       });
-      items = dbItems.map((entry, index) => ({
-        itemId: this.toNumber(entry.id),
-        productId: this.toNumber(entry.productId),
-        skuId: this.toNumber(entry.skuId),
-        title: entry.product.title,
-        subtitle: entry.product.subtitle ?? '',
-        coverUrl: this.resolvePublicUrl(entry.product.coverUrl) ?? '',
-        flashPrice: Number(entry.flashPrice).toFixed(2),
-        originPrice: Number(entry.originPrice).toFixed(2),
-        stockLeft: entry.stockLeft,
-        totalStock: entry.totalStock,
-        originPlace: this.normalizeOriginPlace(entry.product.originPlace) || undefined,
-        badge: index < 2 ? '秒杀价' : '限时',
-      }));
-    } else {
-      const products = await this.prisma.product.findMany({
-        where: { status: 1, auditStatus: 2, deletedAt: null },
-        include: { skus: { orderBy: { id: 'asc' } } },
-        take: 8,
-        orderBy: [{ isHot: 'desc' }, { id: 'desc' }],
-      });
-      items = products.map((product, index) => {
-        const sku = product.skus[0];
-        const price = Number(sku?.price ?? 0);
-        const flashPrice = Math.max(price * 0.6, 1).toFixed(2);
-        const totalStock = Number(sku?.stock ?? 0);
-        const stockLeft = Math.max(Math.floor(totalStock * 0.4), 0);
-        return {
-          productId: this.toNumber(product.id),
-          skuId: sku ? this.toNumber(sku.id) : undefined,
-          title: product.title,
-          subtitle: product.subtitle ?? '',
-          coverUrl: this.resolvePublicUrl(product.coverUrl) ?? '',
-          flashPrice,
-          originPrice: price.toFixed(2),
-          stockLeft,
-          totalStock,
-          originPlace: this.normalizeOriginPlace(product.originPlace) || undefined,
-          badge: index < 2 ? '秒杀价' : '限时',
-        };
-      });
+      const seen = new Set<string>();
+      items = dbItems
+        .filter((entry) => {
+          const key = String(entry.productId);
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        })
+        .map((entry, index) => {
+          const { flashPrice, originPrice } = this.resolveFlashSalePrices({
+            activityPrice: entry.flashPrice,
+            originalPrice: entry.originPrice,
+            skuPrice: entry.sku?.price,
+            skuOriginalPrice: entry.sku?.originalPrice,
+          });
+          return {
+            itemId: this.toNumber(entry.id),
+            productId: this.toNumber(entry.productId),
+            skuId: this.toNumber(entry.skuId),
+            title: entry.product.title,
+            subtitle: entry.product.subtitle ?? '',
+            coverUrl: this.resolvePublicUrl(entry.product.coverUrl) ?? '',
+            flashPrice: flashPrice.toFixed(2),
+            originPrice: originPrice.toFixed(2),
+            stockLeft: entry.stockLeft,
+            totalStock: entry.totalStock,
+            originPlace: this.normalizeOriginPlace(entry.product.originPlace) || undefined,
+            badge: index < 2 ? '秒杀价' : '限时',
+          };
+        });
     }
 
     return {
-      windows,
+      windows: dayTabs,
       items,
       generatedAt: now.toISOString(),
     };
@@ -10198,88 +10638,308 @@ export class PlatformDataService {
     return 'ONGOING';
   }
 
-  async getQuickFlashSaleWindows() {
-    await this.withSeed();
-    const now = new Date();
+  private parseActivityRuleJson(value: unknown): Record<string, unknown> {
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      return value as Record<string, unknown>;
+    }
+    return {};
+  }
 
-    const dbWindows = await this.prisma.flashSaleWindow.findMany({
-      where: { endAt: { gt: now } },
+  private formatFreightRuleText(rule: {
+    thresholdAmount: Prisma.Decimal | number | string;
+    freightAmount: Prisma.Decimal | number | string;
+  }): string {
+    const threshold = Number(rule.thresholdAmount);
+    const freight = Number(rule.freightAmount);
+    const thresholdText = Number.isFinite(threshold) ? String(Math.round(threshold * 100) / 100) : '0';
+    if (!Number.isFinite(freight) || freight <= 0) {
+      return `满${thresholdText}元免运费`;
+    }
+    const freightText = String(Math.round(freight * 100) / 100);
+    return `满${thresholdText}元运费¥${freightText}`;
+  }
+
+  private async listActiveFreightSubsidyRules() {
+    const rules = await this.prisma.logisticsRule.findMany({
+      where: { active: true },
+      orderBy: [{ thresholdAmount: 'asc' }, { id: 'asc' }],
+      take: 6,
+    });
+    return rules.map((rule) => ({
+      id: this.toNumber(rule.id),
+      name: rule.name,
+      province: rule.province,
+      thresholdAmount: this.toMoney(rule.thresholdAmount),
+      freightAmount: this.toMoney(rule.freightAmount),
+      ruleText: this.formatFreightRuleText(rule),
+    }));
+  }
+
+  /** 将后台 SECKILL 活动同步到小程序秒杀场次/商品表 */
+  private async syncSeckillActivityToFlashSale(activity: {
+    id: bigint;
+    activityName: string;
+    activityType: string;
+    status: string;
+    startAt: Date | null;
+    endAt: Date | null;
+    productsJson: unknown;
+    ruleJson: unknown;
+  }) {
+    if (String(activity.activityType).toUpperCase() !== 'SECKILL') {
+      return null;
+    }
+
+    const ruleJson = this.parseActivityRuleJson(activity.ruleJson);
+    const existingWindowId = Number(ruleJson.flashSaleWindowId ?? 0);
+    const shouldPublish = activity.status === 'PUBLISHED' && !!activity.startAt && !!activity.endAt;
+
+    if (!shouldPublish) {
+      if (existingWindowId > 0) {
+        const windowId = BigInt(existingWindowId);
+        const items = await this.prisma.flashSaleItem.findMany({
+          where: { windowId },
+          select: { id: true },
+        });
+        const itemIds = items.map((item) => item.id);
+        if (itemIds.length) {
+          await this.prisma.flashSaleClaim.deleteMany({ where: { itemId: { in: itemIds } } });
+          await this.prisma.flashSaleItem.deleteMany({ where: { windowId } });
+        }
+        await this.prisma.flashSaleWindow.deleteMany({ where: { id: windowId } });
+        const nextRule = { ...ruleJson };
+        delete nextRule.flashSaleWindowId;
+        await this.prisma.activity.update({
+          where: { id: activity.id },
+          data: { ruleJson: nextRule as Prisma.InputJsonValue },
+        });
+      }
+      return null;
+    }
+
+    const startAt = activity.startAt as Date;
+    const endAt = activity.endAt as Date;
+    const label = activity.activityName || '限时秒杀';
+    let windowId: bigint | null = null;
+
+    if (existingWindowId > 0) {
+      const found = await this.prisma.flashSaleWindow.findUnique({
+        where: { id: BigInt(existingWindowId) },
+      });
+      if (found) {
+        await this.prisma.flashSaleWindow.update({
+          where: { id: found.id },
+          data: {
+            label,
+            startAt,
+            endAt,
+            status: this.computeFlashSaleStatus(startAt, endAt, new Date()),
+          },
+        });
+        windowId = found.id;
+      }
+    }
+
+    if (!windowId) {
+      const created = await this.prisma.flashSaleWindow.create({
+        data: {
+          label,
+          startAt,
+          endAt,
+          sortOrder: this.toNumber(activity.id),
+          status: this.computeFlashSaleStatus(startAt, endAt, new Date()),
+        },
+      });
+      windowId = created.id;
+    }
+
+    const products = Array.isArray(activity.productsJson)
+      ? activity.productsJson.filter((item): item is Record<string, unknown> => !!item && typeof item === 'object')
+      : [];
+    const limitPerUser = Math.max(Number(ruleJson.limitPerUser ?? 1) || 1, 1);
+    const keepSkuIds = new Set<bigint>();
+
+    for (const productEntry of products) {
+      const productId = Number(productEntry.productId ?? 0);
+      if (!Number.isFinite(productId) || productId <= 0) {
+        continue;
+      }
+
+      const product = await this.prisma.product.findFirst({
+        where: { id: BigInt(productId), deletedAt: null },
+        include: { skus: { orderBy: { id: 'asc' }, take: 1 } },
+      });
+      const sku = product?.skus?.[0];
+      if (!product || !sku) {
+        continue;
+      }
+
+      const { flashPrice, originPrice } = this.resolveFlashSalePrices({
+        activityPrice: productEntry.activityPrice,
+        originalPrice: productEntry.originalPrice,
+        skuPrice: sku.price,
+        skuOriginalPrice: sku.originalPrice,
+      });
+      const stock = Math.max(0, Math.floor(Number(productEntry.stock ?? sku.stock ?? 0) || 0));
+      keepSkuIds.add(sku.id);
+
+      await this.prisma.flashSaleItem.upsert({
+        where: {
+          windowId_skuId: {
+            windowId,
+            skuId: sku.id,
+          },
+        },
+        create: {
+          windowId,
+          productId: product.id,
+          skuId: sku.id,
+          flashPrice: new Prisma.Decimal(flashPrice.toFixed(2)),
+          originPrice: new Prisma.Decimal(originPrice.toFixed(2)),
+          totalStock: stock,
+          stockLeft: stock,
+          perUserLimit: limitPerUser,
+        },
+        update: {
+          productId: product.id,
+          flashPrice: new Prisma.Decimal(flashPrice.toFixed(2)),
+          originPrice: new Prisma.Decimal(originPrice.toFixed(2)),
+          totalStock: stock,
+          stockLeft: stock,
+          perUserLimit: limitPerUser,
+        },
+      });
+    }
+
+    const staleItems = await this.prisma.flashSaleItem.findMany({
+      where: {
+        windowId,
+        ...(keepSkuIds.size ? { skuId: { notIn: [...keepSkuIds] } } : {}),
+      },
+      select: { id: true },
+    });
+    if (!keepSkuIds.size) {
+      const allItems = await this.prisma.flashSaleItem.findMany({
+        where: { windowId },
+        select: { id: true },
+      });
+      const staleIds = allItems.map((item) => item.id);
+      if (staleIds.length) {
+        await this.prisma.flashSaleClaim.deleteMany({ where: { itemId: { in: staleIds } } });
+        await this.prisma.flashSaleItem.deleteMany({ where: { windowId } });
+      }
+    } else if (staleItems.length) {
+      const staleIds = staleItems.map((item) => item.id);
+      await this.prisma.flashSaleClaim.deleteMany({ where: { itemId: { in: staleIds } } });
+      await this.prisma.flashSaleItem.deleteMany({ where: { id: { in: staleIds } } });
+    }
+
+    const nextRule = {
+      ...ruleJson,
+      flashSaleWindowId: this.toNumber(windowId),
+    };
+    await this.prisma.activity.update({
+      where: { id: activity.id },
+      data: { ruleJson: nextRule as Prisma.InputJsonValue },
+    });
+
+    return this.toNumber(windowId);
+  }
+
+  private async ensurePublishedSeckillFlashSalesSynced() {
+    const now = new Date();
+    const activities = await this.prisma.activity.findMany({
+      where: {
+        activityType: 'SECKILL',
+        status: 'PUBLISHED',
+        deletedAt: null,
+        endAt: { gt: now },
+        startAt: { not: null },
+      },
       orderBy: { startAt: 'asc' },
     });
 
-    if (dbWindows.length > 0) {
-      return {
-        windows: dbWindows.map((w) => ({
-          id: this.toNumber(w.id),
-          label: w.label,
-          startAt: w.startAt.toISOString(),
-          endAt: w.endAt.toISOString(),
-          status: this.computeFlashSaleStatus(w.startAt, w.endAt, now),
-        })),
-        generatedAt: now.toISOString(),
-      };
-    }
+    const syncedWindowIds: number[] = [];
+    for (const activity of activities) {
+      const ruleJson = this.parseActivityRuleJson(activity.ruleJson);
+      const existingWindowId = Number(ruleJson.flashSaleWindowId ?? 0);
 
-    const currentHour = now.getHours();
-    const makeWindow = (hour: number) => {
-      const start = new Date(now);
-      start.setHours(hour, 0, 0, 0);
-      const end = new Date(start);
-      end.setHours(start.getHours() + 2);
-      if (end <= now) return null;
-      return {
-        id: hour,
-        label: `${String(hour).padStart(2, '0')}:00-${String((hour + 2) % 24).padStart(2, '0')}:00 限时秒杀`,
-        startAt: start.toISOString(),
-        endAt: end.toISOString(),
-        status: (now < start ? 'UPCOMING' : 'ONGOING') as 'ONGOING' | 'UPCOMING',
-      };
-    };
+      if (existingWindowId > 0) {
+        const found = await this.prisma.flashSaleWindow.findUnique({
+          where: { id: BigInt(existingWindowId) },
+        });
+        if (found) {
+          if (
+            activity.startAt &&
+            activity.endAt &&
+            (found.startAt.getTime() !== activity.startAt.getTime() ||
+              found.endAt.getTime() !== activity.endAt.getTime() ||
+              found.label !== activity.activityName)
+          ) {
+            await this.prisma.flashSaleWindow.update({
+              where: { id: found.id },
+              data: {
+                label: activity.activityName,
+                startAt: activity.startAt,
+                endAt: activity.endAt,
+                status: this.computeFlashSaleStatus(activity.startAt, activity.endAt, now),
+              },
+            });
+          }
+          syncedWindowIds.push(existingWindowId);
+          continue;
+        }
+      }
+
+      const windowId = await this.syncSeckillActivityToFlashSale(activity);
+      if (windowId) {
+        syncedWindowIds.push(windowId);
+      }
+    }
+    return syncedWindowIds;
+  }
+
+  async getQuickFlashSaleWindows() {
+    await this.withSeed();
+    const now = new Date();
+    await this.ensurePublishedSeckillFlashSalesSynced();
+    const freightRules = await this.listActiveFreightSubsidyRules();
 
     return {
-      windows: [makeWindow(currentHour), makeWindow((currentHour + 4) % 24), makeWindow((currentHour + 10) % 24)].filter(
-        (w): w is NonNullable<typeof w> => w !== null,
-      ),
+      windows: this.buildFlashSaleDayTabs(now),
+      freightRules,
       generatedAt: now.toISOString(),
     };
   }
 
   async getQuickFlashSaleItems(query: Record<string, string>) {
     await this.withSeed();
+    const syncedWindowIds = await this.ensurePublishedSeckillFlashSalesSynced();
 
     const windowId = Number(query.windowId ?? 0);
     const page = this.normalizePage(query.page);
     const pageSize = this.normalizePageSize(query.pageSize);
     const skip = (page - 1) * pageSize;
-
     const now = new Date();
 
-    let targetWindowId = Number.isFinite(windowId) && windowId > 0 ? windowId : 0;
-    let windowRecord: { id: bigint; startAt: Date; endAt: Date; label: string } | null = null;
+    // windowId 约定为 YYYYMMDD（按日 Tab）；兼容旧的真实场次 id
+    const dayBounds = this.getChinaDayBounds(windowId);
+    const dayTabs = this.buildFlashSaleDayTabs(now);
+    const activeDay =
+      dayBounds != null
+        ? dayTabs.find((tab) => tab.id === windowId) || {
+            id: windowId,
+            label: `${String(windowId).slice(4, 6).replace(/^0/, '')}月${String(windowId).slice(6, 8).replace(/^0/, '')}日`,
+            startAt: dayBounds.start.toISOString(),
+            endAt: dayBounds.end.toISOString(),
+            status: this.computeFlashSaleStatus(dayBounds.start, dayBounds.end, now),
+          }
+        : dayTabs[0] || null;
 
-    if (targetWindowId > 0) {
-      const found = await this.prisma.flashSaleWindow.findUnique({
-        where: { id: BigInt(targetWindowId) },
-      });
-      if (found && found.endAt > now) {
-        windowRecord = found;
-      }
-    }
-
-    if (!windowRecord) {
-      const nearest = await this.prisma.flashSaleWindow.findFirst({
-        where: { endAt: { gt: now } },
-        orderBy: { startAt: 'asc' },
-      });
-      if (nearest) {
-        windowRecord = nearest;
-        targetWindowId = this.toNumber(nearest.id);
-      }
-    }
-
-    if (!windowRecord) {
+    if (!activeDay || syncedWindowIds.length === 0) {
       return {
-        windowId: null,
+        windowId: activeDay?.id ?? null,
+        window: activeDay ?? undefined,
         page,
         pageSize,
         total: 0,
@@ -10288,47 +10948,97 @@ export class PlatformDataService {
       };
     }
 
-    const total = await this.prisma.flashSaleItem.count({
-      where: { windowId: windowRecord.id },
+    const bounds = this.getChinaDayBounds(activeDay.id);
+    if (!bounds) {
+      return {
+        windowId: activeDay.id,
+        window: activeDay,
+        page,
+        pageSize,
+        total: 0,
+        items: [],
+        generatedAt: now.toISOString(),
+      };
+    }
+
+    const overlappingWindows = await this.prisma.flashSaleWindow.findMany({
+      where: {
+        id: { in: syncedWindowIds.map((id) => BigInt(id)) },
+        startAt: { lte: bounds.end },
+        endAt: { gte: bounds.start },
+      },
+      orderBy: { startAt: 'asc' },
+      select: { id: true },
     });
 
-    const dbItems = await this.prisma.flashSaleItem.findMany({
-      where: { windowId: windowRecord.id },
+    const overlappingIds = overlappingWindows.map((item) => item.id);
+    if (!overlappingIds.length) {
+      return {
+        windowId: activeDay.id,
+        window: activeDay,
+        page,
+        pageSize,
+        total: 0,
+        items: [],
+        generatedAt: now.toISOString(),
+      };
+    }
+
+    const allItems = await this.prisma.flashSaleItem.findMany({
+      where: { windowId: { in: overlappingIds } },
       include: {
         product: { include: { skus: { orderBy: { id: 'asc' } } } },
         sku: true,
+        window: true,
       },
-      orderBy: [{ id: 'asc' }],
-      skip,
-      take: pageSize,
+      orderBy: [{ flashPrice: 'asc' }, { id: 'asc' }],
     });
 
+    // 同日多活动可能挂同一商品：按 productId 去重，保留更低秒杀价
+    const deduped: typeof allItems = [];
+    const seenProductIds = new Set<string>();
+    for (const entry of allItems) {
+      const key = String(entry.productId);
+      if (seenProductIds.has(key)) {
+        continue;
+      }
+      seenProductIds.add(key);
+      deduped.push(entry);
+    }
+
+    const total = deduped.length;
+    const pageItems = deduped.slice(skip, skip + pageSize);
+
     return {
-      windowId: targetWindowId,
-      window: {
-        id: targetWindowId,
-        label: windowRecord.label,
-        startAt: windowRecord.startAt.toISOString(),
-        endAt: windowRecord.endAt.toISOString(),
-        status: this.computeFlashSaleStatus(windowRecord.startAt, windowRecord.endAt, now),
-      },
+      windowId: activeDay.id,
+      window: activeDay,
       page,
       pageSize,
       total,
-      items: dbItems.map((entry) => ({
-        itemId: this.toNumber(entry.id),
-        productId: this.toNumber(entry.productId),
-        skuId: this.toNumber(entry.skuId),
-        title: entry.product.title,
-        subtitle: entry.product.subtitle ?? '',
-        coverUrl: this.resolvePublicUrl(entry.product.coverUrl) ?? '',
-        flashPrice: Number(entry.flashPrice).toFixed(2),
-        originPrice: Number(entry.originPrice).toFixed(2),
-        stockLeft: entry.stockLeft,
-        totalStock: entry.totalStock,
-        perUserLimit: entry.perUserLimit,
-        originPlace: this.normalizeOriginPlace(entry.product.originPlace) || undefined,
-      })),
+      items: pageItems.map((entry) => {
+        const { flashPrice, originPrice } = this.resolveFlashSalePrices({
+          activityPrice: entry.flashPrice,
+          originalPrice: entry.originPrice,
+          skuPrice: entry.sku?.price,
+          skuOriginalPrice: entry.sku?.originalPrice,
+        });
+        return {
+          itemId: this.toNumber(entry.id),
+          productId: this.toNumber(entry.productId),
+          skuId: this.toNumber(entry.skuId),
+          title: entry.product.title,
+          subtitle: entry.product.subtitle ?? '',
+          coverUrl: this.resolvePublicUrl(entry.product.coverUrl) ?? '',
+          flashPrice: flashPrice.toFixed(2),
+          originPrice: originPrice.toFixed(2),
+          stockLeft: entry.stockLeft,
+          totalStock: entry.totalStock,
+          perUserLimit: entry.perUserLimit,
+          originPlace: this.normalizeOriginPlace(entry.product.originPlace) || undefined,
+          activityStartAt: entry.window.startAt.toISOString(),
+          activityEndAt: entry.window.endAt.toISOString(),
+        };
+      }),
       generatedAt: now.toISOString(),
     };
   }
@@ -10424,6 +11134,7 @@ export class PlatformDataService {
       where: {
         status: 'OPEN',
         expireAt: { gt: new Date() },
+        members: { some: {} },
       },
       include: {
         product: { include: { skus: { orderBy: { id: 'asc' } } } },
@@ -10526,13 +11237,9 @@ export class PlatformDataService {
   }
 
   /**
-   * 开团/参团校验接口。
-   *
-   * 重要：本方法【不会】创建 GroupBuyMember（不占用成团名额）。
-   * 名额只在用户真正支付成功后（见 settleGroupBuyOrderPayment）才会写入，
-   * 避免"点一下就占坑、不下单不付款也不释放"的幽灵成员问题。
-   * 开新团时仍会创建 GroupBuy 容器（拿到 groupId / 邀请码 / 冻结价），
-   * 但发起人同样需要走下单+支付才会被计入成团人数。
+   * 开团/参团预校验。本方法【不会】创建 GroupBuyMember（不占名额）。
+   * 开新团时也【不会】落库 GroupBuy，避免「只点去拼团、未付款」就出现在我的拼团/附近拼团。
+   * 团记录在提交拼团订单时创建，成员名额在支付成功后写入。
    */
   async joinGroupBuy(authUser: AuthUser, body: { productId: number; skuId?: number; groupId?: number; lat?: number; lng?: number }) {
     const user = await this.ensureUser(authUser);
@@ -10581,6 +11288,9 @@ export class PlatformDataService {
           throw new BadRequestException('该团已满员');
         }
       } else {
+        // 开新团：此处【不】落库 GroupBuy。只校验商品可拼并返回结算所需信息。
+        // 真正创建团记录放到用户提交拼团订单时（createOrder），支付成功后才占名额。
+        // 避免「只点了去拼团、未付款」就出现在「我的拼团 / 附近拼团」。
         if (!skuId) {
           throw new BadRequestException('缺少 SKU');
         }
@@ -10596,46 +11306,80 @@ export class PlatformDataService {
         if (!groupConfig?.enabled) {
           throw new BadRequestException('该商品暂未开启拼团');
         }
-        const groupNo = `GB${randomUUID().replace(/-/g, '').slice(0, 14).toUpperCase()}`;
-        // 生成 6 位唯一邀请码
-        const inviteCode = await this.generateUniqueInviteCode(tx);
         const originPrice = Number(sku.price);
         const groupPrice = Number((originPrice * Number(groupConfig.discountRate)).toFixed(2));
-        const expireAt = new Date(Date.now() + Number(groupConfig.expireHours) * 60 * 60 * 1000);
-        group = await tx.groupBuy.create({
-          data: {
-            groupNo,
-            inviteCode,
-            productId,
-            skuId,
-            initiatorId: user.id,
-            groupPrice: new Prisma.Decimal(groupPrice),
-            originPrice: new Prisma.Decimal(originPrice.toFixed(2)),
+        return {
+          group: null,
+          isNewGroup: true,
+          pendingOrderNo: null,
+          alreadyJoined: false,
+          alreadyJoinedOrderNo: null,
+          preview: {
+            productId: this.toNumber(product.id),
+            skuId: this.toNumber(sku.id),
+            title: product.title,
+            coverUrl: this.resolvePublicUrl(product.coverUrl) ?? '',
             needed: Number(groupConfig.needed),
-            status: 'OPEN',
-            expireAt,
-            roughArea: '附近',
-            latitude: null,
-            longitude: null,
+            groupPrice: groupPrice.toFixed(2),
+            originPrice: originPrice.toFixed(2),
+            expireHours: Number(groupConfig.expireHours),
           },
-          include: { members: true, product: true, sku: true },
-        });
-        isNewGroup = true;
+        };
       }
 
       // 若该用户此前已为该团创建过未支付订单，直接把订单号带回去，方便前端续付，避免重复下单锁重复库存
       const pendingOrder = alreadyJoined
         ? null
         : await tx.order.findFirst({
-            where: { groupBuyId: group.id, userId: user.id, orderStatus: PlatformDataService.ORDER_STATUS.PENDING, payStatus: PlatformDataService.PAY_STATUS.UNPAID },
+            where: { groupBuyId: group!.id, userId: user.id, orderStatus: PlatformDataService.ORDER_STATUS.PENDING, payStatus: PlatformDataService.PAY_STATUS.UNPAID },
             select: { orderNo: true },
             orderBy: { createdAt: 'desc' },
           });
 
-      return { group, isNewGroup, pendingOrderNo: pendingOrder?.orderNo ?? null, alreadyJoined, alreadyJoinedOrderNo };
+      return {
+        group,
+        isNewGroup,
+        pendingOrderNo: pendingOrder?.orderNo ?? null,
+        alreadyJoined,
+        alreadyJoinedOrderNo,
+        preview: null as null | {
+          productId: number;
+          skuId: number;
+          title: string;
+          coverUrl: string;
+          needed: number;
+          groupPrice: string;
+          originPrice: string;
+          expireHours: number;
+        },
+      };
     });
 
-    const g = result.group;
+    if (result.isNewGroup && result.preview && !result.group) {
+      return {
+        groupId: 0,
+        groupNo: '',
+        inviteCode: null,
+        productId: result.preview.productId,
+        skuId: result.preview.skuId,
+        title: result.preview.title,
+        coverUrl: result.preview.coverUrl,
+        roughArea: '',
+        memberCount: 0,
+        needed: result.preview.needed,
+        groupPrice: result.preview.groupPrice,
+        originPrice: result.preview.originPrice,
+        expireAt: '',
+        expireHours: result.preview.expireHours,
+        status: 'OPEN' as const,
+        isNewGroup: true,
+        pendingOrderNo: null,
+        alreadyJoined: false,
+        orderNo: null,
+      };
+    }
+
+    const g = result.group!;
     return {
       groupId: this.toNumber(g.id),
       groupNo: g.groupNo,
@@ -10650,10 +11394,9 @@ export class PlatformDataService {
       groupPrice: Number(g.groupPrice).toFixed(2),
       originPrice: Number(g.originPrice).toFixed(2),
       expireAt: g.expireAt.toISOString(),
-      status: g.status as 'OPEN' | 'COMPLETED' | 'FAILED',
+      status: this.resolveGroupBuyStatus(g.status, g.expireAt),
       isNewGroup: result.isNewGroup,
       pendingOrderNo: result.pendingOrderNo,
-      // 已是该团付费成员：不算加入失败，前端应跳转到此订单查看拼团进度而非报错
       alreadyJoined: result.alreadyJoined,
       orderNo: result.alreadyJoinedOrderNo,
     };
@@ -10718,17 +11461,24 @@ export class PlatformDataService {
     };
   }
 
-  /** 我的拼团：我发起或已付款参加过的团，用于"我的拼团"列表页 */
+  /** 我的拼团：仅展示已支付入团的记录（未付款不占名额、不出现在列表） */
   async getMyGroupBuys(authUser: AuthUser) {
     const user = await this.ensureUser(authUser);
 
     const groups = await this.prisma.groupBuy.findMany({
       where: {
-        OR: [{ initiatorId: user.id }, { members: { some: { userId: user.id } } }],
+        members: { some: { userId: user.id } },
       },
       include: {
         product: { select: { title: true, coverUrl: true } },
-        members: { select: { id: true, userId: true, orderNo: true } },
+        members: {
+          select: {
+            id: true,
+            userId: true,
+            orderNo: true,
+            user: { select: { nickname: true, avatarUrl: true } },
+          },
+        },
       },
       orderBy: { createdAt: 'desc' },
       take: 50,
@@ -10772,6 +11522,13 @@ export class PlatformDataService {
           originPrice: Number(g.originPrice).toFixed(2),
           expireAt: g.expireAt.toISOString(),
           completedAt: g.completedAt ? g.completedAt.toISOString() : null,
+          members: g.members.map((m) => ({
+            userId: this.toNumber(m.userId),
+            isInitiator: this.toNumber(m.userId) === this.toNumber(g.initiatorId),
+            isMine: this.toNumber(m.userId) === this.toNumber(user.id),
+            nickname: m.user.nickname ?? '',
+            avatarUrl: this.resolvePublicUrl(m.user.avatarUrl) ?? '',
+          })),
         };
       }),
     };
@@ -11077,8 +11834,8 @@ export class PlatformDataService {
                   activityName: activity.activityName,
                   activityType: activity.activityType,
                   status: activity.status,
-                  startAt: activity.startAt ? activity.startAt.toISOString().slice(0, 16).replace('T', ' ') : '',
-                  endAt: activity.endAt ? activity.endAt.toISOString().slice(0, 16).replace('T', ' ') : '',
+                  startAt: this.formatChinaDateTime(activity.startAt),
+                  endAt: this.formatChinaDateTime(activity.endAt),
                   productCount: activity.productCount,
                 })),
             ));
@@ -11206,21 +11963,114 @@ export class PlatformDataService {
   }
 
   getLogisticsRules() {
-    return this.withSeed().then(() =>
-        this.prisma.logisticsRule
-            .findMany({
-              orderBy: [{ active: 'desc' }, { id: 'asc' }],
-            })
-            .then((rules) =>
-                rules.map((rule) => ({
-                  id: this.toNumber(rule.id),
-                  name: rule.name,
-                  province: rule.province,
-                  thresholdAmount: this.toMoney(rule.thresholdAmount),
-                  freightAmount: this.toMoney(rule.freightAmount),
-                  active: rule.active,
-                })),
-            ));
+    return this.withSeed().then(async () => {
+      const [rules, publicRuleIdSetting] = await Promise.all([
+        this.prisma.logisticsRule.findMany({
+          orderBy: [{ active: 'desc' }, { id: 'asc' }],
+        }),
+        this.prisma.systemSetting.findUnique({ where: { key: 'publicFreightRuleId' } }),
+      ]);
+      const publicRuleId = Number(publicRuleIdSetting?.value ?? 0);
+
+      return rules.map((rule) => ({
+        id: this.toNumber(rule.id),
+        name: rule.name,
+        province: rule.province,
+        thresholdAmount: this.toMoney(rule.thresholdAmount),
+        freightAmount: this.toMoney(rule.freightAmount),
+        active: rule.active,
+        isPublic: publicRuleId > 0 && this.toNumber(rule.id) === publicRuleId,
+      }));
+    });
+  }
+
+  async getPublicFreightPromo() {
+    await this.withSeed();
+    const [thresholdSetting, freightSetting, ruleIdSetting] = await Promise.all([
+      this.prisma.systemSetting.findUnique({ where: { key: 'publicFreightFreeThreshold' } }),
+      this.prisma.systemSetting.findUnique({ where: { key: 'publicFreightAmount' } }),
+      this.prisma.systemSetting.findUnique({ where: { key: 'publicFreightRuleId' } }),
+    ]);
+
+    const ruleId = Number(ruleIdSetting?.value ?? 0);
+    if (ruleId > 0) {
+      const rule = await this.prisma.logisticsRule.findUnique({ where: { id: BigInt(ruleId) } });
+      if (rule && rule.active) {
+        return {
+          ruleId: this.toNumber(rule.id),
+          thresholdAmount: this.toMoney(rule.thresholdAmount),
+          freightAmount: this.toMoney(rule.freightAmount),
+          name: rule.name,
+        };
+      }
+    }
+
+    if (thresholdSetting && Number(thresholdSetting.value) > 0) {
+      return {
+        ruleId: null,
+        thresholdAmount: Number(thresholdSetting.value).toFixed(2),
+        freightAmount: freightSetting ? Number(freightSetting.value || 0).toFixed(2) : '0.00',
+        name: '公共满减规则',
+      };
+    }
+
+    const national = await this.prisma.logisticsRule.findFirst({
+      where: { active: true, province: '全国' },
+      orderBy: { thresholdAmount: 'asc' },
+    });
+    if (national) {
+      return {
+        ruleId: this.toNumber(national.id),
+        thresholdAmount: this.toMoney(national.thresholdAmount),
+        freightAmount: this.toMoney(national.freightAmount),
+        name: national.name,
+      };
+    }
+
+    return {
+      ruleId: null,
+      thresholdAmount: '0.00',
+      freightAmount: '0.00',
+      name: '',
+    };
+  }
+
+  private async syncPublicFreightSettings(rule: {
+    id: bigint | number;
+    thresholdAmount: Prisma.Decimal | number | string;
+    freightAmount: Prisma.Decimal | number | string;
+    name?: string;
+  } | null) {
+    if (!rule) {
+      await Promise.all([
+        this.prisma.systemSetting.deleteMany({ where: { key: 'publicFreightRuleId' } }),
+        this.prisma.systemSetting.deleteMany({ where: { key: 'publicFreightFreeThreshold' } }),
+        this.prisma.systemSetting.deleteMany({ where: { key: 'publicFreightAmount' } }),
+      ]);
+      return;
+    }
+
+    const ruleId = String(this.toNumber(rule.id as bigint));
+    const threshold = this.toMoney(rule.thresholdAmount);
+    const freight = this.toMoney(rule.freightAmount);
+
+    await Promise.all([
+      this.prisma.systemSetting.upsert({
+        where: { key: 'publicFreightRuleId' },
+        create: { key: 'publicFreightRuleId', value: ruleId },
+        update: { value: ruleId },
+      }),
+      this.prisma.systemSetting.upsert({
+        where: { key: 'publicFreightFreeThreshold' },
+        create: { key: 'publicFreightFreeThreshold', value: threshold },
+        update: { value: threshold },
+      }),
+      this.prisma.systemSetting.upsert({
+        where: { key: 'publicFreightAmount' },
+        create: { key: 'publicFreightAmount', value: freight },
+        update: { value: freight },
+      }),
+    ]);
   }
 
   getSystemSettings() {
@@ -11618,8 +12468,8 @@ export class PlatformDataService {
         activityName,
         activityType,
         status: String(body.status ?? 'DRAFT'),
-        startAt: body.startAt ? new Date(String(body.startAt)) : null,
-        endAt: body.endAt ? new Date(String(body.endAt)) : null,
+        startAt: this.parseChinaDateTime(body.startAt),
+        endAt: this.parseChinaDateTime(body.endAt),
         productCount,
         ruleJson: ruleJson as Prisma.InputJsonValue,
         productsJson: products as Prisma.InputJsonValue,
@@ -11635,8 +12485,8 @@ export class PlatformDataService {
           discountAmount: new Prisma.Decimal(String(ruleJson.discountAmount ?? body.discountAmount ?? '10')),
           stock: Number(ruleJson.couponStock ?? body.stock ?? 100),
           issuedStock: 0,
-          validStartAt: body.startAt ? new Date(String(body.startAt)) : null,
-          validEndAt: body.endAt ? new Date(String(body.endAt)) : null,
+          validStartAt: this.parseChinaDateTime(body.startAt),
+          validEndAt: this.parseChinaDateTime(body.endAt),
           scope: String(body.scope ?? ruleJson.scope ?? 'ALL').trim().toUpperCase() || 'ALL',
           perUserLimit: Math.max(Number(ruleJson.perUserLimit ?? body.perUserLimit ?? 1) || 1, 1),
           ruleJson: {
@@ -11647,6 +12497,10 @@ export class PlatformDataService {
           status: String(body.status ?? 'DRAFT') === 'DRAFT' ? 'DRAFT' : 'ENABLED',
         },
       });
+    }
+
+    if (activity.activityType === 'SECKILL') {
+      await this.syncSeckillActivityToFlashSale(activity);
     }
 
     await this.recordAdminOperation(authUser, 'CREATE_ACTIVITY', '活动管理', activity.id, {
@@ -11660,8 +12514,8 @@ export class PlatformDataService {
       activityName: activity.activityName,
       activityType: activity.activityType,
       status: activity.status,
-      startAt: activity.startAt ? activity.startAt.toISOString().slice(0, 16).replace('T', ' ') : '',
-      endAt: activity.endAt ? activity.endAt.toISOString().slice(0, 16).replace('T', ' ') : '',
+      startAt: this.formatChinaDateTime(activity.startAt),
+      endAt: this.formatChinaDateTime(activity.endAt),
       productCount: activity.productCount,
       products,
       ruleJson,
@@ -11696,8 +12550,8 @@ export class PlatformDataService {
         activityName,
         activityType,
         status: String(body.status ?? oldActivity.status),
-        startAt: body.startAt ? new Date(String(body.startAt)) : oldActivity.startAt,
-        endAt: body.endAt ? new Date(String(body.endAt)) : oldActivity.endAt,
+        startAt: body.startAt !== undefined ? this.parseChinaDateTime(body.startAt) : oldActivity.startAt,
+        endAt: body.endAt !== undefined ? this.parseChinaDateTime(body.endAt) : oldActivity.endAt,
         productCount,
         ...(body.ruleJson !== undefined ? { ruleJson: ruleJson as Prisma.InputJsonValue } : {}),
         ...(body.products !== undefined ? { productsJson: products as Prisma.InputJsonValue } : {}),
@@ -11716,8 +12570,8 @@ export class PlatformDataService {
             thresholdAmount: new Prisma.Decimal(String(ruleJson.thresholdAmount ?? body.thresholdAmount ?? '100')),
             discountAmount: new Prisma.Decimal(String(ruleJson.discountAmount ?? body.discountAmount ?? '10')),
             stock: Number(ruleJson.couponStock ?? body.stock ?? 100),
-            validStartAt: body.startAt ? new Date(String(body.startAt)) : coupon.validStartAt,
-            validEndAt: body.endAt ? new Date(String(body.endAt)) : coupon.validEndAt,
+            validStartAt: body.startAt !== undefined ? this.parseChinaDateTime(body.startAt) : coupon.validStartAt,
+            validEndAt: body.endAt !== undefined ? this.parseChinaDateTime(body.endAt) : coupon.validEndAt,
             scope: String(body.scope ?? ruleJson.scope ?? coupon.scope ?? 'ALL').trim().toUpperCase() || 'ALL',
             perUserLimit: Math.max(Number(ruleJson.perUserLimit ?? body.perUserLimit ?? coupon.perUserLimit ?? 1) || 1, 1),
             ruleJson: {
@@ -11740,8 +12594,8 @@ export class PlatformDataService {
             discountAmount: new Prisma.Decimal(String(ruleJson.discountAmount ?? body.discountAmount ?? '10')),
             stock: Number(ruleJson.couponStock ?? body.stock ?? 100),
             issuedStock: 0,
-            validStartAt: body.startAt ? new Date(String(body.startAt)) : null,
-            validEndAt: body.endAt ? new Date(String(body.endAt)) : null,
+            validStartAt: this.parseChinaDateTime(body.startAt),
+            validEndAt: this.parseChinaDateTime(body.endAt),
             scope: String(body.scope ?? ruleJson.scope ?? 'ALL').trim().toUpperCase() || 'ALL',
             perUserLimit: Math.max(Number(ruleJson.perUserLimit ?? body.perUserLimit ?? 1) || 1, 1),
             ruleJson: {
@@ -11755,6 +12609,10 @@ export class PlatformDataService {
       }
     }
 
+    if (activity.activityType === 'SECKILL') {
+      await this.syncSeckillActivityToFlashSale(activity);
+    }
+
     await this.recordAdminOperation(authUser, 'UPDATE_ACTIVITY', '活动管理', activity.id, {
       activityName: activity.activityName,
       activityType: activity.activityType,
@@ -11766,8 +12624,8 @@ export class PlatformDataService {
       activityName: activity.activityName,
       activityType: activity.activityType,
       status: activity.status,
-      startAt: activity.startAt ? activity.startAt.toISOString().slice(0, 16).replace('T', ' ') : '',
-      endAt: activity.endAt ? activity.endAt.toISOString().slice(0, 16).replace('T', ' ') : '',
+      startAt: this.formatChinaDateTime(activity.startAt),
+      endAt: this.formatChinaDateTime(activity.endAt),
       productCount: activity.productCount,
       products,
       ruleJson,
@@ -11790,6 +12648,13 @@ export class PlatformDataService {
       where: { id: activityId },
       data: { deletedAt: this.now() },
     });
+
+    if (activity.activityType === 'SECKILL') {
+      await this.syncSeckillActivityToFlashSale({
+        ...activity,
+        status: 'ENDED',
+      });
+    }
 
     if (activity.activityType === 'CASHBACK') {
       const coupon = await this.prisma.coupon.findFirst({
@@ -12021,7 +12886,20 @@ export class PlatformDataService {
     await this.withSeed();
     const user = await this.resolveOptionalUser(authUser);
     const pointRule = await this.getPointRuleConfig();
-    const coupons = await this.getCoupons(authUser);
+    const coupons = await this.prisma.coupon.findMany({
+      where: { deletedAt: null, type: 'CASHBACK' },
+      orderBy: [{ id: 'asc' }],
+    });
+    const receivedCouponIds = user
+      ? new Set(
+          (
+            await this.prisma.userCoupon.findMany({
+              where: { userId: user.id },
+              select: { couponId: true },
+            })
+          ).map((item) => this.toNumber(item.couponId)),
+        )
+      : new Set<number>();
     const balanceAgg = user
       ? await this.prisma.pointLog.aggregate({
           where: { userId: user.id },
@@ -12031,22 +12909,24 @@ export class PlatformDataService {
     const balance = Math.max(Number(balanceAgg?._sum.points ?? 0), 0);
 
     const items = coupons
-      .filter((coupon) => coupon.isActive && String(coupon.type ?? '').toUpperCase() === 'CASHBACK')
+      .filter((coupon) => coupon.status === 'ENABLED' && this.isCouponInValidWindow(coupon))
       .map((coupon) => {
         const pointsCost = Math.max(Math.ceil(Number(coupon.discountAmount) * pointRule.redeemRate), pointRule.redeemRate);
+        const received = receivedCouponIds.has(this.toNumber(coupon.id));
         return {
-          couponId: coupon.couponId,
+          couponId: this.toNumber(coupon.id),
           name: coupon.name,
           type: coupon.type,
-          thresholdAmount: coupon.thresholdAmount,
-          discountAmount: coupon.discountAmount,
+          exchangeKind: this.getExchangeKindFromRuleJson(coupon.ruleJson),
+          thresholdAmount: this.toMoney(coupon.thresholdAmount),
+          discountAmount: this.toMoney(coupon.discountAmount),
           stock: coupon.stock,
           issuedStock: coupon.issuedStock,
-          validStartAt: coupon.validStartAt,
-          validEndAt: coupon.validEndAt,
-          received: coupon.received,
+          validStartAt: this.toIso(coupon.validStartAt),
+          validEndAt: this.toIso(coupon.validEndAt),
+          received,
           pointsCost,
-          canRedeem: Boolean(user) && !coupon.received && coupon.stock > coupon.issuedStock && balance >= pointsCost,
+          canRedeem: Boolean(user) && !received && coupon.stock > coupon.issuedStock && balance >= pointsCost,
         };
       })
       .sort((left, right) => Number(left.pointsCost) - Number(right.pointsCost));
@@ -14056,8 +14936,8 @@ export class PlatformDataService {
       activityName: activity.activityName,
       activityType: activity.activityType,
       status: activity.status,
-      startAt: activity.startAt ? activity.startAt.toISOString().slice(0, 16).replace('T', ' ') : '',
-      endAt: activity.endAt ? activity.endAt.toISOString().slice(0, 16).replace('T', ' ') : '',
+      startAt: this.formatChinaDateTime(activity.startAt),
+      endAt: this.formatChinaDateTime(activity.endAt),
       productCount: activity.productCount,
       products: activityProducts.length ? activityProducts : (Array.isArray(couponRule.products) ? couponRule.products : []),
       ruleJson: coupon
@@ -14084,17 +14964,35 @@ export class PlatformDataService {
     if (!activity.startAt || !activity.endAt) {
       throw new BadRequestException('活动开始时间和结束时间不能为空，请先编辑活动补充时间');
     }
-    await this.prisma.activity.update({ where: { id: BigInt(activityId) }, data: { status: 'PUBLISHED' } });
+    const updated = await this.prisma.activity.update({
+      where: { id: BigInt(activityId) },
+      data: { status: 'PUBLISHED' },
+    });
+    if (updated.activityType === 'SECKILL') {
+      await this.syncSeckillActivityToFlashSale(updated);
+    }
     return { success: true };
   }
 
   async pauseAdminActivity(authUser: AuthUser, activityId: number) {
-    await this.prisma.activity.update({ where: { id: BigInt(activityId) }, data: { status: 'PAUSED' } });
+    const updated = await this.prisma.activity.update({
+      where: { id: BigInt(activityId) },
+      data: { status: 'PAUSED' },
+    });
+    if (updated.activityType === 'SECKILL') {
+      await this.syncSeckillActivityToFlashSale(updated);
+    }
     return { success: true };
   }
 
   async finishAdminActivity(authUser: AuthUser, activityId: number) {
-    await this.prisma.activity.update({ where: { id: BigInt(activityId) }, data: { status: 'ENDED' } });
+    const updated = await this.prisma.activity.update({
+      where: { id: BigInt(activityId) },
+      data: { status: 'ENDED' },
+    });
+    if (updated.activityType === 'SECKILL') {
+      await this.syncSeckillActivityToFlashSale(updated);
+    }
     return { success: true };
   }
 
@@ -14135,31 +15033,67 @@ export class PlatformDataService {
   async createLogisticsRule(body: Record<string, unknown>, authUser: AuthUser) {
     const rule = await this.prisma.logisticsRule.create({
       data: {
-        name: String(body.name ?? ''),
-        province: String(body.province ?? '全国'),
+        name: String(body.name ?? '').trim() || '物流规则',
+        province: String(body.province ?? '全国').trim() || '全国',
         thresholdAmount: new Prisma.Decimal(String(body.thresholdAmount ?? '0')),
         freightAmount: new Prisma.Decimal(String(body.freightAmount ?? '0')),
-        active: Boolean(body.active ?? true),
+        active: body.active !== false && body.active !== 'false',
       },
     });
-    return { id: this.toNumber(rule.id), success: true };
+
+    if (body.isPublic === true || body.isPublic === 'true' || body.isPublic === 1) {
+      await this.syncPublicFreightSettings(rule);
+    }
+
+    return {
+      id: this.toNumber(rule.id),
+      success: true,
+      isPublic: body.isPublic === true || body.isPublic === 'true' || body.isPublic === 1,
+    };
   }
 
   async updateLogisticsRule(templateId: number, body: Record<string, unknown>, authUser: AuthUser) {
     const data: Record<string, unknown> = {};
-    if (body.name !== undefined) data.name = String(body.name);
-    if (body.province !== undefined) data.province = String(body.province);
+    if (body.name !== undefined) data.name = String(body.name).trim() || '物流规则';
+    if (body.province !== undefined) data.province = String(body.province).trim() || '全国';
     if (body.thresholdAmount !== undefined) data.thresholdAmount = new Prisma.Decimal(String(body.thresholdAmount));
     if (body.freightAmount !== undefined) data.freightAmount = new Prisma.Decimal(String(body.freightAmount));
-    if (body.active !== undefined) data.active = Boolean(body.active);
-    if (Object.keys(data).length) {
-      await this.prisma.logisticsRule.update({ where: { id: BigInt(templateId) }, data: data as any });
+    if (body.active !== undefined) data.active = body.active !== false && body.active !== 'false';
+
+    const rule = Object.keys(data).length
+      ? await this.prisma.logisticsRule.update({ where: { id: BigInt(templateId) }, data: data as any })
+      : await this.prisma.logisticsRule.findUnique({ where: { id: BigInt(templateId) } });
+
+    if (!rule) {
+      throw new NotFoundException('物流规则不存在');
     }
+
+    if (body.isPublic !== undefined) {
+      const makePublic = body.isPublic === true || body.isPublic === 'true' || body.isPublic === 1;
+      if (makePublic) {
+        await this.syncPublicFreightSettings(rule);
+      } else {
+        const current = await this.prisma.systemSetting.findUnique({ where: { key: 'publicFreightRuleId' } });
+        if (Number(current?.value ?? 0) === templateId) {
+          await this.syncPublicFreightSettings(null);
+        }
+      }
+    } else {
+      const current = await this.prisma.systemSetting.findUnique({ where: { key: 'publicFreightRuleId' } });
+      if (Number(current?.value ?? 0) === templateId) {
+        await this.syncPublicFreightSettings(rule);
+      }
+    }
+
     return { success: true };
   }
 
   async deleteLogisticsRule(templateId: number, authUser: AuthUser) {
+    const current = await this.prisma.systemSetting.findUnique({ where: { key: 'publicFreightRuleId' } });
     await this.prisma.logisticsRule.delete({ where: { id: BigInt(templateId) } }).catch(() => {});
+    if (Number(current?.value ?? 0) === templateId) {
+      await this.syncPublicFreightSettings(null);
+    }
     return { success: true };
   }
 

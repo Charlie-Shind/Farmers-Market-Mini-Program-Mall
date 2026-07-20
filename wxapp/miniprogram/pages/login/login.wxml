@@ -1,4 +1,4 @@
-﻿<view class="login-page" style="{{pageStyle}}">
+<view class="login-page" style="{{pageStyle}}">
   <!-- 顶部导航 -->
   <view class="login-header">
     <view class="back-btn" bindtap="goBack" hover-class="back-btn--hover">
@@ -10,11 +10,21 @@
 
   <!-- Logo 区域 -->
   <view class="logo-section">
-    <view class="logo-wrapper">
+    <button
+      wx:if="{{loginMode === 'wechat'}}"
+      class="logo-wrapper logo-wrapper--choose"
+      open-type="chooseAvatar"
+      bindchooseavatar="handleChooseAvatar"
+      disabled="{{avatarUploading || loading}}"
+    >
+      <image class="logo-image" src="{{avatarUrl}}" mode="aspectFill"></image>
+      <view class="avatar-edit"><t-icon name="camera" size="24rpx" color="#ffffff"></t-icon></view>
+    </button>
+    <view wx:else class="logo-wrapper">
       <image class="logo-image" src="/assets/avatars/default-user.png" mode="aspectFit"></image>
     </view>
     <text class="app-name">浔源农仓</text>
-    <text class="app-slogan">欢迎来到农谷仓</text>
+    <text class="app-slogan">{{loginMode === 'wechat' ? '点击头像获取微信头像' : '欢迎来到农谷仓'}}</text>
   </view>
 
   <!-- 登录方式切换 -->

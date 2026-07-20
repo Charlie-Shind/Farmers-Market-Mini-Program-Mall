@@ -12,6 +12,14 @@
             <p>管理平台首页的轮播广告图，支持拖拽实时排序和一键启停。</p>
           </div>
           <div class="top-actions">
+            <el-button
+              type="danger"
+              plain
+              :disabled="!selectedIds.length || saving"
+              @click="batchDelete"
+            >
+              批量删除
+            </el-button>
             <el-button class="banner-create-btn" type="primary" @click="openCreateModal">新增 Banner</el-button>
           </div>
         </div>
@@ -19,18 +27,32 @@
 
       <!-- Grid View with Drag and Drop -->
       <div v-loading="loading" class="grid-wrap">
+        <div v-if="banners.length" class="banner-batch-bar">
+          <label class="banner-select-all">
+            <input type="checkbox" :checked="isAllSelected" @change="toggleSelectAll" />
+            <span>全选</span>
+          </label>
+          <span v-if="selectedIds.length">已选 {{ selectedIds.length }} 项</span>
+        </div>
         <div v-if="banners.length" class="banner-grid">
           <div
             v-for="(row, index) in banners"
             :key="row.id"
             class="banner-card-item"
-            :class="{ 'is-dragging': dragIndex === index }"
+            :class="{ 'is-dragging': dragIndex === index, 'is-selected': selectedIds.includes(row.id) }"
             draggable="true"
             @dragstart="onDragStart(index, $event)"
             @dragenter="onDragEnter(index, $event)"
             @dragover.prevent
             @dragend="onDragEnd"
           >
+            <label class="card-select" @click.stop>
+              <input
+                type="checkbox"
+                :checked="selectedIds.includes(row.id)"
+                @change="toggleSelect(row.id)"
+              />
+            </label>
             <!-- Drag Handle Icon Overlay -->
             <div class="card-drag-handle">
               <svg class="drag-icon" viewBox="0 0 24 24" fill="currentColor">
@@ -164,9 +186,15 @@ const banners = ref<BannerItem[]>([]);
 const loading = ref(false);
 const saving = ref(false);
 const imageUploading = ref(false);
+const selectedIds = ref<number[]>([]);
 const fileInputRef = ref<HTMLInputElement | null>(null);
 
 const dragIndex = ref<number | null>(null);
+
+const isAllSelected = computed(() => {
+  if (!banners.value.length) return false;
+  return banners.value.every((item) => selectedIds.value.includes(item.id));
+});
 
 const dialog = reactive({
   open: false,
@@ -212,10 +240,28 @@ async function loadData() {
   try {
     const data = await getBanners();
     banners.value = data.sort((a, b) => a.sortOrder - b.sortOrder);
+    selectedIds.value = [];
   } catch (error: any) {
     ElMessage.error(error.message || '加载 Banner 列表失败');
   } finally {
     loading.value = false;
+  }
+}
+
+function toggleSelect(id: number) {
+  const idx = selectedIds.value.indexOf(id);
+  if (idx > -1) {
+    selectedIds.value.splice(idx, 1);
+  } else {
+    selectedIds.value.push(id);
+  }
+}
+
+function toggleSelectAll() {
+  if (isAllSelected.value) {
+    selectedIds.value = [];
+  } else {
+    selectedIds.value = banners.value.map((item) => item.id);
   }
 }
 
@@ -326,6 +372,34 @@ async function confirmDelete(row: BannerItem) {
   }
 }
 
+async function batchDelete() {
+  if (!selectedIds.value.length) return;
+  try {
+    await ElMessageBox.confirm(
+      `确定要批量删除已选的 ${selectedIds.value.length} 个 Banner 吗？此操作无法撤销。`,
+      '批量删除确认',
+      { confirmButtonText: '确定删除', cancelButtonText: '取消', type: 'warning' },
+    );
+    saving.value = true;
+    const results = await Promise.allSettled(selectedIds.value.map((id) => deleteBanner(id)));
+    const successCount = results.filter((r) => r.status === 'fulfilled').length;
+    const failCount = results.length - successCount;
+    selectedIds.value = [];
+    await loadData();
+    if (failCount === 0) {
+      ElMessage.success(`成功删除 ${successCount} 个 Banner`);
+    } else {
+      ElMessage.warning(`删除完成：成功 ${successCount} 个，失败 ${failCount} 个`);
+    }
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      ElMessage.error(error.message || '批量删除失败');
+    }
+  } finally {
+    saving.value = false;
+  }
+}
+
 // Drag & Drop handlers
 function onDragStart(index: number, event: DragEvent) {
   dragIndex.value = index;
@@ -413,6 +487,49 @@ async function onDragEnd() {
   gap: 24px;
 }
 
+.banner-batch-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: #606266;
+}
+
+.banner-select-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.banner-card-item.is-selected {
+  border-color: #409eff;
+  box-shadow: 0 0 0 1px rgba(64, 158, 255, 0.25);
+}
+
+.card-select {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 12;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.card-status-badge {
+  position: absolute;
+  top: 10px;
+  right: 46px;
+  z-index: 5;
+}
+
 .banner-card-item {
   background: var(--bg-card, #ffffff);
   border-radius: 12px;
@@ -474,13 +591,6 @@ async function onDragEnd() {
 .banner-grid-preview {
   width: 100%;
   height: 100%;
-}
-
-.card-status-badge {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 5;
 }
 
 .card-info {

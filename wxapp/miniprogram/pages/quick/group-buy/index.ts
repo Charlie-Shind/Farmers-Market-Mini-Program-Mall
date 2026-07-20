@@ -5,6 +5,7 @@ import {
   joinGroupBuy,
   isAlreadyJoinedGroupError,
   navigateToJoinedGroupProgress,
+  buildGroupBuyCheckoutUrl,
   type GroupBuyItem,
 } from '../../../services/quick';
 import { buildPageTopStyle } from '../../../utils/page-layout';
@@ -170,9 +171,12 @@ Component({
           return;
         }
         const gid = Number((res as any).groupId || (res as any).groupBuyId || groupId || 0);
-        if (!gid) throw new Error('拼团加入失败');
         wx.navigateTo({
-          url: `/pages/checkout/checkout?mode=groupBuy&groupBuyId=${gid}&productId=${productId}&skuId=${res.skuId || skuId || 0}`,
+          url: buildGroupBuyCheckoutUrl({
+            productId,
+            skuId: res.skuId || skuId || 0,
+            groupId: gid,
+          }),
         });
       } catch (err: any) {
         if (isAlreadyJoinedGroupError(err)) {

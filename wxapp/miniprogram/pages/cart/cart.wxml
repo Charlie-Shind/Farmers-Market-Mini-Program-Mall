@@ -15,18 +15,25 @@
       </view>
     </view>
 
-    <view class="cart-freight" data-label="去凑单" bindtap="openSection" hover-class="cart-freight--hover">
-      <view class="cart-freight__badge">运费</view>
-      <text class="cart-freight__text">{{cart.promo.text}}</text>
-      <view class="cart-freight__link">
-        <text>{{cart.promo.actionLabel}}</text>
-        <t-icon name="chevronRight" size="22rpx" color="#2c4a39"></t-icon>
+    <view class="cart-freight" data-label="{{cart.promo.actionLabel}}" bindtap="openSection" hover-class="cart-freight--hover">
+      <view class="cart-freight__icon">
+        <t-icon name="truck" size="36rpx" color="#c4933a"></t-icon>
       </view>
+      <view class="cart-freight__body">
+        <view class="cart-freight__top">
+          <text class="cart-freight__text">{{cart.promo.text}}</text>
+          <text class="cart-freight__remain">{{cart.promo.remainText}}</text>
+        </view>
+        <view class="cart-freight__bar">
+          <view class="cart-freight__fill" style="width: {{cart.promo.progress}}%;"></view>
+        </view>
+      </view>
+      <view class="cart-freight__btn">{{cart.promo.actionLabel}}</view>
     </view>
   </view>
 
-  <view class="panel cart-goods-panel">
-    <block wx:if="{{cart.items.length}}">
+  <block wx:if="{{cart.items.length}}">
+    <view class="panel cart-goods-panel">
       <view wx:for="{{cart.items}}" wx:key="id" class="cart-item">
         <view class="check {{item.checked ? 'check--active' : ''}}" data-cart-id="{{item.id}}" data-checked="{{item.checked}}" bindtap="toggleItem">
           <t-icon wx:if="{{item.checked}}" name="check" size="24rpx" color="#ffffff"></t-icon>
@@ -52,42 +59,55 @@
           <t-icon name="delete" size="32rpx" color="#b0aca2"></t-icon>
         </button>
       </view>
-    </block>
-    <view wx:elif="{{loadError}}" class="cart-empty-state">
-      <text class="cart-empty-state__title">购物车暂时没加载出来</text>
-      <text class="cart-empty-state__desc">下拉刷新或重新进入页面后会再次尝试</text>
     </view>
-    <view wx:else class="cart-empty-state">
+  </block>
+
+  <view wx:elif="{{loadError}}" class="cart-empty-state">
+    <text class="cart-empty-state__title">购物车暂时没加载出来</text>
+    <text class="cart-empty-state__desc">下拉刷新或重新进入页面后会再次尝试</text>
+  </view>
+
+  <block wx:else>
+    <view class="cart-empty-state">
       <image class="cart-empty-state__image" src="/assets/cart-empty.svg" mode="aspectFit"></image>
       <text class="cart-empty-state__title">购物车空空如也</text>
       <text class="cart-empty-state__desc">先去首页或分类页挑几样好货，再回来结算</text>
       <button class="cart-empty-state__action" data-label="去逛逛" bindtap="openSection">去首页逛逛</button>
     </view>
-  </view>
 
-  <!-- 为你推荐 暂时关闭
-  <view class="panel">
-    <view class="section-title">
-      <text class="section-title__title">为你推荐</text>
-    </view>
-    <view class="recommend-two">
-      <view wx:for="{{cart.recommend}}" wx:key="id" class="goods-card" data-id="{{item.id}}" bindtap="openProductDetail">
-        <view class="goods-img {{item.imageClass}}" style="{{item.imageStyle}}"></view>
-        <text class="goods-title">{{item.title}}</text>
-        <text class="goods-desc">{{item.desc}}</text>
-        <view class="price-line">
-          <text class="price">{{item.price}}</text>
-          <button data-id="{{item.id}}" catchtap="addRecommendToCart">
-            <t-icon name="cart" size="24rpx"></t-icon>
-          </button>
-        </view>
+    <view wx:if="{{cart.recommend.length}}" class="cart-recommend">
+      <view class="cart-recommend__head">
+        <view class="cart-recommend__line"></view>
+        <text class="cart-recommend__title">为你推荐</text>
+        <view class="cart-recommend__line"></view>
       </view>
+      <scroll-view class="cart-recommend__scroll" scroll-x enhanced show-scrollbar="{{false}}">
+        <view class="cart-recommend__row">
+          <view
+            wx:for="{{cart.recommend}}"
+            wx:key="id"
+            class="cart-rec-card"
+            data-id="{{item.id}}"
+            bindtap="openProductDetail"
+            hover-class="cart-rec-card--hover"
+          >
+            <view class="cart-rec-card__cover {{item.imageClass}}" style="{{item.imageStyle}}"></view>
+            <text class="cart-rec-card__title">{{item.title}}</text>
+            <view class="cart-rec-card__foot">
+              <text class="cart-rec-card__price">{{item.price}}</text>
+              <view class="cart-rec-card__add" data-id="{{item.id}}" catchtap="addRecommendToCart">
+                <t-icon name="plus" size="24rpx" color="#ffffff"></t-icon>
+              </view>
+            </view>
+          </view>
+        </view>
+      </scroll-view>
     </view>
-  </view>
-  -->
+  </block>
 
-  <view class="cart-spacer"></view>
-  <view class="cart-bottom">
+  <view class="cart-spacer {{cart.items.length ? '' : 'cart-spacer--empty'}}"></view>
+
+  <view wx:if="{{cart.items.length}}" class="cart-bottom">
     <view class="cart-select" bindtap="toggleSelectAll">
       <view class="check {{isAllChecked ? 'check--active' : ''}}">
         <t-icon wx:if="{{isAllChecked}}" name="check" size="24rpx" color="#ffffff"></t-icon>

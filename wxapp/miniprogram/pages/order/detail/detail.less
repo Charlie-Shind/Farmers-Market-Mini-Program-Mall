@@ -33,25 +33,49 @@
   margin-bottom: 24rpx;
   border-radius: 32rpx;
   overflow: hidden;
+  min-height: 280rpx;
   box-shadow: 0 20rpx 48rpx rgba(44, 74, 57, 0.12);
+  background: #2c4a39;
 }
 
-.status-hero__bg {
+.status-hero__bg-img {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
   pointer-events: none;
+  z-index: 0;
 }
 
-.status-hero.banner--green .status-hero__bg {
-  background: linear-gradient(135deg, #2c4a39 0%, #3f6f44 52%, #2f5638 100%);
+.status-hero__shade {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: linear-gradient(90deg, rgba(20, 40, 28, 0.28) 0%, rgba(20, 40, 28, 0.08) 48%, transparent 72%);
 }
 
-.status-hero.banner--gold .status-hero__bg {
-  background: linear-gradient(135deg, #b8894c 0%, #d8a978 48%, #a66f2d 100%);
+.status-hero.banner--gold {
+  background: #b8894c;
 }
 
-.status-hero.banner--gray .status-hero__bg {
-  background: linear-gradient(135deg, #6b7280 0%, #8b939e 52%, #5c6370 100%);
+.status-hero.banner--gold .status-hero__shade {
+  background: linear-gradient(90deg, rgba(120, 70, 20, 0.22) 0%, rgba(120, 70, 20, 0.06) 48%, transparent 72%);
+}
+
+.status-hero.banner--gray {
+  background: #6b7280;
+}
+
+.status-hero.banner--gray .status-hero__shade {
+  background: linear-gradient(90deg, rgba(40, 45, 55, 0.28) 0%, rgba(40, 45, 55, 0.08) 48%, transparent 72%);
 }
 
 .status-hero__content {
@@ -62,27 +86,9 @@
 
 .status-hero__head {
   display: flex;
-  align-items: center;
-  gap: 24rpx;
-}
-
-.status-hero__icon {
-  width: 96rpx;
-  height: 96rpx;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.18);
-  border: 2rpx solid rgba(255, 255, 255, 0.28);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  box-shadow: inset 0 2rpx 8rpx rgba(255, 255, 255, 0.12);
-}
-
-.status-hero__icon .t-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  padding-right: 200rpx;
+  box-sizing: border-box;
 }
 
 .status-hero__info {
@@ -650,153 +656,161 @@
   box-shadow: 0 16rpx 32rpx rgba(210, 96, 47, 0.18);
 }
 
-/* Group Buy Panel */
+/* Group Buy Panel — 头像位进度（对齐拼好货「正在拼团」） */
 .group-buy-panel {
-  background: linear-gradient(160deg, #fff8e9 0%, #fef0d6 100%);
-  border-color: rgba(241, 153, 74, 0.25);
+  padding: 28rpx 24rpx 24rpx;
+  background: #ffffff;
+  border-color: rgba(44, 74, 57, 0.08);
+  box-shadow: 0 10rpx 28rpx rgba(44, 74, 57, 0.06);
 }
 
-.group-buy-panel__head {
+.gbp {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.gbp__row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16rpx;
+  gap: 16rpx;
 }
 
-.group-buy-panel__eyebrow {
+.gbp__label {
+  font-size: 28rpx;
+  font-weight: 800;
+  color: #222;
+}
+
+.gbp__timer {
+  display: flex;
+  align-items: baseline;
+  gap: 8rpx;
+  flex-shrink: 0;
+}
+
+.gbp__timer-label {
+  font-size: 22rpx;
+  color: #999;
+}
+
+.gbp__timer-value {
+  font-size: 28rpx;
+  font-weight: 800;
+  color: #222;
+  font-variant-numeric: tabular-nums;
+}
+
+.gbp__status {
   font-size: 24rpx;
   font-weight: 800;
-  color: #946222;
-  letter-spacing: 0.5rpx;
 }
 
-.group-buy-panel__countdown {
-  font-size: 22rpx;
-  color: #c65f2d;
-  font-weight: 700;
-}
-
-.group-buy-panel__countdown--ok {
+.gbp__status--ok {
   color: #2c4a39;
 }
 
-.group-buy-panel__countdown--fail {
+.gbp__status--fail {
   color: #8a7a5f;
 }
 
-.group-buy-panel__progress {
+.gbp__members {
   display: flex;
   align-items: center;
-  gap: 18rpx;
-  margin-bottom: 16rpx;
+  justify-content: center;
+  gap: 28rpx;
+  padding: 20rpx 0 12rpx;
 }
 
-.group-buy-panel__bar {
-  flex: 1;
-  height: 14rpx;
-  border-radius: 999rpx;
-  background: rgba(146, 98, 34, 0.18);
+.gbp__member {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10rpx;
+}
+
+.gbp__avatar {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 50%;
+  background: #e8ebe9;
+  border: 2rpx dashed #cfd5d1;
+  box-sizing: border-box;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.group-buy-panel__fill {
+.gbp__avatar.is-filled {
+  background: linear-gradient(145deg, #d7e5d8, #a8c4ad);
+  border: none;
+}
+
+.gbp__avatar.is-mine {
+  border: 5rpx solid #d4933e;
+  box-shadow: 0 0 0 4rpx rgba(212, 147, 62, 0.2);
+}
+
+.gbp__avatar-img {
+  width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, #f2994a 0%, #d2602f 100%);
-  border-radius: 999rpx;
-  transition: width 0.4s ease;
+  display: block;
 }
 
-.group-buy-panel__text {
-  font-size: 26rpx;
-  font-weight: 800;
-  color: #ff431c;
-  white-space: nowrap;
+.gbp__role {
+  font-size: 22rpx;
+  color: #666;
 }
 
-.group-buy-panel__invite {
+.gbp__invite {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 18rpx;
-  margin-bottom: 18rpx;
-  padding: 18rpx 20rpx;
-  border-radius: 24rpx;
-  background: rgba(255, 255, 255, 0.56);
-}
-
-.group-buy-panel__invite-label {
-  font-size: 24rpx;
-  font-weight: 800;
-  color: #946222;
-  white-space: nowrap;
-}
-
-.group-buy-panel__invite-code {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 12rpx;
-  padding: 14rpx 18rpx;
+  gap: 16rpx;
+  margin-top: 4rpx;
+  padding: 16rpx 18rpx;
   border-radius: 18rpx;
-  background: rgba(255, 255, 255, 0.82);
-  border: 1rpx solid rgba(241, 153, 74, 0.22);
+  background: #f6f8f5;
 }
 
-.group-buy-panel__invite-code--hover {
-  transform: scale(0.98);
-  opacity: 0.92;
-}
-
-.group-buy-panel__invite-value {
-  font-size: 26rpx;
-  font-weight: 900;
-  color: #c65f2d;
+.gbp__invite-label {
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #2c4a39;
   letter-spacing: 1rpx;
 }
 
-.group-buy-panel__invite-tip {
-  font-size: 20rpx;
-  color: #946222;
-  white-space: nowrap;
-}
-
-.group-buy-panel__members {
-  display: flex;
-  gap: 16rpx;
-  flex-wrap: wrap;
-}
-
-.group-buy-member {
+.gbp__invite-copy {
+  flex-shrink: 0;
+  height: 48rpx;
+  padding: 0 18rpx;
+  border-radius: 999rpx;
+  background: #2c4a39;
+  color: #fff;
+  font-size: 22rpx;
+  font-weight: 700;
   display: flex;
   align-items: center;
-  gap: 8rpx;
-  background: rgba(255, 255, 255, 0.7);
+  justify-content: center;
+}
+
+.gbp__btn {
+  margin: 12rpx 0 0;
+  height: 84rpx;
+  line-height: 84rpx;
   border-radius: 999rpx;
-  padding: 4rpx 14rpx 4rpx 4rpx;
+  background: #2c4a39;
+  color: #ffffff;
+  font-size: 30rpx;
+  font-weight: 800;
+  border: none;
+  padding: 0;
 }
 
-.group-buy-member__avatar {
-  width: 36rpx;
-  height: 36rpx;
-  border-radius: 50%;
-  background: #d2c4ad;
-  color: #fff;
-  display: grid;
-  place-items: center;
-  font-size: 20rpx;
-  font-weight: 900;
-}
-
-.group-buy-member__avatar--init {
-  background: #c65f2d;
-}
-
-.group-buy-member__role {
-  font-size: 20rpx;
-  font-weight: 700;
-  color: #6e4e2c;
+.gbp__btn::after {
+  border: none;
 }
 
 /* Custom Bottom Drawer / Sheet */

@@ -92,6 +92,18 @@ export type AppCartGroup = {
   items: AppCartItem[];
 };
 
+export type AppFreightPromo = {
+  ruleId?: number | null;
+  thresholdAmount: string;
+  freightAmount?: string;
+  name?: string;
+};
+
+export type AppCartResult = {
+  groups: AppCartGroup[];
+  freightPromo?: AppFreightPromo;
+};
+
 let cachedCartItemCount: number | null = null;
 let cachedCartItemCountPromise: Promise<number> | null = null;
 
@@ -238,6 +250,7 @@ export type AppPointExchangeItem = {
   couponId: number;
   name: string;
   type: string;
+  exchangeKind?: 'COUPON' | 'PRODUCT' | string;
   thresholdAmount: string;
   discountAmount: string;
   stock: number;
@@ -247,6 +260,8 @@ export type AppPointExchangeItem = {
   received: boolean;
   pointsCost: number;
   canRedeem: boolean;
+  coverUrl?: string;
+  imageUrl?: string;
 };
 
 export type AppOrder = {
@@ -285,6 +300,8 @@ export type AppOrderGroupBuy = {
     userId: number;
     isInitiator: boolean;
     joinedAt: string;
+    nickname?: string;
+    avatarUrl?: string;
   }>;
 };
 
@@ -399,8 +416,15 @@ export async function fetchSearchHotKeywords() {
   return get<string[]>('/app/search/hot-keywords');
 }
 
-export async function fetchCart() {
-  return get<AppCartGroup[]>('/app/cart');
+export async function fetchCart(): Promise<AppCartResult> {
+  const data = await get<AppCartGroup[] | AppCartResult>('/app/cart');
+  if (Array.isArray(data)) {
+    return { groups: data };
+  }
+  return {
+    groups: Array.isArray(data?.groups) ? data.groups : [],
+    freightPromo: data?.freightPromo,
+  };
 }
 
 export async function fetchMessageList(query: { page?: number; pageSize?: number; type?: string; isRead?: boolean } = {}) {
@@ -506,7 +530,7 @@ export async function fetchCartItemCount(forceRefresh = false) {
   }
 
   cachedCartItemCountPromise = (async () => {
-    const groups = await fetchCart();
+    const { groups } = await fetchCart();
 
     const count = groups.reduce((sum, group) => {
       return (

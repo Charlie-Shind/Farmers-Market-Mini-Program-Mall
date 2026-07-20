@@ -11,6 +11,15 @@ export type FlashSaleWindow = {
   status: FlashSaleStatus;
 };
 
+export type FreightSubsidyRule = {
+  id: number;
+  name: string;
+  province: string;
+  thresholdAmount: string;
+  freightAmount: string;
+  ruleText: string;
+};
+
 export type FlashSaleItem = {
   itemId?: number;
   productId: number;
@@ -23,6 +32,8 @@ export type FlashSaleItem = {
   stockLeft: number;
   totalStock: number;
   originPlace?: string;
+  activityStartAt?: string;
+  activityEndAt?: string;
 };
 
 export type FlashSaleActiveResult = {
@@ -81,6 +92,7 @@ export async function fetchFlashSaleActive(): Promise<FlashSaleActiveResult> {
 
 export type FlashSaleWindowListResult = {
   windows: FlashSaleWindow[];
+  freightRules?: FreightSubsidyRule[];
   generatedAt: string;
 };
 
@@ -151,6 +163,7 @@ export type GroupBuyJoinResult = {
   groupPrice: string;
   originPrice: string;
   expireAt: string;
+  expireHours?: number;
   status: 'OPEN' | 'COMPLETED' | 'FAILED';
   isNewGroup: boolean;
   /** 若该用户此前已为该团创建过未支付订单，这里会带回订单号，前端应引导续付而不是重新下单 */
@@ -164,9 +177,25 @@ export type GroupBuyJoinResult = {
 /**
  * 开团/参团校验接口。
  * 注意：调用本接口【不会】占用成团名额，只有真正下单并支付成功才会计入成团人数。
+ * 开新团时也不会立刻创建团记录，需提交拼团订单后才落库。
  */
 export async function joinGroupBuy(payload: { productId: number; skuId?: number; groupId?: number; lat?: number; lng?: number }) {
   return post<GroupBuyJoinResult>('/app/quick/group-buy/join', payload, { auth: true });
+}
+
+/** 拼团结算页跳转：新开团无 groupId，参已有团带 groupId */
+export function buildGroupBuyCheckoutUrl(params: {
+  productId: number | string;
+  skuId?: number | string | null;
+  groupId?: number | string | null;
+}) {
+  const productId = Number(params.productId);
+  const skuId = Number(params.skuId || 0);
+  const groupId = Number(params.groupId || 0);
+  if (groupId > 0) {
+    return `/pages/checkout/checkout?mode=groupBuy&groupBuyId=${groupId}&productId=${productId}&skuId=${skuId}`;
+  }
+  return `/pages/checkout/checkout?mode=groupBuy&productId=${productId}&skuId=${skuId}`;
 }
 
 /** 是否为「已在该团中」类错误（兼容尚未部署新后端的旧接口文案） */
@@ -264,6 +293,13 @@ export type MyGroupBuyItem = {
   originPrice: string;
   expireAt: string;
   completedAt: string | null;
+  members?: Array<{
+    userId: number;
+    isInitiator: boolean;
+    isMine?: boolean;
+    nickname?: string;
+    avatarUrl?: string;
+  }>;
 };
 
 /** 我的拼团列表：我发起或已付款参加过的团 */

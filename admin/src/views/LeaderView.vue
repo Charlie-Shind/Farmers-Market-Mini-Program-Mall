@@ -10,6 +10,14 @@
         </div>
         <div class="top-actions">
           <RefreshDataButton :loading="loading" compact @refresh="handleRefreshData" />
+          <button
+            type="button"
+            class="ghost-btn compact danger-text"
+            :disabled="!selectedIds.length || saving"
+            @click="batchDelete"
+          >
+            批量删除
+          </button>
         </div>
       </div>
 
@@ -40,6 +48,9 @@
         <table class="data-table">
           <thead>
             <tr>
+              <th class="check-cell">
+                <input type="checkbox" :checked="isAllSelected" @change="toggleSelectAll" />
+              </th>
               <th>ID</th>
               <th>团长信息</th>
               <th>申请编号</th>
@@ -52,6 +63,13 @@
           </thead>
           <tbody>
             <tr v-for="leader in leaders" :key="leader.id">
+              <td class="check-cell">
+                <input
+                  type="checkbox"
+                  :checked="selectedIds.includes(leader.id)"
+                  @change="toggleSelect(leader.id)"
+                />
+              </td>
               <td data-label="ID">{{ leader.id }}</td>
               <td data-label="团长信息">
                 <div class="cell-main plain">
@@ -89,7 +107,7 @@
               </td>
             </tr>
             <tr v-if="!leaders.length">
-              <td colspan="8" class="empty-hint">暂无团长记录</td>
+              <td colspan="9" class="empty-hint">暂无团长记录</td>
             </tr>
           </tbody>
         </table>
@@ -352,6 +370,12 @@ const pageSize = ref(20);
 const pageInput = ref(1);
 const loading = ref(false);
 const saving = ref(false);
+const selectedIds = ref<number[]>([]);
+
+const isAllSelected = computed(() => {
+  if (!leaders.value.length) return false;
+  return leaders.value.every((item) => selectedIds.value.includes(item.id));
+});
 
 const filters = reactive({
   keyword: '',
@@ -417,12 +441,30 @@ async function loadData(): Promise<boolean> {
     leaders.value = res.items ?? [];
     total.value = res.total ?? 0;
     pageInput.value = page.value;
+    selectedIds.value = [];
     return true;
   } catch (error: any) {
     ElMessage.error(error.message || '加载团长列表失败');
     return false;
   } finally {
     loading.value = false;
+  }
+}
+
+function toggleSelect(id: number) {
+  const idx = selectedIds.value.indexOf(id);
+  if (idx > -1) {
+    selectedIds.value.splice(idx, 1);
+  } else {
+    selectedIds.value.push(id);
+  }
+}
+
+function toggleSelectAll() {
+  if (isAllSelected.value) {
+    selectedIds.value = [];
+  } else {
+    selectedIds.value = leaders.value.map((item) => item.id);
   }
 }
 
@@ -573,6 +615,34 @@ async function confirmDelete(leader: Leader) {
     if (error !== 'cancel') {
       ElMessage.error(error.message || '删除失败');
     }
+  }
+}
+
+async function batchDelete() {
+  if (!selectedIds.value.length) return;
+  try {
+    await ElMessageBox.confirm(
+      `确定要批量删除已选的 ${selectedIds.value.length} 位团长吗？删除后将解除其角色与自提点关联。`,
+      '批量删除确认',
+      { confirmButtonText: '确定删除', cancelButtonText: '取消', type: 'warning' },
+    );
+    saving.value = true;
+    const results = await Promise.allSettled(selectedIds.value.map((id) => deleteLeader(id)));
+    const successCount = results.filter((r) => r.status === 'fulfilled').length;
+    const failCount = results.length - successCount;
+    selectedIds.value = [];
+    await loadData();
+    if (failCount === 0) {
+      ElMessage.success(`成功删除 ${successCount} 位团长`);
+    } else {
+      ElMessage.warning(`删除完成：成功 ${successCount} 位，失败 ${failCount} 位`);
+    }
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      ElMessage.error(error.message || '批量删除失败');
+    }
+  } finally {
+    saving.value = false;
   }
 }
 </script>

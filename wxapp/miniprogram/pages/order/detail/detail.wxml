@@ -4,12 +4,28 @@
   <scroll-view scroll-y="true" class="detail-scroll" enhanced="true" show-scrollbar="{{false}}">
     <!-- Status Hero (JD/PDD style) -->
     <view class="status-hero {{statusColorClass}}">
-      <view class="status-hero__bg"></view>
+      <!-- 静态路径便于真机打包收录（ignoreUploadUnusedFiles） -->
+      <image
+        wx:if="{{statusColorClass === 'banner--gold'}}"
+        class="status-hero__bg-img"
+        src="/assets/images/order/status-bg-gold.jpg"
+        mode="aspectFill"
+      />
+      <image
+        wx:elif="{{statusColorClass === 'banner--gray'}}"
+        class="status-hero__bg-img"
+        src="/assets/images/order/status-bg-gray.jpg"
+        mode="aspectFill"
+      />
+      <image
+        wx:else
+        class="status-hero__bg-img"
+        src="/assets/images/order/status-bg-green.jpg"
+        mode="aspectFill"
+      />
+      <view class="status-hero__shade"></view>
       <view class="status-hero__content">
         <view class="status-hero__head">
-          <view class="status-hero__icon">
-            <t-icon name="{{statusIcon}}" size="56rpx" color="{{statusIconColor}}"></t-icon>
-          </view>
           <view class="status-hero__info">
             <text class="status-hero__title">{{statusLabel}}</text>
             <text class="status-hero__sub" wx:if="{{statusSubLabel}}">{{statusSubLabel}}</text>
@@ -38,32 +54,47 @@
 
     <!-- Group Buy Progress Card -->
     <view class="panel group-buy-panel" wx:if="{{order.groupBuy}}">
-      <view class="group-buy-panel__head">
-        <text class="group-buy-panel__eyebrow">邻里拼团</text>
-        <text wx:if="{{order.groupBuy.status === 'OPEN'}}" class="group-buy-panel__countdown">剩余 {{groupBuyCountdown || '--:--:--'}}，超时未满员将自动取消退款</text>
-        <text wx:elif="{{order.groupBuy.status === 'COMPLETED'}}" class="group-buy-panel__countdown group-buy-panel__countdown--ok">已成团</text>
-        <text wx:elif="{{order.groupBuy.status === 'FAILED'}}" class="group-buy-panel__countdown group-buy-panel__countdown--fail">拼团失败，已自动退款</text>
-      </view>
-      <view class="group-buy-panel__progress">
-        <view class="group-buy-panel__bar">
-          <view class="group-buy-panel__fill" style="width: {{groupBuyProgress.percent * 100}}%;"></view>
-        </view>
-        <text class="group-buy-panel__text">{{groupBuyProgress.memberCount}}/{{groupBuyProgress.needed}}人 已参团</text>
-      </view>
-      <view class="group-buy-panel__invite" wx:if="{{groupInviteCode}}">
-        <text class="group-buy-panel__invite-label">邀请码</text>
-        <view class="group-buy-panel__invite-code" bindtap="copyGroupInviteCode" hover-class="group-buy-panel__invite-code--hover">
-          <text class="group-buy-panel__invite-value">{{groupInviteCode}}</text>
-          <text class="group-buy-panel__invite-tip">点我复制</text>
-        </view>
-      </view>
-      <view class="group-buy-panel__members" wx:if="{{order.groupBuy.members && order.groupBuy.members.length}}">
-        <view class="group-buy-member" wx:for="{{order.groupBuy.members}}" wx:key="memberId">
-          <view class="group-buy-member__avatar {{item.isInitiator ? 'group-buy-member__avatar--init' : ''}}">
-            <text>{{item.isInitiator ? '团' : '友'}}</text>
+      <view class="gbp">
+        <view class="gbp__row">
+          <text class="gbp__label">拼团进度 {{groupBuyProgressText}}</text>
+          <view class="gbp__timer" wx:if="{{order.groupBuy.status === 'OPEN'}}">
+            <text class="gbp__timer-label">剩余时间</text>
+            <text class="gbp__timer-value">{{groupBuyCountdown || '00:00:00'}}</text>
           </view>
-          <text class="group-buy-member__role">{{item.isInitiator ? '团长' : '团员'}}</text>
+          <text wx:elif="{{order.groupBuy.status === 'COMPLETED'}}" class="gbp__status gbp__status--ok">已成团</text>
+          <text wx:elif="{{order.groupBuy.status === 'FAILED'}}" class="gbp__status gbp__status--fail">拼团失败</text>
         </view>
+
+        <view class="gbp__members">
+          <view
+            wx:for="{{groupBuySlots}}"
+            wx:key="key"
+            class="gbp__member {{item.filled ? '' : 'is-empty'}}"
+          >
+            <view class="gbp__avatar {{item.filled ? 'is-filled' : ''}} {{item.isMine ? 'is-mine' : ''}}">
+              <image
+                wx:if="{{item.avatarUrl}}"
+                class="gbp__avatar-img"
+                src="{{item.avatarUrl}}"
+                mode="aspectFill"
+                data-key="{{item.key}}"
+                binderror="onGroupBuyAvatarError"
+              />
+            </view>
+            <text class="gbp__role">{{item.label}}</text>
+          </view>
+        </view>
+
+        <view class="gbp__invite" wx:if="{{groupInviteCode && order.groupBuy.status === 'OPEN'}}">
+          <text class="gbp__invite-label">邀请码 {{groupInviteCode}}</text>
+          <view class="gbp__invite-copy" bindtap="copyGroupInviteCode">复制</view>
+        </view>
+
+        <button
+          wx:if="{{order.groupBuy.status === 'OPEN' && order.payStatus === 1}}"
+          class="gbp__btn"
+          open-type="share"
+        >邀请好友参团</button>
       </view>
     </view>
 

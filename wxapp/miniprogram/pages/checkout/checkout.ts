@@ -154,7 +154,7 @@ Component({
 
       const modeStr = options.mode || '';
 
-      if (!cartIdsStr && !groupBuyIdStr && modeStr !== 'flashSale') {
+      if (!cartIdsStr && !groupBuyIdStr && modeStr !== 'flashSale' && modeStr !== 'groupBuy') {
         wx.showToast({ title: '参数错误', icon: 'none' });
         setTimeout(() => this.goBack(), 1500);
         return;
@@ -211,6 +211,32 @@ Component({
           cartIds: [],
           groupBuyContext: {
             groupBuyId,
+            productId,
+            skuId,
+            title: '',
+            skuName: '',
+            coverUrl: '',
+            groupPrice: '0.00',
+          },
+        });
+        await this.initCheckoutData();
+        return;
+      }
+
+      if (modeStr === 'groupBuy') {
+        const productId = Number(productIdStr);
+        const skuId = Number(skuIdStr);
+        if (![productId, skuId].every((value) => Number.isFinite(value) && value > 0)) {
+          wx.showToast({ title: '拼团参数错误', icon: 'none' });
+          setTimeout(() => this.goBack(), 1500);
+          return;
+        }
+
+        this.setData({
+          checkoutMode: 'groupBuy',
+          cartIds: [],
+          groupBuyContext: {
+            groupBuyId: 0,
             productId,
             skuId,
             title: '',
@@ -322,8 +348,8 @@ Component({
             },
           });
         } else {
-          const cartGroups = await fetchCart();
-          cartGroups.forEach((group: AppCartGroup) => {
+          const cartResult = await fetchCart();
+          (cartResult.groups || []).forEach((group: AppCartGroup) => {
             group.items.forEach((item: AppCartItem) => {
               if (this.data.cartIds.includes(item.cartId)) {
                 flatItems.push({

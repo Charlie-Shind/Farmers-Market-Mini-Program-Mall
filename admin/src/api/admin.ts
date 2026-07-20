@@ -967,11 +967,15 @@ export async function finishActivity(activityId: number) {
   });
 }
 
-export async function endActivity(activityId: number, remark = '超管强制下线') {
-  return request(`/activities/${activityId}/end`, {
-    method: 'PATCH',
-    body: JSON.stringify({ activityId, remark }),
+export async function deleteActivity(activityId: number) {
+  return request(`/activities/${activityId}`, {
+    method: 'DELETE',
   });
+}
+
+export async function endActivity(activityId: number, _remark = '超管强制下线') {
+  // 后端无 /end 接口，强制下线统一走 finish
+  return finishActivity(activityId);
 }
 
 export async function createLogisticsRule(payload: Record<string, unknown>) {

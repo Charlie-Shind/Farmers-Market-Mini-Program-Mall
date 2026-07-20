@@ -29,6 +29,8 @@ type CartPromoView = {
   text: string;
   actionLabel: string;
   threshold: number;
+  remainText: string;
+  progress: number;
 };
 
 function toMoney(value: string | number | undefined) {
@@ -69,9 +71,11 @@ Component({
         desc: '正在拉取真实收货地址',
       },
       promo: {
-        text: '满¥129.00，可享免运费',
+        text: '满 ¥0.00，享免运费',
         actionLabel: '去凑单',
-        threshold: 129,
+        threshold: 0,
+        remainText: '还差 ¥0.00',
+        progress: 0,
       } as CartPromoView,
       shopName: '购物车',
       items: [] as CartViewItem[],
@@ -136,12 +140,13 @@ Component({
       });
 
       try {
-        const [groups, addresses, productsPage] = await Promise.all([
+        const [cartResult, addresses, productsPage] = await Promise.all([
           fetchCart(),
           fetchAddresses(),
-          fetchProducts('', 4),
+          fetchProducts('', { page: 1, pageSize: 10 }),
         ]);
 
+        const groups = cartResult.groups || [];
         const items = buildCartItems(groups);
         const checkedItems = items.filter((item) => item.checked);
         const checkedTotal = items.reduce((sum, item) => {
@@ -151,41 +156,57 @@ Component({
 
           return sum + toMoney(item.price) * item.quantity;
         }, 0);
-        const promoThreshold = 129;
+        const promoThreshold = Math.max(
+          Number(cartResult.freightPromo?.thresholdAmount || 0) || 0,
+          0,
+        );
+        const remainAmount = Math.max(promoThreshold - checkedTotal, 0);
+        const promoProgress =
+          promoThreshold > 0 ? Math.min(Math.round((checkedTotal / promoThreshold) * 100), 100) : 100;
         const shopName = groups.length > 1 ? `${groups.length} 家商户商品` : groups[0]?.storeName || '购物车';
         const address = addresses.find((item) => item.isDefault) || addresses[0];
         const promoText =
-          checkedTotal >= promoThreshold
-            ? '已满足免运费'
-            : `满¥${promoThreshold.toFixed(2)}，可享免运费`;
+          promoThreshold <= 0
+            ? '暂未配置运费满减'
+            : checkedTotal >= promoThreshold
+              ? '已满足免运费条件'
+              : `满 ¥${promoThreshold.toFixed(2)}，享免运费`;
+        const remainText =
+          promoThreshold <= 0
+            ? ''
+            : checkedTotal >= promoThreshold
+              ? '已达标'
+              : `还差 ¥${remainAmount.toFixed(2)}`;
 
         this.setData({
           cart: {
             address: address
               ? {
-                  title: `${address.province}${address.city}${address.district} ${address.detailAddress}`,
-                  desc: `${address.receiverName} ${address.receiverMobile}${address.isDefault ? ' · 默认地址' : ''}`,
+                  title: `收货地址：${address.province}${address.city}${address.district}`,
+                  desc: `${address.detailAddress} · ${address.receiverName} ${address.receiverMobile}`,
                 }
               : {
-                  title: '请选择收货地址',
-                  desc: '添加地址后，可更精准为您推荐商品',
+                  title: '收货地址：未设置',
+                  desc: '请先添加真实收货地址，方便商品准确送达',
                 },
             promo: {
               text: promoText,
-              actionLabel: '去凑单',
+              actionLabel: promoThreshold > 0 && checkedTotal >= promoThreshold ? '去逛逛' : '去凑单',
               threshold: promoThreshold,
+              remainText,
+              progress: promoProgress,
             },
             shopName,
             items,
             discount: '¥0.00',
             total: `¥${checkedTotal.toFixed(2)}`,
-            recommend: (productsPage.items || []).slice(0, 2).map((product, index) => ({
+            recommend: (productsPage.items || []).slice(0, 10).map((product, index) => ({
               id: String(product.id),
               skuId: product.skuId,
               title: product.title,
               desc: product.subtitle || product.originPlace || '优选商品',
               price: `¥${product.minPrice || '0.00'}`,
-              imageClass: ['oil-img', 'tomato-img'][index % 2],
+              imageClass: ['oil-img', 'tomato-img', 'egg-img', 'rice-img'][index % 4],
               coverUrl: product.coverUrl,
               imageStyle: product.coverUrl
                 ? `background-image: url(${product.coverUrl}); background-size: cover; background-position: center;`
@@ -399,16 +420,15 @@ Component({
         return;
       }
 
-      if (label === '去凑单') {
-        if (!ensureCustomerAccess('/pages/cart/cart')) {
+      if (label === '去凑单' || label === '去逛逛') {
+        if (label === '去凑单' && !ensureCustomerAccess('/pages/cart/cart')) {
           return;
         }
-        wx.navigateTo({ url: '/pages/category/category' });
-        return;
-      }
-
-      if (label === '去逛逛') {
-        wx.switchTab({ url: '/pages/index/index' });
+        if (label === '去凑单') {
+          wx.navigateTo({ url: '/pages/category/category' });
+        } else {
+          wx.switchTab({ url: '/pages/index/index' });
+        }
         return;
       }
 

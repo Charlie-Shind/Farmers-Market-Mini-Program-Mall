@@ -18,14 +18,16 @@
     <view class="pdd-grid">
       <view class="pdd-grid__cell" bindtap="focusSubsidy">
         <text class="pdd-grid__title">专属补贴</text>
-        <text class="pdd-grid__sub">1元起抢</text>
-        <view class="pdd-grid__thumbs" wx:if="{{subsidyItems.length}}">
-          <view wx:for="{{subsidyItems}}" wx:key="id" class="pdd-grid__thumb-wrap">
-            <image class="pdd-grid__thumb" src="{{item.coverUrl}}" mode="aspectFill" />
-            <text class="pdd-grid__price">¥{{item.price}}</text>
-          </view>
+        <text class="pdd-grid__sub">运费满减</text>
+        <view class="pdd-grid__rules" wx:if="{{freightRules.length}}">
+          <text
+            wx:for="{{freightRules}}"
+            wx:key="id"
+            class="pdd-grid__rule"
+          >{{item.ruleText}}</text>
         </view>
-        <view wx:else class="pdd-grid__empty">更多补贴加载中</view>
+        <view wx:elif="{{loading}}" class="pdd-grid__empty">规则加载中</view>
+        <view wx:else class="pdd-grid__empty">暂无运费补贴</view>
       </view>
       <view class="pdd-grid__cell" bindtap="openCoupons">
         <text class="pdd-grid__title">秒杀神券</text>
@@ -47,7 +49,7 @@
   </view>
 
   <view class="pdd-flash__body">
-    <!-- 场次 Tab -->
+    <!-- 活动时间 Tab：展示实际起止时间 -->
     <scroll-view
       wx:if="{{windows.length}}"
       class="pdd-sessions"
@@ -64,21 +66,8 @@
         data-index="{{index}}"
         bindtap="selectWindow"
       >
-        <text class="pdd-session__time">{{item.startTime}}场</text>
+        <text class="pdd-session__time">{{item.label}}</text>
         <text class="pdd-session__state">{{item.tabLabel}}</text>
-      </view>
-    </scroll-view>
-
-    <!-- 分类 Tab -->
-    <scroll-view class="pdd-cats" scroll-x enhanced show-scrollbar="{{false}}">
-      <view
-        wx:for="{{categoryTabs}}"
-        wx:key="key"
-        class="pdd-cat {{activeCategory === item.key ? 'is-active' : ''}}"
-        data-key="{{item.key}}"
-        bindtap="selectCategory"
-      >
-        <text>{{item.label}}</text>
       </view>
     </scroll-view>
 
@@ -90,8 +79,8 @@
       <text class="pdd-empty__desc">稍后再来看看</text>
     </view>
     <view wx:elif="{{!displayProducts.length}}" class="pdd-empty">
-      <text class="pdd-empty__title">本场/分类暂无商品</text>
-      <text class="pdd-empty__desc">切换场次或分类再看看</text>
+      <text class="pdd-empty__title">本场暂无商品</text>
+      <text class="pdd-empty__desc">切换活动再看看</text>
     </view>
 
     <scroll-view

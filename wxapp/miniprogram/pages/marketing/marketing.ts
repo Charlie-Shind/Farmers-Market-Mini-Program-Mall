@@ -1,14 +1,12 @@
 import { iconPaths } from '../../config/icons';
 import {
   fetchCartItemCount,
-  fetchHomeHotProducts,
   fetchRecommendedCoupons,
   fetchCoupons,
   receiveCoupon,
   exchangePointsCoupon,
   fetchPointExchangeItems,
   type AppCoupon,
-  type AppProduct,
 } from '../../services/app';
 import {
   fetchFlashSaleItems,
@@ -17,6 +15,7 @@ import {
   joinGroupBuy,
   isAlreadyJoinedGroupError,
   navigateToJoinedGroupProgress,
+  buildGroupBuyCheckoutUrl,
   type FlashSaleItem,
   type FlashSaleWindow,
   type GroupBuyItem,
@@ -63,9 +62,14 @@ type GroupView = {
   title: string;
   groupPrice: string;
   originPrice: string;
+  needBadge: string;
+  joinedText: string;
   memberText: string;
   expireText: string;
   progress: number;
+  needed: number;
+  memberCount: number;
+  isFull: boolean;
   imageStyle: string;
 };
 
@@ -121,8 +125,7 @@ function formatExpire(expireAt: string): string {
 
 function mapFlash(item: FlashSaleItem): FlashView {
   const flash = Number(item.flashPrice) || 0;
-  const origin = Number(item.originPrice) || flash;
-  const pct = origin > 0 ? Math.round((flash / origin) * 10) : 10;
+  const origin = Number(item.originPrice) || 0;
   const stockProgress = Math.max(0, Math.min(100, ((item.stockLeft ?? 0) / Math.max(item.totalStock ?? 1, 1)) * 100));
   return {
     id: String(item.productId),
@@ -130,55 +133,56 @@ function mapFlash(item: FlashSaleItem): FlashView {
     title: item.title,
     desc: item.subtitle || item.originPlace || '产地直供',
     price: `¥${item.flashPrice}`,
-    originPrice: `¥${item.originPrice}`,
-    discount: `${pct}折`,
+    originPrice: origin > flash ? `¥${Number(origin).toFixed(2)}` : '',
+    discount: '',
     imageStyle: buildCoverStyle(item.coverUrl),
     stockLeft: item.stockLeft ?? 0,
     stockProgress,
   };
 }
 
-function mapFallbackFlash(item: AppProduct, index: number): FlashView {
-  const flashPrice = Number(item.minPrice || 0);
-  const originPrice = Number(item.maxPrice || item.minPrice || 0);
-  const discountRate = originPrice > 0 ? Math.max(1, Math.round((flashPrice / originPrice) * 10)) : 10;
-  return {
-    id: String(item.id),
-    title: item.title,
-    desc: item.subtitle || item.originPlace || '产地直供',
-    price: `¥${Number(item.minPrice || 0).toFixed(2)}`,
-    originPrice: `¥${Number(item.maxPrice || item.minPrice || 0).toFixed(2)}`,
-    discount: `${discountRate}折`,
-    imageStyle: buildCoverStyle(item.coverUrl),
-    stockLeft: Math.max(0, 99 - index * 7),
-    stockProgress: Math.max(0, Math.min(100, 100 - index * 22)),
-  };
-}
-
-function computeFlashWindowCountdown(window: FlashSaleWindow | null) {
+function computeFlashWindowCountdown(window: FlashSaleWindow | null, activityEndAt?: string) {
   if (!window) {
     return { label: '下一场', target: '' };
   }
 
+  if (window.status === 'ONGOING') {
+    return {
+      label: '结束倒计时',
+      target: activityEndAt || window.endAt,
+    };
+  }
+
   return {
-    label: window.status === 'ONGOING' ? '结束倒计时' : '下一场',
-    target: window.status === 'ONGOING' ? window.endAt : window.startAt,
+    label: '下一场',
+    target: window.startAt,
   };
 }
 
 function mapGroup(item: GroupBuyItem): GroupView {
   const needed = Math.max(item.needed, 1);
-  const progress = Math.max(0, Math.min(Math.round((item.memberCount / needed) * 100), 100));
+  const memberCount = Math.max(Number(item.memberCount || 0), 0);
+  const isFull = memberCount >= needed;
+  const progress = Math.max(0, Math.min(Math.round((memberCount / needed) * 100), 100));
   return {
     groupId: String(item.groupId),
     productId: String(item.productId),
     skuId: item.skuId ?? undefined,
     title: item.title,
-    groupPrice: `¥${item.groupPrice}`,
+    groupPrice: item.groupPrice,
     originPrice: `¥${item.originPrice}`,
-    memberText: `${item.memberCount}/${item.needed} 人成团`,
+    needBadge: `${needed}人成团`,
+    joinedText: isFull
+      ? '拼团人数已满'
+      : memberCount > 0
+        ? `已拼 ${memberCount} 人参团`
+        : '邀好友一起拼更优惠',
+    memberText: `${memberCount}/${needed} 人成团`,
     expireText: formatExpire(item.expireAt),
     progress,
+    needed,
+    memberCount,
+    isFull,
     imageStyle: buildCoverStyle(item.coverUrl),
   };
 }
@@ -335,17 +339,33 @@ Component({
     async loadFlash() {
       this.setData({ loadingFlash: true, flashEmpty: false });
       try {
-        const [windowsResult, hotProducts] = await Promise.all([
-          fetchFlashSaleWindows().catch(() => ({ windows: [] as FlashSaleWindow[] })),
-          fetchHomeHotProducts().catch(() => [] as AppProduct[]),
-        ]);
+        const windowsResult = await fetchFlashSaleWindows().catch(() => ({
+          windows: [] as FlashSaleWindow[],
+        }));
         const windows = (windowsResult.windows || []).slice();
         const activeWindow =
           windows.find((w) => w.status === 'ONGOING') ||
           windows.find((w) => w.status === 'UPCOMING') ||
           windows[0] ||
           null;
-        const flashWindow = computeFlashWindowCountdown(activeWindow);
+
+        let products = [] as FlashView[];
+        let activityEndAt = '';
+        if (activeWindow) {
+          const itemResult = await fetchFlashSaleItems({
+            windowId: activeWindow.id,
+            page: 1,
+            pageSize: 3,
+          }).catch(() => null);
+          const realItems = (itemResult?.items || []).slice(0, 3);
+          products = realItems.map(mapFlash);
+          activityEndAt = realItems
+            .map((item) => String((item as FlashSaleItem & { activityEndAt?: string }).activityEndAt || ''))
+            .filter(Boolean)
+            .sort()[0] || '';
+        }
+
+        const flashWindow = computeFlashWindowCountdown(activeWindow, activityEndAt);
         const countdownTarget = flashWindow.target;
 
         if (countdownTarget) {
@@ -364,15 +384,6 @@ Component({
           this._clearCountdown();
         }
 
-        let products = [] as FlashView[];
-        if (activeWindow) {
-          const itemResult = await fetchFlashSaleItems({ windowId: activeWindow.id, page: 1, pageSize: 3 }).catch(() => null);
-          const realItems = (itemResult?.items || []).slice(0, 3);
-          products = realItems.length ? realItems.map(mapFlash) : [];
-        }
-        if (!products.length) {
-          products = hotProducts.slice(0, 3).map(mapFallbackFlash);
-        }
         this.setData({
           flashWindowLabel: activeWindow ? activeWindow.label : '',
           flashProducts: products,
@@ -423,22 +434,25 @@ Component({
       this.setData({ loadingPoints: true });
       try {
         const result = await fetchPointExchangeItems().catch(() => ({ balance: 0, items: [] as any[] }));
-        const goods: PointsView[] = (result.items || []).slice(0, 4).map((item: any) => ({
-          id: String(item.couponId),
-          couponId: item.couponId,
-          title: item.name,
-          desc: '',
-          pointsCost: item.pointsCost,
-          received: Boolean(item.received),
-          canRedeem: Boolean(item.canRedeem),
-          imageStyle: buildCoverStyle(
-            typeof item.coverUrl === 'string'
-              ? item.coverUrl
-              : typeof item.imageUrl === 'string'
-                ? item.imageUrl
-                : '',
-          ),
-        }));
+        const goods: PointsView[] = (result.items || [])
+          .filter((item: any) => String(item.exchangeKind || 'COUPON').toUpperCase() === 'PRODUCT')
+          .slice(0, 4)
+          .map((item: any) => ({
+            id: String(item.couponId),
+            couponId: item.couponId,
+            title: item.name,
+            desc: '',
+            pointsCost: item.pointsCost,
+            received: Boolean(item.received),
+            canRedeem: Boolean(item.canRedeem),
+            imageStyle: buildCoverStyle(
+              typeof item.coverUrl === 'string'
+                ? item.coverUrl
+                : typeof item.imageUrl === 'string'
+                  ? item.imageUrl
+                  : '',
+            ),
+          }));
         this.setData({ pointsGoods: goods, pointsBalance: result.balance ?? 0 });
       } catch {
         this.setData({ pointsGoods: [], pointsBalance: 0 });
@@ -562,6 +576,16 @@ Component({
         return;
       }
 
+      const target = (this.data.groupProducts || []).find((item) =>
+        groupId
+          ? String(item.groupId) === String(groupId)
+          : String(item.productId) === String(productId),
+      );
+      if (target?.isFull) {
+        wx.showToast({ title: '拼团人数已满', icon: 'none' });
+        return;
+      }
+
       try {
         wx.showLoading({ title: '加入拼团…', mask: true });
         const res = await joinGroupBuy({
@@ -575,11 +599,12 @@ Component({
           return;
         }
         const gid = Number((res as any).groupId || (res as any).groupBuyId || groupId || 0);
-        if (!gid) {
-          throw new Error('拼团加入失败');
-        }
         wx.navigateTo({
-          url: `/pages/checkout/checkout?mode=groupBuy&groupBuyId=${gid}&productId=${productId}&skuId=${res.skuId || skuId || 0}`,
+          url: buildGroupBuyCheckoutUrl({
+            productId,
+            skuId: res.skuId || skuId || 0,
+            groupId: gid,
+          }),
         });
       } catch (err: any) {
         // 兼容远程旧后端仍返回「你已在该团中」的情况
@@ -587,7 +612,12 @@ Component({
           await navigateToJoinedGroupProgress({ groupId });
           return;
         }
-        wx.showToast({ title: err?.message || '拼团加入失败', icon: 'none' });
+        const message = String(err?.message || '');
+        if (message.includes('满员') || message.includes('已满')) {
+          wx.showToast({ title: '拼团人数已满', icon: 'none' });
+          return;
+        }
+        wx.showToast({ title: message || '拼团加入失败', icon: 'none' });
       } finally {
         wx.hideLoading();
       }

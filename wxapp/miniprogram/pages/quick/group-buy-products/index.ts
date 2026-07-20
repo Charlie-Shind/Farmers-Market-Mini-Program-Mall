@@ -1,16 +1,44 @@
 import { iconPaths } from '../../../config/icons';
-import { fetchCartItemCount } from '../../../services/app';
+import { fetchCartItemCount, fetchMe } from '../../../services/app';
 import {
   fetchGroupBuyProducts,
   fetchGroupBuyNearby,
+  fetchMyGroupBuys,
   joinGroupBuy,
   isAlreadyJoinedGroupError,
   navigateToJoinedGroupProgress,
+  buildGroupBuyCheckoutUrl,
   type GroupBuyProduct,
   type GroupBuyItem,
+  type MyGroupBuyItem,
 } from '../../../services/quick';
+import { loadProfileDraft } from '../../../services/profile';
 import { buildPageTopStyle } from '../../../utils/page-layout';
 import { ensureCustomerAccess, navigateBackOrHome, redirectMerchantAwayFromCustomerRoute } from '../../../utils/auth-route';
+
+function isHttpAvatar(url?: string | null): boolean {
+  return /^https?:\/\//i.test(String(url || '').trim());
+}
+
+function normalizeAvatarUrl(url?: string | null): string {
+  const value = String(url || '').trim();
+  if (!value) return '';
+  if (isHttpAvatar(value) || value.startsWith('/')) return value;
+  return '';
+}
+
+async function resolveCurrentUserAvatar(): Promise<string> {
+  const draft = loadProfileDraft();
+  const draftAvatar = normalizeAvatarUrl(draft.avatarUrl);
+  try {
+    const me = await fetchMe();
+    const serverAvatar =
+      normalizeAvatarUrl(me.profile?.avatarUrl) || normalizeAvatarUrl(me.user?.avatarUrl);
+    return draftAvatar || serverAvatar || '';
+  } catch {
+    return draftAvatar || '';
+  }
+}
 
 type ProductView = {
   productId: string;
@@ -38,6 +66,27 @@ type NearbyView = {
   area: string;
 };
 
+type MyOngoingMember = {
+  key: string;
+  label: string;
+  filled: boolean;
+  avatarUrl: string;
+  isMine: boolean;
+};
+
+type MyOngoingView = {
+  groupId: number;
+  productId: string;
+  title: string;
+  needed: number;
+  memberCount: number;
+  progressText: string;
+  remainText: string;
+  expireAt: string;
+  members: MyOngoingMember[];
+  inviteCode: string;
+};
+
 const IMAGE_CLASSES = ['img-orange', 'img-rice', 'img-gift', 'img-egg', 'img-meat', 'img-tomato'];
 
 const CATEGORY_TABS = [
@@ -57,6 +106,7 @@ const CATEGORY_KEYWORDS: Record<string, string[]> = {
 };
 
 let _tickerTimer: ReturnType<typeof setInterval> | null = null;
+let _mineTimer: ReturnType<typeof setInterval> | null = null;
 
 function readPageTitle() {
   const pages = getCurrentPages();
@@ -70,6 +120,62 @@ function resolveCategories(text: string): string[] {
     if (CATEGORY_KEYWORDS[key].some((kw) => text.includes(kw))) keys.push(key);
   });
   return keys.length ? keys : ['hot'];
+}
+
+function formatRemain(expireAt: string): string {
+  const end = new Date(expireAt).getTime();
+  if (!Number.isFinite(end)) return '00:00:00';
+  const diff = Math.max(0, end - Date.now());
+  const totalSec = Math.floor(diff / 1000);
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${pad(h)}:${pad(m)}:${pad(s)}`;
+}
+
+function mapMyOngoing(item: MyGroupBuyItem, myAvatarUrl = ''): MyOngoingView | null {
+  if (item.status !== 'OPEN') return null;
+  const needed = Math.max(Number(item.needed || 2), 1);
+  const memberCount = Math.max(Number(item.memberCount || 0), 0);
+  const slots = Math.min(needed, 5);
+  const groupMembers = Array.isArray(item.members)
+    ? [...item.members].sort((a, b) => Number(b.isInitiator) - Number(a.isInitiator))
+    : [];
+  const fallbackMine = normalizeAvatarUrl(myAvatarUrl);
+  const defaultAvatar = String(iconPaths.defaultAvatar || '');
+  const members: MyOngoingMember[] = [];
+  for (let i = 0; i < slots; i++) {
+    const member = groupMembers[i];
+    const filled = Boolean(member) || i < memberCount;
+    const isMine = Boolean(member?.isMine);
+    let avatarUrl = normalizeAvatarUrl(member?.avatarUrl);
+    if (!avatarUrl && isMine && fallbackMine) {
+      avatarUrl = fallbackMine;
+    }
+    if (!avatarUrl && filled) {
+      avatarUrl = defaultAvatar;
+    }
+    members.push({
+      key: `${item.groupId}-${i}`,
+      label: i === 0 ? '团长' : filled ? `团员${i}` : '待邀请',
+      filled,
+      avatarUrl,
+      isMine,
+    });
+  }
+  return {
+    groupId: item.groupId,
+    productId: String(item.productId),
+    title: item.title,
+    needed,
+    memberCount,
+    progressText: `${memberCount}/${needed}人`,
+    remainText: formatRemain(item.expireAt),
+    expireAt: item.expireAt,
+    members,
+    inviteCode: item.inviteCode || '',
+  };
 }
 
 function mapProduct(item: GroupBuyProduct, index: number): ProductView {
@@ -127,10 +233,15 @@ Component({
     products: [] as ProductView[],
     displayProducts: [] as ProductView[],
     nearbyGroups: [] as NearbyView[],
+    myOngoingGroups: [] as MyOngoingView[],
     tickerLines: [] as string[],
     tickerText: '',
     showInviteSheet: false,
     inviteCodeInput: '',
+    shareGroupId: 0,
+    shareInviteCode: '',
+    shareTitle: '',
+    scrollIntoView: '',
   },
 
   lifetimes: {
@@ -142,6 +253,7 @@ Component({
     },
     detached() {
       this._clearTicker();
+      this._clearMineTimer();
     },
   },
 
@@ -149,19 +261,56 @@ Component({
     show() {
       void this.syncCartBadge();
       this._startTicker();
+      void this.loadMyOngoingGroups();
     },
     hide() {
       this._clearTicker();
+      this._clearMineTimer();
     },
   },
 
   methods: {
     noop() {},
 
+    prepareShare(e: WechatMiniprogram.BaseEvent) {
+      const { groupId, inviteCode, title } = (e.currentTarget.dataset as {
+        groupId?: string | number;
+        inviteCode?: string;
+        title?: string;
+      }) || {};
+      this.setData({
+        shareGroupId: Number(groupId || 0),
+        shareInviteCode: String(inviteCode || ''),
+        shareTitle: String(title || ''),
+      });
+    },
+
+    onShareAppMessage() {
+      const groupId = this.data.shareGroupId;
+      const inviteCode = this.data.shareInviteCode;
+      const title = this.data.shareTitle || '来和我一起拼团更优惠';
+      const query = inviteCode
+        ? `inviteCode=${encodeURIComponent(inviteCode)}`
+        : groupId
+          ? `groupId=${groupId}`
+          : '';
+      return {
+        title,
+        path: `/pages/quick/group-buy/index?${query}`,
+      };
+    },
+
     _clearTicker() {
       if (_tickerTimer != null) {
         clearInterval(_tickerTimer);
         _tickerTimer = null;
+      }
+    },
+
+    _clearMineTimer() {
+      if (_mineTimer != null) {
+        clearInterval(_mineTimer);
+        _mineTimer = null;
       }
     },
 
@@ -177,12 +326,41 @@ Component({
       }, 2800);
     },
 
+    _startMineTimer() {
+      this._clearMineTimer();
+      if (!this.data.myOngoingGroups.length) return;
+      _mineTimer = setInterval(() => {
+        const next = (this.data.myOngoingGroups || []).map((item) => ({
+          ...item,
+          remainText: formatRemain(item.expireAt),
+        }));
+        this.setData({ myOngoingGroups: next });
+      }, 1000);
+    },
+
     async syncCartBadge() {
       try {
         const count = await fetchCartItemCount();
         this.setData({ cartBadge: count > 0 ? String(count) : '' });
       } catch {
         this.setData({ cartBadge: '' });
+      }
+    },
+
+    async loadMyOngoingGroups() {
+      try {
+        const [result, myAvatarUrl] = await Promise.all([
+          fetchMyGroupBuys(),
+          resolveCurrentUserAvatar(),
+        ]);
+        const myOngoingGroups = (result.items || [])
+          .map((item) => mapMyOngoing(item, myAvatarUrl))
+          .filter((g): g is MyOngoingView => g != null);
+        this.setData({ myOngoingGroups });
+        this._startMineTimer();
+      } catch {
+        this.setData({ myOngoingGroups: [] });
+        this._clearMineTimer();
       }
     },
 
@@ -210,6 +388,7 @@ Component({
           tickerText: tickerLines[0] || '',
         });
         this._startTicker();
+        void this.loadMyOngoingGroups();
       } catch {
         this.setData({ products: [], displayProducts: [], nearbyGroups: [], tickerLines: [], tickerText: '' });
       } finally {
@@ -230,7 +409,10 @@ Component({
         wx.showToast({ title: '暂无可拼商品', icon: 'none' });
         return;
       }
-      wx.showToast({ title: '下滑选择好物开团', icon: 'none' });
+      this.setData({ scrollIntoView: 'phf-products' });
+      setTimeout(() => {
+        this.setData({ scrollIntoView: '' });
+      }, 400);
     },
 
     openInviteSheet() {
@@ -277,10 +459,12 @@ Component({
           productId: Number(productId),
           skuId: skuId ? Number(skuId) : undefined,
         });
-        const gid = Number((res as any).groupId || (res as any).groupBuyId || 0);
-        if (!gid) throw new Error('拼团创建失败');
         wx.navigateTo({
-          url: `/pages/checkout/checkout?mode=groupBuy&groupBuyId=${gid}&productId=${productId}&skuId=${res.skuId || 0}`,
+          url: buildGroupBuyCheckoutUrl({
+            productId,
+            skuId: res.skuId || skuId || 0,
+            groupId: res.groupId,
+          }),
         });
       } catch (err: any) {
         wx.showToast({ title: err?.message || '拼团发起失败', icon: 'none' });
@@ -311,7 +495,11 @@ Component({
         const gid = Number((res as any).groupId || (res as any).groupBuyId || groupId || 0);
         if (!gid) throw new Error('加入失败');
         wx.navigateTo({
-          url: `/pages/checkout/checkout?mode=groupBuy&groupBuyId=${gid}&productId=${productId}&skuId=${res.skuId || skuId || 0}`,
+          url: buildGroupBuyCheckoutUrl({
+            productId,
+            skuId: res.skuId || skuId || 0,
+            groupId: gid,
+          }),
         });
       } catch (err: any) {
         if (isAlreadyJoinedGroupError(err)) {

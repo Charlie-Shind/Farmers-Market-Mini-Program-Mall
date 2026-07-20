@@ -6,6 +6,7 @@ import {
   fetchFlashSaleItems,
   type FlashSaleItem,
   type FlashSaleWindow,
+  type FreightSubsidyRule,
 } from '../../../services/quick';
 import { buildPageTopStyle } from '../../../utils/page-layout';
 import { ensureCustomerAccess, redirectMerchantAwayFromCustomerRoute } from '../../../utils/auth-route';
@@ -31,14 +32,12 @@ type FlashSaleProductView = {
   promoLabel: string;
   proofText: string;
   saveAmount: string;
-  categoryKeys: string[];
 };
 
 type FlashSaleWindowView = {
   id: number;
   label: string;
   rangeText: string;
-  startTime: string;
   status: 'ONGOING' | 'UPCOMING' | 'ENDED';
   statusLabel: string;
   tabLabel: string;
@@ -47,18 +46,6 @@ type FlashSaleWindowView = {
   endAt: string;
   total: number;
 };
-
-type CategoryTab = { key: string; label: string };
-
-const CATEGORY_TABS: CategoryTab[] = [
-  { key: 'all', label: '精选' },
-  { key: 'hot', label: '即将抢完' },
-  { key: 'fruit', label: '果蔬' },
-  { key: 'seafood', label: '水产' },
-  { key: 'meat', label: '肉禽' },
-  { key: 'grain', label: '粮油' },
-  { key: 'gift', label: '礼盒' },
-];
 
 let _countdownTimer: number | null = null;
 
@@ -89,21 +76,18 @@ function formatCountdownText(parts: { hh: string; mm: string; ss: string }) {
   return `${parts.hh}:${parts.mm}:${parts.ss}`;
 }
 
+function formatDateTimePart(date: Date): string {
+  return `${date.getMonth() + 1}月${date.getDate()}日 ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+/** 展示活动真实起止时间，例如：7月19日 05:44 - 7月20日 05:44 */
 function formatTimeRange(startAt: string, endAt: string): string {
   const start = new Date(startAt);
   const end = new Date(endAt);
   if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
     return `${startAt} - ${endAt}`;
   }
-  return `${pad(start.getHours())}:${pad(start.getMinutes())} - ${pad(end.getHours())}:${pad(end.getMinutes())}`;
-}
-
-function formatStartTime(startAt: string): string {
-  const start = new Date(startAt);
-  if (Number.isNaN(start.getTime())) {
-    return startAt;
-  }
-  return `${pad(start.getHours())}:${pad(start.getMinutes())}`;
+  return `${formatDateTimePart(start)} - ${formatDateTimePart(end)}`;
 }
 
 function computeWindowStatus(startAt: string, endAt: string, now: number): 'ONGOING' | 'UPCOMING' | 'ENDED' {
@@ -154,23 +138,15 @@ function calcSaveAmount(originPrice: string, flashPrice: string): string {
   return (origin - flash).toFixed(2);
 }
 
-function detectCategories(item: FlashSaleItem): string[] {
-  const text = `${item.title || ''}${item.subtitle || ''}${item.originPlace || ''}`;
-  const keys: string[] = [];
-  if (/果|蔬|菜|芒|茄|瓜|橙|苹|梨|莓|椒|笋|菌/.test(text)) keys.push('fruit');
-  if (/鱼|虾|蟹|贝|海鲜|海参|带鱼|三文鱼|紫菜|蛤蜊/.test(text)) keys.push('seafood');
-  if (/肉|蛋|奶|鸡|鸭|羊|猪|牛排|牛奶/.test(text)) keys.push('meat');
-  if (/米|油|面|粮|豆|酱|醋|干货|香油/.test(text)) keys.push('grain');
-  if (/礼盒|礼包|送礼|茶礼/.test(text)) keys.push('gift');
-  return keys;
-}
-
 function mapItem(item: FlashSaleItem): FlashSaleProductView {
   const sold = Math.max(0, item.totalStock - item.stockLeft);
   const total = Math.max(0, Number(item.totalStock) || 0);
   const soldPercent = total > 0 ? Math.min(100, Math.round((sold / total) * 100)) : -1;
   const { priceInt, priceFrac } = splitPrice(item.flashPrice);
   const stockLeft = Number(item.stockLeft) || 0;
+  const flashNum = Number(item.flashPrice) || 0;
+  const originNum = Number(item.originPrice) || 0;
+  const displayOrigin = originNum > flashNum ? item.originPrice : '';
   const tags = ['农仓补贴', '低价秒杀'];
   if (item.originPlace) {
     tags.splice(1, 0, '产地直发');
@@ -191,11 +167,6 @@ function mapItem(item: FlashSaleItem): FlashSaleProductView {
         ? `${item.originPlace}直供 · 坏单包退`
         : '超万人收藏店铺 · 放心购';
 
-  const categoryKeys = detectCategories(item);
-  if (stockLeft > 0 && (stockLeft <= 15 || soldPercent >= 70)) {
-    categoryKeys.push('hot');
-  }
-
   return {
     id: String(item.itemId || item.productId),
     itemId: item.itemId,
@@ -206,8 +177,8 @@ function mapItem(item: FlashSaleItem): FlashSaleProductView {
     price: item.flashPrice,
     priceInt,
     priceFrac,
-    originPrice: item.originPrice,
-    discount: calcDiscount(item.originPrice, item.flashPrice),
+    originPrice: displayOrigin,
+    discount: displayOrigin ? calcDiscount(item.originPrice, item.flashPrice) : '',
     sold,
     soldPercent,
     coverUrl: item.coverUrl,
@@ -216,8 +187,7 @@ function mapItem(item: FlashSaleItem): FlashSaleProductView {
     tags: tags.slice(0, 3),
     promoLabel,
     proofText,
-    saveAmount: calcSaveAmount(item.originPrice, item.flashPrice),
-    categoryKeys,
+    saveAmount: displayOrigin ? calcSaveAmount(item.originPrice, item.flashPrice) : '',
   };
 }
 
@@ -228,7 +198,6 @@ function mapWindow(window: FlashSaleWindow, total: number, now: number): FlashSa
     id: window.id,
     label: window.label,
     rangeText: formatTimeRange(window.startAt, window.endAt),
-    startTime: formatStartTime(window.startAt),
     status,
     statusLabel: mapStatusLabel(status),
     tabLabel: mapTabLabel(status),
@@ -239,29 +208,13 @@ function mapWindow(window: FlashSaleWindow, total: number, now: number): FlashSa
   };
 }
 
-function filterProducts(products: FlashSaleProductView[], category: string) {
-  if (!category || category === 'all') {
-    return products;
-  }
-  return products.filter((item) => item.categoryKeys.includes(category));
-}
-
-function pickSubsidyItems(products: FlashSaleProductView[]) {
-  return [...products]
-    .filter((item) => item.coverUrl && item.stockLeft > 0)
-    .sort((a, b) => Number(a.price) - Number(b.price))
-    .slice(0, 2);
-}
-
 Component({
   data: {
     pageTitle: '限时秒杀',
     products: [] as FlashSaleProductView[],
     displayProducts: [] as FlashSaleProductView[],
-    subsidyItems: [] as FlashSaleProductView[],
+    freightRules: [] as FreightSubsidyRule[],
     windows: [] as FlashSaleWindowView[],
-    categoryTabs: CATEGORY_TABS,
-    activeCategory: 'all',
     activeWindowIndex: 0,
     activeWindow: null as FlashSaleWindowView | null,
     activeWindowId: '',
@@ -305,12 +258,10 @@ Component({
     },
   },
   methods: {
-    _syncDerivedProducts(products: FlashSaleProductView[], category = this.data.activeCategory) {
-      const displayProducts = filterProducts(products, category);
+    _syncDerivedProducts(products: FlashSaleProductView[]) {
       this.setData({
         products,
-        displayProducts,
-        subsidyItems: pickSubsidyItems(products),
+        displayProducts: products,
       });
     },
     _clearCountdowns() {
@@ -340,6 +291,7 @@ Component({
             status,
             statusLabel: mapStatusLabel(status),
             tabLabel: mapTabLabel(status),
+            rangeText: formatTimeRange(w.startAt, w.endAt),
             countdownParts: splitCountdown(formatCountdown(target, now)),
           };
         });
@@ -387,13 +339,13 @@ Component({
 
         this.setData({
           windows,
+          freightRules: (result.freightRules || []).slice(0, 3),
           activeWindowIndex,
           activeWindow,
           activeWindowId: activeWindow ? `flash-window-${activeWindow.id}` : '',
           countdownText: activeWindow ? formatCountdownText(activeWindow.countdownParts) : '00:00:00',
           products: [],
           displayProducts: [],
-          subsidyItems: [],
           noMore: windows.length === 0,
         });
         this._startCountdowns();
@@ -404,9 +356,9 @@ Component({
       } catch {
         this.setData({
           windows: [],
+          freightRules: [],
           products: [],
           displayProducts: [],
-          subsidyItems: [],
           activeWindow: null,
           noMore: true,
         });
@@ -436,13 +388,21 @@ Component({
           w.id === window.id ? { ...w, total: result.total } : w,
         );
 
+        const activityEnds = (result.items || [])
+          .map((item) => String(item.activityEndAt || ''))
+          .filter(Boolean)
+          .sort();
+        const countdownTarget = activityEnds[0] || window.endAt;
+        const activeWindow = windowsWithTotal[activeWindowIndex] ?? null;
+
         this.setData({
           noMore,
           windows: windowsWithTotal,
-          activeWindow: windowsWithTotal[activeWindowIndex] ?? null,
-          activeWindowId: windowsWithTotal[activeWindowIndex]
-            ? `flash-window-${windowsWithTotal[activeWindowIndex].id}`
-            : '',
+          activeWindow,
+          activeWindowId: activeWindow ? `flash-window-${activeWindow.id}` : '',
+          countdownText: formatCountdown(countdownTarget, Date.now()) === '已结束'
+            ? '00:00:00'
+            : formatCountdown(countdownTarget, Date.now()),
         });
         this._syncDerivedProducts(merged);
       } catch {
@@ -467,24 +427,16 @@ Component({
         countdownText: activeWindow ? formatCountdownText(activeWindow.countdownParts) : '00:00:00',
         products: [],
         displayProducts: [],
-        subsidyItems: [],
-        activeCategory: 'all',
         noMore: false,
       });
       await this.loadItems(true);
     },
-    selectCategory(e: WechatMiniprogram.BaseEvent) {
-      const { key } = (e.currentTarget.dataset as { key?: string }) || {};
-      if (!key || key === this.data.activeCategory) {
-        return;
-      }
-      this.setData({ activeCategory: key });
-      this._syncDerivedProducts(this.data.products, key);
-    },
     focusSubsidy() {
-      this.setData({ activeCategory: 'all' });
-      this._syncDerivedProducts(this.data.products, 'all');
-      wx.showToast({ title: '已切换至补贴精选', icon: 'none' });
+      const rules = this.data.freightRules || [];
+      const tip = rules.length
+        ? rules.map((item) => item.ruleText).join('；')
+        : '暂无运费满减规则';
+      wx.showToast({ title: tip.slice(0, 28), icon: 'none' });
     },
     openGroupBuy() {
       wx.navigateTo({ url: '/pages/quick/group-buy/index?title=拼团专区' });

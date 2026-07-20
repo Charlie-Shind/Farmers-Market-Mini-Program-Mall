@@ -301,7 +301,8 @@ export const resourceConfigs: Record<ResourceKey, ResourceConfig> = {
         label: '状态',
         options: [
           { label: '草稿', value: 'DRAFT' },
-          { label: '进行中', value: 'RUNNING' },
+          { label: '已发布', value: 'PUBLISHED' },
+          { label: '已暂停', value: 'PAUSED' },
           { label: '已结束', value: 'ENDED' },
         ],
       },
@@ -418,13 +419,14 @@ export const resourceConfigs: Record<ResourceKey, ResourceConfig> = {
   logistics: {
     title: '物流配置',
     searchPlaceholder: '搜索规则 / 地区 / 模板',
-    primaryAction: '规则管理',
+    primaryAction: '新增规则',
     secondaryAction: '导出',
     columns: [
       { key: 'name', label: '规则名称' },
       { key: 'province', label: '适用地区' },
       { key: 'thresholdAmount', label: '包邮门槛' },
       { key: 'freightAmount', label: '运费' },
+      { key: 'isPublic', label: '公共规则' },
       { key: 'active', label: '启用' },
       { key: 'actions', label: '操作' },
     ],

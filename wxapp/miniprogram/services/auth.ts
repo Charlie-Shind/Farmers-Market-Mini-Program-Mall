@@ -31,11 +31,13 @@ export interface AuthMeResponse {
 
 export interface WechatLoginPayload {
   code: string;
+  avatarUrl?: string;
 }
 
 export interface WechatPhoneBindPayload {
   loginCode: string;
   phoneCode: string;
+  avatarUrl?: string;
 }
 
 export interface WechatPhoneLoginPayload {

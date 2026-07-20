@@ -9,6 +9,7 @@ import { statusIcons } from './registry/status';
 import { businessIcons } from './registry/business';
 import { categoryIcons } from './registry/category';
 import { orderIcons } from './registry/order';
+import { customIcons } from './registry/custom';
 
 const allIcons = {
   ...navigationIcons,
@@ -17,6 +18,7 @@ const allIcons = {
   ...businessIcons,
   ...categoryIcons,
   ...orderIcons,
+  ...customIcons,
 } as const;
 
 export type IconName = keyof typeof allIcons;
@@ -56,6 +58,7 @@ export const iconCategories = {
   business: Object.keys(businessIcons) as IconName[],
   category: Object.keys(categoryIcons) as IconName[],
   order: Object.keys(orderIcons) as IconName[],
+  custom: Object.keys(customIcons) as IconName[],
 } as const;
 
 // ==================== 使用次数统计 ====================

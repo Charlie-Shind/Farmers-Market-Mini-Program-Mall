@@ -74,7 +74,23 @@
 }
 
 .pl-page--recommend .pl-hero {
+  // 渐变仅作背景图加载前的兜底
   background: linear-gradient(135deg, #24362c 0%, #2c4a39 50%, #3f6f44 100%);
+}
+
+.pl-hero__bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+// 背景图场景下隐藏右下角圆形装饰，避免叠在图片上
+.pl-page--recommend .pl-hero::after {
+  display: none;
 }
 
 .pl-hero__copy {

@@ -23,15 +23,29 @@
             <h2>管理员账号管理</h2>
             <p>分配角色、启用/禁用账号和重置管理员密码。</p>
           </div>
-          <button class="primary-btn" type="button" @click="createAccountDialog.visible = true">
-            新增管理员
-          </button>
+          <div class="top-actions">
+            <button
+              class="ghost-btn"
+              type="button"
+              style="color: var(--danger);"
+              :disabled="!selectedAccountIds.length || accountSaving"
+              @click="batchDeleteAccounts"
+            >
+              批量删除
+            </button>
+            <button class="primary-btn" type="button" @click="createAccountDialog.visible = true">
+              新增管理员
+            </button>
+          </div>
         </div>
 
         <div class="table-x">
           <table class="data-table">
             <thead>
               <tr>
+                <th class="check-cell">
+                  <input type="checkbox" :checked="isAllAccountsSelected" @change="toggleSelectAllAccounts" />
+                </th>
                 <th>账号</th>
                 <th>昵称</th>
                 <th>手机号</th>
@@ -43,6 +57,14 @@
             </thead>
             <tbody>
               <tr v-for="account in adminAccounts" :key="account.id">
+                <td class="check-cell">
+                  <input
+                    type="checkbox"
+                    :checked="selectedAccountIds.includes(account.id)"
+                    :disabled="account.accountNo === currentAccountNo"
+                    @change="toggleSelectAccount(account)"
+                  />
+                </td>
                 <td data-label="账号">
                   <strong>{{ account.username }}</strong>
                   <span>{{ account.accountNo || '-' }}</span>
@@ -82,7 +104,7 @@
                 </td>
               </tr>
               <tr v-if="adminAccounts.length === 0">
-                <td colspan="7" class="empty-hint">暂无管理员账号</td>
+                <td colspan="8" class="empty-hint">暂无管理员账号</td>
               </tr>
             </tbody>
           </table>
@@ -431,6 +453,7 @@ const logs = ref<
 >([]);
 const adminAccounts = ref<AdminAccount[]>([]);
 const adminRoles = ref<AdminRole[]>([]);
+const selectedAccountIds = ref<number[]>([]);
 const accountSaving = ref(false);
 const roleSaving = ref(false);
 const accountMessage = ref('');
@@ -484,6 +507,15 @@ const createRoleDialog = reactive({
 });
 
 const currentAccountNo = computed(() => localStorage.getItem('farm-admin-account') || '');
+
+const selectableAccounts = computed(() =>
+  adminAccounts.value.filter((account) => account.accountNo !== currentAccountNo.value),
+);
+
+const isAllAccountsSelected = computed(() => {
+  if (!selectableAccounts.value.length) return false;
+  return selectableAccounts.value.every((account) => selectedAccountIds.value.includes(account.id));
+});
 
 const metricCards = computed(() => [
   {
@@ -543,12 +575,32 @@ async function loadSystemData(): Promise<boolean> {
         permissionCount: role.permissionCount ?? permissionKeys.length,
       };
     });
+    selectedAccountIds.value = [];
     return true;
   } catch (error) {
     ElMessage.error(error instanceof Error ? error.message : '刷新数据失败');
     return false;
   } finally {
     loading.value = false;
+  }
+}
+
+function toggleSelectAccount(account: AdminAccount) {
+  if (account.accountNo === currentAccountNo.value) return;
+  const idx = selectedAccountIds.value.indexOf(account.id);
+  if (idx > -1) {
+    selectedAccountIds.value.splice(idx, 1);
+  } else {
+    selectedAccountIds.value.push(account.id);
+  }
+}
+
+function toggleSelectAllAccounts() {
+  const selectableIds = selectableAccounts.value.map((account) => account.id);
+  if (isAllAccountsSelected.value) {
+    selectedAccountIds.value = selectedAccountIds.value.filter((id) => !selectableIds.includes(id));
+  } else {
+    selectedAccountIds.value = Array.from(new Set([...selectedAccountIds.value, ...selectableIds]));
   }
 }
 
@@ -912,6 +964,36 @@ async function handleDeleteAccount(account: AdminAccount) {
     if (error !== 'cancel') {
       ElMessage.error(error instanceof Error ? error.message : '删除失败');
     }
+  }
+}
+
+async function batchDeleteAccounts() {
+  if (!selectedAccountIds.value.length) return;
+  try {
+    await ElMessageBox.confirm(
+      `确定要批量删除已选的 ${selectedAccountIds.value.length} 个管理员账号吗？删除后这些账号将无法再登录系统。`,
+      '批量删除确认',
+      { confirmButtonText: '确定删除', cancelButtonText: '取消', type: 'warning' },
+    );
+    accountSaving.value = true;
+    const results = await Promise.allSettled(
+      selectedAccountIds.value.map((id) => deleteAdminAccount(id)),
+    );
+    const successCount = results.filter((r) => r.status === 'fulfilled').length;
+    const failCount = results.length - successCount;
+    selectedAccountIds.value = [];
+    await loadSystemData();
+    if (failCount === 0) {
+      ElMessage.success(`成功删除 ${successCount} 个管理员账号`);
+    } else {
+      ElMessage.warning(`删除完成：成功 ${successCount} 个，失败 ${failCount} 个`);
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error(error instanceof Error ? error.message : '批量删除失败');
+    }
+  } finally {
+    accountSaving.value = false;
   }
 }
 

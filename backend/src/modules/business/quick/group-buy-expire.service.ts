@@ -107,9 +107,13 @@ export class GroupBuyExpireService implements OnModuleInit, OnModuleDestroy {
             });
           }
 
-          // 退积分（如有抵扣）
+          // 退积分（如有下单抵扣）
           const pointsDeductLog = await tx.pointLog.findFirst({
-            where: { sourceNo: order.orderNo, changeType: 'DEDUCT' },
+            where: {
+              sourceNo: order.orderNo,
+              changeType: 'DEDUCT',
+              remark: { in: ['订单抵扣积分', '拼团订单抵扣积分'] },
+            },
           });
           if (pointsDeductLog) {
             const refundPoints = Math.abs(Number(pointsDeductLog.points));
@@ -122,6 +126,40 @@ export class GroupBuyExpireService implements OnModuleInit, OnModuleDestroy {
                   sourceType: 'ORDER',
                   sourceNo: order.orderNo,
                   remark: '拼团失败退还积分',
+                },
+              });
+            }
+          }
+
+          // 扣回支付成功时已发放的奖励积分
+          const earnLog = await tx.pointLog.findFirst({
+            where: {
+              userId: order.userId,
+              sourceNo: order.orderNo,
+              changeType: 'EARN',
+              sourceType: 'ORDER',
+            },
+          });
+          if (earnLog) {
+            const earnPoints = Math.abs(Number(earnLog.points));
+            const alreadyClawed = await tx.pointLog.findFirst({
+              where: {
+                userId: order.userId,
+                sourceNo: order.orderNo,
+                changeType: 'DEDUCT',
+                sourceType: 'ORDER',
+                remark: '订单退款扣回支付奖励积分',
+              },
+            });
+            if (earnPoints > 0 && !alreadyClawed) {
+              await tx.pointLog.create({
+                data: {
+                  userId: order.userId,
+                  changeType: 'DEDUCT',
+                  points: -earnPoints,
+                  sourceType: 'ORDER',
+                  sourceNo: order.orderNo,
+                  remark: '订单退款扣回支付奖励积分',
                 },
               });
             }

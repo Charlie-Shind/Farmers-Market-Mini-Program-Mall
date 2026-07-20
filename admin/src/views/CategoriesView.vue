@@ -10,12 +10,32 @@
             <p>维护小程序左侧展示的分类标签，商品挂载到子分类后会自动归入对应标签。</p>
           </div>
           <div class="top-actions">
+            <el-button
+              type="danger"
+              plain
+              :disabled="!selectedIds.length || saving"
+              @click="batchDelete"
+            >
+              批量删除
+            </el-button>
             <el-button type="primary" @click="openCreateModal">新增分类</el-button>
           </div>
         </div>
       </template>
 
       <el-table v-loading="loading" :data="categories" row-key="id" stripe>
+        <el-table-column width="48" align="center">
+          <template #header>
+            <input type="checkbox" :checked="isAllSelected" @change="toggleSelectAll" />
+          </template>
+          <template #default="{ row }">
+            <input
+              type="checkbox"
+              :checked="selectedIds.includes(row.id)"
+              @change="toggleSelect(row.id)"
+            />
+          </template>
+        </el-table-column>
         <el-table-column label="名称" min-width="180">
           <template #default="{ row }">
             <div class="name-cell">
@@ -116,7 +136,13 @@ const loading = ref(false);
 const saving = ref(false);
 const imageUploading = ref(false);
 const categories = ref<AdminCategoryRow[]>([]);
+const selectedIds = ref<number[]>([]);
 const fileInputRef = ref<HTMLInputElement | null>(null);
+
+const isAllSelected = computed(() => {
+  if (!categories.value.length) return false;
+  return categories.value.every((item) => selectedIds.value.includes(item.id));
+});
 
 const dialog = reactive({
   open: false,
@@ -158,10 +184,28 @@ async function loadData() {
   loading.value = true;
   try {
     categories.value = await getAdminCategories();
+    selectedIds.value = [];
   } catch (error: any) {
     ElMessage.error(error.message || '分类加载失败');
   } finally {
     loading.value = false;
+  }
+}
+
+function toggleSelect(id: number) {
+  const idx = selectedIds.value.indexOf(id);
+  if (idx > -1) {
+    selectedIds.value.splice(idx, 1);
+  } else {
+    selectedIds.value.push(id);
+  }
+}
+
+function toggleSelectAll() {
+  if (isAllSelected.value) {
+    selectedIds.value = [];
+  } else {
+    selectedIds.value = categories.value.map((item) => item.id);
   }
 }
 
@@ -268,6 +312,34 @@ async function confirmDelete(row: AdminCategoryRow) {
     if (error !== 'cancel') {
       ElMessage.error(error.message || '删除失败');
     }
+  }
+}
+
+async function batchDelete() {
+  if (!selectedIds.value.length) return;
+  try {
+    await ElMessageBox.confirm(
+      `确定要批量删除已选的 ${selectedIds.value.length} 个分类吗？`,
+      '批量删除确认',
+      { confirmButtonText: '确定删除', cancelButtonText: '取消', type: 'warning' },
+    );
+    saving.value = true;
+    const results = await Promise.allSettled(selectedIds.value.map((id) => deleteCategory(id)));
+    const successCount = results.filter((r) => r.status === 'fulfilled').length;
+    const failCount = results.length - successCount;
+    selectedIds.value = [];
+    await loadData();
+    if (failCount === 0) {
+      ElMessage.success(`成功删除 ${successCount} 个分类`);
+    } else {
+      ElMessage.warning(`删除完成：成功 ${successCount} 个，失败 ${failCount} 个`);
+    }
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      ElMessage.error(error.message || '批量删除失败');
+    }
+  } finally {
+    saving.value = false;
   }
 }
 </script>

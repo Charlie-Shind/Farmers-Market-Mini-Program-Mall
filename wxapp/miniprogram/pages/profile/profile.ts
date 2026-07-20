@@ -1,6 +1,7 @@
 import { iconPaths } from '../../config/icons';
 import {
   fetchAddresses,
+  fetchAssetsSummary,
   fetchCartItemCount,
   fetchFavorites,
   fetchMe,
@@ -122,7 +123,7 @@ Component({
         { key: 'points', label: '我的积分', icon: 'points', iconColor: '#3d7a57' },
         { key: 'favorite', label: '我的收藏', icon: 'favorite', iconColor: '#c04f42' },
         { key: 'history', label: '浏览记录', icon: 'history', iconColor: '#5a6b62' },
-        { key: 'follow', label: '我的关注', icon: 'follow', iconColor: '#b8864d' },
+        { key: 'home', label: '个人主页', icon: 'profile', iconColor: '#b8864d' },
         { key: 'help', label: '联系客服', icon: 'support', iconColor: '#2c4a39' },
         { key: 'feedback', label: '意见反馈', icon: 'feedback', iconColor: '#4d6b58' },
       ] as ProfileServiceEntry[],
@@ -330,13 +331,14 @@ Component({
     },
     async loadProfileData() {
       try {
-        const [me, ordersPage, addresses, userCoupons, pointLogs, favorites] = await Promise.all([
+        const [me, ordersPage, addresses, userCoupons, pointLogs, favorites, assets] = await Promise.all([
           fetchMe(),
           fetchOrders({ page: 1, pageSize: 50 }),
           fetchAddresses(),
           fetchUserCoupons(),
           fetchPointsLogs(),
           fetchFavorites({ page: 1, pageSize: 20 }),
+          fetchAssetsSummary().catch(() => null),
         ]);
 
         const user = me.user;
@@ -368,13 +370,49 @@ Component({
           createdAt: formatDateTime(item.createdAt),
         }));
 
+        // 与订单列表页一致：优先用后端枚举/文案判断状态，避免「已取消但仍未支付」被算进待付款
+        const resolveProfileOrderStatus = (item: any): string => {
+          const enumStatus = String(item?.statusEnum || item?.orderStatus || '').toUpperCase();
+          if (
+            enumStatus === 'PENDING_PAY' ||
+            enumStatus === 'PENDING_SHIP' ||
+            enumStatus === 'PENDING_RECEIVE' ||
+            enumStatus === 'PENDING_COMMENT' ||
+            enumStatus === 'COMPLETED' ||
+            enumStatus === 'CANCELLED' ||
+            enumStatus === 'EXPIRED' ||
+            enumStatus === 'REFUNDING' ||
+            enumStatus === 'AFTER_SALE'
+          ) {
+            return enumStatus;
+          }
+
+          const label = String(item?.status || '').trim();
+          if (label === '待付款' || label === '待支付' || label === '等待付款') return 'PENDING_PAY';
+          if (label === '待发货' || label === '待接单' || label === '等待商家发货') return 'PENDING_SHIP';
+          if (label === '待收货' || label === '已发货' || label === '运输中') return 'PENDING_RECEIVE';
+          if (label === '待评价' || label === '已签收待评价') return 'PENDING_COMMENT';
+          if (label === '已完成' || label === '交易已完成') return 'COMPLETED';
+          if (label === '已取消' || label === '订单已取消') return 'CANCELLED';
+          if (label === '已过期' || label === '支付超时') return 'EXPIRED';
+          if (label === '售后中' || label === '退款中' || label === '退款申请中') return 'REFUNDING';
+
+          // 兜底时也要先排除已取消/已过期，不能只看 payStatus
+          if (label === 'CANCELLED' || Number(item?.orderStatus) === 4) return 'CANCELLED';
+          if (Number(item?.payStatus) === 0) return 'PENDING_PAY';
+          if (Number(item?.payStatus) === 1 && Number(item?.deliveryStatus) <= 1) return 'PENDING_SHIP';
+          if (Number(item?.payStatus) === 1 && Number(item?.deliveryStatus) === 2) return 'PENDING_RECEIVE';
+          return 'UNKNOWN';
+        };
+
+        const orderStatuses = orderItems.map((item) => resolveProfileOrderStatus(item));
         const orderSummary = {
           total: ordersPage.total ?? orderItems.length,
-          pay: orderItems.filter((item) => Number(item.payStatus) === 0).length,
-          ship: orderItems.filter((item) => Number(item.payStatus) === 1 && Number(item.deliveryStatus) === 0).length,
-          receive: orderItems.filter((item) => Number(item.payStatus) === 1 && Number(item.deliveryStatus) === 1).length,
-          comment: orderItems.filter((item) => Number(item.payStatus) === 1 && Number(item.deliveryStatus) === 2).length,
-          refund: orderItems.filter((item) => String(item.status) === 'REFUNDING' || String(item.status) === '售后中').length,
+          pay: orderStatuses.filter((status) => status === 'PENDING_PAY').length,
+          ship: orderStatuses.filter((status) => status === 'PENDING_SHIP').length,
+          receive: orderStatuses.filter((status) => status === 'PENDING_RECEIVE').length,
+          comment: orderStatuses.filter((status) => status === 'PENDING_COMMENT').length,
+          refund: orderStatuses.filter((status) => status === 'REFUNDING' || status === 'AFTER_SALE').length,
         };
 
         // Check local draft for newly uploaded avatar (instant refresh)
@@ -411,7 +449,7 @@ Component({
               avatarSrc: cachedAvatar || serverAvatar || iconPaths.defaultAvatar,
             },
             stats: [
-              { key: 'points', label: '积分', value: String(pointLogs.length ?? 0) },
+              { key: 'points', label: '积分', value: String(Math.max(Number(assets?.points?.balance ?? 0), 0)) },
               { key: 'coupon', label: '优惠券', value: String(usableCoupons) },
               { key: 'favorite', label: '收藏', value: String(favorites.total ?? favorites.items.length ?? 0) },
             ],
@@ -546,8 +584,13 @@ Component({
         return;
       }
 
-      if (key === 'favorite' || key === 'follow') {
+      if (key === 'favorite') {
         go('/pages/favorite/list/list');
+        return;
+      }
+
+      if (key === 'home') {
+        go('/pages/profile/home/home');
         return;
       }
 

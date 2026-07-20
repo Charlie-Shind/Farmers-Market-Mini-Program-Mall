@@ -19,9 +19,6 @@
       </view>
 
       <view class="profile-header__actions">
-        <view class="profile-header__tool" catchtap="handleHeaderAction" data-action="profile" data-label="个人资料">
-          <t-icon name="profile" size="40rpx" color="#ffffff" strokeWidth="{{2.25}}"></t-icon>
-        </view>
         <view class="profile-header__tool" catchtap="handleHeaderAction" data-action="settings" data-label="设置">
           <t-icon name="settings" size="40rpx" color="#ffffff" strokeWidth="{{2.25}}"></t-icon>
         </view>

@@ -4,5 +4,6 @@
     "t-icon": "../../../components/base/t-icon/t-icon"
   },
   "navigationStyle": "custom",
-  "disableScroll": true
+  "disableScroll": true,
+  "enableShareAppMessage": true
 }

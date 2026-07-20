@@ -3,14 +3,9 @@
     <page-nav title="{{pageTitle}}" theme="{{navTheme}}" />
 
     <view class="pl-hero">
-      <view class="pl-hero__copy">
-        <text class="pl-hero__eyebrow">{{pageEyebrow}}</text>
-        <text class="pl-hero__title">{{pageTitle}}</text>
-        <text class="pl-hero__desc">{{pageDesc}}</text>
-      </view>
+      <image wx:if="{{sceneTone === 'recommend'}}" class="pl-hero__bg" src="/assets/images/points/zhinengbg.jpg" mode="aspectFill" />
+      
       <view class="pl-hero__stat">
-        <text class="pl-hero__stat-num">{{loading ? '--' : products.length}}</text>
-        <text class="pl-hero__stat-label">件好物</text>
       </view>
     </view>
 

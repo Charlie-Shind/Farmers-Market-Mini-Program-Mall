@@ -14,6 +14,7 @@ import {
   loginWithWechatCode,
   loginWithWechatSms,
 } from '../../services/auth';
+import { upload } from '../../services/request';
 import { setGuestMode } from '../../services/token';
 
 type ToastType = 'info' | 'success' | 'warning' | 'danger';
@@ -63,6 +64,9 @@ Component({
       confirmText: '我知道了',
     } as ProtocolDialogState,
     icons: iconPaths,
+    avatarUrl: iconPaths.defaultAvatar as string,
+    uploadedAvatarUrl: '',
+    avatarUploading: false,
     pageStyle: '',
   },
   lifetimes: {
@@ -153,6 +157,48 @@ Component({
       this.setData({
         loginMode: mode,
       });
+    },
+    async handleChooseAvatar(e: WechatMiniprogram.CustomEvent) {
+      const tempFilePath = String((e.detail as { avatarUrl?: string })?.avatarUrl ?? '');
+      if (!tempFilePath) {
+        return;
+      }
+
+      this.setData({
+        avatarUrl: tempFilePath,
+        avatarUploading: true,
+        loading: true,
+        loadingText: '正在上传微信头像',
+      });
+
+      try {
+        const uploaded = await upload<{ url?: string }>({
+          url: '/files/upload',
+          filePath: tempFilePath,
+          name: 'file',
+          auth: false,
+        });
+        if (!uploaded?.url) {
+          throw new Error('头像上传失败');
+        }
+        this.setData({
+          avatarUrl: uploaded.url,
+          uploadedAvatarUrl: uploaded.url,
+        });
+        this.setToast('头像已获取', 'success');
+      } catch (error) {
+        logger.error('login avatar upload failed', error);
+        this.setData({
+          avatarUrl: iconPaths.defaultAvatar,
+          uploadedAvatarUrl: '',
+        });
+        this.setToast(this.getErrorMessage(error), 'danger');
+      } finally {
+        this.setData({
+          avatarUploading: false,
+          loading: false,
+        });
+      }
     },
     handlePhoneNumberInput(e: WechatMiniprogram.BaseEvent) {
       const detail = (e as WechatMiniprogram.BaseEvent & { detail?: { value?: string } }).detail ?? {};
@@ -271,6 +317,7 @@ Component({
 
         await loginWithWechatCode({
           code: loginCode,
+          avatarUrl: this.data.uploadedAvatarUrl || undefined,
         });
 
         const freshLoginCode = await new Promise<string>((resolve, reject) => {
@@ -292,6 +339,7 @@ Component({
         const boundSession = await bindWechatPhone({
           loginCode: freshLoginCode,
           phoneCode: detail.code,
+          avatarUrl: this.data.uploadedAvatarUrl || undefined,
         });
 
         this.completeAuth('登录成功', boundSession.user?.role);

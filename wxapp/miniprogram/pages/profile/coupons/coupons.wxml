@@ -1,20 +1,19 @@
-﻿<view class="phone-page profile-coupons-page" style="{{pageStyle}}">
+<view class="phone-page profile-coupons-page" style="{{pageStyle}}">
   <page-nav title="卡券包" theme="solid" />
 
   <view class="coupon-content">
     <view class="coupon-hero">
-      <view class="coupon-hero__glow coupon-hero__glow--one"></view>
-      <view class="coupon-hero__glow coupon-hero__glow--two"></view>
+      <image class="coupon-hero__bg" src="/assets/images/points/kajuanbg.jpg" mode="aspectFill" />
       <view class="coupon-hero__main">
         <view class="coupon-hero__info">
-          <text class="coupon-hero__label">可使用卡券</text>
+          <view class="coupon-hero__label-row">
+            <t-icon name="coupon" size="26rpx" color="#5c7a5e"></t-icon>
+            <text class="coupon-hero__label">可使用卡券</text>
+          </view>
           <view class="coupon-hero__value-row">
             <text class="coupon-hero__value">{{summary.available}}</text>
             <text class="coupon-hero__unit">张</text>
           </view>
-        </view>
-        <view class="coupon-hero__icon">
-          <t-icon name="coupon" size="48rpx" color="#ffffff"></t-icon>
         </view>
       </view>
       <view class="coupon-hero__stats">
@@ -56,8 +55,6 @@
         wx:for="{{visibleCoupons}}"
         wx:key="userCouponId"
         class="coupon-card {{item.statusTone}}"
-        bindtap="showCouponDetail"
-        data-index="{{index}}"
       >
         <view class="coupon-card__main">
           <text class="coupon-card__badge">{{item.name}}</text>

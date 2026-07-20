@@ -1,4 +1,5 @@
 <view class="phone-page phf" style="{{pageStyle}}">
+  <!-- 仅导航 + 顶部操作行固定 -->
   <view class="phf__top">
     <page-nav title="拼好货" theme="transparent" />
 
@@ -9,7 +10,9 @@
         <view class="phf-hero__chip phf-hero__chip--ghost" bindtap="onMyGroups" hover-class="phf-hero__chip--hover">我的拼团</view>
       </view>
     </view>
+  </view>
 
+  <scroll-view class="phf__body" scroll-y enhanced show-scrollbar="{{false}}" scroll-into-view="{{scrollIntoView}}">
     <!-- 附近实时拼单滚动条 -->
     <view wx:if="{{tickerText}}" class="phf-ticker">
       <text class="phf-ticker__dot">拼</text>
@@ -46,11 +49,58 @@
         <text class="phf-nearby__area">{{item.area}}</text>
       </view>
     </scroll-view>
-  </view>
 
-  <view class="phf__body">
+    <!-- 我正在拼的团 -->
+    <view wx:if="{{myOngoingGroups.length}}" class="phf-mine">
+      <view class="phf-mine__head">
+        <text class="phf-mine__title">我正在拼的团</text>
+        <text class="phf-mine__more" bindtap="onMyGroups">全部</text>
+      </view>
+      <swiper
+        class="phf-mine__swiper"
+        circular="{{myOngoingGroups.length > 1}}"
+        indicator-dots="{{myOngoingGroups.length > 1}}"
+        indicator-color="rgba(44,74,57,0.18)"
+        indicator-active-color="#2c4a39"
+        autoplay="{{false}}"
+      >
+        <swiper-item wx:for="{{myOngoingGroups}}" wx:key="groupId">
+          <view class="phf-progress">
+            <view class="phf-progress__row">
+              <text class="phf-progress__label">拼团进度 {{item.progressText}}</text>
+              <view class="phf-progress__timer">
+                <text class="phf-progress__timer-label">剩余时间</text>
+                <text class="phf-progress__timer-value">{{item.remainText}}</text>
+              </view>
+            </view>
+            <view class="phf-progress__members">
+              <view
+                wx:for="{{item.members}}"
+                wx:for-item="member"
+                wx:key="key"
+                class="phf-progress__member {{member.filled ? '' : 'is-empty'}}"
+              >
+                <view class="phf-progress__avatar {{member.filled ? 'is-filled' : ''}} {{member.isMine ? 'is-mine' : ''}}">
+                  <image wx:if="{{member.avatarUrl}}" class="phf-progress__avatar-img" src="{{member.avatarUrl}}" mode="aspectFill" />
+                </view>
+                <text class="phf-progress__role">{{member.label}}</text>
+              </view>
+            </view>
+            <button
+              class="phf-progress__btn"
+              open-type="share"
+              data-group-id="{{item.groupId}}"
+              data-invite-code="{{item.inviteCode}}"
+              data-title="{{item.title}}"
+              catchtap="prepareShare"
+            >邀请好友参团</button>
+          </view>
+        </swiper-item>
+      </swiper>
+    </view>
+
     <!-- 分类 -->
-    <scroll-view class="phf-cats" scroll-x enhanced show-scrollbar="{{false}}">
+    <scroll-view id="phf-products" class="phf-cats" scroll-x enhanced show-scrollbar="{{false}}">
       <view
         wx:for="{{categoryTabs}}"
         wx:key="key"
@@ -70,7 +120,7 @@
       <text class="phf-empty__desc">切换分类或稍后再来看看</text>
     </view>
 
-    <scroll-view wx:else class="phf-list" scroll-y enhanced show-scrollbar="{{false}}">
+    <view wx:else class="phf-list">
       <view
         wx:for="{{displayProducts}}"
         wx:key="productId"
@@ -110,8 +160,8 @@
         <t-icon name="chevronRight" size="22rpx" color="#999999"></t-icon>
       </view>
       <view class="phf-list__pad"></view>
-    </scroll-view>
-  </view>
+    </view>
+  </scroll-view>
 
   <!-- 底部栏 -->
   <view class="phf-dock">

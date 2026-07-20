@@ -3,6 +3,8 @@ import { exchangePointsCoupon, fetchPointExchangeItems } from '../../../services
 import { buildPageTopStyle } from '../../../utils/page-layout';
 import { navigateBackOrHome } from '../../../utils/auth-route';
 
+type ExchangeKind = 'PRODUCT' | 'COUPON';
+
 type PointsExchangeItem = {
   id: string;
   couponId: number;
@@ -11,13 +13,17 @@ type PointsExchangeItem = {
   pointsCost: number;
   received: boolean;
   canRedeem: boolean;
-  imageStyle: string;
+  exchangeKind: ExchangeKind;
+  discountAmount: string;
+  coverUrl: string;
 };
 
-function buildCoverStyle(url?: string): string {
-  return url
-    ? `background-image: url(${url}); background-size: cover; background-position: center;`
-    : '';
+function normalizeKind(raw: unknown): ExchangeKind {
+  return String(raw || 'COUPON').toUpperCase() === 'PRODUCT' ? 'PRODUCT' : 'COUPON';
+}
+
+function filterByKind(list: PointsExchangeItem[], kind: ExchangeKind) {
+  return list.filter((item) => item.exchangeKind === kind);
 }
 
 Component({
@@ -28,6 +34,8 @@ Component({
     loadingText: '正在加载积分兑换',
     pointsBalance: 0,
     pointsGoods: [] as PointsExchangeItem[],
+    displayGoods: [] as PointsExchangeItem[],
+    activeKind: 'COUPON' as ExchangeKind,
     redeeming: false,
   },
   lifetimes: {
@@ -51,6 +59,13 @@ Component({
     goBack() {
       navigateBackOrHome();
     },
+    switchKind(e: WechatMiniprogram.BaseEvent) {
+      const kind = normalizeKind((e.currentTarget.dataset as { kind?: string }).kind);
+      this.setData({
+        activeKind: kind,
+        displayGoods: filterByKind(this.data.pointsGoods, kind),
+      });
+    },
     async loadPoints() {
       this.setData({
         loading: true,
@@ -59,37 +74,44 @@ Component({
 
       try {
         const result = await fetchPointExchangeItems().catch(() => ({ balance: 0, items: [] as any[] }));
-        const goods: PointsExchangeItem[] = (result.items || []).map((item: any) => ({
-          id: String(item.couponId),
-          couponId: item.couponId,
-          title: item.name,
-          desc: [
-            item.matchReason || '',
-            item.thresholdAmount != null ? `满 ${item.thresholdAmount} 元可用` : '',
-          ]
-            .filter(Boolean)
-            .join(' · ') || '后台配置的积分兑换商品',
-          pointsCost: Number(item.pointsCost || 0),
-          received: Boolean(item.received),
-          canRedeem: Boolean(item.canRedeem),
-          imageStyle: buildCoverStyle(
-            typeof item.coverUrl === 'string'
-              ? item.coverUrl
-              : typeof item.imageUrl === 'string'
-                ? item.imageUrl
-                : '',
-          ),
-        }));
+        const goods: PointsExchangeItem[] = (result.items || []).map((item: any) => {
+          const exchangeKind = normalizeKind(item.exchangeKind);
+          const discountAmount = String(item.discountAmount ?? '0');
+          const threshold =
+            item.thresholdAmount != null && item.thresholdAmount !== ''
+              ? `满 ${Number(item.thresholdAmount).toFixed(2)} 元可用`
+              : '';
+          return {
+            id: String(item.couponId),
+            couponId: item.couponId,
+            title: item.name,
+            desc: threshold || (exchangeKind === 'PRODUCT' ? '精选好物可兑换' : '优惠券可兑换'),
+            pointsCost: Number(item.pointsCost || 0),
+            received: Boolean(item.received),
+            canRedeem: Boolean(item.canRedeem),
+            exchangeKind,
+            discountAmount: discountAmount.replace(/\.00$/, ''),
+            coverUrl:
+              typeof item.coverUrl === 'string'
+                ? item.coverUrl
+                : typeof item.imageUrl === 'string'
+                  ? item.imageUrl
+                  : '',
+          };
+        });
 
+        const activeKind = this.data.activeKind;
         this.setData({
           pointsBalance: Number(result.balance || 0),
           pointsGoods: goods,
+          displayGoods: filterByKind(goods, activeKind),
         });
         (this as any)._hasLoaded = true;
       } catch {
         this.setData({
           pointsBalance: 0,
           pointsGoods: [],
+          displayGoods: [],
         });
       } finally {
         this.setData({

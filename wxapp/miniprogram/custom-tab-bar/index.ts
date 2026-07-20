@@ -1,4 +1,5 @@
-import { fetchCartItemCount, invalidateCartItemCount } from '../services/app';
+import { fetchCartItemCount, fetchUnreadMessageCount, invalidateCartItemCount } from '../services/app';
+import { getAuthTokenType } from '../services/token';
 
 type TabItem = {
   key: string;
@@ -30,6 +31,19 @@ function normalizeBadge(value: number): string {
   }
 
   return String(value);
+}
+
+async function fetchProfileMessageBadge(): Promise<string> {
+  if (getAuthTokenType() !== 'access') {
+    return '';
+  }
+
+  try {
+    const res = await fetchUnreadMessageCount();
+    return normalizeBadge(Number(res.unreadCount || 0));
+  } catch {
+    return '';
+  }
 }
 
 Component({
@@ -73,30 +87,23 @@ Component({
           updateData.active = targetActive;
         }
 
-        try {
-          const count = await fetchCartItemCount();
-          const cartBadge = normalizeBadge(Number(count || 0));
-          
-          const nextItems = CUSTOMER_ITEMS.map((item) => {
-            const newItem = { ...item };
-            if (newItem.key === 'cart') {
-              newItem.badge = cartBadge;
-            }
-            return newItem;
-          });
-          
-          updateData.items = nextItems;
-        } catch {
-          const nextItems = CUSTOMER_ITEMS.map((item) => {
-            const newItem = { ...item };
-            if (newItem.key === 'cart') {
-              newItem.badge = '';
-            }
-            return newItem;
-          });
-          
-          updateData.items = nextItems;
-        }
+        const [cartCountResult, messageBadge] = await Promise.all([
+          fetchCartItemCount()
+            .then((count) => normalizeBadge(Number(count || 0)))
+            .catch(() => ''),
+          fetchProfileMessageBadge(),
+        ]);
+
+        updateData.items = CUSTOMER_ITEMS.map((item) => {
+          const newItem = { ...item };
+          if (newItem.key === 'cart') {
+            newItem.badge = cartCountResult;
+          }
+          if (newItem.key === 'profile') {
+            newItem.badge = messageBadge;
+          }
+          return newItem;
+        });
 
         this.setData(updateData);
       });

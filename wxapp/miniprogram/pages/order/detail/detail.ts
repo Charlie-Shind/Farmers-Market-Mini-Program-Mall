@@ -1,6 +1,8 @@
 import { iconPaths } from '../../../config/icons';
 import {
   fetchOrderDetail,
+  fetchMe,
+  updateMeProfile,
   cancelOrder,
   confirmOrder,
   createWechatPayment,
@@ -9,8 +11,33 @@ import {
   createRefundApply,
   type AppOrderGroupBuy,
 } from '../../../services/app';
+import { loadProfileDraft } from '../../../services/profile';
 import { buildPageTopStyle } from '../../../utils/page-layout';
 import { ensureCustomerAccess, navigateBackOrHome } from '../../../utils/auth-route';
+
+function isHttpAvatar(url?: string | null): boolean {
+  return /^https?:\/\//i.test(String(url || '').trim());
+}
+
+function normalizeAvatarUrl(url?: string | null): string {
+  const value = String(url || '').trim();
+  if (!value) return '';
+  if (isHttpAvatar(value) || value.startsWith('/')) return value;
+  return '';
+}
+
+async function resolveCurrentUserAvatar(): Promise<string> {
+  const draft = loadProfileDraft();
+  const draftAvatar = normalizeAvatarUrl(draft.avatarUrl);
+  try {
+    const me = await fetchMe();
+    const serverAvatar =
+      normalizeAvatarUrl(me.profile?.avatarUrl) || normalizeAvatarUrl(me.user?.avatarUrl);
+    return draftAvatar || serverAvatar || '';
+  } catch {
+    return draftAvatar || '';
+  }
+}
 
 let _groupBuyTimer: number | null = null;
 
@@ -108,9 +135,9 @@ function formatDateTime(value?: string) {
 }
 
 function getGroupBuyStats(groupBuy?: AppOrderGroupBuy | null) {
-  const memberCountRaw = Number(groupBuy?.memberCount);
+  const memberCountRaw = Number(groupBuy?.memberCount ?? groupBuy?.members?.length ?? 0);
   const neededRaw = Number(groupBuy?.needed);
-  const memberCount = Number.isFinite(memberCountRaw) && memberCountRaw > 0 ? memberCountRaw : 1;
+  const memberCount = Number.isFinite(memberCountRaw) && memberCountRaw >= 0 ? memberCountRaw : 0;
   const neededBase = Number.isFinite(neededRaw) && neededRaw > 0 ? neededRaw : 2;
   const needed = Math.max(neededBase, memberCount);
   return {
@@ -118,6 +145,50 @@ function getGroupBuyStats(groupBuy?: AppOrderGroupBuy | null) {
     needed,
     remaining: Math.max(needed - memberCount, 0),
   };
+}
+
+type GroupBuySlotView = {
+  key: string;
+  label: string;
+  filled: boolean;
+  avatarUrl: string;
+  isMine: boolean;
+};
+
+function buildGroupBuySlots(
+  groupBuy?: AppOrderGroupBuy | null,
+  currentUserId?: number,
+  myAvatarUrl = '',
+): GroupBuySlotView[] {
+  if (!groupBuy) return [];
+  const { memberCount, needed } = getGroupBuyStats(groupBuy);
+  const slots = Math.min(Math.max(needed, 1), 5);
+  const members = Array.isArray(groupBuy.members) ? [...groupBuy.members] : [];
+  members.sort((a, b) => Number(b.isInitiator) - Number(a.isInitiator));
+  const fallbackMine = normalizeAvatarUrl(myAvatarUrl);
+  const defaultAvatar = String(iconPaths.defaultAvatar || '');
+
+  const views: GroupBuySlotView[] = [];
+  for (let i = 0; i < slots; i++) {
+    const member = members[i];
+    const filled = Boolean(member) || i < memberCount;
+    const isMine = Boolean(member && Number(member.userId) === Number(currentUserId));
+    let avatarUrl = normalizeAvatarUrl(member?.avatarUrl);
+    if (!avatarUrl && isMine && fallbackMine) {
+      avatarUrl = fallbackMine;
+    }
+    if (!avatarUrl && filled) {
+      avatarUrl = defaultAvatar;
+    }
+    views.push({
+      key: member ? `m-${member.memberId}` : `slot-${i}`,
+      label: i === 0 ? '团长' : filled ? `团员${i}` : '待邀请',
+      filled,
+      avatarUrl,
+      isMine,
+    });
+  }
+  return views;
 }
 
 type StatusStep = { label: string; done: boolean; current: boolean };
@@ -169,6 +240,12 @@ function getStatusIconColor(colorClass: string): string {
   if (colorClass === 'banner--gray') return '#ffffff';
   if (colorClass === 'banner--green' || colorClass === 'banner--gold') return '#ffffff';
   return '#2c4a39';
+}
+
+function getStatusBgUrl(colorClass: string): string {
+  if (colorClass === 'banner--gold') return '/assets/images/order/status-bg-gold.jpg';
+  if (colorClass === 'banner--gray') return '/assets/images/order/status-bg-gray.jpg';
+  return '/assets/images/order/status-bg-green.jpg';
 }
 
 function buildStatusSteps(order: OrderDetail, statusLabel: string): StatusStep[] {
@@ -264,13 +341,17 @@ Component({
     statusIcon: 'points',
     statusIconColor: '#2c4a39',
     statusColorClass: 'banner--gray',
+    statusBgUrl: '/assets/images/order/status-bg-gray.jpg',
     statusSteps: [] as StatusStep[],
     statusProgressWidth: 0,
     hasActionButtons: false,
     actionButtons: [] as Array<{ key: string; label: string; type?: string }>,
     groupBuyProgress: null as { percent: number; memberCount: number; needed: number; remaining: number; expireAt: string | null } | null,
+    groupBuyProgressText: '',
+    groupBuySlots: [] as GroupBuySlotView[],
     groupBuyCountdown: '' as string,
     groupInviteCode: '',
+    myAvatarUrl: '',
     icons: iconPaths,
     pageStyle: '',
     activeSheet: '',
@@ -329,7 +410,10 @@ Component({
       wx.showLoading({ title: '加载中…' });
 
       try {
-        const order = await fetchOrderDetail(orderNo);
+        const [order, myAvatarUrl] = await Promise.all([
+          fetchOrderDetail(orderNo),
+          resolveCurrentUserAvatar(),
+        ]);
         if (!order) {
           wx.showToast({ title: '订单不存在', icon: 'none' });
           setTimeout(() => this.goBack(), 1500);
@@ -374,9 +458,11 @@ Component({
 
         this.setData({
           order: formattedOrder,
+          myAvatarUrl,
         });
 
         this.mapOrderStatus();
+        void this.syncMyAvatarIfNeeded(formattedOrder.groupBuy, myAvatarUrl);
 
         this._startGroupBuyCountdown();
 
@@ -389,6 +475,36 @@ Component({
       } finally {
         wx.hideLoading();
       }
+    },
+    async syncMyAvatarIfNeeded(groupBuy?: AppOrderGroupBuy | null, myAvatarUrl = '') {
+      if (!groupBuy || !isHttpAvatar(myAvatarUrl)) {
+        return;
+      }
+      const mine = (groupBuy.members || []).find(
+        (member) => Number(member.userId) === Number(this.data.order.userId),
+      );
+      if (!mine || isHttpAvatar(mine.avatarUrl)) {
+        return;
+      }
+      try {
+        await updateMeProfile({ avatarUrl: myAvatarUrl });
+      } catch {
+        // ignore sync failures; UI already falls back to local avatar
+      }
+    },
+    onGroupBuyAvatarError(e: WechatMiniprogram.TouchEvent) {
+      const key = String((e.currentTarget.dataset as { key?: string }).key || '');
+      if (!key) {
+        return;
+      }
+      const defaultAvatar = String(iconPaths.defaultAvatar || '');
+      const groupBuySlots = (this.data.groupBuySlots || []).map((slot) => {
+        if (slot.key !== key || slot.avatarUrl === defaultAvatar) {
+          return slot;
+        }
+        return { ...slot, avatarUrl: defaultAvatar };
+      });
+      this.setData({ groupBuySlots });
     },
     _clearGroupBuyCountdown() {
       if (_groupBuyTimer != null) {
@@ -486,16 +602,20 @@ Component({
 
       // 计算拼团进度数据（无论后端是否直接返回状态文案，都需要展示）
       let groupBuyProgress: { percent: number; memberCount: number; needed: number; remaining: number; expireAt: string | null } | null = null;
+      let groupBuyProgressText = '';
+      let groupBuySlots: GroupBuySlotView[] = [];
       const groupInviteCode = String(groupBuy?.inviteCode ?? '').trim();
       if (groupBuy) {
         const { memberCount, needed, remaining } = getGroupBuyStats(groupBuy);
         groupBuyProgress = {
-          percent: Math.min(memberCount / needed, 1),
+          percent: needed > 0 ? Math.min(memberCount / needed, 1) : 0,
           memberCount,
           needed,
           remaining,
           expireAt: groupBuy.expireAt,
         };
+        groupBuyProgressText = `${memberCount}/${needed}人`;
+        groupBuySlots = buildGroupBuySlots(groupBuy, order.userId, this.data.myAvatarUrl);
       }
 
       const backendStatusLabel = String((order as any).statusLabel || order.status || '').trim();
@@ -519,11 +639,14 @@ Component({
           statusIcon: getStatusIcon(normalizedBackendStatusLabel),
           statusIconColor: getStatusIconColor(colorClass),
           statusColorClass: colorClass,
+          statusBgUrl: getStatusBgUrl(colorClass),
           statusSteps,
           statusProgressWidth: getStatusProgressWidth(statusSteps),
           hasActionButtons: backendActionButtons.length > 0 || normalizedBackendStatusLabel === '售后中' || normalizedBackendStatusLabel === '退款申请中',
           actionButtons: backendActionButtons,
           groupBuyProgress,
+          groupBuyProgressText,
+          groupBuySlots,
           groupInviteCode,
         });
         return;
@@ -671,10 +794,13 @@ Component({
         statusIcon,
         statusIconColor: getStatusIconColor(statusColorClass),
         statusColorClass,
+        statusBgUrl: getStatusBgUrl(statusColorClass),
         statusSteps,
         statusProgressWidth: getStatusProgressWidth(statusSteps),
         hasActionButtons,
         groupBuyProgress,
+        groupBuyProgressText,
+        groupBuySlots,
         groupInviteCode,
       });
     },

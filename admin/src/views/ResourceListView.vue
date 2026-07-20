@@ -17,8 +17,18 @@
         <div>
           <strong>{{ visibleRows.length }} / {{ total }} 条记录</strong>
           <span>当前筛选：{{ searchSummary }}</span>
+          <span v-if="selectedIds.length"> · 已选 {{ selectedIds.length }} 条</span>
         </div>
         <div class="batch-actions">
+          <button
+            v-if="batchActionLabel"
+            type="button"
+            class="ghost-btn"
+            :disabled="!selectedIds.length || batchRunning"
+            @click="runBatchAction"
+          >
+            {{ batchRunning ? '处理中…' : batchActionLabel }}
+          </button>
           <RefreshDataButton :loading="loading" @refresh="handleReload" />
         </div>
       </div>
@@ -55,6 +65,9 @@
         <table class="data-table">
           <thead>
             <tr>
+              <th v-if="supportsBatch" class="check-cell">
+                <input type="checkbox" :checked="isAllSelected" :disabled="!selectableRows.length" @change="toggleSelectAll" />
+              </th>
               <th v-for="column in config.columns" :key="column.key">
                 {{ column.label }}
               </th>
@@ -63,6 +76,14 @@
 
           <tbody>
             <tr v-for="row in visibleRows" :key="rowKey(row)">
+              <td v-if="supportsBatch" class="check-cell">
+                <input
+                  type="checkbox"
+                  :checked="isRowSelected(row)"
+                  :disabled="!isRowSelectable(row)"
+                  @change="toggleSelectRow(row)"
+                />
+              </td>
               <td
                 v-for="column in config.columns"
                 :key="column.key"
@@ -1398,8 +1419,19 @@
 
           <p class="form-section-title">关联商品（可留空）</p>
           <div class="form-field">
-            <span>商品 ID</span>
-            <input v-model="activityFormModal.productId" type="number" placeholder="输入商品 ID" />
+            <span>选择商品</span>
+            <select v-model="activityFormModal.productId" @change="handleActivityProductChange">
+              <option value="">不关联商品</option>
+              <option
+                v-for="product in activityProductOptions"
+                :key="product.id"
+                :value="String(product.id)"
+              >
+                {{ product.title }}（ID {{ product.id }}{{ product.merchantName ? ` · ${product.merchantName}` : '' }}）
+              </option>
+            </select>
+            <span v-if="activityProductLoading" class="mini-muted">正在加载商品列表…</span>
+            <span v-else-if="!activityProductOptions.length" class="mini-muted">暂无可选商品，请先在商品管理中创建</span>
           </div>
           <div v-if="activityFormModal.productId" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
             <label class="form-field" style="display: flex; flex-direction: column; gap: 6px;">
@@ -1499,13 +1531,71 @@
       </section>
     </div>
 
+    <!-- Logistics rule form modal -->
+    <div v-if="logisticsFormModal.open" class="action-modal" @click.self="closeLogisticsFormModal">
+      <section class="action-card" role="dialog" aria-modal="true" aria-label="物流规则表单" style="max-width: 520px;">
+        <header class="action-card__head">
+          <div>
+            <h3>{{ logisticsFormModal.id ? '编辑物流规则' : '新增物流规则' }}</h3>
+            <p>配置包邮门槛与运费；可勾选作为购物车公共满减规则。</p>
+          </div>
+        </header>
+
+        <form class="action-card__body" @submit.prevent="submitLogisticsFormModal">
+          <label class="form-field">
+            <span>规则名称 *</span>
+            <input v-model.trim="logisticsFormModal.name" type="text" placeholder="例如：全国包邮" required />
+          </label>
+
+          <div class="form-grid-2">
+            <label class="form-field">
+              <span>适用地区 *</span>
+              <input v-model.trim="logisticsFormModal.province" type="text" placeholder="全国 / 广东" required />
+            </label>
+            <label class="form-field">
+              <span>状态</span>
+              <select v-model="logisticsFormModal.active">
+                <option :value="true">启用</option>
+                <option :value="false">停用</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="form-grid-2">
+            <label class="form-field">
+              <span>包邮门槛（元）*</span>
+              <input v-model="logisticsFormModal.thresholdAmount" type="number" min="0" step="0.01" placeholder="0.00" required />
+            </label>
+            <label class="form-field">
+              <span>未满门槛运费（元）*</span>
+              <input v-model="logisticsFormModal.freightAmount" type="number" min="0" step="0.01" placeholder="0.00" required />
+            </label>
+          </div>
+
+          <label class="form-field" style="flex-direction: row; align-items: center; gap: 10px;">
+            <input v-model="logisticsFormModal.isPublic" type="checkbox" style="width: 16px; height: 16px;" />
+            <span style="margin: 0;">设为购物车公共满减规则（小程序购物车展示此门槛）</span>
+          </label>
+
+          <p v-if="logisticsFormError" class="form-error" style="color: #c0392b; font-size: 13px;">{{ logisticsFormError }}</p>
+
+          <footer class="action-card__foot">
+            <button type="button" class="ghost-btn" @click="closeLogisticsFormModal">取消</button>
+            <button type="submit" class="primary-btn" :disabled="logisticsFormSaving">
+              {{ logisticsFormSaving ? '保存中…' : '保存规则' }}
+            </button>
+          </footer>
+        </form>
+      </section>
+    </div>
+
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, inject, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import { RouterLink, useRoute, useRouter } from 'vue-router';
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElMessageBox } from 'element-plus';
 import { Check, Clock, Loading, Promotion, Star } from '@element-plus/icons-vue';
 
 import {
@@ -1534,6 +1624,7 @@ import {
   auditWithdraw,
   finishActivity,
   getActivityDetail,
+  deleteActivity,
   getUserSummary,
   getMerchantSummary,
   getUsers,
@@ -1583,6 +1674,15 @@ type MerchantOption = {
   storeName: string;
 };
 
+type ActivityProductOption = {
+  id: number;
+  title: string;
+  merchantName: string;
+  minPrice: string;
+  coverUrl: string;
+  stock: string;
+};
+
 type ActionPanelState = {
   open: boolean;
   title: string;
@@ -1602,13 +1702,35 @@ const rows = ref<any[]>([]);
 const total = ref(0);
 const actionMessage = ref('');
 const actionError = ref('');
+const selectedIds = ref<Array<string | number>>([]);
+const batchRunning = ref(false);
 const catalogCategories = ref<CategoryOption[]>([]);
 const merchantOptions = ref<MerchantOption[]>([]);
+const activityProductOptions = ref<ActivityProductOption[]>([]);
+const activityProductLoading = ref(false);
 const supportsPagination = computed(() => !['activities', 'logistics'].includes(props.resourceKey));
 const currentPage = computed(() => parsePageNumber(route.query.page, 1));
 const pageSize = computed(() => parsePageSize(route.query.pageSize, 20));
 const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)));
 const pageInput = ref(currentPage.value);
+
+const BATCH_DELETE_KEYS = new Set(['merchants', 'products', 'activities', 'coupons', 'logistics']);
+const BATCH_APPROVE_KEYS = new Set(['refunds', 'withdraws']);
+const BATCH_DISABLE_KEYS = new Set(['users']);
+
+const supportsBatch = computed(
+  () =>
+    BATCH_DELETE_KEYS.has(props.resourceKey) ||
+    BATCH_APPROVE_KEYS.has(props.resourceKey) ||
+    BATCH_DISABLE_KEYS.has(props.resourceKey),
+);
+
+const batchActionLabel = computed(() => {
+  if (BATCH_DELETE_KEYS.has(props.resourceKey)) return '批量删除';
+  if (BATCH_APPROVE_KEYS.has(props.resourceKey)) return '批量通过';
+  if (BATCH_DISABLE_KEYS.has(props.resourceKey)) return '批量禁用';
+  return '';
+});
 
 
 
@@ -2167,7 +2289,92 @@ function openActivityFormModal(initial: Record<string, unknown> = {}): Promise<R
     activityFormModal.finalPaymentEndAt = String(ruleJson.finalPaymentEndAt ?? '');
     activityFormModal.deliveryStartAt = String(ruleJson.deliveryStartAt ?? '');
     activityFormModal.open = true;
+    void loadActivityProductOptions(Number(firstProduct.productId || 0));
   });
+}
+
+async function loadActivityProductOptions(preferredProductId = 0) {
+  activityProductLoading.value = true;
+  try {
+    const data = await getProducts({ page: 1, pageSize: 200 });
+    const options: ActivityProductOption[] = (data.items ?? []).map((item: any) => ({
+      id: Number(item.id),
+      title: String(item.title ?? `商品 ${item.id}`),
+      merchantName: String(item.merchantName ?? ''),
+      minPrice: String(item.minPrice ?? item.price ?? '0.00'),
+      coverUrl: String(item.coverUrl ?? ''),
+      stock: String(item.stock ?? item.skuStock ?? '0'),
+    }));
+
+    // 编辑时如果当前关联商品不在列表里，补一条选项避免选不中
+    if (preferredProductId > 0 && !options.some((item) => item.id === preferredProductId)) {
+      options.unshift({
+        id: preferredProductId,
+        title: activityFormModal.productTitle || `商品 ${preferredProductId}`,
+        merchantName: '',
+        minPrice: activityFormModal.originalPrice || '0.00',
+        coverUrl: activityFormModal.productCoverUrl || '',
+        stock: activityFormModal.stock || '0',
+      });
+    }
+
+    activityProductOptions.value = options;
+  } catch (error) {
+    activityProductOptions.value = [];
+    ElMessage.error(error instanceof Error ? error.message : '商品列表加载失败');
+  } finally {
+    activityProductLoading.value = false;
+  }
+}
+
+async function handleActivityProductChange() {
+  const productId = Number(activityFormModal.productId || 0);
+  if (!productId) {
+    activityFormModal.productTitle = '';
+    activityFormModal.productCoverUrl = '';
+    activityFormModal.originalPrice = '';
+    activityFormModal.activityPrice = '';
+    activityFormModal.stock = '0';
+    return;
+  }
+
+  const option = activityProductOptions.value.find((item) => item.id === productId);
+  if (option) {
+    activityFormModal.productTitle = option.title;
+    activityFormModal.productCoverUrl = option.coverUrl;
+    activityFormModal.originalPrice = option.minPrice;
+    if (!activityFormModal.activityPrice) {
+      activityFormModal.activityPrice = option.minPrice;
+    }
+    if (!activityFormModal.stock || activityFormModal.stock === '0') {
+      activityFormModal.stock = option.stock || '0';
+    }
+  }
+
+  try {
+    const detail = await getAdminProductDetail(productId);
+    if (!detail || typeof detail !== 'object') {
+      return;
+    }
+    const product = detail as Record<string, unknown>;
+    const skus = Array.isArray(product.skus) ? product.skus : [];
+    const firstSku =
+      skus[0] && typeof skus[0] === 'object' ? (skus[0] as Record<string, unknown>) : {};
+
+    activityFormModal.productTitle = String(product.title ?? activityFormModal.productTitle);
+    activityFormModal.productCoverUrl = String(product.coverUrl ?? activityFormModal.productCoverUrl);
+    const skuPrice = Number(firstSku.price ?? product.minPrice ?? product.price ?? 0);
+    const skuOriginal = Number(firstSku.originalPrice ?? 0);
+    const resolvedOrigin =
+      skuOriginal > skuPrice ? skuOriginal : skuOriginal > 0 ? skuOriginal : skuPrice;
+    activityFormModal.originalPrice = resolvedOrigin > 0 ? resolvedOrigin.toFixed(2) : '';
+    if (!activityFormModal.activityPrice) {
+      activityFormModal.activityPrice = skuPrice > 0 ? skuPrice.toFixed(2) : '';
+    }
+    activityFormModal.stock = String(firstSku.stock ?? product.stock ?? activityFormModal.stock ?? '0');
+  } catch {
+    // 列表字段已足够时忽略详情失败
+  }
 }
 
 function closeActivityFormModal() {
@@ -2376,41 +2583,84 @@ function previewImage(src: string) {
   window.open(src, '_blank');
 }
 
-function promptFormValue(label: string, initialValue = '') {
-  const nextValue = window.prompt(label, initialValue);
-  if (nextValue === null) {
-    return null;
-  }
-  return nextValue.trim();
+const logisticsFormModal = reactive({
+  open: false,
+  id: null as number | null,
+  name: '',
+  province: '全国',
+  thresholdAmount: '88.00',
+  freightAmount: '0.00',
+  active: true,
+  isPublic: false,
+});
+const logisticsFormError = ref('');
+const logisticsFormSaving = ref(false);
+
+function openLogisticsFormModal(initial: Record<string, unknown> = {}) {
+  logisticsFormError.value = '';
+  logisticsFormModal.id = initial.id != null ? Number(initial.id) : null;
+  logisticsFormModal.name = String(initial.name ?? initial.ruleName ?? '');
+  logisticsFormModal.province = String(initial.province ?? '全国');
+  logisticsFormModal.thresholdAmount = String(initial.thresholdAmount ?? '88.00');
+  logisticsFormModal.freightAmount = String(initial.freightAmount ?? '0.00');
+  logisticsFormModal.active = initial.active !== false && initial.active !== 'false';
+  logisticsFormModal.isPublic = Boolean(initial.isPublic);
+  logisticsFormModal.open = true;
 }
 
-function parseBooleanInput(value: string | null, fallback = false) {
-  if (value == null || value === '') {
-    return fallback;
-  }
-  const normalized = value.trim().toLowerCase();
-  return normalized === '1' || normalized === 'true' || normalized === 'yes' || normalized === 'y' || normalized === '是' || normalized === '启用';
+function closeLogisticsFormModal() {
+  logisticsFormModal.open = false;
+  logisticsFormError.value = '';
+  logisticsFormSaving.value = false;
 }
 
-function collectLogisticsPayload(initial: Record<string, unknown> = {}) {
-  const name = promptFormValue('规则名称', String(initial.name ?? initial.ruleName ?? ''));
-  if (name === null) return null;
-  const province = promptFormValue('适用地区', String(initial.province ?? '全国'));
-  if (province === null) return null;
-  const thresholdAmount = promptFormValue('包邮门槛金额', String(initial.thresholdAmount ?? 0));
-  if (thresholdAmount === null) return null;
-  const freightAmount = promptFormValue('运费金额', String(initial.freightAmount ?? 0));
-  if (freightAmount === null) return null;
-  const activeRaw = promptFormValue('是否启用（true/false）', String(initial.active ?? true));
-  if (activeRaw === null) return null;
+async function submitLogisticsFormModal() {
+  if (!logisticsFormModal.name.trim()) {
+    logisticsFormError.value = '请填写规则名称';
+    return;
+  }
+  if (!logisticsFormModal.province.trim()) {
+    logisticsFormError.value = '请填写适用地区';
+    return;
+  }
 
-  return {
-    name,
-    province,
-    thresholdAmount: Number(thresholdAmount || 0),
-    freightAmount: Number(freightAmount || 0),
-    active: parseBooleanInput(activeRaw, Boolean(initial.active ?? true)),
+  const thresholdAmount = Number(logisticsFormModal.thresholdAmount);
+  const freightAmount = Number(logisticsFormModal.freightAmount);
+  if (!Number.isFinite(thresholdAmount) || thresholdAmount < 0) {
+    logisticsFormError.value = '包邮门槛金额无效';
+    return;
+  }
+  if (!Number.isFinite(freightAmount) || freightAmount < 0) {
+    logisticsFormError.value = '运费金额无效';
+    return;
+  }
+
+  const payload = {
+    name: logisticsFormModal.name.trim(),
+    province: logisticsFormModal.province.trim(),
+    thresholdAmount,
+    freightAmount,
+    active: logisticsFormModal.active,
+    isPublic: logisticsFormModal.isPublic,
   };
+
+  logisticsFormSaving.value = true;
+  logisticsFormError.value = '';
+  try {
+    if (logisticsFormModal.id != null) {
+      await updateLogisticsRule(logisticsFormModal.id, payload);
+      actionMessage.value = `物流规则「${payload.name}」已更新`;
+    } else {
+      await createLogisticsRule(payload);
+      actionMessage.value = `物流规则「${payload.name}」已创建`;
+    }
+    closeLogisticsFormModal();
+    await loadRows();
+  } catch (error) {
+    logisticsFormError.value = error instanceof Error ? error.message : '物流规则保存失败';
+  } finally {
+    logisticsFormSaving.value = false;
+  }
 }
 
 function openRejectModal(title: string, description: string, resourceKey: ResourceKey, row: any, action: string) {
@@ -2488,6 +2738,114 @@ const visibleRows = computed(() =>
     filterDefs.value.every((filter) => matchesFilter(row, filter.key, activeFilterValues.value[filter.key])),
   ),
 );
+
+function getSelectableId(row: any): string | number | null {
+  if (props.resourceKey === 'orders') return row.orderNo ?? null;
+  if (props.resourceKey === 'refunds') return row.refundNo ?? null;
+  if (props.resourceKey === 'withdraws') return row.withdrawNo || row.applyNo || null;
+  return row.id ?? null;
+}
+
+function isRowSelectable(row: any) {
+  if (!supportsBatch.value) return false;
+  if (props.resourceKey === 'refunds') {
+    return ['PENDING_ARBITRATION', 'MERCHANT_REPLIED'].includes(String(row.status));
+  }
+  if (props.resourceKey === 'withdraws') {
+    return String(row.status) === 'PENDING' || String(row.status) === '待审核';
+  }
+  if (props.resourceKey === 'users') {
+    return String(row.status) !== 'DISABLED' && String(row.status) !== '禁用';
+  }
+  return getSelectableId(row) != null;
+}
+
+const selectableRows = computed(() => visibleRows.value.filter((row) => isRowSelectable(row)));
+
+const isAllSelected = computed(() => {
+  const selectable = selectableRows.value;
+  if (!selectable.length) return false;
+  return selectable.every((row) => {
+    const id = getSelectableId(row);
+    return id != null && selectedIds.value.includes(id);
+  });
+});
+
+function isRowSelected(row: any) {
+  const id = getSelectableId(row);
+  return id != null && selectedIds.value.includes(id);
+}
+
+function toggleSelectRow(row: any) {
+  const id = getSelectableId(row);
+  if (id == null || !isRowSelectable(row)) return;
+  const idx = selectedIds.value.indexOf(id);
+  if (idx >= 0) {
+    selectedIds.value.splice(idx, 1);
+  } else {
+    selectedIds.value.push(id);
+  }
+}
+
+function toggleSelectAll() {
+  const selectable = selectableRows.value
+    .map((row) => getSelectableId(row))
+    .filter((id): id is string | number => id != null);
+  if (isAllSelected.value) {
+    selectedIds.value = selectedIds.value.filter((id) => !selectable.includes(id));
+  } else {
+    selectedIds.value = Array.from(new Set([...selectedIds.value, ...selectable]));
+  }
+}
+
+async function runBatchAction() {
+  if (!selectedIds.value.length || !batchActionLabel.value) return;
+  const ids = [...selectedIds.value];
+  const label = batchActionLabel.value;
+
+  try {
+    await ElMessageBox.confirm(`确定对已选的 ${ids.length} 条记录执行「${label}」吗？`, '批量操作确认', {
+      type: 'warning',
+      confirmButtonText: label,
+      cancelButtonText: '取消',
+    });
+  } catch {
+    return;
+  }
+
+  batchRunning.value = true;
+  actionError.value = '';
+  try {
+    const tasks = ids.map(async (id) => {
+      if (props.resourceKey === 'merchants') return deleteAdminMerchant(Number(id));
+      if (props.resourceKey === 'products') return deleteAdminProduct(Number(id));
+      if (props.resourceKey === 'activities') return deleteActivity(Number(id));
+      if (props.resourceKey === 'coupons') return deleteCoupon(Number(id));
+      if (props.resourceKey === 'logistics') return deleteLogisticsRule(Number(id));
+      if (props.resourceKey === 'refunds') return arbitrateRefund(String(id), 'approve');
+      if (props.resourceKey === 'withdraws') return auditWithdraw(String(id), 3);
+      if (props.resourceKey === 'users') return updateAdminUserStatus(Number(id), 'DISABLED');
+      throw new Error('不支持的批量操作');
+    });
+
+    const results = await Promise.allSettled(tasks);
+    const successCount = results.filter((item) => item.status === 'fulfilled').length;
+    const failCount = results.length - successCount;
+    selectedIds.value = [];
+    actionMessage.value =
+      failCount > 0
+        ? `批量操作完成：成功 ${successCount} 条，失败 ${failCount} 条`
+        : `批量操作成功，共处理 ${successCount} 条`;
+    ElMessage.success(actionMessage.value);
+    await loadRows();
+  } catch (error) {
+    actionError.value = error instanceof Error ? error.message : '批量操作失败';
+    ElMessage.error(actionError.value);
+  } finally {
+    batchRunning.value = false;
+  }
+}
+
 const searchSummary = computed(() => {
   const parts: string[] = [keyword.value || '全部'];
 
@@ -2510,7 +2868,7 @@ const summaryCards = computed(() => {
     ['PENDING_AUDIT', 'PENDING_REVIEW', 'PENDING_ARBITRATION'].includes(String(item.auditStatus ?? item.status)),
   ).length;
   const okCount = visibleRows.value.filter((item) =>
-    ['APPROVED', 'NORMAL', 'ON_SHELF', 'RUNNING', 'TO_SHIP', 'COMPLETED', true].includes(
+    ['APPROVED', 'NORMAL', 'ON_SHELF', 'RUNNING', 'PUBLISHED', 'TO_SHIP', 'COMPLETED', true].includes(
       item.auditStatus ?? item.status ?? item.active,
     ),
   ).length;
@@ -2535,6 +2893,13 @@ const summaryCards = computed(() => {
     { title: '风险项', value: dangerCount, note: dangerNote },
   ];
 });
+
+watch(
+  () => props.resourceKey,
+  () => {
+    selectedIds.value = [];
+  },
+);
 
 watch(
   () => route.fullPath,
@@ -2605,6 +2970,7 @@ async function loadMerchantOptions() {
 async function loadRows(): Promise<boolean> {
   loading.value = true;
   actionError.value = '';
+  selectedIds.value = [];
 
   try {
     const query = buildServerQuery();
@@ -2818,24 +3184,14 @@ async function handlePrimaryAction() {
   }
 
   if (props.resourceKey === 'logistics') {
-    const payload = collectLogisticsPayload({
+    openLogisticsFormModal({
       name: '',
       province: '全国',
-      thresholdAmount: 0,
-      freightAmount: 0,
+      thresholdAmount: '88.00',
+      freightAmount: '0.00',
       active: true,
+      isPublic: false,
     });
-    if (!payload) {
-      return;
-    }
-
-    try {
-      await createLogisticsRule(payload);
-      actionMessage.value = `物流规则「${payload.name as string}」已创建`;
-      await loadRows();
-    } catch (error) {
-      actionError.value = error instanceof Error ? error.message : '物流规则创建失败';
-    }
     return;
   }
 
@@ -2970,6 +3326,10 @@ function formatCell(key: string, row: any) {
     return formatTime(value);
   }
 
+  if (key === 'isPublic') {
+    return value ? '公共' : '-';
+  }
+
   if (typeof value === 'boolean') {
     return value ? '是' : '否';
   }
@@ -2987,6 +3347,8 @@ function statusLabel(value: string) {
     ON_SHELF: '已上架',
     OFF_SHELF: '已下架',
     DRAFT: '草稿',
+    PUBLISHED: '已发布',
+    PAUSED: '已暂停',
     RUNNING: '进行中',
     ENDED: '已结束',
     PENDING_PAY: '待支付',
@@ -3004,11 +3366,11 @@ function statusLabel(value: string) {
 function statusClass(key: string, row: any) {
   const value = String(row[key]);
 
-  if (['NORMAL', 'APPROVED', 'ON_SHELF', 'RUNNING', 'COMPLETED', 'TO_SHIP', 'ENABLED'].includes(value) || row[key] === true) {
+  if (['NORMAL', 'APPROVED', 'ON_SHELF', 'RUNNING', 'PUBLISHED', 'COMPLETED', 'TO_SHIP', 'ENABLED'].includes(value) || row[key] === true) {
     return 'ok';
   }
 
-  if (['PENDING_AUDIT', 'PENDING_PAY', 'PENDING_ARBITRATION', 'MERCHANT_REPLIED'].includes(value)) {
+  if (['PENDING_AUDIT', 'PENDING_PAY', 'PENDING_ARBITRATION', 'MERCHANT_REPLIED', 'PAUSED'].includes(value)) {
     return 'warn';
   }
 
@@ -3075,12 +3437,13 @@ function rowActions(row: any) {
         { key: 'view', label: '详情' },
         { key: 'edit', label: '编辑' },
         { key: 'copy', label: '复制' },
+        { key: 'delete', label: '删除' },
       ];
       const status = String(row.status);
       if (status === 'DRAFT' || status === 'PAUSED') {
         actions.push({ key: 'publish', label: '发布' });
       }
-      if (status === 'RUNNING') {
+      if (status === 'RUNNING' || status === 'PUBLISHED') {
         actions.push({ key: 'pause', label: '暂停' });
         actions.push({ key: 'finish', label: '结束' });
         actions.push({ key: 'forceEnd', label: '强制下线' });
@@ -3388,19 +3751,27 @@ async function handleRowAction(action: string, row: any) {
       return;
     }
 
+    if (props.resourceKey === 'activities' && action === 'delete') {
+      openDangerConfirm(
+        '删除活动',
+        `即将删除活动「${row.activityName ?? row.title ?? row.id}」，删除后列表将不再展示该活动。`,
+        '删除活动',
+        async () => {
+          await deleteActivity(Number(row.id));
+          actionMessage.value = `活动「${row.activityName ?? row.title ?? row.id}」已删除`;
+          await loadRows();
+        },
+      );
+      return;
+    }
+
     if (props.resourceKey === 'orders' && action === 'ship') {
       openRecordPanel('履约详情', row, '列表页已切换为真实履约查看入口，发货/改单请继续接入对应接口。', `/orders/${row.orderNo}`);
       return;
     }
 
     if (props.resourceKey === 'logistics' && action === 'edit') {
-      const payload = collectLogisticsPayload(row);
-      if (!payload) {
-        return;
-      }
-      await updateLogisticsRule(row.id, payload);
-      actionMessage.value = `物流规则「${row.name ?? row.ruleName ?? row.id}」已更新`;
-      await loadRows();
+      openLogisticsFormModal(row);
       return;
     }
 
