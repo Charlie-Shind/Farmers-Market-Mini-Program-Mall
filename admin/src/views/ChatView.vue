@@ -329,7 +329,9 @@ onMounted(async () => {
   await loadConversations();
 
   if (refreshApi) {
-    unregisterRefresh = refreshApi.register(() => loadConversations());
+    unregisterRefresh = refreshApi.register(() => {
+      void loadConversations();
+    });
   }
 });
 

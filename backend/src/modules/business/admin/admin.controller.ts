@@ -616,25 +616,25 @@ export class AdminController {
   }
 
   @Get('dashboard/overview')
-  getDashboardOverview(@Query() query: Record<string, string>) {
+  getDashboardOverview(@CurrentUser() user: AuthUser, @Query() query: Record<string, string>) {
     const periodDays = query.periodDays ? Number(query.periodDays) : undefined;
-    return this.platformDataService.getDashboardOverview(periodDays);
+    return this.platformDataService.getDashboardOverview(periodDays, user);
   }
 
   @Get('dashboard/sales')
-  getDashboardSales(@Query() query: Record<string, string>) {
+  getDashboardSales(@CurrentUser() user: AuthUser, @Query() query: Record<string, string>) {
     const periodDays = query.periodDays ? Number(query.periodDays) : undefined;
-    return this.platformDataService.getDashboardSales(periodDays);
+    return this.platformDataService.getDashboardSales(periodDays, user);
   }
 
   @Get('dashboard/hot-products')
-  getHotProducts() {
-    return this.platformDataService.getHotProducts();
+  getHotProducts(@CurrentUser() user: AuthUser) {
+    return this.platformDataService.getHotProducts(user);
   }
 
   @Get('dashboard/origin-sales')
-  getOriginSales() {
-    return this.platformDataService.getOriginSales();
+  getOriginSales(@CurrentUser() user: AuthUser) {
+    return this.platformDataService.getOriginSales(user);
   }
 
   @Get('leaders')

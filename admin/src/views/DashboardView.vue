@@ -100,7 +100,7 @@
       <el-card class="panel hot-products-card">
         <template #header>
           <div class="panel-head compact">
-            <h2>商品</h2>
+            <h2>{{ isMerchantAccount ? '本店热销商品' : '商品' }}</h2>
             <el-button link type="primary" @click="router.push('/products')">商品管理</el-button>
           </div>
         </template>
@@ -273,6 +273,9 @@ const periodDays = computed(() => {
   const v = Number(activePeriod.value);
   return v > 0 ? v : undefined;
 });
+const isMerchantAccount = computed(
+  () => localStorage.getItem('farm-admin-account-type') === 'MERCHANT',
+);
 
 function setPeriod(key: string) {
   activePeriod.value = key;
@@ -284,32 +287,65 @@ const chartModes: Array<{ key: ChartMetric; label: string }> = [
   { key: 'orders', label: '订单量' },
 ];
 
-const metricCards = computed(() => [
-  {
-    title: '今日成交额',
-    value: `¥${formatAmount(overview.value.salesAmount)}`,
-    note: salesTrendNote.value,
-  },
-  {
-    title: '今日订单数',
-    value: overview.value.orderCount.toLocaleString(),
-    note: toShipCount.value > 0
-      ? `<span class="mini-warn">${toShipCount.value} 单待发货</span>`
-      : '<span class="mini-muted">暂无待发货</span>',
-  },
-  {
-    title: '平台用户',
-    value: overview.value.userCount.toLocaleString(),
-    note: pendingRefundCount.value > 0
-      ? `<span class="mini-warn">${pendingRefundCount.value} 单售后待处理</span>`
-      : '<span class="mini-muted">暂无售后待处理</span>',
-  },
-  {
-    title: '入驻商户',
-    value: overview.value.merchantCount.toLocaleString(),
-    note: merchantNote.value,
-  },
-]);
+const metricCards = computed(() => {
+  if (isMerchantAccount.value) {
+    return [
+      {
+        title: '本店成交额',
+        value: `¥${formatAmount(overview.value.salesAmount)}`,
+        note: salesTrendNote.value,
+      },
+      {
+        title: '本店订单数',
+        value: overview.value.orderCount.toLocaleString(),
+        note: toShipCount.value > 0
+          ? `<span class="mini-warn">${toShipCount.value} 单待发货</span>`
+          : '<span class="mini-muted">暂无待发货</span>',
+      },
+      {
+        title: '本店客户数',
+        value: overview.value.userCount.toLocaleString(),
+        note: pendingRefundCount.value > 0
+          ? `<span class="mini-warn">${pendingRefundCount.value} 单售后待处理</span>`
+          : '<span class="mini-muted">暂无售后待处理</span>',
+      },
+      {
+        title: '本店待审商品',
+        value: pendingProductAuditCount.value.toLocaleString(),
+        note: pendingProductAuditCount.value > 0
+          ? '<span class="mini-warn">请等待平台审核</span>'
+          : '<span class="mini-muted">暂无待审商品</span>',
+      },
+    ];
+  }
+
+  return [
+    {
+      title: '今日成交额',
+      value: `¥${formatAmount(overview.value.salesAmount)}`,
+      note: salesTrendNote.value,
+    },
+    {
+      title: '今日订单数',
+      value: overview.value.orderCount.toLocaleString(),
+      note: toShipCount.value > 0
+        ? `<span class="mini-warn">${toShipCount.value} 单待发货</span>`
+        : '<span class="mini-muted">暂无待发货</span>',
+    },
+    {
+      title: '平台用户',
+      value: overview.value.userCount.toLocaleString(),
+      note: pendingRefundCount.value > 0
+        ? `<span class="mini-warn">${pendingRefundCount.value} 单售后待处理</span>`
+        : '<span class="mini-muted">暂无售后待处理</span>',
+    },
+    {
+      title: '入驻商户',
+      value: overview.value.merchantCount.toLocaleString(),
+      note: merchantNote.value,
+    },
+  ];
+});
 
 const chartSeries = computed(() =>
   salesData.value.map((item) => ({
@@ -433,42 +469,68 @@ const todoItems = computed<InsightItem[]>(() => [
   },
 ]);
 
-const riskItems = computed<InsightItem[]>(() => [
-  {
-    key: 'refunds-risk',
-    tone: pendingRefundCount.value > 0 ? 'high' : 'low',
-    title:
-      pendingRefundCount.value > 0
-        ? `售后待处理 ${pendingRefundCount.value} 单`
-        : '售后风险受控',
-    description:
-      pendingRefundCount.value > 0 ? '优先处理平台仲裁单' : '当前没有高风险售后',
-    to: '/refunds',
-    actionLabel: pendingRefundCount.value > 0 ? '下钻' : '查看',
-  },
-  {
-    key: 'merchant-risk',
-    tone: merchantAttentionCount.value > 0 ? 'mid' : 'low',
-    title:
-      merchantAttentionCount.value > 0
-        ? `${merchantAttentionCount.value} 家商户资质待处理`
-        : '商户审核稳定',
-    description:
-      merchantAttentionCount.value > 0 ? '待审 / 驳回商户需要补充资料' : '当前没有待处理商户',
-    to: '/merchants',
-    actionLabel: merchantAttentionCount.value > 0 ? '处理' : '查看',
-  },
-  {
-    key: 'activity-risk',
-    tone: draftActivityCount.value > 0 ? 'warn' : 'low',
-    title:
-      draftActivityCount.value > 0 ? `${draftActivityCount.value} 个活动待上线` : '活动排期正常',
-    description:
-      draftActivityCount.value > 0 ? '草稿活动尚未排期发布' : '当前没有未发布活动',
-    to: '/activities',
-    actionLabel: '查看',
-  },
-]);
+const riskItems = computed<InsightItem[]>(() => {
+  const items: InsightItem[] = [
+    {
+      key: 'refunds-risk',
+      tone: pendingRefundCount.value > 0 ? 'high' : 'low',
+      title:
+        pendingRefundCount.value > 0
+          ? `售后待处理 ${pendingRefundCount.value} 单`
+          : '售后风险受控',
+      description:
+        pendingRefundCount.value > 0
+          ? isMerchantAccount.value
+            ? '优先处理本店售后单'
+            : '优先处理平台仲裁单'
+          : '当前没有高风险售后',
+      to: '/refunds',
+      actionLabel: pendingRefundCount.value > 0 ? '下钻' : '查看',
+    },
+  ];
+
+  if (!isMerchantAccount.value) {
+    items.push(
+      {
+        key: 'merchant-risk',
+        tone: merchantAttentionCount.value > 0 ? 'mid' : 'low',
+        title:
+          merchantAttentionCount.value > 0
+            ? `${merchantAttentionCount.value} 家商户资质待处理`
+            : '商户审核稳定',
+        description:
+          merchantAttentionCount.value > 0 ? '待审 / 驳回商户需要补充资料' : '当前没有待处理商户',
+        to: '/merchants',
+        actionLabel: merchantAttentionCount.value > 0 ? '处理' : '查看',
+      },
+      {
+        key: 'activity-risk',
+        tone: draftActivityCount.value > 0 ? 'warn' : 'low',
+        title:
+          draftActivityCount.value > 0 ? `${draftActivityCount.value} 个活动待上线` : '活动排期正常',
+        description:
+          draftActivityCount.value > 0 ? '草稿活动尚未排期发布' : '当前没有未发布活动',
+        to: '/activities',
+        actionLabel: '查看',
+      },
+    );
+  } else {
+    items.push({
+      key: 'products-risk',
+      tone: pendingProductAuditCount.value > 0 ? 'mid' : 'low',
+      title:
+        pendingProductAuditCount.value > 0
+          ? `${pendingProductAuditCount.value} 个商品待审核`
+          : '商品审核正常',
+      description:
+        pendingProductAuditCount.value > 0 ? '本店商品等待平台审核' : '当前没有待审商品',
+      to: '/products',
+      actionLabel: '查看',
+    });
+  }
+
+  return items;
+});
 
 // ECharts Instance Management
 const chartRef = ref<HTMLDivElement | null>(null);

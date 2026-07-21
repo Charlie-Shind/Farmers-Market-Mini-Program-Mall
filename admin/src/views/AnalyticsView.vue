@@ -11,14 +11,19 @@
         <span class="deep-metric__note">近7日平均</span>
       </article>
       <article class="deep-metric-card">
-        <span class="deep-metric__label">复购率</span>
+        <span class="deep-metric__label">{{ isMerchantAccount ? '复购估算' : '复购率' }}</span>
         <strong class="deep-metric__value">{{ repurchaseRate }}</strong>
-        <span class="deep-metric__note">30日内复购用户占比</span>
+        <span class="deep-metric__note">{{ isMerchantAccount ? '基于本店客户估算' : '30日内复购用户占比' }}</span>
       </article>
-      <article class="deep-metric-card">
+      <article v-if="!isMerchantAccount" class="deep-metric-card">
         <span class="deep-metric__label">商户动销率</span>
         <strong class="deep-metric__value">{{ merchantActivationRate }}</strong>
         <span class="deep-metric__note">有订单商户占比</span>
+      </article>
+      <article v-else class="deep-metric-card">
+        <span class="deep-metric__label">本店热销品</span>
+        <strong class="deep-metric__value">{{ hotProducts.length }}</strong>
+        <span class="deep-metric__note">当前榜单商品数</span>
       </article>
       <article class="deep-metric-card deep-metric-card--export">
         <span class="deep-metric__label">数据导出</span>
@@ -69,7 +74,7 @@
       <el-card class="panel origin-card">
         <template #header>
           <div class="panel-head compact">
-            <h2>产地销售占比</h2>
+            <h2>{{ isMerchantAccount ? '本店产地销售占比' : '产地销售占比' }}</h2>
             <span>近 7 日占比统计</span>
           </div>
         </template>
@@ -92,7 +97,7 @@
       <el-card class="panel hot-products-card">
         <template #header>
           <div class="panel-head compact">
-            <h2>热销商品列表</h2>
+            <h2>{{ isMerchantAccount ? '本店热销商品' : '热销商品列表' }}</h2>
             <el-button link type="primary" @click="router.push('/products')">进入商品管理</el-button>
           </div>
         </template>
@@ -194,6 +199,9 @@ const activeMetric = ref<'sales' | 'orders'>('sales');
 const exporting = ref(false);
 const loading = ref(true);
 const loadError = ref('');
+const isMerchantAccount = computed(
+  () => localStorage.getItem('farm-admin-account-type') === 'MERCHANT',
+);
 
 // Deep business metrics
 const avgOrderValue = computed(() => {
@@ -227,33 +235,67 @@ const chartSeries = computed(() =>
   })),
 );
 
-const metricCards = computed(() => [
-  {
-    title: '总成交额',
-    value: `¥${Number(overview.value.salesAmount).toLocaleString('zh-CN', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })}`,
-    note: '近 7 日累计表现',
-  },
-  {
-    title: '总订单量',
-    value: overview.value.orderCount.toLocaleString(),
-    note: '<span class="mini-ok">履约保持稳定</span>',
-  },
-  {
-    title: '活跃用户数',
-    value: overview.value.userCount.toLocaleString(),
-    note: '平台活跃用户规模',
-  },
-  {
-    title: '入驻商家数',
-    value: overview.value.merchantCount.toLocaleString(),
-    note: merchantRiskCount.value > 0
-      ? `<span class="mini-warn">${merchantRiskCount.value} 家需关注</span>`
-      : '<span class="mini-ok">商户状态正常</span>',
-  },
-]);
+const metricCards = computed(() => {
+  if (isMerchantAccount.value) {
+    return [
+      {
+        title: '本店成交额',
+        value: `¥${Number(overview.value.salesAmount).toLocaleString('zh-CN', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}`,
+        note: '近 7 日累计表现',
+      },
+      {
+        title: '本店订单量',
+        value: overview.value.orderCount.toLocaleString(),
+        note: pendingRefundCount.value > 0
+          ? `<span class="mini-warn">${pendingRefundCount.value} 单售后待处理</span>`
+          : '<span class="mini-ok">履约保持稳定</span>',
+      },
+      {
+        title: '本店客户数',
+        value: overview.value.userCount.toLocaleString(),
+        note: '下单客户去重统计',
+      },
+      {
+        title: '本店待审商品',
+        value: productsPendingAudit.value.toLocaleString(),
+        note: productsPendingAudit.value > 0
+          ? `<span class="mini-warn">${productsPendingAudit.value} 个待审核</span>`
+          : '<span class="mini-ok">商品状态正常</span>',
+      },
+    ];
+  }
+
+  return [
+    {
+      title: '总成交额',
+      value: `¥${Number(overview.value.salesAmount).toLocaleString('zh-CN', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}`,
+      note: '近 7 日累计表现',
+    },
+    {
+      title: '总订单量',
+      value: overview.value.orderCount.toLocaleString(),
+      note: '<span class="mini-ok">履约保持稳定</span>',
+    },
+    {
+      title: '活跃用户数',
+      value: overview.value.userCount.toLocaleString(),
+      note: '平台活跃用户规模',
+    },
+    {
+      title: '入驻商家数',
+      value: overview.value.merchantCount.toLocaleString(),
+      note: merchantRiskCount.value > 0
+        ? `<span class="mini-warn">${merchantRiskCount.value} 家需关注</span>`
+        : '<span class="mini-ok">商户状态正常</span>',
+    },
+  ];
+});
 
 const riskSignals = computed(() => {
   const items: Array<{ tone: string; title: string; description: string }> = [];
@@ -261,10 +303,10 @@ const riskSignals = computed(() => {
     items.push({
       tone: 'danger',
       title: '退款率异常升高',
-      description: `${pendingRefundCount.value} 单售后待仲裁`,
+      description: `${pendingRefundCount.value} 单售后待处理`,
     });
   }
-  if (merchantRiskCount.value > 0) {
+  if (!isMerchantAccount.value && merchantRiskCount.value > 0) {
     items.push({
       tone: 'warn',
       title: '商户资质需关注',

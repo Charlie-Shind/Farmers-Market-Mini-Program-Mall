@@ -22,6 +22,7 @@ type DashboardOverview = {
   orderCount: number;
   userCount: number;
   merchantCount: number;
+  scoped?: boolean;
 };
 
 type DashboardSale = {

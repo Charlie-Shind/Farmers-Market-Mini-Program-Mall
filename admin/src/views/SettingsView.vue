@@ -267,7 +267,9 @@ let unregisterRefresh: (() => void) | null = null;
 onMounted(() => {
   void loadSystemData();
   if (refreshApi) {
-    unregisterRefresh = refreshApi.register(() => loadSystemData());
+    unregisterRefresh = refreshApi.register(() => {
+      void loadSystemData();
+    });
   }
 });
 

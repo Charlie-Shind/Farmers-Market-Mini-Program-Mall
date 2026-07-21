@@ -49,9 +49,8 @@
                 <th class="check-cell">
                   <input type="checkbox" :checked="isAllAccountsSelected" @change="toggleSelectAllAccounts" />
                 </th>
-                <th>账号</th>
-                <th>昵称</th>
                 <th>手机号</th>
+                <th>昵称</th>
                 <th>登录密码</th>
                 <th>角色</th>
                 <th>状态</th>
@@ -69,24 +68,34 @@
                     @change="toggleSelectAccount(account)"
                   />
                 </td>
-                <td data-label="账号">
-                  <strong>{{ account.username }}</strong>
-                  <span>{{ account.accountNo || '-' }}</span>
+                <td data-label="手机号">
+                  <strong>{{ account.mobile || '-' }}</strong>
                 </td>
                 <td data-label="昵称">{{ account.nickname }}</td>
-                <td data-label="手机号">{{ account.mobile || '-' }}</td>
                 <td data-label="登录密码">
                   <div class="row-actions">
-                    <code v-if="account.loginPassword">{{ account.loginPassword }}</code>
+                    <template v-if="account.loginPassword">
+                      <code>{{
+                        revealedPasswordIds.has(account.id)
+                          ? account.loginPassword
+                          : '••••••••••••'
+                      }}</code>
+                      <button
+                        class="ghost-btn"
+                        type="button"
+                        @click="toggleRevealPassword(account.id)"
+                      >
+                        {{ revealedPasswordIds.has(account.id) ? '隐藏' : '查看' }}
+                      </button>
+                      <button
+                        class="ghost-btn"
+                        type="button"
+                        @click="copyText(account.loginPassword, '密码已复制')"
+                      >
+                        复制
+                      </button>
+                    </template>
                     <span v-else>—</span>
-                    <button
-                      v-if="account.loginPassword"
-                      class="ghost-btn"
-                      type="button"
-                      @click="copyText(account.loginPassword, '密码已复制')"
-                    >
-                      复制
-                    </button>
                   </div>
                 </td>
                 <td data-label="角色">
@@ -122,7 +131,7 @@
                 </td>
               </tr>
               <tr v-if="adminAccounts.length === 0">
-                <td colspan="9" class="empty-hint">暂无管理员账号</td>
+                <td colspan="8" class="empty-hint">暂无管理员账号</td>
               </tr>
             </tbody>
           </table>
@@ -209,7 +218,7 @@
       destroy-on-close
     >
       <div style="margin-bottom: 16px; font-size: 14px; color: var(--text-muted);">
-        正在为管理员账号 <strong style="color: var(--text); font-weight: 600;">{{ editRoleDialog.username }}</strong> 分配角色，请勾选：
+        正在为管理员 <strong style="color: var(--text); font-weight: 600;">{{ editRoleDialog.mobile || editRoleDialog.username }}</strong> 分配角色，请勾选：
       </div>
       <el-checkbox-group v-model="editRoleDialog.roleCodes">
         <div style="display: flex; flex-direction: column; gap: 10px; padding: 4px 0;">
@@ -306,7 +315,7 @@
         </label>
         <label class="form-field">
           <span>初始密码</span>
-          <input v-model.trim="accountForm.password" type="password" placeholder="选填；不填则随机生成 6 位" />
+          <input v-model.trim="accountForm.password" type="password" placeholder="选填；不填则随机生成 12 位强密码" />
         </label>
 
         <div class="form-field">
@@ -476,6 +485,7 @@ const logs = ref<
 const adminAccounts = ref<AdminAccount[]>([]);
 const adminRoles = ref<AdminRole[]>([]);
 const selectedAccountIds = ref<number[]>([]);
+const revealedPasswordIds = ref<Set<number>>(new Set());
 const accountSaving = ref(false);
 const roleSaving = ref(false);
 const accountMessage = ref('');
@@ -509,6 +519,7 @@ const editRoleDialog = reactive({
   visible: false,
   adminUserId: 0,
   username: '',
+  mobile: '',
   roleCodes: [] as string[],
 });
 
@@ -567,7 +578,9 @@ let unregisterRefresh: (() => void) | null = null;
 onMounted(() => {
   void loadSystemData();
   if (refreshApi) {
-    unregisterRefresh = refreshApi.register(() => loadSystemData());
+    unregisterRefresh = refreshApi.register(() => {
+      void loadSystemData();
+    });
   }
 });
 
@@ -598,6 +611,7 @@ async function loadSystemData(): Promise<boolean> {
       };
     });
     selectedAccountIds.value = [];
+    revealedPasswordIds.value = new Set();
     return true;
   } catch (error) {
     ElMessage.error(error instanceof Error ? error.message : '刷新数据失败');
@@ -735,7 +749,7 @@ async function handleCreateAdminAccount() {
     createAccountDialog.visible = false;
     if (created.initialPassword) {
       await ElMessageBox.alert(
-        `账号：${created.username}\n初始密码：${created.initialPassword}\n\n密码也会显示在列表「登录密码」列。`,
+        `手机号：${created.mobile || created.username}\n初始密码：${created.initialPassword}\n\n密码也会显示在列表「登录密码」列。`,
         '账号已创建',
         { confirmButtonText: '我已复制', type: 'success' },
       );
@@ -762,6 +776,16 @@ async function copyText(text: string, successMessage = '已复制') {
   } catch {
     ElMessage.error('复制失败，请手动选择文本');
   }
+}
+
+function toggleRevealPassword(accountId: number) {
+  const next = new Set(revealedPasswordIds.value);
+  if (next.has(accountId)) {
+    next.delete(accountId);
+  } else {
+    next.add(accountId);
+  }
+  revealedPasswordIds.value = next;
 }
 
 async function handleSyncMerchants() {
@@ -791,11 +815,11 @@ async function handleSyncMerchants() {
     const lines = accounts
       .map(
         (item) =>
-          `${item.storeName} | ${item.username || item.mobile} | ${item.initialPassword}`,
+          `${item.storeName} | ${item.mobile || item.username} | ${item.initialPassword}`,
       )
       .join('\n');
     await ElMessageBox.alert(
-      `新建 ${result.createdCount || 0} 个，已有账号 ${result.ensuredCount || 0} 个，跳过 ${result.skippedCount || 0} 个\n\n店铺 | 登录账号 | 密码\n${lines}\n\n密码也会显示在管理员列表「登录密码」列，可随时复制。`,
+      `新建 ${result.createdCount || 0} 个，已有账号 ${result.ensuredCount || 0} 个，跳过 ${result.skippedCount || 0} 个\n\n店铺 | 手机号 | 密码\n${lines}\n\n密码也会显示在管理员列表「登录密码」列，可随时复制。`,
       '商户账号同步结果',
       { confirmButtonText: '我已复制', type: 'success', customClass: 'sync-merchant-password-dialog' },
     );
@@ -817,7 +841,7 @@ async function handleToggleAccountStatus(account: AdminAccount) {
 
   const actionText = account.status === 'NORMAL' ? '禁用' : '启用';
   try {
-    await ElMessageBox.confirm(`确定要${actionText}管理员账号 [${account.username}] 吗？`, '安全提示', {
+    await ElMessageBox.confirm(`确定要${actionText}管理员 [${account.mobile || account.username}] 吗？`, '安全提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning',
@@ -838,6 +862,7 @@ async function handleToggleAccountStatus(account: AdminAccount) {
 function handleUpdateAccountRoles(account: AdminAccount) {
   editRoleDialog.adminUserId = account.id;
   editRoleDialog.username = account.username;
+  editRoleDialog.mobile = account.mobile || '';
   editRoleDialog.roleCodes = [...account.roleCodes];
   editRoleDialog.visible = true;
 }
@@ -875,12 +900,12 @@ async function handleSaveAccountRoles() {
 async function handleResetPassword(account: AdminAccount) {
   try {
     const { value: password } = await ElMessageBox.prompt(
-      `为管理员 [${account.username}] 设置新密码。留空则随机生成 6 位密码。`,
+      `为管理员 [${account.mobile || account.username}] 设置新密码。留空则随机生成 12 位强密码。`,
       '重置密码',
       {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
-        inputPlaceholder: '选填；不填则随机生成',
+        inputPlaceholder: '选填；不填则随机生成 12 位强密码',
         inputType: 'password',
         inputValidator: (val) => {
           if (val && val.trim().length > 0 && val.trim().length < 6) {
@@ -894,13 +919,13 @@ async function handleResetPassword(account: AdminAccount) {
     const result = await resetAdminPassword(account.id, password?.trim() || undefined);
     if (result.initialPassword) {
       await ElMessageBox.alert(
-        `账号：${result.username || account.username}\n新密码：${result.initialPassword}\n\n密码也会显示在列表「登录密码」列。`,
+        `手机号：${result.mobile || account.mobile || account.username}\n新密码：${result.initialPassword}\n\n密码也会显示在列表「登录密码」列。`,
         '密码已重置',
         { confirmButtonText: '我已复制', type: 'success' },
       );
       await loadSystemData();
     } else {
-      ElMessage.success(`管理员 [${account.username}] 的密码已重置成功`);
+      ElMessage.success(`管理员 [${account.mobile || account.username}] 的密码已重置成功`);
       await loadSystemData();
     }
   } catch (error) {
@@ -1044,7 +1069,7 @@ async function handleDeleteAccount(account: AdminAccount) {
 
   try {
     await ElMessageBox.confirm(
-      `确定要删除管理员账号 [${account.username}] 吗？删除后该账号将无法再登录系统，但操作日志会保留。`,
+      `确定要删除管理员 [${account.mobile || account.username}] 吗？删除后该账号将无法再登录系统，但操作日志会保留。`,
       '安全提示',
       {
         confirmButtonText: '确定',

@@ -138,14 +138,14 @@ async function main() {
       code: 'MERCHANT_ADMIN',
       name: '商户管理员',
       permissionJson: {
-        permissionKeys: ['orders', 'products', 'withdraws', 'refunds', 'merchants'],
+        permissionKeys: ['dashboard', 'analytics', 'orders', 'products', 'withdraws', 'refunds', 'merchants'],
       },
       status: 1,
     },
     update: {
       name: '商户管理员',
       permissionJson: {
-        permissionKeys: ['orders', 'products', 'withdraws', 'refunds', 'merchants'],
+        permissionKeys: ['dashboard', 'analytics', 'orders', 'products', 'withdraws', 'refunds', 'merchants'],
       },
       status: 1,
     },

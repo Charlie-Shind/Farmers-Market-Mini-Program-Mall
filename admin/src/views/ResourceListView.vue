@@ -3505,7 +3505,7 @@ function formatCell(key: string, row: any) {
   }
 
   if (key === 'adminPassword') {
-    return value ? String(value) : (row.hasAdminAccount ? '—' : '未开通');
+    return value ? '••••••••••••' : (row.hasAdminAccount ? '—' : '未开通');
   }
 
   if (key === 'activityType') {

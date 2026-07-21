@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { randomUUID, createHash } from 'node:crypto';
+import { randomUUID, createHash, randomInt } from 'node:crypto';
 import { Prisma } from '@prisma/client';
 import { readFileSync, existsSync } from 'node:fs';
 import { join, extname, basename } from 'node:path';
@@ -94,6 +94,8 @@ type TraceTimelineItemView = {
 type AccountScope = 'USER' | 'ADMIN';
 
 const MERCHANT_ADMIN_PERMISSION_KEYS = [
+  'dashboard',
+  'analytics',
   'orders',
   'products',
   'withdraws',
@@ -217,13 +219,29 @@ export class PlatformDataService {
     return [...ADMIN_PERMISSION_KEYS];
   }
 
-  private generateRandomPassword(length = 6): string {
-    const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
-    let result = '';
-    for (let i = 0; i < length; i += 1) {
-      result += alphabet[Math.floor(Math.random() * alphabet.length)];
+  /** 生成默认登录密码：12 位，含大小写字母、数字、特殊符号 */
+  private generateRandomPassword(length = 12): string {
+    const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+    const lower = 'abcdefghijkmnopqrstuvwxyz';
+    const digits = '23456789';
+    const symbols = '!@#$%&*?_+-=';
+    const all = upper + lower + digits + symbols;
+    const pick = (pool: string) => pool[randomInt(pool.length)];
+
+    const chars = [
+      pick(upper),
+      pick(lower),
+      pick(digits),
+      pick(symbols),
+    ];
+    for (let i = chars.length; i < length; i += 1) {
+      chars.push(pick(all));
     }
-    return result;
+    for (let i = chars.length - 1; i > 0; i -= 1) {
+      const j = randomInt(i + 1);
+      [chars[i], chars[j]] = [chars[j], chars[i]];
+    }
+    return chars.join('');
   }
 
   /** 平台管理员返回 null；商户后台账号返回绑定的 merchantId */
@@ -274,6 +292,7 @@ export class PlatformDataService {
       },
       update: {
         name: '商户管理员',
+        permissionJson: { permissionKeys: [...MERCHANT_ADMIN_PERMISSION_KEYS] },
         status: 1,
       },
     });
@@ -8862,7 +8881,7 @@ export class PlatformDataService {
     const roleCodes = this.normalizeAdminRoleCodes(body.roleCodes ?? body.roleCode ?? 'ADMIN');
     const initialPassword = rawPassword
       ? (passwordHashed ? '' : rawPassword)
-      : this.generateRandomPassword(6);
+      : this.generateRandomPassword();
     const passwordForHash = rawPassword || initialPassword;
 
     if (!username) {
@@ -9018,7 +9037,7 @@ export class PlatformDataService {
     const passwordHashed = Boolean(body.passwordHashed);
     const initialPassword = rawPassword
       ? (passwordHashed ? '' : rawPassword)
-      : this.generateRandomPassword(6);
+      : this.generateRandomPassword();
     const passwordForHash = rawPassword || initialPassword;
 
     const id = BigInt(adminUserId);
@@ -9125,7 +9144,7 @@ export class PlatformDataService {
       let loginPassword = String(bound.loginPassword ?? '').trim();
       let updated = false;
       if (!loginPassword) {
-        loginPassword = this.generateRandomPassword(6);
+        loginPassword = this.generateRandomPassword();
         await this.prisma.adminUser.update({
           where: { id: bound.id },
           data: {
@@ -9173,7 +9192,7 @@ export class PlatformDataService {
     });
     const mobileForCreate = mobileOwner ? null : mobile;
 
-    const initialPassword = this.generateRandomPassword(6);
+    const initialPassword = this.generateRandomPassword();
     const admin = await this.prisma.adminUser.create({
       data: {
         accountNo: await this.generateAccountNo('ADMIN'),
@@ -11174,11 +11193,39 @@ export class PlatformDataService {
     };
   }
 
-  async getDashboardOverview(periodDays?: number) {
+  async getDashboardOverview(periodDays?: number, authUser?: AuthUser) {
     await this.withSeed();
+    const merchantScope = await this.resolveAdminMerchantScope(authUser);
 
     const since = periodDays ? new Date(Date.now() - periodDays * 24 * 60 * 60 * 1000) : undefined;
-    const orderWhere = since ? { createdAt: { gte: since } } : {};
+    const orderWhere: Prisma.OrderWhereInput = {
+      deletedAt: null,
+      ...(since ? { createdAt: { gte: since } } : {}),
+      ...(merchantScope != null ? { merchantId: BigInt(merchantScope) } : {}),
+    };
+
+    if (merchantScope != null) {
+      const [salesAmount, orderCount, buyerRows] = await Promise.all([
+        this.prisma.order.aggregate({
+          where: orderWhere,
+          _sum: { payAmount: true },
+        }),
+        this.prisma.order.count({ where: orderWhere }),
+        this.prisma.order.findMany({
+          where: orderWhere,
+          select: { userId: true },
+          distinct: ['userId'],
+        }),
+      ]);
+
+      return {
+        salesAmount: this.toMoney(salesAmount._sum.payAmount ?? 0),
+        orderCount,
+        userCount: buyerRows.length,
+        merchantCount: 1,
+        scoped: true,
+      };
+    }
 
     const [salesAmount, orderCount, userCount, merchantCount] = await Promise.all([
       this.prisma.order.aggregate({
@@ -11187,7 +11234,7 @@ export class PlatformDataService {
       }),
       this.prisma.order.count({ where: orderWhere }),
       this.prisma.user.count(),
-      this.prisma.merchant.count(),
+      this.prisma.merchant.count({ where: { deletedAt: null } }),
     ]);
 
     return {
@@ -11195,14 +11242,20 @@ export class PlatformDataService {
       orderCount,
       userCount,
       merchantCount,
+      scoped: false,
     };
   }
 
-  async getDashboardSales(periodDays?: number) {
+  async getDashboardSales(periodDays?: number, authUser?: AuthUser) {
     await this.withSeed();
+    const merchantScope = await this.resolveAdminMerchantScope(authUser);
 
     const since = periodDays ? new Date(Date.now() - periodDays * 24 * 60 * 60 * 1000) : undefined;
-    const where = since ? { createdAt: { gte: since } } : {};
+    const where: Prisma.OrderWhereInput = {
+      deletedAt: null,
+      ...(since ? { createdAt: { gte: since } } : {}),
+      ...(merchantScope != null ? { merchantId: BigInt(merchantScope) } : {}),
+    };
 
     const orders = await this.prisma.order.findMany({
       where,
@@ -11229,11 +11282,18 @@ export class PlatformDataService {
     }));
   }
 
-  async getHotProducts() {
+  async getHotProducts(authUser?: AuthUser) {
     await this.withSeed();
+    const merchantScope = await this.resolveAdminMerchantScope(authUser);
+    const merchantFilter =
+      merchantScope != null ? { merchantId: BigInt(merchantScope) } : {};
 
     const salesRows = await this.prisma.orderItem.groupBy({
       by: ['productId'],
+      where:
+        merchantScope != null
+          ? { order: { merchantId: BigInt(merchantScope), deletedAt: null } }
+          : { order: { deletedAt: null } },
       _sum: { quantity: true },
     });
 
@@ -11242,24 +11302,59 @@ export class PlatformDataService {
       salesMap.set(String(row.productId), Number(row._sum.quantity ?? 0));
     }
 
-    const products = await this.prisma.product.findMany({
-      where: { status: 1, auditStatus: 2, deletedAt: null },
-      select: {
-        id: true,
-        title: true,
-        coverUrl: true,
-        subtitle: true,
-        originPlace: true,
-        skus: {
-          select: {
-            price: true,
+    const rankedIds = [...salesRows]
+      .sort((a, b) => Number(b._sum.quantity ?? 0) - Number(a._sum.quantity ?? 0))
+      .slice(0, 10)
+      .map((row) => row.productId);
+
+    let products = rankedIds.length
+      ? await this.prisma.product.findMany({
+          where: {
+            id: { in: rankedIds },
+            status: 1,
+            auditStatus: 2,
+            deletedAt: null,
+            ...merchantFilter,
           },
-          orderBy: { id: 'asc' },
+          select: {
+            id: true,
+            title: true,
+            coverUrl: true,
+            subtitle: true,
+            originPlace: true,
+            skus: {
+              select: { price: true },
+              orderBy: { id: 'asc' },
+            },
+          },
+        })
+      : [];
+
+    // 无销量时回退为本店（或平台）在售商品
+    if (!products.length) {
+      products = await this.prisma.product.findMany({
+        where: { status: 1, auditStatus: 2, deletedAt: null, ...merchantFilter },
+        select: {
+          id: true,
+          title: true,
+          coverUrl: true,
+          subtitle: true,
+          originPlace: true,
+          skus: {
+            select: { price: true },
+            orderBy: { id: 'asc' },
+          },
         },
-      },
-      orderBy: { updatedAt: 'desc' },
-      take: 10,
-    });
+        orderBy: { updatedAt: 'desc' },
+        take: 10,
+      });
+    } else {
+      const orderIndex = new Map(rankedIds.map((id, index) => [id.toString(), index]));
+      products.sort(
+        (a, b) =>
+          (orderIndex.get(a.id.toString()) ?? 999) - (orderIndex.get(b.id.toString()) ?? 999),
+      );
+    }
 
     return products.map((product) => ({
       id: this.toNumber(product.id),
@@ -12500,23 +12595,36 @@ export class PlatformDataService {
     };
   }
 
-  async getOriginSales() {
+  async getOriginSales(authUser?: AuthUser) {
     await this.withSeed();
+    const merchantScope = await this.resolveAdminMerchantScope(authUser);
+    const merchantFilter =
+      merchantScope != null ? { merchantId: BigInt(merchantScope) } : {};
 
     const products = await this.prisma.product.findMany({
+      where: { deletedAt: null, ...merchantFilter },
       include: { skus: true },
     });
+    const productIds = products.map((item) => item.id);
 
     const orderItems = await this.prisma.orderItem.findMany({
+      where:
+        merchantScope != null
+          ? {
+              productId: { in: productIds.length ? productIds : [BigInt(-1)] },
+              order: { merchantId: BigInt(merchantScope), deletedAt: null },
+            }
+          : { order: { deletedAt: null } },
       select: {
         productId: true,
         lineAmount: true,
       },
     });
 
+    const productById = new Map(products.map((entry) => [entry.id.toString(), entry]));
     const sales = new Map<string, { originPlace: string; salesAmount: number; orderCount: number }>();
     for (const item of orderItems) {
-      const product = products.find((entry) => entry.id === item.productId);
+      const product = productById.get(item.productId.toString());
       const originPlace = this.normalizeOriginPlace(product?.originPlace) || '未知';
       const current = sales.get(originPlace) ?? {
         originPlace,

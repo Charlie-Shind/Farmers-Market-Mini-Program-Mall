@@ -123,19 +123,19 @@ export class AdminContentService {
     return this.platformDataService.auditWithdraw(user, applyNo, body);
   }
 
-  getDashboardOverview(periodDays?: number) {
-    return this.platformDataService.getDashboardOverview(periodDays);
+  getDashboardOverview(periodDays?: number, authUser?: AuthUser) {
+    return this.platformDataService.getDashboardOverview(periodDays, authUser);
   }
 
-  getDashboardSales(periodDays?: number) {
-    return this.platformDataService.getDashboardSales(periodDays);
+  getDashboardSales(periodDays?: number, authUser?: AuthUser) {
+    return this.platformDataService.getDashboardSales(periodDays, authUser);
   }
 
-  getHotProducts() {
-    return this.platformDataService.getHotProducts();
+  getHotProducts(authUser?: AuthUser) {
+    return this.platformDataService.getHotProducts(authUser);
   }
 
-  getOriginSales() {
-    return this.platformDataService.getOriginSales();
+  getOriginSales(authUser?: AuthUser) {
+    return this.platformDataService.getOriginSales(authUser);
   }
 }

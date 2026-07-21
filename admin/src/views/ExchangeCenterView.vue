@@ -368,7 +368,9 @@ const saveButtonLabel = computed(() => (forcedMode.value === 'PRODUCT' ? '保存
 onMounted(async () => {
   await Promise.all([loadSettings(), loadCatalog(), loadMerchants(), loadData()]);
   if (refreshApi) {
-    unregisterRefresh = refreshApi.register(() => loadData());
+    unregisterRefresh = refreshApi.register(() => {
+      void loadData();
+    });
   }
 });
 

@@ -299,7 +299,9 @@ const selectedPendingAmount = computed(() => {
 onMounted(() => {
   void loadData();
   if (refreshApi) {
-    const unregister = refreshApi.register(() => loadData());
+    const unregister = refreshApi.register(() => {
+      void loadData();
+    });
     onBeforeUnmount(() => unregister());
   }
 });
