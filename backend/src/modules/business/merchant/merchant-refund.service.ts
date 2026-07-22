@@ -155,7 +155,7 @@ export class MerchantRefundService {
 
     const order = await this.prisma.order.findUnique({
       where: { id: refund.orderId },
-      select: { orderStatus: true },
+      select: { orderStatus: true, orderNo: true },
     });
     if (!order || order.orderStatus === PlatformDataService.ORDER_STATUS.CANCELLED) {
       throw new BadRequestException('订单已取消，不可处理退款');
@@ -228,6 +228,21 @@ export class MerchantRefundService {
         });
       }
     });
+
+    const orderNo = order.orderNo;
+    try {
+      await this.platformDataService.notifyUserRefundResult({
+        userId: refund.userId,
+        refundNo,
+        orderNo,
+        approved: isApprove,
+        refundAmount: this.toMoney(refund.refundAmount),
+        applyReason: refund.applyReason,
+        remark,
+      });
+    } catch {
+      // 通知失败不影响主流程
+    }
 
     return {
       refundNo,

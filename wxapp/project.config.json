@@ -46,16 +46,16 @@
   "packOptions": {
     "ignore": [
       {
-        "type": "suffix",
-        "value": ".md"
+        "value": ".md",
+        "type": "suffix"
       },
       {
-        "type": "file",
-        "value": "config/env.config.example.ts"
+        "value": "config/env.config.example.ts",
+        "type": "file"
       },
       {
-        "type": "file",
-        "value": "config/env.config.example.js"
+        "value": "config/env.config.example.js",
+        "type": "file"
       }
     ],
     "include": []

@@ -1182,6 +1182,10 @@ export class PlatformDataService {
       return '已过期';
     }
 
+    if (refundStatus === 3) {
+      return '退款成功';
+    }
+
     if (refundStatus === 1 || refundStatus === 2) {
       return '售后中';
     }
@@ -1208,6 +1212,10 @@ export class PlatformDataService {
   private getUserOrderStatusEnum(orderStatus: number, payStatus: number, deliveryStatus: number, refundStatus: number, expireAt?: Date | null): string {
     if (expireAt != null && expireAt < new Date() && payStatus === 0 && orderStatus === 1) {
       return 'EXPIRED';
+    }
+
+    if (refundStatus === 3) {
+      return 'REFUND_SUCCESS';
     }
 
     if (refundStatus === 1 || refundStatus === 2) {
@@ -1242,6 +1250,11 @@ export class PlatformDataService {
       buttons.push({ key: 'invite', label: '邀请好友参团', type: 'primary' });
     }
 
+    // 退款成功：仅可查看订单详情，不再展示物流/收货/售后等操作
+    if (refundStatus === PlatformDataService.REFUND_STATUS.APPROVED) {
+      return buttons;
+    }
+
     if (refundStatus === 1 || refundStatus === 2) {
       return buttons;
     }
@@ -1254,9 +1267,7 @@ export class PlatformDataService {
       if (deliveryStatus >= PlatformDataService.DELIVERY_STATUS.SHIPPED) {
         buttons.push({ key: 'logistics', label: '查看物流', type: 'secondary' });
       }
-      if (refundStatus !== 3) {
-        buttons.push({ key: 'refund', label: '申请售后', type: 'secondary' });
-      }
+      buttons.push({ key: 'refund', label: '申请售后', type: 'secondary' });
       buttons.push({ key: 'review', label: '去评价', type: 'primary' });
       return buttons;
     }
@@ -1289,9 +1300,7 @@ export class PlatformDataService {
     }
 
     if (orderStatus === 3 || orderStatus === 4) {
-      if (refundStatus !== 3) {
-        buttons.push({ key: 'refund', label: '申请售后', type: 'secondary' });
-      }
+      buttons.push({ key: 'refund', label: '申请售后', type: 'secondary' });
       buttons.push({ key: 'review', label: '去评价', type: 'primary' });
     }
 
@@ -1400,7 +1409,85 @@ export class PlatformDataService {
       return 'REJECTED';
     }
 
-    return 'PENDING_MERCHANT';
+    if (status === 2) {
+      return 'MERCHANT_REPLIED';
+    }
+
+    return 'PENDING_ARBITRATION';
+  }
+
+  private getRefundStatusText(status: number): string {
+    if (status === 3) {
+      return '已通过';
+    }
+
+    if (status === 4) {
+      return '已驳回';
+    }
+
+    if (status === 2) {
+      return '商家已回复';
+    }
+
+    return '待审核';
+  }
+
+  private normalizeRefundImages(value: unknown): string[] {
+    if (!Array.isArray(value)) {
+      return [];
+    }
+    return value
+      .filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+      .map((url) => this.resolvePublicUrl(url) ?? url);
+  }
+
+  async notifyUserRefundResult(params: {
+    userId: bigint | number;
+    refundNo: string;
+    orderNo: string;
+    approved: boolean;
+    refundAmount: string;
+    applyReason?: string | null;
+    remark?: string | null;
+  }) {
+    const title = params.approved ? '退款成功' : '退款申请已驳回';
+    const remarkText = String(params.remark ?? '').trim();
+    const rawSummary = params.approved
+      ? `订单 ${params.orderNo} 退款 ¥${params.refundAmount} 已处理完成，款项将原路退回`
+      : `订单 ${params.orderNo} 的退款申请未通过${remarkText ? `，原因：${remarkText}` : ''}`;
+    const summary = rawSummary.length > 255 ? `${rawSummary.slice(0, 252)}...` : rawSummary;
+
+    const message = await this.prisma.systemMessage.create({
+      data: {
+        type: 'NOTIFICATION',
+        title,
+        summary,
+        contentType: 'TEXT',
+        contentJson: {
+          refundNo: params.refundNo,
+          orderNo: params.orderNo,
+          approved: params.approved,
+          refundAmount: params.refundAmount,
+          applyReason: params.applyReason ?? null,
+          remark: remarkText || null,
+          processedAt: this.now().toISOString(),
+        } as Prisma.InputJsonValue,
+        senderType: 'SYSTEM',
+        bizType: 'REFUND',
+        bizId: params.refundNo,
+        publishAt: this.now(),
+        status: 'PUBLISHED',
+      },
+    });
+
+    await this.prisma.userMessage.create({
+      data: {
+        userId: BigInt(params.userId),
+        messageId: message.id,
+        isRead: false,
+        deliveredAt: this.now(),
+      },
+    });
   }
 
   private getWithdrawStatusLabel(status: number): string {
@@ -5943,19 +6030,59 @@ export class PlatformDataService {
     const page = this.normalizePage(query.page);
     const pageSize = this.normalizePageSize(query.pageSize);
     const keyword = String(query.keyword ?? '').trim();
+    const statusFilter = String(query.status ?? query.type ?? '').trim().toUpperCase();
+
+    const andFilters: Prisma.OrderWhereInput[] = [];
+
+    if (keyword) {
+      andFilters.push({
+        OR: [
+          { orderNo: { contains: keyword } },
+          { remark: { contains: keyword } },
+        ],
+      });
+    }
+
+    if (statusFilter === 'PENDING_PAY' || statusFilter === 'PAY') {
+      andFilters.push({
+        payStatus: 0,
+        orderStatus: PlatformDataService.ORDER_STATUS.PENDING,
+        OR: [{ expireAt: null }, { expireAt: { gt: this.now() } }],
+      });
+    } else if (statusFilter === 'PENDING_SHIP' || statusFilter === 'SHIP') {
+      andFilters.push({
+        payStatus: 1,
+        deliveryStatus: { in: [0, 1] },
+        orderStatus: { in: [PlatformDataService.ORDER_STATUS.PENDING, PlatformDataService.ORDER_STATUS.ACCEPTED] },
+        refundStatus: { in: [0, 4] },
+      });
+    } else if (statusFilter === 'PENDING_RECEIVE' || statusFilter === 'RECEIVE') {
+      andFilters.push({
+        payStatus: 1,
+        deliveryStatus: 2,
+        orderStatus: { not: PlatformDataService.ORDER_STATUS.COMPLETED },
+        refundStatus: { in: [0, 4] },
+      });
+    } else if (statusFilter === 'REFUNDING' || statusFilter === 'REFUND' || statusFilter === 'AFTER_SALE') {
+      andFilters.push({
+        refundStatus: { in: [1, 2] },
+      });
+    } else if (statusFilter === 'COMPLETED' || statusFilter === 'DONE') {
+      andFilters.push({
+        orderStatus: PlatformDataService.ORDER_STATUS.COMPLETED,
+      });
+    } else if (statusFilter === 'CANCELLED') {
+      andFilters.push({
+        orderStatus: PlatformDataService.ORDER_STATUS.CANCELLED,
+      });
+    }
 
     const where: Prisma.OrderWhereInput = {
       userId: user.id,
+      deletedAt: null,
       // 只返回子订单和普通订单（拼团等），不返回父订单聚合记录
       isParent: false,
-      ...(keyword
-          ? {
-            OR: [
-              { orderNo: { contains: keyword } },
-              { remark: { contains: keyword } },
-            ],
-          }
-          : {}),
+      ...(andFilters.length ? { AND: andFilters } : {}),
     };
 
     const [total, items] = await Promise.all([
@@ -6033,6 +6160,30 @@ export class PlatformDataService {
     }
 
     const groupBuy = await this.getOrderGroupBuySummary(order.groupBuyId);
+    const latestRefund = await this.prisma.refundApply.findFirst({
+      where: { orderId: order.id, deletedAt: null },
+      orderBy: { createdAt: 'desc' },
+    });
+    const rejectReason = latestRefund
+      ? String(latestRefund.adminRemark ?? latestRefund.merchantRemark ?? '').trim() || null
+      : null;
+    const refundInfo = latestRefund
+      ? {
+          refundNo: latestRefund.refundNo,
+          applyType: latestRefund.applyType,
+          applyTypeLabel: latestRefund.applyType === 2 ? '退货退款' : '仅退款',
+          applyReason: latestRefund.applyReason,
+          applyImages: this.normalizeRefundImages(latestRefund.applyImages),
+          refundAmount: this.toMoney(latestRefund.refundAmount),
+          status: latestRefund.status,
+          statusLabel: this.getRefundStatusLabel(latestRefund.status),
+          rejectReason,
+          merchantRemark: latestRefund.merchantRemark,
+          adminRemark: latestRefund.adminRemark,
+          processedAt: this.toIso(latestRefund.processedAt),
+          createdAt: this.toIso(latestRefund.createdAt),
+        }
+      : null;
 
     return {
       id: this.toNumber(order.id),
@@ -6062,6 +6213,7 @@ export class PlatformDataService {
       deliveryStatus: order.deliveryStatus,
       refundStatus: order.refundStatus,
       afterSaleStatus: order.refundStatus,
+      refund: refundInfo,
       groupBuyId: order.groupBuyId != null ? this.toNumber(order.groupBuyId) : null,
       groupBuy,
       expireAt: this.toIso(order.expireAt),
@@ -10127,6 +10279,9 @@ export class PlatformDataService {
       ...(keyword
           ? {
             OR: [
+              ...(Number.isFinite(Number(keyword)) && Number(keyword) > 0
+                ? [{ id: BigInt(Math.floor(Number(keyword))) }]
+                : []),
               { title: { contains: keyword } },
               { subtitle: { contains: keyword } },
               { merchant: { storeName: { contains: keyword } } },
@@ -10278,7 +10433,13 @@ export class PlatformDataService {
         userName: refund.user.nickname ?? refund.user.mobile ?? '用户',
         merchantName: refund.merchant.storeName,
         amount: this.toMoney(refund.refundAmount),
+        applyType: refund.applyType,
+        applyReason: refund.applyReason,
+        userEvidence: this.normalizeRefundImages(refund.applyImages),
+        merchantRemark: refund.merchantRemark,
+        adminRemark: refund.adminRemark,
         status: this.getRefundStatusLabel(refund.status),
+        statusText: this.getRefundStatusText(refund.status),
         createdAt: refund.createdAt.toISOString().slice(0, 16).replace('T', ' '),
       })),
     };
@@ -12944,6 +13105,15 @@ export class PlatformDataService {
                 pointsRedeemEnabled: String(map.get('pointsRedeemEnabled') ?? 'true') !== 'false',
                 pointsEarnRate: map.get('pointsEarnRate') ?? '1',
                 pointsRedeemRate: map.get('pointsRedeemRate') ?? '100',
+                logisticsCompanies: (() => {
+                  try {
+                    return this.normalizeLogisticsCompanies(
+                      map.get('logisticsCompanies') ? JSON.parse(String(map.get('logisticsCompanies'))) : null,
+                    );
+                  } catch {
+                    return this.getDefaultLogisticsCompanies();
+                  }
+                })(),
                 items: settings.map((item) => ({
                   key: item.key,
                   value: item.value,
@@ -13537,7 +13707,7 @@ export class PlatformDataService {
 
     const order = await this.prisma.order.findUnique({
       where: { id: refund.orderId },
-      select: { orderStatus: true },
+      select: { orderStatus: true, orderNo: true },
     });
     if (!order || order.orderStatus === PlatformDataService.ORDER_STATUS.CANCELLED) {
       throw new BadRequestException('订单已取消，不可仲裁退款');
@@ -13606,6 +13776,22 @@ export class PlatformDataService {
       action: body.action ?? 'approve',
       remark: body.remark ?? '',
     });
+
+    const orderNo = order.orderNo;
+    const remark = typeof body.remark === 'string' ? body.remark : '';
+    try {
+      await this.notifyUserRefundResult({
+        userId: refund.userId,
+        refundNo,
+        orderNo,
+        approved: isApprove,
+        refundAmount: this.toMoney(refund.refundAmount),
+        applyReason: refund.applyReason,
+        remark,
+      });
+    } catch {
+      // 通知失败不影响主流程
+    }
 
     return {
       refundNo,
@@ -14073,10 +14259,15 @@ export class PlatformDataService {
         where: { userId: user.id },
         _sum: { points: true },
       }),
-      this.prisma.order.groupBy({
-        by: ['orderStatus', 'refundStatus'],
-        where: { userId: user.id, deletedAt: null },
-        _count: { _all: true },
+      this.prisma.order.findMany({
+        where: { userId: user.id, deletedAt: null, isParent: false },
+        select: {
+          orderStatus: true,
+          payStatus: true,
+          deliveryStatus: true,
+          refundStatus: true,
+          expireAt: true,
+        },
       }),
       this.prisma.userCoupon.count({
         where: { userId: user.id, status: 'RECEIVED', coupon: { deletedAt: null } },
@@ -14105,24 +14296,39 @@ export class PlatformDataService {
       refunding: 0,
       totalCompleted: 0,
     };
+    const now = new Date();
     for (const row of orderRows) {
-      const count = Number(row._count._all ?? 0);
-      const refunding = row.refundStatus === 1 || row.refundStatus === 2;
-      switch (row.orderStatus) {
-        case 1:
-          orders.pendingPay += count;
+      const statusEnum = this.getUserOrderStatusEnum(
+        row.orderStatus,
+        row.payStatus,
+        row.deliveryStatus,
+        row.refundStatus,
+        row.expireAt,
+      );
+      // 已过期但未落库取消的待支付单，不计入待付款角标
+      if (
+        row.payStatus === 0 &&
+        row.orderStatus === PlatformDataService.ORDER_STATUS.PENDING &&
+        row.expireAt != null &&
+        row.expireAt < now
+      ) {
+        continue;
+      }
+      switch (statusEnum) {
+        case 'PENDING_PAY':
+          orders.pendingPay += 1;
           break;
-        case 2:
-          if (refunding) orders.refunding += count;
-          else orders.pendingShip += count;
+        case 'PENDING_SHIP':
+          orders.pendingShip += 1;
           break;
-        case 3:
-          if (refunding) orders.refunding += count;
-          else orders.pendingReceive += count;
+        case 'PENDING_RECEIVE':
+          orders.pendingReceive += 1;
           break;
-        case 4:
-          orders.totalCompleted += count;
-          orders.pendingReview += count;
+        case 'REFUNDING':
+          orders.refunding += 1;
+          break;
+        case 'COMPLETED':
+          orders.totalCompleted += 1;
           break;
         default:
           break;
@@ -16016,27 +16222,32 @@ export class PlatformDataService {
       include: { user: true, merchant: true, order: true },
     });
     if (!refund) throw new NotFoundException('退款申请不存在');
+    const applyImages = this.normalizeRefundImages(refund.applyImages);
     return {
       refundNo: refund.refundNo,
       orderNo: refund.order.orderNo,
-      userName: refund.user.nickname ?? '',
+      userName: refund.user.nickname ?? refund.user.mobile ?? '用户',
       merchantName: refund.merchant.storeName,
       amount: this.toMoney(refund.refundAmount),
       applyType: refund.applyType,
+      applyTypeLabel: refund.applyType === 2 ? '退货退款' : '仅退款',
       applyReason: refund.applyReason,
-      applyImages: refund.applyImages ?? [],
-      status: refund.status,
-      statusLabel: this.getRefundStatusLabel(refund.status),
+      applyImages,
+      userEvidence: applyImages,
+      status: this.getRefundStatusLabel(refund.status),
+      statusText: this.getRefundStatusText(refund.status),
+      statusCode: refund.status,
+      statusLabel: this.getRefundStatusText(refund.status),
       merchantRemark: refund.merchantRemark,
       adminRemark: refund.adminRemark,
-      createdAt: refund.createdAt.toISOString(),
-      processedAt: refund.processedAt?.toISOString() ?? null,
+      createdAt: refund.createdAt.toISOString().slice(0, 16).replace('T', ' '),
+      processedAt: refund.processedAt?.toISOString().slice(0, 16).replace('T', ' ') ?? null,
     };
   }
 
   // ====== 物流公司 ======
 
-  getLogisticsCompanies() {
+  private getDefaultLogisticsCompanies() {
     return [
       { code: 'SF', name: '顺丰速运' },
       { code: 'JD', name: '京东物流' },
@@ -16046,5 +16257,52 @@ export class PlatformDataService {
       { code: 'YUNDA', name: '韵达快递' },
       { code: 'EMS', name: 'EMS' },
     ];
+  }
+
+  private normalizeLogisticsCompanies(raw: unknown): Array<{ code: string; name: string }> {
+    const defaults = this.getDefaultLogisticsCompanies();
+    if (!Array.isArray(raw)) {
+      return defaults;
+    }
+    const items = raw
+      .map((item, index) => {
+        if (typeof item === 'string') {
+          const name = item.trim();
+          if (!name) return null;
+          return {
+            code: `C${index + 1}`,
+            name,
+          };
+        }
+        if (item && typeof item === 'object') {
+          const record = item as Record<string, unknown>;
+          const name = String(record.name ?? record.label ?? '').trim();
+          if (!name) return null;
+          const codeRaw = String(record.code ?? '').trim().toUpperCase();
+          return {
+            code: codeRaw || `C${index + 1}`,
+            name,
+          };
+        }
+        return null;
+      })
+      .filter((item): item is { code: string; name: string } => item != null);
+
+    return items.length ? items : defaults;
+  }
+
+  async getLogisticsCompanies() {
+    await this.withSeed();
+    const setting = await this.prisma.systemSetting.findUnique({
+      where: { key: 'logisticsCompanies' },
+    });
+    if (!setting?.value) {
+      return this.getDefaultLogisticsCompanies();
+    }
+    try {
+      return this.normalizeLogisticsCompanies(JSON.parse(setting.value));
+    } catch {
+      return this.getDefaultLogisticsCompanies();
+    }
   }
 }

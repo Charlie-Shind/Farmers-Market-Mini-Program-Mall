@@ -3,7 +3,7 @@
     "es6": true,
     "postcss": true,
     "minified": true,
-    "uglifyFileName": false,
+    "uglifyFileName": true,
     "enhance": true,
     "packNpmRelationList": [],
     "babelSetting": {
@@ -12,27 +12,38 @@
       "outputPath": ""
     },
     "useCompilerPlugins": false,
-    "minifyWXML": true
+    "minifyWXML": true,
+    "compileWorklet": false,
+    "uploadWithSourceMap": true,
+    "packNpmManually": false,
+    "minifyWXSS": true,
+    "localPlugins": false,
+    "disableUseStrict": false,
+    "condition": false,
+    "swc": false,
+    "disableSWC": true,
+    "ignoreUploadUnusedFiles": true
   },
   "compileType": "miniprogram",
   "simulatorPluginLibVersion": {},
   "packOptions": {
     "ignore": [
       {
-        "type": "suffix",
-        "value": ".md"
+        "value": ".md",
+        "type": "suffix"
       },
       {
-        "type": "file",
-        "value": "config/env.config.example.ts"
+        "value": "config/env.config.example.ts",
+        "type": "file"
       },
       {
-        "type": "file",
-        "value": "config/env.config.example.js"
+        "value": "config/env.config.example.js",
+        "type": "file"
       }
     ],
     "include": []
   },
   "appid": "wx69b18ac09ffc0427",
-  "editorSetting": {}
+  "editorSetting": {},
+  "libVersion": "3.16.2"
 }

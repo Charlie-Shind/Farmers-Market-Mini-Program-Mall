@@ -265,6 +265,28 @@
   padding: 10px;
 }
 
+.filter-field--search {
+  grid-column: span 2;
+  min-width: 280px;
+}
+
+.filter-search {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.filter-search input {
+  flex: 1;
+  min-width: 0;
+}
+
+.filter-search__btn {
+  height: 36px;
+  padding: 0 14px;
+  white-space: nowrap;
+}
+
 .filter-actions,
 .batch-actions,
 .top-actions-inline {
@@ -429,6 +451,7 @@
   background: var(--success-bg);
   border: 1px solid #c5dfc9;
   color: var(--success);
+  margin: 0;
 }
 
 .empty-state {

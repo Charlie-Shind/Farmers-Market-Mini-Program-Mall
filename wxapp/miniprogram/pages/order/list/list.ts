@@ -19,6 +19,7 @@ type OrderStatusKey =
   | 'CANCELLED'
   | 'EXPIRED'
   | 'REFUNDING'
+  | 'REFUND_SUCCESS'
   | 'AFTER_SALE'
   | 'GROUP_BUYING'
   | 'GROUP_FAILED'
@@ -28,10 +29,17 @@ const ORDER_TAB_KEYS = ['all', 'pay', 'groupBuying', 'ship', 'receive', 'comment
 type OrderTabKey = (typeof ORDER_TAB_KEYS)[number];
 
 function buildOrderActionButtons(order: any) {
+  const refundStatus = Number(order?.afterSaleStatus ?? order?.refundStatus ?? 0);
+  const statusEnum = String(order?.statusEnum || order?.orderStatus || '').toUpperCase();
+  const statusLabel = String(order?.statusLabel || order?.status || '').trim();
+
+  // 退款成功：不展示物流/收货/售后等操作，仅可点进订单详情
+  if (refundStatus === 3 || statusEnum === 'REFUND_SUCCESS' || statusLabel === '退款成功') {
+    return [];
+  }
+
   const backendActionButtons = Array.isArray(order?.actionButtons) ? order.actionButtons : [];
   const hasCancelAfterSale = backendActionButtons.some((item: any) => item?.key === 'cancelAfterSale');
-  const statusLabel = String(order?.statusLabel || order?.status || '').trim();
-  const refundStatus = Number(order?.afterSaleStatus ?? order?.refundStatus ?? 0);
   const shouldShowCancelAfterSale =
     statusLabel === '售后中' ||
     statusLabel === '退款申请中' ||
@@ -70,6 +78,8 @@ function formatOrderDisplayStatus(order: any, normalizedStatus: OrderStatusKey):
     case 'REFUNDING':
     case 'AFTER_SALE':
       return '售后中';
+    case 'REFUND_SUCCESS':
+      return '退款成功';
     case 'CANCELLED':
       return '已取消';
     case 'EXPIRED':
@@ -85,6 +95,24 @@ function formatOrderDisplayStatus(order: any, normalizedStatus: OrderStatusKey):
 
 function normalizeOrderStatus(order: any): OrderStatusKey {
   if (!order) return 'UNKNOWN';
+
+  const refundStatus = Number(order?.afterSaleStatus ?? order?.refundStatus ?? 0);
+  if (refundStatus === 3) {
+    return 'REFUND_SUCCESS';
+  }
+  if (refundStatus === 1 || refundStatus === 2) {
+    return 'REFUNDING';
+  }
+
+  // 拼团优先：进行中的拼团不应归入待付款/待发货角标逻辑
+  const gb = order.groupBuy;
+  if (gb && gb.status === 'OPEN') {
+    return 'GROUP_BUYING';
+  }
+  if (gb && gb.status === 'FAILED') {
+    return 'GROUP_FAILED';
+  }
+
   if (typeof order.statusEnum === 'string' && order.statusEnum.trim()) {
     const upper = order.statusEnum.toUpperCase();
     if (
@@ -96,21 +124,13 @@ function normalizeOrderStatus(order: any): OrderStatusKey {
       upper === 'CANCELLED' ||
       upper === 'EXPIRED' ||
       upper === 'REFUNDING' ||
+      upper === 'REFUND_SUCCESS' ||
       upper === 'AFTER_SALE' ||
       upper === 'GROUP_BUYING' ||
       upper === 'GROUP_FAILED'
     ) {
       return upper as OrderStatusKey;
     }
-  }
-
-  // 拼团订单特殊处理：未支付/已支付但拼团未完成时
-  const gb = order.groupBuy;
-  if (gb && gb.status === 'OPEN') {
-    return 'GROUP_BUYING';
-  }
-  if (gb && gb.status === 'FAILED') {
-    return 'GROUP_FAILED';
   }
 
   if (typeof order.orderStatus === 'string') {
@@ -170,6 +190,9 @@ function normalizeOrderStatus(order: any): OrderStatusKey {
   if (status === 'REFUNDING' || status === '售后中' || status === 5 || status === '5') {
     return 'REFUNDING';
   }
+  if (status === 'REFUND_SUCCESS' || status === '退款成功') {
+    return 'REFUND_SUCCESS';
+  }
   if (status === 'AFTER_SALE' || status === '售后') {
     return 'AFTER_SALE';
   }
@@ -188,10 +211,6 @@ function normalizeOrderStatus(order: any): OrderStatusKey {
       return 'PENDING_COMMENT';
     }
     return 'PENDING_SHIP';
-  }
-
-  if (order.afterSaleStatus === 1 || order.afterSaleStatus === 3) {
-    return 'AFTER_SALE';
   }
 
   return 'UNKNOWN';
@@ -257,13 +276,48 @@ Component({
           this.setData({ loadingMore: true });
         }
 
-        const res = await fetchOrders({ page, pageSize: this.data.pageSize });
+        const statusQueryMap: Partial<Record<OrderTabKey, string>> = {
+          pay: 'PENDING_PAY',
+          ship: 'PENDING_SHIP',
+          receive: 'PENDING_RECEIVE',
+          done: 'COMPLETED',
+          refund: 'REFUNDING',
+        };
+        const status = statusQueryMap[activeTab];
+        const res = await fetchOrders({
+          page,
+          pageSize: this.data.pageSize,
+          ...(status ? { status } : {}),
+        });
         const items = (res.items || []).map((item: any) => ({
           ...item,
           actionButtons: buildOrderActionButtons(item),
           normalizedStatus: normalizeOrderStatus(item),
           displayStatus: formatOrderDisplayStatus(item, normalizeOrderStatus(item)),
         }));
+        // 服务端已按状态筛选时，直接使用返回列表；全部/拼团等仍在本地过滤
+        let displayItems = items;
+        if (activeTab === 'groupBuying') {
+          displayItems = items.filter((o: any) => o.normalizedStatus === 'GROUP_BUYING');
+        } else if (activeTab === 'comment') {
+          displayItems = items.filter((o: any) => o.normalizedStatus === 'PENDING_COMMENT');
+        } else if (!status && activeTab !== 'all' && activeTab !== 'orders') {
+          displayItems = items.filter((o: any) => {
+            if (activeTab === 'pay') return o.normalizedStatus === 'PENDING_PAY';
+            if (activeTab === 'ship') return o.normalizedStatus === 'PENDING_SHIP';
+            if (activeTab === 'receive') return o.normalizedStatus === 'PENDING_RECEIVE';
+            if (activeTab === 'done') return o.normalizedStatus === 'COMPLETED';
+            if (activeTab === 'refund') {
+              return (
+                o.normalizedStatus === 'REFUNDING' ||
+                o.normalizedStatus === 'AFTER_SALE' ||
+                o.normalizedStatus === 'REFUND_SUCCESS'
+              );
+            }
+            return true;
+          });
+        }
+
         const mergedOrders = reset ? items : [...this.data.allOrders, ...items];
         const serverPageSize = Number((res as any).pageSize) || this.data.pageSize;
         const total = Number(res.total);
@@ -274,11 +328,11 @@ Component({
 
         this.setData({
           allOrders: mergedOrders,
+          orders: reset ? displayItems : [...this.data.orders, ...displayItems],
           total: Number.isFinite(total) ? total : mergedOrders.length,
           page: page + 1,
           noMore,
         });
-        this.applyFilter(activeTab);
       } catch (err) {
         console.error('Failed to load orders:', err);
         if (reset) {
@@ -295,34 +349,14 @@ Component({
       }
     },
     applyFilter(this: any, activeTab: OrderTabKey = this.data.activeTab) {
-      const { allOrders } = this.data;
-      let orders = allOrders;
-      if (activeTab === 'pay') {
-        orders = allOrders.filter((o: any) => o.normalizedStatus === 'PENDING_PAY');
-      } else if (activeTab === 'groupBuying') {
-        orders = allOrders.filter((o: any) => o.normalizedStatus === 'GROUP_BUYING');
-      } else if (activeTab === 'ship') {
-        orders = allOrders.filter((o: any) => o.normalizedStatus === 'PENDING_SHIP');
-      } else if (activeTab === 'receive') {
-        orders = allOrders.filter((o: any) => o.normalizedStatus === 'PENDING_RECEIVE');
-      } else if (activeTab === 'comment') {
-        orders = allOrders.filter((o: any) => o.normalizedStatus === 'PENDING_COMMENT');
-      } else if (activeTab === 'done') {
-        orders = allOrders.filter((o: any) => o.normalizedStatus === 'COMPLETED');
-      } else if (activeTab === 'refund') {
-        orders = allOrders.filter(
-          (o: any) => o.normalizedStatus === 'REFUNDING' || o.normalizedStatus === 'AFTER_SALE',
-        );
-      }
-
-      this.setData({ orders });
+      void this.loadOrders(true, activeTab);
     },
     setTab(this: any, e: WechatMiniprogram.BaseEvent) {
       const { key } = e.currentTarget.dataset as { key?: string };
       if (!key) return;
       const nextTab = (ORDER_TAB_KEYS as readonly string[]).includes(key) ? (key as OrderTabKey) : 'all';
       this.setData({ activeTab: nextTab }, () => {
-        this.applyFilter(nextTab);
+        void this.loadOrders(true, nextTab);
       });
     },
     loadMore(this: any) {

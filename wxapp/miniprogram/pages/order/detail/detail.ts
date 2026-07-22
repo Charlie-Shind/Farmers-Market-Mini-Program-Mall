@@ -113,6 +113,21 @@ type OrderDetail = {
     id: number;
     storeName: string;
   };
+  refund?: {
+    refundNo: string;
+    applyType: number;
+    applyTypeLabel?: string;
+    applyReason: string;
+    applyImages?: string[];
+    refundAmount: string;
+    status: number;
+    statusLabel?: string;
+    rejectReason?: string | null;
+    merchantRemark?: string | null;
+    adminRemark?: string | null;
+    processedAt?: string | null;
+    createdAt?: string;
+  } | null;
 };
 
 function formatDateTime(value?: string) {
@@ -217,12 +232,18 @@ const STATUS_SUB_LABELS: Record<string, string> = {
   '退款成功': '退款已同意，退款金额已原路退回',
 };
 
-function getStatusSubLabel(statusLabel: string, refundStatus = 0): string {
-  if (refundStatus === 4 && (statusLabel === '待发货' || statusLabel === '等待商家发货')) {
-    return '退款被驳回，等待商家配货发货';
-  }
-  if (refundStatus === 4 && (statusLabel === '待收货' || statusLabel === '商品已发货' || statusLabel === '已发货')) {
-    return '退款被驳回，商品正在路上，请注意查收';
+function getStatusSubLabel(statusLabel: string, refundStatus = 0, rejectReason = ''): string {
+  if (refundStatus === 4) {
+    if (rejectReason) {
+      return `退款被驳回：${rejectReason}`;
+    }
+    if (statusLabel === '待发货' || statusLabel === '等待商家发货') {
+      return '退款被驳回，等待商家配货发货';
+    }
+    if (statusLabel === '待收货' || statusLabel === '商品已发货' || statusLabel === '已发货') {
+      return '退款被驳回，商品正在路上，请注意查收';
+    }
+    return '退款申请已被驳回';
   }
   return STATUS_SUB_LABELS[statusLabel] || '';
 }
@@ -232,6 +253,7 @@ function getStatusIcon(statusLabel: string): string {
   if (['待发货', '等待商家发货', '待接单', '等待商家接单'].includes(statusLabel)) return 'package';
   if (['待收货', '商品已发货', '已发货', '运输中'].includes(statusLabel)) return 'truck';
   if (['退款申请中', '售后中'].includes(statusLabel)) return 'wallet';
+  if (statusLabel === '退款成功') return 'shield';
   if (['订单已取消', '已取消', '拼团失败'].includes(statusLabel)) return 'close';
   return 'shield';
 }
@@ -629,10 +651,18 @@ Component({
           colorClass = 'banner--gold';
         } else if (normalizedBackendStatusLabel === '售后中' || normalizedBackendStatusLabel === '退款申请中') {
           colorClass = 'banner--gold';
+        } else if (normalizedBackendStatusLabel === '退款成功') {
+          colorClass = 'banner--gray';
         }
         const refundStatus = Number(order.afterSaleStatus ?? order.refundStatus ?? 0);
-        const statusSubLabel = getStatusSubLabel(normalizedBackendStatusLabel, refundStatus);
+        const rejectReason = String(order.refund?.rejectReason ?? '').trim();
+        let statusSubLabel = getStatusSubLabel(normalizedBackendStatusLabel, refundStatus, rejectReason);
+        if ((normalizedBackendStatusLabel === '售后中' || normalizedBackendStatusLabel === '退款申请中') && order.refund?.applyReason) {
+          statusSubLabel = `申请原因：${order.refund.applyReason}`;
+        }
         const statusSteps = buildStatusSteps(order, normalizedBackendStatusLabel);
+        const backendHasActions = backendActionButtons.length > 0;
+        const isRefundSuccess = normalizedBackendStatusLabel === '退款成功' || refundStatus === 3;
         this.setData({
           statusLabel: normalizedBackendStatusLabel,
           statusSubLabel,
@@ -642,8 +672,8 @@ Component({
           statusBgUrl: getStatusBgUrl(colorClass),
           statusSteps,
           statusProgressWidth: getStatusProgressWidth(statusSteps),
-          hasActionButtons: backendActionButtons.length > 0 || normalizedBackendStatusLabel === '售后中' || normalizedBackendStatusLabel === '退款申请中',
-          actionButtons: backendActionButtons,
+          hasActionButtons: !isRefundSuccess && (backendHasActions || normalizedBackendStatusLabel === '售后中' || normalizedBackendStatusLabel === '退款申请中'),
+          actionButtons: isRefundSuccess ? [] : backendActionButtons,
           groupBuyProgress,
           groupBuyProgressText,
           groupBuySlots,
@@ -657,6 +687,10 @@ Component({
       const refundStatus = Number(order.afterSaleStatus ?? order.refundStatus ?? 0);
       const statusCode = String(order.orderStatus || '').toUpperCase();
       const statusText = String(order.status || '').trim();
+      const rejectReason = String(order.refund?.rejectReason ?? '').trim();
+      const rejectedSubLabel = rejectReason
+        ? `退款被驳回：${rejectReason}`
+        : '';
 
       let statusLabel = statusText || String(order.orderStatus || '未知状态');
       let statusSubLabel = '';
@@ -680,9 +714,11 @@ Component({
         statusIcon = 'close';
         statusColorClass = 'banner--gray';
         hasActionButtons = false;
-      } else if (refundStatus === 1) {
+      } else if (refundStatus === 1 || refundStatus === 2) {
         statusLabel = '退款申请中';
-        statusSubLabel = '退款申请已提交，等待商家审核';
+        statusSubLabel = order.refund?.applyReason
+          ? `申请原因：${order.refund.applyReason}`
+          : '退款申请已提交，等待商家审核';
         statusIcon = 'wallet';
         statusColorClass = 'banner--gold';
         hasActionButtons = true;
@@ -709,14 +745,18 @@ Component({
         }
         else if (statusText === '待发货' || statusText === '等待商家发货') {
           statusLabel = '等待商家发货';
-          statusSubLabel = refundStatus === 4 ? '退款被驳回，等待商家配货发货' : '商家正在配货，将尽快发货';
+          statusSubLabel = refundStatus === 4
+            ? (rejectedSubLabel || '退款被驳回，等待商家配货发货')
+            : '商家正在配货，将尽快发货';
           statusIcon = 'package';
           statusColorClass = 'banner--green';
           hasActionButtons = true;
         }
         else if (statusText === '待收货' || statusText === '商品已发货' || statusText === '已发货' || statusText === '运输中') {
           statusLabel = '商品已发货';
-          statusSubLabel = refundStatus === 4 ? '退款被驳回，商品正在路上，请注意查收' : '商品正在路上，请注意查收';
+          statusSubLabel = refundStatus === 4
+            ? (rejectedSubLabel || '退款被驳回，商品正在路上，请注意查收')
+            : '商品正在路上，请注意查收';
           statusIcon = 'truck';
           statusColorClass = 'banner--green';
           hasActionButtons = true;
@@ -761,13 +801,17 @@ Component({
           } else if (payStatus === 1) {
             if (deliveryStatus === 0) {
               statusLabel = '等待商家发货';
-              statusSubLabel = refundStatus === 4 ? '退款被驳回，等待商家配货发货' : '商家正在配货，将尽快发货';
+              statusSubLabel = refundStatus === 4
+                ? (rejectedSubLabel || '退款被驳回，等待商家配货发货')
+                : '商家正在配货，将尽快发货';
               statusIcon = 'package';
               statusColorClass = 'banner--green';
               hasActionButtons = true;
             } else if (deliveryStatus === 1) {
               statusLabel = '商品已发货';
-              statusSubLabel = refundStatus === 4 ? '退款被驳回，商品正在路上，请注意查收' : '商品正在路上，请注意查收';
+              statusSubLabel = refundStatus === 4
+                ? (rejectedSubLabel || '退款被驳回，商品正在路上，请注意查收')
+                : '商品正在路上，请注意查收';
               statusIcon = 'truck';
               statusColorClass = 'banner--green';
               hasActionButtons = true;

@@ -516,6 +516,11 @@ export class AdminController {
     return this.platformDataService.getLogisticsRules();
   }
 
+  @Get('logistics/companies')
+  listLogisticsCompanies() {
+    return this.platformDataService.getLogisticsCompanies();
+  }
+
   @Post('logistics/templates')
   createLogisticsTemplate(@CurrentUser() user: AuthUser, @Body() body: Record<string, unknown>) {
     return this.platformDataService.createLogisticsRule(body, user);

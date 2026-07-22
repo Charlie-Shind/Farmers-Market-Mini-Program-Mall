@@ -132,6 +132,20 @@ export class AdminRefundService {
       }
     });
 
+    try {
+      await this.platformDataService.notifyUserRefundResult({
+        userId: refund.userId,
+        refundNo,
+        orderNo: refund.order.orderNo,
+        approved: isApprove,
+        refundAmount: this.toMoney(refund.refundAmount),
+        applyReason: refund.applyReason,
+        remark,
+      });
+    } catch {
+      // 通知失败不影响主流程
+    }
+
     return {
       refundNo,
       status: isApprove ? 'APPROVED' : 'REJECTED',

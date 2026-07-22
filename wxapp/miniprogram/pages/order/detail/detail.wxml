@@ -98,6 +98,34 @@
       </view>
     </view>
 
+    <!-- After-sale / Refund Info -->
+    <view class="panel refund-info-panel" wx:if="{{order.refund}}">
+      <view class="refund-info__head">
+        <text class="refund-info__title">售后信息</text>
+        <text class="refund-info__status">{{order.refund.status === 3 ? '退款成功' : (order.refund.status === 4 ? '已驳回' : '处理中')}}</text>
+      </view>
+      <view class="refund-info__row">
+        <text class="refund-info__label">申请类型</text>
+        <text class="refund-info__value">{{order.refund.applyTypeLabel || (order.refund.applyType === 2 ? '退货退款' : '仅退款')}}</text>
+      </view>
+      <view class="refund-info__row">
+        <text class="refund-info__label">退款金额</text>
+        <text class="refund-info__value refund-info__value--amount">¥{{order.refund.refundAmount}}</text>
+      </view>
+      <view class="refund-info__row refund-info__row--block">
+        <text class="refund-info__label">申请原因</text>
+        <text class="refund-info__value">{{order.refund.applyReason || '未填写'}}</text>
+      </view>
+      <view class="refund-info__row refund-info__row--block" wx:if="{{order.refund.rejectReason}}">
+        <text class="refund-info__label">{{order.refund.status === 4 ? '驳回原因' : '处理备注'}}</text>
+        <text class="refund-info__value refund-info__value--warn">{{order.refund.rejectReason}}</text>
+      </view>
+      <view class="refund-info__row" wx:if="{{order.refund.processedAt}}">
+        <text class="refund-info__label">处理时间</text>
+        <text class="refund-info__value">{{order.refund.processedAt}}</text>
+      </view>
+    </view>
+
     <!-- Logistics Delivery Card (if shipped or completed) -->
     <view class="panel logistics-panel" wx:if="{{order.deliveries && order.deliveries.length}}">
       <t-icon name="truck" size="36rpx" color="#2c4a39"></t-icon>

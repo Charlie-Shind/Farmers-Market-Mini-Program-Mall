@@ -611,12 +611,13 @@ export async function exchangePointsCoupon(couponId: number) {
   }>('/app/points/exchange', { couponId }, { auth: true });
 }
 
-export async function fetchOrders(query: { page?: number; pageSize?: number; keyword?: string } = {}) {
+export async function fetchOrders(query: { page?: number; pageSize?: number; keyword?: string; status?: string } = {}) {
   return get<{ page: number; pageSize: number; total: number; items: AppOrder[] }>(
     `/app/orders${buildQuery({
       page: query.page,
       pageSize: query.pageSize,
       keyword: query.keyword,
+      status: query.status,
     })}`,
   );
 }

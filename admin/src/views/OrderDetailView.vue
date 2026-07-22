@@ -206,20 +206,28 @@
             <span>{{ shipModal.error }}</span>
           </div>
 
-          <div class="panel-banner success">
+          <div class="panel-banner success ship-order-banner">
             <strong>订单号</strong>
             <span>{{ order?.orderNo }}</span>
           </div>
 
           <label class="form-field">
-            <span>快递公司</span>
-            <input
+            <span>快递公司 <em style="color: var(--danger); font-style: normal;">*</em></span>
+            <select
               v-model="shipModal.logisticsCompany"
-              type="text"
-              maxlength="40"
-              placeholder="例如：顺丰速运 / 中通快递"
-              :disabled="shipModal.loading"
-            />
+              required
+              :disabled="shipModal.loading || !logisticsCompanies.length"
+            >
+              <option value="" disabled>请选择快递公司</option>
+              <option
+                v-for="company in logisticsCompanies"
+                :key="company.code"
+                :value="company.name"
+              >
+                {{ company.name }}
+              </option>
+            </select>
+            <small v-if="!logisticsCompanies.length" class="form-help">暂无快递公司，请先到系统配置中维护。</small>
           </label>
 
           <label class="form-field">
@@ -250,9 +258,10 @@
 import { computed, onMounted, reactive, ref } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 
-import { getOrderDetail, shipOrder } from '@/api/admin';
+import { getLogisticsCompanies, getOrderDetail, shipOrder } from '@/api/admin';
 
 type OrderDetail = Awaited<ReturnType<typeof getOrderDetail>>;
+type LogisticsCompany = { code: string; name: string };
 
 const route = useRoute();
 const loading = ref(true);
@@ -260,6 +269,7 @@ const loadError = ref('');
 const actionMessage = ref('');
 const actionError = ref('');
 const order = ref<OrderDetail | null>(null);
+const logisticsCompanies = ref<LogisticsCompany[]>([]);
 
 const shipModal = reactive({
   open: false,
@@ -339,12 +349,17 @@ function openShipModal() {
   if (!canShip.value || !order.value) {
     return;
   }
+  const existing = order.value.logisticsCompany || '';
+  const matched = logisticsCompanies.value.find((item) => item.name === existing);
   shipModal.open = true;
-  shipModal.logisticsCompany = order.value.logisticsCompany || '';
+  shipModal.logisticsCompany = matched?.name || logisticsCompanies.value[0]?.name || '';
   shipModal.trackingNo = order.value.trackingNo || '';
   shipModal.loading = false;
   shipModal.error = '';
   actionError.value = '';
+  if (!logisticsCompanies.value.length) {
+    void loadLogisticsCompanies();
+  }
 }
 
 function closeShipModal() {
@@ -360,6 +375,12 @@ async function submitShip() {
     return;
   }
 
+  const company = shipModal.logisticsCompany.trim();
+  if (!company) {
+    shipModal.error = '请选择快递公司';
+    return;
+  }
+
   const trackingNo = shipModal.trackingNo.trim();
   if (!trackingNo) {
     shipModal.error = '请填写快递单号';
@@ -372,7 +393,7 @@ async function submitShip() {
   try {
     await shipOrder(order.value.orderNo, {
       trackingNo,
-      logisticsCompany: shipModal.logisticsCompany.trim() || undefined,
+      logisticsCompany: company,
     });
     order.value = await getOrderDetail(order.value.orderNo);
     actionMessage.value = `已发货，快递单号 ${trackingNo}`;
@@ -385,7 +406,16 @@ async function submitShip() {
   }
 }
 
+async function loadLogisticsCompanies() {
+  try {
+    logisticsCompanies.value = await getLogisticsCompanies();
+  } catch {
+    logisticsCompanies.value = [];
+  }
+}
+
 onMounted(async () => {
+  void loadLogisticsCompanies();
   try {
     const orderNo = String(route.params.orderNo ?? '').trim();
     order.value = await getOrderDetail(orderNo);

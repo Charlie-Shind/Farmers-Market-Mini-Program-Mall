@@ -79,6 +79,30 @@
         </div>
       </article>
 
+      <article class="config-card config-form-card">
+        <strong>快递公司配置</strong>
+        <p>录入物流时的快递公司下拉选项在这里维护，保存后立即生效。</p>
+        <div class="logistics-company-list">
+          <div
+            v-for="(company, index) in logisticsCompanyForm"
+            :key="`${company.code}-${index}`"
+            class="logistics-company-row"
+          >
+            <input v-model.trim="company.name" type="text" placeholder="快递公司名称，如顺丰速运" />
+            <button type="button" class="ghost-btn" @click="removeLogisticsCompany(index)">删除</button>
+          </div>
+        </div>
+        <div class="config-form-actions">
+          <button class="ghost-btn" type="button" @click="addLogisticsCompany">新增快递公司</button>
+          <RefreshDataButton :loading="refreshing" :disabled="savingSettings" label="刷新列表" @refresh="handleRefreshData('快递公司')" />
+          <button class="primary-btn" type="button" @click="handleSaveLogisticsCompanies" :disabled="savingSettings">
+            {{ savingSettings ? '保存中...' : '保存快递公司' }}
+          </button>
+        </div>
+        <p v-if="saveMessage" class="form-help success-text">{{ saveMessage }}</p>
+        <p v-if="saveError" class="form-help error-text">{{ saveError }}</p>
+      </article>
+
       <article class="config-card">
         <strong>平台客服绑定</strong>
         <p>这里绑定的是小程序“官方客服”默认打开的商户会话。配置后会优先按这个商户创建/打开客服对话。</p>
@@ -228,6 +252,15 @@ const settingForm = reactive({
   pointsEarnRate: '1',
   pointsRedeemRate: '100',
 });
+const logisticsCompanyForm = ref<Array<{ code: string; name: string }>>([
+  { code: 'SF', name: '顺丰速运' },
+  { code: 'JD', name: '京东物流' },
+  { code: 'YT', name: '圆通快递' },
+  { code: 'ZTO', name: '中通快递' },
+  { code: 'STO', name: '申通快递' },
+  { code: 'YUNDA', name: '韵达快递' },
+  { code: 'EMS', name: 'EMS' },
+]);
 const supportTarget = ref<null | {
   merchantId: number;
   merchantName: string;
@@ -312,6 +345,20 @@ async function loadSystemData(): Promise<boolean> {
     settingForm.pointsRedeemEnabled = settingsData.pointsRedeemEnabled ?? true;
     settingForm.pointsEarnRate = settingsData.pointsEarnRate || '1';
     settingForm.pointsRedeemRate = settingsData.pointsRedeemRate || '100';
+    logisticsCompanyForm.value = Array.isArray(settingsData.logisticsCompanies) && settingsData.logisticsCompanies.length
+      ? settingsData.logisticsCompanies.map((item, index) => ({
+          code: item.code || `C${index + 1}`,
+          name: item.name || '',
+        }))
+      : [
+          { code: 'SF', name: '顺丰速运' },
+          { code: 'JD', name: '京东物流' },
+          { code: 'YT', name: '圆通快递' },
+          { code: 'ZTO', name: '中通快递' },
+          { code: 'STO', name: '申通快递' },
+          { code: 'YUNDA', name: '韵达快递' },
+          { code: 'EMS', name: 'EMS' },
+        ];
     supportTarget.value = targetData;
 
     settings.value.adminCount = accountData.items.length;
@@ -368,6 +415,54 @@ function formatLogTime(raw: string): string {
   if (isNaN(d.getTime())) return raw;
   const pad = (n: number) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function addLogisticsCompany() {
+  logisticsCompanyForm.value.push({
+    code: `C${Date.now()}`,
+    name: '',
+  });
+}
+
+function removeLogisticsCompany(index: number) {
+  logisticsCompanyForm.value.splice(index, 1);
+  if (!logisticsCompanyForm.value.length) {
+    addLogisticsCompany();
+  }
+}
+
+async function handleSaveLogisticsCompanies() {
+  if (savingSettings.value) return;
+
+  const companies = logisticsCompanyForm.value
+    .map((item, index) => ({
+      code: String(item.code || `C${index + 1}`).trim().toUpperCase() || `C${index + 1}`,
+      name: String(item.name || '').trim(),
+    }))
+    .filter((item) => item.name);
+
+  if (!companies.length) {
+    saveError.value = '请至少保留一个快递公司';
+    saveMessage.value = '';
+    return;
+  }
+
+  savingSettings.value = true;
+  saveMessage.value = '';
+  saveError.value = '';
+  try {
+    const updated = await saveSettings([
+      { key: 'logisticsCompanies', value: JSON.stringify(companies) },
+    ]);
+    logisticsCompanyForm.value = Array.isArray(updated.logisticsCompanies) && updated.logisticsCompanies.length
+      ? updated.logisticsCompanies
+      : companies;
+    saveMessage.value = '快递公司配置已保存';
+  } catch (error) {
+    saveError.value = error instanceof Error ? error.message : '保存失败';
+  } finally {
+    savingSettings.value = false;
+  }
 }
 
 async function handleSaveSettings() {

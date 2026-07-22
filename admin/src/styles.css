@@ -1654,6 +1654,11 @@ select {
   color: var(--green);
 }
 
+.ship-order-banner {
+  justify-content: flex-start;
+  text-align: left;
+}
+
 .app-icon {
   display: inline-block;
   flex: none;

@@ -83,7 +83,7 @@ const router = createRouter({
           meta: {
             title: '商品管理',
             breadcrumb: '后台管理 / 商品管理',
-            searchPlaceholder: '搜索商品 / 商户 / 类目',
+            searchPlaceholder: '搜索商品名称 / 商户 / 类目 / ID',
             permissionKey: 'products',
           },
         },

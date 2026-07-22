@@ -101,6 +101,36 @@
   line-height: 1.5;
 }
 
+.danger-highlight {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #fff3bf 0%, #ffe8a3 100%);
+  border: 1px solid #f0c14b;
+  box-shadow: 0 0 0 1px rgba(255, 214, 102, 0.35);
+}
+
+.danger-highlight__label {
+  display: inline-block;
+  margin-bottom: 4px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #c92a2a;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.danger-highlight__text {
+  display: block;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
 .action-card__head .text-btn,
 .action-card__head .ghost-btn {
   width: 70px;

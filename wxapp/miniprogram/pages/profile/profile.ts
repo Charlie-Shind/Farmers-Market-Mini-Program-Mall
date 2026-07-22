@@ -372,6 +372,10 @@ Component({
 
         // 与订单列表页一致：优先用后端枚举/文案判断状态，避免「已取消但仍未支付」被算进待付款
         const resolveProfileOrderStatus = (item: any): string => {
+          const gb = item?.groupBuy;
+          if (gb && gb.status === 'OPEN') return 'GROUP_BUYING';
+          if (gb && gb.status === 'FAILED') return 'GROUP_FAILED';
+
           const enumStatus = String(item?.statusEnum || item?.orderStatus || '').toUpperCase();
           if (
             enumStatus === 'PENDING_PAY' ||
@@ -382,6 +386,7 @@ Component({
             enumStatus === 'CANCELLED' ||
             enumStatus === 'EXPIRED' ||
             enumStatus === 'REFUNDING' ||
+            enumStatus === 'REFUND_SUCCESS' ||
             enumStatus === 'AFTER_SALE'
           ) {
             return enumStatus;
@@ -396,9 +401,13 @@ Component({
           if (label === '已取消' || label === '订单已取消') return 'CANCELLED';
           if (label === '已过期' || label === '支付超时') return 'EXPIRED';
           if (label === '售后中' || label === '退款中' || label === '退款申请中') return 'REFUNDING';
+          if (label === '退款成功') return 'REFUND_SUCCESS';
 
           // 兜底时也要先排除已取消/已过期，不能只看 payStatus
           if (label === 'CANCELLED' || Number(item?.orderStatus) === 4) return 'CANCELLED';
+          if (item?.expireAt && new Date(item.expireAt).getTime() < Date.now() && Number(item?.payStatus) === 0) {
+            return 'EXPIRED';
+          }
           if (Number(item?.payStatus) === 0) return 'PENDING_PAY';
           if (Number(item?.payStatus) === 1 && Number(item?.deliveryStatus) <= 1) return 'PENDING_SHIP';
           if (Number(item?.payStatus) === 1 && Number(item?.deliveryStatus) === 2) return 'PENDING_RECEIVE';
@@ -406,13 +415,18 @@ Component({
         };
 
         const orderStatuses = orderItems.map((item) => resolveProfileOrderStatus(item));
+        // 角标优先用资产汇总（全量准确统计），避免只扫前几页订单导致虚高/漏计
+        const assetsOrders = assets?.orders;
         const orderSummary = {
           total: ordersPage.total ?? orderItems.length,
-          pay: orderStatuses.filter((status) => status === 'PENDING_PAY').length,
-          ship: orderStatuses.filter((status) => status === 'PENDING_SHIP').length,
-          receive: orderStatuses.filter((status) => status === 'PENDING_RECEIVE').length,
-          comment: orderStatuses.filter((status) => status === 'PENDING_COMMENT').length,
-          refund: orderStatuses.filter((status) => status === 'REFUNDING' || status === 'AFTER_SALE').length,
+          pay: Number(assetsOrders?.pendingPay ?? orderStatuses.filter((status) => status === 'PENDING_PAY').length),
+          ship: Number(assetsOrders?.pendingShip ?? orderStatuses.filter((status) => status === 'PENDING_SHIP').length),
+          receive: Number(assetsOrders?.pendingReceive ?? orderStatuses.filter((status) => status === 'PENDING_RECEIVE').length),
+          comment: Number(assetsOrders?.pendingReview ?? orderStatuses.filter((status) => status === 'PENDING_COMMENT').length),
+          refund: Number(
+            assetsOrders?.refunding ??
+              orderStatuses.filter((status) => status === 'REFUNDING' || status === 'AFTER_SALE').length,
+          ),
         };
 
         // Check local draft for newly uploaded avatar (instant refresh)

@@ -180,7 +180,7 @@ export const resourceConfigs: Record<ResourceKey, ResourceConfig> = {
   },
   products: {
     title: '商品管理',
-    searchPlaceholder: '搜索商品 / 商户 / 类目',
+    searchPlaceholder: '搜索商品名称 / 商户 / 类目 / ID',
     primaryAction: '新增商品',
     secondaryAction: '导出',
     columns: [
@@ -377,6 +377,7 @@ export const resourceConfigs: Record<ResourceKey, ResourceConfig> = {
       { key: 'userName', label: '用户' },
       { key: 'merchantName', label: '商户' },
       { key: 'amount', label: '退款金额' },
+      { key: 'applyReason', label: '申请原因' },
       { key: 'status', label: '状态' },
       { key: 'createdAt', label: '创建时间' },
       { key: 'actions', label: '操作' },
@@ -386,9 +387,10 @@ export const resourceConfigs: Record<ResourceKey, ResourceConfig> = {
         key: 'status',
         label: '售后状态',
         options: [
-          { label: '待仲裁', value: 'PENDING_ARBITRATION' },
-          { label: '商家回复', value: 'MERCHANT_REPLIED' },
+          { label: '待审核', value: 'PENDING_ARBITRATION' },
+          { label: '商家已回复', value: 'MERCHANT_REPLIED' },
           { label: '已通过', value: 'APPROVED' },
+          { label: '已驳回', value: 'REJECTED' },
         ],
       },
     ],

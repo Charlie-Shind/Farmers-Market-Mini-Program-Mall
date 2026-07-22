@@ -139,7 +139,13 @@ type AdminRefundRow = {
   userName: string;
   merchantName: string;
   amount: string;
+  applyType?: number;
+  applyReason?: string;
+  userEvidence?: string[];
+  merchantRemark?: string | null;
+  adminRemark?: string | null;
   status: string;
+  statusText?: string;
   createdAt: string;
 };
 
@@ -243,6 +249,7 @@ type SystemSettings = {
   pointsRedeemEnabled?: boolean;
   pointsEarnRate?: string;
   pointsRedeemRate?: string;
+  logisticsCompanies?: Array<{ code: string; name: string }>;
   items?: Array<{ key: string; value: string }>;
 };
 
@@ -692,6 +699,16 @@ export async function getRefunds(query: QueryParams = {}) {
   );
 }
 
+export async function getRefundDetail(refundNo: string) {
+  return request<AdminRefundRow & {
+    applyTypeLabel?: string;
+    applyImages?: string[];
+    statusCode?: number;
+    statusLabel?: string;
+    processedAt?: string | null;
+  }>(`/refunds/${refundNo}`);
+}
+
 export async function getLogisticsRules(query: QueryParams = {}) {
   return request<LogisticsRuleRow[]>(
     `/logistics${buildQueryString({
@@ -702,6 +719,10 @@ export async function getLogisticsRules(query: QueryParams = {}) {
 
 export async function getSettings() {
   return request<SystemSettings>('/settings');
+}
+
+export async function getLogisticsCompanies() {
+  return request<Array<{ code: string; name: string }>>('/logistics/companies');
 }
 
 export async function getChatSupportTarget() {

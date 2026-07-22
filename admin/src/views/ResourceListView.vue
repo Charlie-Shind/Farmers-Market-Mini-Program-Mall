@@ -33,7 +33,21 @@
         </div>
       </div>
 
-      <div v-if="filterDefs.length" class="filter-grid">
+      <div v-if="filterDefs.length || config.searchPlaceholder" class="filter-grid">
+        <label v-if="config.searchPlaceholder" class="filter-field filter-field--search">
+          <span>搜索</span>
+          <div class="filter-search">
+            <input
+              v-model="keywordDraft"
+              type="search"
+              :placeholder="config.searchPlaceholder"
+              @keyup.enter="applyKeywordSearch"
+            />
+            <button type="button" class="primary-btn filter-search__btn" @click="applyKeywordSearch">
+              搜索
+            </button>
+          </div>
+        </label>
         <label v-for="filter in filterDefs" :key="filter.key" class="filter-field">
           <span>{{ filter.label }}</span>
           <select :value="activeFilterValues[filter.key] ?? ''" @change="handleFilterChange(filter.key, $event)">
@@ -1254,6 +1268,11 @@
           <div>
             <h3 style="color: var(--danger);">{{ dangerConfirm.title }}</h3>
             <p style="white-space: pre-line;">{{ dangerConfirm.description }}</p>
+            <div v-if="dangerConfirm.highlight" class="danger-highlight">
+              <span class="danger-highlight__label">{{ dangerConfirm.highlightLabel || '重要信息' }}</span>
+              <strong class="danger-highlight__text">{{ dangerConfirm.highlight }}</strong>
+            </div>
+            <p v-if="dangerConfirm.footerNote" style="white-space: pre-line; margin-top: 10px;">{{ dangerConfirm.footerNote }}</p>
           </div>
           <button type="button" class="text-btn" @click="closeDangerConfirm">取消</button>
         </header>
@@ -1701,6 +1720,7 @@ import {
   getOrders,
   getProducts,
   getRefunds,
+  getRefundDetail,
   getWithdraws,
   auditWithdraw,
   finishActivity,
@@ -2536,6 +2556,9 @@ const dangerConfirm = reactive({
   open: false,
   title: '',
   description: '',
+  highlightLabel: '',
+  highlight: '',
+  footerNote: '',
   actionLabel: '',
   onConfirm: (() => {}) as () => void,
 });
@@ -2545,16 +2568,23 @@ function openDangerConfirm(
   description: string,
   actionLabel: string,
   onConfirm: () => void,
+  options?: { highlightLabel?: string; highlight?: string; footerNote?: string },
 ) {
   dangerConfirm.open = true;
   dangerConfirm.title = title;
   dangerConfirm.description = description;
+  dangerConfirm.highlightLabel = options?.highlightLabel ?? '';
+  dangerConfirm.highlight = options?.highlight ?? '';
+  dangerConfirm.footerNote = options?.footerNote ?? '';
   dangerConfirm.actionLabel = actionLabel;
   dangerConfirm.onConfirm = onConfirm;
 }
 
 function closeDangerConfirm() {
   dangerConfirm.open = false;
+  dangerConfirm.highlightLabel = '';
+  dangerConfirm.highlight = '';
+  dangerConfirm.footerNote = '';
 }
 
 function confirmDangerAction() {
@@ -2670,7 +2700,7 @@ const refundDrawer = reactive({
   orderFields: [] as DetailField[],
 });
 
-function openRefundDrawer(row: any) {
+async function openRefundDrawer(row: any) {
   refundDrawer.open = true;
   refundDrawer.title = `售后仲裁 — ${row.refundNo}`;
   refundDrawer.subtitle = `订单号 ${row.orderNo} · 金额 ¥${Number(row.amount).toFixed(2)}`;
@@ -2678,21 +2708,50 @@ function openRefundDrawer(row: any) {
   refundDrawer.userFields = [
     { label: '用户', value: row.userName ?? '-' },
     { label: '申请金额', value: `¥${Number(row.amount).toFixed(2)}` },
+    { label: '申请类型', value: Number(row.applyType) === 2 ? '退货退款' : '仅退款' },
+    { label: '申请原因', value: row.applyReason || '-' },
     { label: '申请时间', value: formatCell('createdAt', row) as string },
-    { label: '退款状态', value: statusLabel(String(row.status)) },
+    { label: '退款状态', value: statusLabel(String(row.statusText ?? row.status)) },
   ];
-  refundDrawer.userEvidence = row.userEvidence ?? [];
+  refundDrawer.userEvidence = row.userEvidence ?? row.applyImages ?? [];
   refundDrawer.merchantFields = [
     { label: '商户', value: row.merchantName ?? '-' },
+    { label: '商家备注', value: row.merchantRemark || '暂无' },
     { label: '申诉状态', value: String(row.status) === 'MERCHANT_REPLIED' ? '已回复' : '待回复' },
-    { label: '处理时限', value: '3 个工作日' },
   ];
   refundDrawer.merchantEvidence = row.merchantEvidence ?? [];
   refundDrawer.orderFields = [
-    { label: '仲裁进度', value: statusLabel(String(row.status)) },
-    { label: '处理建议', value: String(row.status) === 'PENDING_ARBITRATION' ? '请核对双方举证后裁定' : '可查看历史处理结果' },
+    { label: '仲裁进度', value: statusLabel(String(row.statusText ?? row.status)) },
+    { label: '平台备注', value: row.adminRemark || '暂无' },
+    { label: '处理建议', value: ['PENDING_ARBITRATION', 'PENDING_MERCHANT', 'MERCHANT_REPLIED'].includes(String(row.status)) ? '请核对双方举证后裁定' : '可查看历史处理结果' },
   ];
   rejectReason.value = '';
+
+  try {
+    const detail = await getRefundDetail(row.refundNo);
+    refundDrawer.userFields = [
+      { label: '用户', value: detail.userName ?? row.userName ?? '-' },
+      { label: '申请金额', value: `¥${Number(detail.amount ?? row.amount).toFixed(2)}` },
+      { label: '申请类型', value: detail.applyTypeLabel || (Number(detail.applyType) === 2 ? '退货退款' : '仅退款') },
+      { label: '申请原因', value: detail.applyReason || '-' },
+      { label: '申请时间', value: detail.createdAt || (formatCell('createdAt', row) as string) },
+      { label: '退款状态', value: statusLabel(String(detail.statusText ?? detail.statusLabel ?? detail.status ?? row.status)) },
+    ];
+    refundDrawer.userEvidence = detail.userEvidence ?? detail.applyImages ?? [];
+    refundDrawer.merchantFields = [
+      { label: '商户', value: detail.merchantName ?? row.merchantName ?? '-' },
+      { label: '商家备注', value: detail.merchantRemark || '暂无' },
+      { label: '申诉状态', value: String(detail.status) === 'MERCHANT_REPLIED' ? '已回复' : '待回复' },
+    ];
+    refundDrawer.orderFields = [
+      { label: '仲裁进度', value: statusLabel(String(detail.statusText ?? detail.statusLabel ?? detail.status ?? row.status)) },
+      { label: '平台备注', value: detail.adminRemark || '暂无' },
+      { label: '处理时间', value: detail.processedAt || '-' },
+      { label: '处理建议', value: ['PENDING_ARBITRATION', 'PENDING_MERCHANT', 'MERCHANT_REPLIED'].includes(String(detail.status ?? row.status)) ? '请核对双方举证后裁定' : '可查看历史处理结果' },
+    ];
+  } catch (error) {
+    actionError.value = error instanceof Error ? error.message : '加载售后详情失败';
+  }
 }
 
 async function arbitrateFromDrawer(action: 'approve' | 'reject') {
@@ -2849,6 +2908,19 @@ async function confirmReject() {
 const config = computed(() => resourceConfigs[props.resourceKey]);
 const filterDefs = computed(() => config.value.filters ?? []);
 const keyword = computed(() => String(route.query.q ?? ''));
+const keywordDraft = ref(keyword.value);
+watch(
+  keyword,
+  (value) => {
+    keywordDraft.value = value;
+  },
+);
+watch(
+  () => props.resourceKey,
+  () => {
+    keywordDraft.value = String(route.query.q ?? '');
+  },
+);
 const activeFilterValues = computed<Record<string, string>>(() => {
   const values: Record<string, string> = {};
 
@@ -2881,7 +2953,7 @@ function getSelectableId(row: any): string | number | null {
 function isRowSelectable(row: any) {
   if (!supportsBatch.value) return false;
   if (props.resourceKey === 'refunds') {
-    return ['PENDING_ARBITRATION', 'MERCHANT_REPLIED'].includes(String(row.status));
+    return ['PENDING_ARBITRATION', 'PENDING_MERCHANT', 'MERCHANT_REPLIED'].includes(String(row.status));
   }
   if (props.resourceKey === 'withdraws') {
     return String(row.status) === 'PENDING' || String(row.status) === '待审核';
@@ -3208,6 +3280,7 @@ function handleReload() {
 }
 
 function resetFilters() {
+  keywordDraft.value = '';
   const nextQuery = { ...route.query } as Record<string, string | string[] | undefined>;
 
   delete nextQuery.q;
@@ -3223,6 +3296,10 @@ function resetFilters() {
 function handleFilterChange(filterKey: string, event: Event) {
   const target = event.target as HTMLSelectElement;
   updateQueryValue(filterKey, target.value, true);
+}
+
+function applyKeywordSearch() {
+  updateQueryValue('q', keywordDraft.value.trim(), true);
 }
 
 function buildServerQuery() {
@@ -3486,7 +3563,16 @@ function formatCell(key: string, row: any) {
   const value = row[key];
 
   if (key === 'status') {
+    if (props.resourceKey === 'refunds') {
+      return statusLabel(String(row.statusText ?? row.statusLabel ?? value ?? ''));
+    }
     return statusLabel(String(value));
+  }
+
+  if (key === 'applyReason') {
+    const text = String(value ?? '').trim();
+    if (!text) return '-';
+    return text.length > 36 ? `${text.slice(0, 36)}…` : text;
   }
 
   if (key === 'auditStatus') {
@@ -3565,12 +3651,13 @@ function formatCell(key: string, row: any) {
 }
 
 function statusLabel(value: string) {
+  const normalized = String(value ?? '').trim().toUpperCase();
   const map: Record<string, string> = {
     NORMAL: '正常',
     DISABLED: '禁用',
     APPROVED: '已通过',
     PENDING_AUDIT: '待审核',
-    REJECTED: '已拒绝',
+    REJECTED: '已驳回',
     ON_SHELF: '已上架',
     OFF_SHELF: '已下架',
     DRAFT: '草稿',
@@ -3584,13 +3671,20 @@ function statusLabel(value: string) {
     COMPLETED: '已完成',
     CANCELLED: '已取消',
     CANCELED: '已取消',
-    PENDING_ARBITRATION: '待仲裁',
-    MERCHANT_REPLIED: '商家回复',
+    PENDING_ARBITRATION: '待审核',
+    PENDING_MERCHANT: '待审核',
+    MERCHANT_REPLIED: '商家已回复',
     REVOKED: '已撤回',
     ENABLED: '启用',
   };
 
-  return map[value] ?? value;
+  if (map[normalized]) {
+    return map[normalized];
+  }
+
+  // 已是中文或其他可读文案时原样返回
+  const raw = String(value ?? '').trim();
+  return raw || '-';
 }
 
 function statusClass(key: string, row: any) {
@@ -3603,7 +3697,7 @@ function statusClass(key: string, row: any) {
     return 'ok';
   }
 
-  if (['PENDING_AUDIT', 'PENDING_PAY', 'PENDING_ARBITRATION', 'MERCHANT_REPLIED', 'PAUSED', '待支付', '待审核', '待仲裁', '资料变更待审'].includes(value)) {
+  if (['PENDING_AUDIT', 'PENDING_PAY', 'PENDING_ARBITRATION', 'PENDING_MERCHANT', 'MERCHANT_REPLIED', 'PAUSED', '待支付', '待审核', '待仲裁', '资料变更待审'].includes(value)) {
     return 'warn';
   }
 
@@ -3711,11 +3805,12 @@ function rowActions(row: any) {
       ];
     }
     case 'refunds': {
-      const arbitrationStatuses = ['PENDING_ARBITRATION', 'MERCHANT_REPLIED'];
+      const arbitrationStatuses = ['PENDING_ARBITRATION', 'PENDING_MERCHANT', 'MERCHANT_REPLIED'];
       if (arbitrationStatuses.includes(String(row.status))) {
         return [
           { key: 'approve', label: '同意' },
           { key: 'reject', label: '驳回' },
+          { key: 'view', label: '详情' },
         ];
       }
       return [{ key: 'view', label: '详情' }];
@@ -3914,17 +4009,19 @@ async function handleRowAction(action: string, row: any) {
 
     if (props.resourceKey === 'products' && action === 'restore') {
       const reason = String(row.auditRemark ?? '').trim();
-      const reasonText = reason
-        ? `下架原因：${reason}`
-        : '未记录下架原因（可能为商户自行下架或历史数据）。';
       openDangerConfirm(
         '确认重新上架',
-        `商品「${row.title ?? row.name ?? row.id}」当前为下架状态。\n${reasonText}\n\n确认后商品将重新在 C 端可见，是否继续上架？`,
+        `商品「${row.title ?? row.name ?? row.id}」当前为下架状态。`,
         '确认上架',
         async () => {
           await restoreProduct(Number(row.id));
           actionMessage.value = `商品「${row.title ?? row.name ?? row.id}」已重新上架`;
           await loadRows();
+        },
+        {
+          highlightLabel: '下架原因',
+          highlight: reason || '未记录下架原因（可能为商户自行下架或历史数据）',
+          footerNote: '确认后商品将重新在 C 端可见，是否继续上架？',
         },
       );
       return;
