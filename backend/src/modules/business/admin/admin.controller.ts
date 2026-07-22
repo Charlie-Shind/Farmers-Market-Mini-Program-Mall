@@ -506,6 +506,15 @@ export class AdminController {
     return this.platformDataService.shipAdminOrder(orderNo, body, user);
   }
 
+  @Put('orders/:orderNo/logistics')
+  updateOrderLogistics(
+    @CurrentUser() user: AuthUser,
+    @Param('orderNo') orderNo: string,
+    @Body() body: Record<string, unknown>,
+  ) {
+    return this.platformDataService.updateAdminOrderLogistics(orderNo, body, user);
+  }
+
   @Get('refunds')
   listRefunds(@CurrentUser() user: AuthUser, @Query() query: Record<string, string>) {
     return this.platformDataService.listAdminRefunds(query, user);

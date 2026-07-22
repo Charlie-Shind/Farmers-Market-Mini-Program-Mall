@@ -111,10 +111,10 @@ Component({
         { key: 'favorite', label: '收藏', value: '--' },
       ],
       orders: [
+        { key: 'all', label: '全部订单', icon: 'invoice', iconColor: '#2c4a39' },
         { key: 'pay', label: '待付款', icon: 'wallet', iconColor: '#d97b2a' },
         { key: 'ship', label: '待发货', icon: 'truck', iconColor: '#2c4a39' },
         { key: 'receive', label: '待收货', icon: 'delivering', iconColor: '#3d7a57' },
-        { key: 'comment', label: '待评价', icon: 'star', iconColor: '#b8864d' },
         { key: 'refund', label: '售后/退款', icon: 'refund', iconColor: '#c04f42' },
       ] as ProfileOrderEntry[],
       services: [
@@ -170,7 +170,6 @@ Component({
       pay: 0,
       ship: 0,
       receive: 0,
-      comment: 0,
       refund: 0,
     },
     toastVisible: false,
@@ -422,7 +421,6 @@ Component({
           pay: Number(assetsOrders?.pendingPay ?? orderStatuses.filter((status) => status === 'PENDING_PAY').length),
           ship: Number(assetsOrders?.pendingShip ?? orderStatuses.filter((status) => status === 'PENDING_SHIP').length),
           receive: Number(assetsOrders?.pendingReceive ?? orderStatuses.filter((status) => status === 'PENDING_RECEIVE').length),
-          comment: Number(assetsOrders?.pendingReview ?? orderStatuses.filter((status) => status === 'PENDING_COMMENT').length),
           refund: Number(
             assetsOrders?.refunding ??
               orderStatuses.filter((status) => status === 'REFUNDING' || status === 'AFTER_SALE').length,
@@ -444,7 +442,6 @@ Component({
           pay: orderSummary.pay,
           ship: orderSummary.ship,
           receive: orderSummary.receive,
-          comment: orderSummary.comment,
           refund: orderSummary.refund,
         };
         const orderShortcuts = (this.data.profile.orders as ProfileOrderEntry[]).map((item) => {
@@ -627,7 +624,7 @@ Component({
         return;
       }
 
-      if (['orders', 'pay', 'ship', 'receive', 'comment', 'refund'].includes(key || '')) {
+      if (['orders', 'all', 'pay', 'ship', 'receive', 'refund'].includes(key || '')) {
         const orderType = key === 'orders' ? 'all' : key;
         go(`/pages/order/list/list?type=${orderType}`);
         return;

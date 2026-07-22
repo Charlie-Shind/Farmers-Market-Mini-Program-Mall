@@ -95,6 +95,10 @@ export class AdminActivityService {
       throw new NotFoundException('Activity not found');
     }
 
+    if (String(oldActivity.status).toUpperCase() === 'ENDED') {
+      throw new BadRequestException('活动已结束，不可编辑');
+    }
+
     const activityName = String(body.activityName ?? body.title ?? oldActivity.activityName);
     const activityType = String(body.activityType ?? oldActivity.activityType).trim().toUpperCase() || oldActivity.activityType;
     const products = Array.isArray(body.products) ? body.products.filter((item) => item && typeof item === 'object') : [];

@@ -26,13 +26,22 @@
             <div class="top-actions">
               <RouterLink class="ghost-btn" to="/orders">返回列表</RouterLink>
               <button
+                v-if="canUpdateLogistics"
+                type="button"
+                class="ghost-btn"
+                title="修正已录入的快递公司或单号"
+                @click="openLogisticsModal('edit')"
+              >
+                修正物流
+              </button>
+              <button
                 type="button"
                 class="primary-btn"
                 :disabled="!canShip"
                 :title="shipButtonTitle"
-                @click="openShipModal"
+                @click="openLogisticsModal('ship')"
               >
-                {{ order.deliveryStatus === 2 ? '已发货' : '录入物流' }}
+                {{ canShip ? '录入物流' : (order.deliveryStatus >= 2 ? '已发货' : '录入物流') }}
               </button>
             </div>
           </div>
@@ -47,6 +56,10 @@
           </div>
 
           <div class="detail-list">
+            <div class="detail-row">
+              <span>创建时间</span>
+              <strong>{{ order.createdAt || '—' }}</strong>
+            </div>
             <div class="detail-row">
               <span>订单状态</span>
               <strong><span :class="['status', statusClass(order.status)]">{{ statusLabel(order.status) }}</span></strong>
@@ -93,14 +106,17 @@
               <span class="timeline-dot ok"></span>
               <div class="timeline-body">
                 <strong>下单成功</strong>
-                <span>订单已由后端返回真实数据</span>
+                <span>{{ order.createdAt || '订单已创建' }}</span>
               </div>
             </div>
             <div class="timeline-item">
               <span class="timeline-dot" :class="order.payStatus === 1 ? 'ok' : 'warn'"></span>
               <div class="timeline-body">
                 <strong>支付状态</strong>
-                <span>{{ order.payStatus === 1 ? '已支付' : '待支付' }}</span>
+                <span>
+                  {{ order.payStatus === 1 ? '已支付' : '待支付' }}
+                  <template v-if="order.paidAt"> · {{ order.paidAt }}</template>
+                </span>
               </div>
             </div>
             <div class="timeline-item">
@@ -112,6 +128,7 @@
                   <template v-if="order.trackingNo">
                     · {{ order.logisticsCompany || '快递' }} {{ order.trackingNo }}
                   </template>
+                  <template v-if="order.shippedAt"> · {{ order.shippedAt }}</template>
                 </span>
                 <span v-else>等待录入物流</span>
               </div>
@@ -191,11 +208,22 @@
     </template>
 
     <div v-if="shipModal.open" class="action-modal" @click.self="closeShipModal">
-      <section class="action-card action-card--narrow" role="dialog" aria-modal="true" aria-label="录入物流">
+      <section
+        class="action-card action-card--narrow"
+        role="dialog"
+        aria-modal="true"
+        :aria-label="shipModal.mode === 'edit' ? '修正物流' : '录入物流'"
+      >
         <header class="action-card__head">
           <div>
-            <h3>录入物流</h3>
-            <p>填写快递信息后，订单将变为已发货，用户可在小程序查看单号。</p>
+            <h3>{{ shipModal.mode === 'edit' ? '修正物流信息' : '录入物流' }}</h3>
+            <p>
+              {{
+                shipModal.mode === 'edit'
+                  ? '可修改快递公司或单号，修正后用户小程序将显示最新物流信息。'
+                  : '填写快递信息后，订单将变为已发货，用户可在小程序查看单号。'
+              }}
+            </p>
           </div>
           <button type="button" class="text-btn" :disabled="shipModal.loading" @click="closeShipModal">关闭</button>
         </header>
@@ -216,9 +244,15 @@
             <select
               v-model="shipModal.logisticsCompany"
               required
-              :disabled="shipModal.loading || !logisticsCompanies.length"
+              :disabled="shipModal.loading || (!logisticsCompanies.length && !shipModal.logisticsCompany)"
             >
               <option value="" disabled>请选择快递公司</option>
+              <option
+                v-if="shipModal.logisticsCompany && !logisticsCompanies.some((c) => c.name === shipModal.logisticsCompany)"
+                :value="shipModal.logisticsCompany"
+              >
+                {{ shipModal.logisticsCompany }}（当前）
+              </option>
               <option
                 v-for="company in logisticsCompanies"
                 :key="company.code"
@@ -245,7 +279,13 @@
           <div class="form-actions">
             <button type="button" class="ghost-btn" :disabled="shipModal.loading" @click="closeShipModal">取消</button>
             <button type="submit" class="primary-btn" :disabled="shipModal.loading">
-              {{ shipModal.loading ? '提交中…' : '确认发货' }}
+              {{
+                shipModal.loading
+                  ? '提交中…'
+                  : shipModal.mode === 'edit'
+                    ? '保存修正'
+                    : '确认发货'
+              }}
             </button>
           </div>
         </form>
@@ -258,10 +298,11 @@
 import { computed, onMounted, reactive, ref } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 
-import { getLogisticsCompanies, getOrderDetail, shipOrder } from '@/api/admin';
+import { getLogisticsCompanies, getOrderDetail, shipOrder, updateOrderLogistics } from '@/api/admin';
 
 type OrderDetail = Awaited<ReturnType<typeof getOrderDetail>>;
 type LogisticsCompany = { code: string; name: string };
+type LogisticsModalMode = 'ship' | 'edit';
 
 const route = useRoute();
 const loading = ref(true);
@@ -273,6 +314,7 @@ const logisticsCompanies = ref<LogisticsCompany[]>([]);
 
 const shipModal = reactive({
   open: false,
+  mode: 'ship' as LogisticsModalMode,
   logisticsCompany: '',
   trackingNo: '',
   loading: false,
@@ -280,10 +322,11 @@ const shipModal = reactive({
 });
 
 const canShip = computed(() => Boolean(order.value?.canShip));
+const canUpdateLogistics = computed(() => Boolean(order.value?.canUpdateLogistics));
 
 const shipButtonTitle = computed(() => {
   if (!order.value) return '';
-  if (order.value.deliveryStatus === 2) return '订单已发货';
+  if (order.value.deliveryStatus >= 2) return '订单已发货，如需改单号请点「修正物流」';
   if (order.value.payStatus !== 1) return '订单未支付，无法发货';
   if (!order.value.canShip) return '当前订单状态不可发货';
   return '录入物流并发货';
@@ -345,14 +388,25 @@ function statusClass(status: string) {
   return 'blue';
 }
 
-function openShipModal() {
-  if (!canShip.value || !order.value) {
+function openLogisticsModal(mode: LogisticsModalMode) {
+  if (!order.value) {
     return;
   }
+  if (mode === 'ship' && !canShip.value) {
+    return;
+  }
+  if (mode === 'edit' && !canUpdateLogistics.value) {
+    return;
+  }
+
   const existing = order.value.logisticsCompany || '';
   const matched = logisticsCompanies.value.find((item) => item.name === existing);
   shipModal.open = true;
-  shipModal.logisticsCompany = matched?.name || logisticsCompanies.value[0]?.name || '';
+  shipModal.mode = mode;
+  shipModal.logisticsCompany = matched?.name
+    || (mode === 'edit' ? existing : '')
+    || logisticsCompanies.value[0]?.name
+    || '';
   shipModal.trackingNo = order.value.trackingNo || '';
   shipModal.loading = false;
   shipModal.error = '';
@@ -389,18 +443,29 @@ async function submitShip() {
 
   shipModal.loading = true;
   shipModal.error = '';
+  const isEdit = shipModal.mode === 'edit';
 
   try {
-    await shipOrder(order.value.orderNo, {
-      trackingNo,
-      logisticsCompany: company,
-    });
+    if (isEdit) {
+      await updateOrderLogistics(order.value.orderNo, {
+        trackingNo,
+        logisticsCompany: company,
+      });
+      actionMessage.value = `物流信息已修正：${company} ${trackingNo}`;
+    } else {
+      await shipOrder(order.value.orderNo, {
+        trackingNo,
+        logisticsCompany: company,
+      });
+      actionMessage.value = `已发货，快递单号 ${trackingNo}`;
+    }
     order.value = await getOrderDetail(order.value.orderNo);
-    actionMessage.value = `已发货，快递单号 ${trackingNo}`;
     actionError.value = '';
     shipModal.open = false;
   } catch (error) {
-    shipModal.error = error instanceof Error ? error.message : '发货失败';
+    shipModal.error = error instanceof Error
+      ? error.message
+      : (isEdit ? '修正物流失败' : '发货失败');
   } finally {
     shipModal.loading = false;
   }

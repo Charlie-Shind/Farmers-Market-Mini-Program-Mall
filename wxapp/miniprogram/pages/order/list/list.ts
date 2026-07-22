@@ -25,20 +25,32 @@ type OrderStatusKey =
   | 'GROUP_FAILED'
   | 'UNKNOWN';
 
-const ORDER_TAB_KEYS = ['all', 'pay', 'groupBuying', 'ship', 'receive', 'comment', 'done', 'refund', 'orders'] as const;
+const ORDER_TAB_KEYS = ['all', 'pay', 'groupBuying', 'ship', 'receive', 'done', 'refund', 'orders'] as const;
 type OrderTabKey = (typeof ORDER_TAB_KEYS)[number];
 
 function buildOrderActionButtons(order: any) {
   const refundStatus = Number(order?.afterSaleStatus ?? order?.refundStatus ?? 0);
   const statusEnum = String(order?.statusEnum || order?.orderStatus || '').toUpperCase();
   const statusLabel = String(order?.statusLabel || order?.status || '').trim();
+  const isRefunding =
+    refundStatus === 1 ||
+    refundStatus === 2 ||
+    refundStatus === 3 ||
+    statusEnum === 'REFUND_SUCCESS' ||
+    statusEnum === 'REFUNDING' ||
+    statusLabel === '退款成功' ||
+    statusLabel === '售后中' ||
+    statusLabel === '退款申请中' ||
+    statusLabel === '退款中';
 
   // 退款成功：不展示物流/收货/售后等操作，仅可点进订单详情
   if (refundStatus === 3 || statusEnum === 'REFUND_SUCCESS' || statusLabel === '退款成功') {
     return [];
   }
 
-  const backendActionButtons = Array.isArray(order?.actionButtons) ? order.actionButtons : [];
+  const backendActionButtons = (Array.isArray(order?.actionButtons) ? order.actionButtons : []).filter(
+    (item: any) => item?.key !== 'review' && !(isRefunding && item?.key === 'invite'),
+  );
   const hasCancelAfterSale = backendActionButtons.some((item: any) => item?.key === 'cancelAfterSale');
   const shouldShowCancelAfterSale =
     statusLabel === '售后中' ||
@@ -226,7 +238,6 @@ Component({
       { key: 'groupBuying', label: '拼团中' },
       { key: 'ship', label: '待发货' },
       { key: 'receive', label: '待收货' },
-      { key: 'comment', label: '待评价' },
       { key: 'done', label: '已完成' },
       { key: 'refund', label: '退款/售后' },
     ],
@@ -299,8 +310,6 @@ Component({
         let displayItems = items;
         if (activeTab === 'groupBuying') {
           displayItems = items.filter((o: any) => o.normalizedStatus === 'GROUP_BUYING');
-        } else if (activeTab === 'comment') {
-          displayItems = items.filter((o: any) => o.normalizedStatus === 'PENDING_COMMENT');
         } else if (!status && activeTab !== 'all' && activeTab !== 'orders') {
           displayItems = items.filter((o: any) => {
             if (activeTab === 'pay') return o.normalizedStatus === 'PENDING_PAY';
@@ -396,10 +405,6 @@ Component({
         this.onRefund(e);
         return;
       }
-      if (key === 'review') {
-        this.onGoReview(e);
-        return;
-      }
       if (key === 'cancelAfterSale') {
         this.onCancelAfterSale();
         return;
@@ -485,13 +490,6 @@ Component({
       if (!orderNo) return;
       wx.navigateTo({
         url: `/pages/order/detail/detail?orderNo=${orderNo}&action=refund`,
-      });
-    },
-    onGoReview(e: WechatMiniprogram.BaseEvent) {
-      const { orderNo } = e.currentTarget.dataset as { orderNo?: string };
-      if (!orderNo) return;
-      wx.navigateTo({
-        url: `/pages/order/review/review?orderNo=${orderNo}`,
       });
     },
     onCancelAfterSale() {

@@ -223,7 +223,10 @@
   ],
   "window": {
     "navigationBarTextStyle": "black",
-    "navigationStyle": "custom"
+    "navigationStyle": "custom",
+    "enablePullDownRefresh": true,
+    "backgroundTextStyle": "dark",
+    "backgroundColor": "#f5f5f5"
   },
   "usingComponents": {
     "page-nav": "/components/base/page-nav/page-nav",

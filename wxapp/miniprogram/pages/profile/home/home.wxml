@@ -11,9 +11,7 @@
       <t-icon name="back" size="48rpx" color="#ffffff" />
     </button>
     <text class="nav-title">个人主页</text>
-    <button class="back-btn" plain="true" bindtap="shareProfile" hover-class="back-btn--hover">
-      <t-icon name="more" size="24px" color="#ffffff" />
-    </button>
+    <view class="nav-spacer"></view>
   </view>
 
   <scroll-view

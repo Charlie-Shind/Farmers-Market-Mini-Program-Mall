@@ -6,6 +6,12 @@ export const ADMIN_ROLE_NAMES_STORAGE_KEY = 'farm-admin-role-names';
 
 export const ADMIN_PERMISSION_KEYS = navItems.map((item) => item.key);
 
+const PERMISSION_KEY_ALIASES: Record<string, string> = {
+  exchangeCoupons: 'exchange',
+  exchangeProducts: 'exchange',
+  pointsExchange: 'exchange',
+};
+
 const IMPLIED_ADMIN_PERMISSIONS: Record<string, string[]> = {
   products: ['categories'],
   orders: ['withdraws'],
@@ -16,9 +22,13 @@ function uniqueKeys(keys: string[]) {
   return Array.from(new Set(keys.filter(Boolean)));
 }
 
+function mapPermissionAlias(key: string) {
+  return PERMISSION_KEY_ALIASES[key] ?? key;
+}
+
 export function expandAdminPermissionKeys(keys: string[]): string[] {
-  const expanded = new Set(keys);
-  for (const key of keys) {
+  const expanded = new Set(keys.map(mapPermissionAlias));
+  for (const key of Array.from(expanded)) {
     for (const implied of IMPLIED_ADMIN_PERMISSIONS[key] ?? []) {
       if (ADMIN_PERMISSION_KEYS.includes(implied)) {
         expanded.add(implied);
@@ -32,7 +42,7 @@ export function normalizeAdminPermissionKeys(value: unknown): string[] {
   if (Array.isArray(value)) {
     return uniqueKeys(
       value
-        .map((item) => String(item).trim())
+        .map((item) => mapPermissionAlias(String(item).trim()))
         .filter((item) => ADMIN_PERMISSION_KEYS.includes(item)),
     );
   }
@@ -50,7 +60,7 @@ export function normalizeAdminPermissionKeys(value: unknown): string[] {
       return uniqueKeys(
         trimmed
           .split(',')
-          .map((item) => item.trim())
+          .map((item) => mapPermissionAlias(item.trim()))
           .filter((item) => ADMIN_PERMISSION_KEYS.includes(item)),
       );
     }

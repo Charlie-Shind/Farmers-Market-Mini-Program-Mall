@@ -75,6 +75,7 @@ type AdminProductRow = {
   auditRemark?: string;
   status: string;
   minPrice: string;
+  coverUrl?: string;
   salesCount: number;
   updatedAt: string;
   originPlace?: string;
@@ -116,10 +117,13 @@ type AdminOrderRow = {
 type AdminOrderDetailRow = AdminOrderRow & {
   remark?: string;
   addressSnapshot?: any;
+  createdAt?: string;
+  paidAt?: string;
   logisticsCompany?: string;
   trackingNo?: string;
   shippedAt?: string | null;
   canShip?: boolean;
+  canUpdateLogistics?: boolean;
   items: Array<{
     orderItemId: number;
     productId: number;
@@ -684,6 +688,23 @@ export async function shipOrder(
     status: string;
   }>(`/orders/${orderNo}/ship`, {
     method: 'POST',
+    body: JSON.stringify(body),
+  });
+}
+
+export async function updateOrderLogistics(
+  orderNo: string,
+  body: { trackingNo: string; logisticsCompany?: string },
+) {
+  return request<{
+    orderNo: string;
+    trackingNo: string;
+    logisticsCompany: string;
+    deliveryStatus: number;
+    status: string;
+    updated?: boolean;
+  }>(`/orders/${orderNo}/logistics`, {
+    method: 'PUT',
     body: JSON.stringify(body),
   });
 }

@@ -3,6 +3,9 @@ import { fetchAnonymousSession } from './services/auth';
 import { getToken } from './services/token';
 import { setGuestMode } from './services/token';
 import { logger } from './utils/logger';
+import { installPullDownRefresh } from './utils/install-pull-down-refresh';
+
+installPullDownRefresh();
 
 type EventBus = {
   on(event: string, fn: (...args: any[]) => void): void;

@@ -254,19 +254,6 @@ Component({
 
       this.goLogin();
     },
-    shareProfile() {
-      wx.showActionSheet({
-        itemList: ['修改个人昵称', '修改个人头像', '修改个人信息', '分享个人资料'],
-        success: (result) => {
-          if (result.tapIndex <= 2) {
-            this.goEdit();
-            return;
-          }
-
-          wx.showToast({ title: '请点击右上角 ··· 转发', icon: 'none' });
-        },
-      });
-    },
     onMetricTap(e: WechatMiniprogram.BaseEvent) {
       const { key } = (e.currentTarget.dataset as { key?: string }) || {};
       if (!key) return;

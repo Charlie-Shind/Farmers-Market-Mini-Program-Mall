@@ -100,6 +100,80 @@
   grid-column: 1 / -1;
 }
 
+.multi-check-panel {
+  max-height: 220px;
+  overflow: auto;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.multi-check-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--border-light, var(--border));
+}
+
+.multi-check-group:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.multi-check-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.multi-check-item span,
+.drawer-body .form-field .multi-check-item span {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.multi-check-item--root span,
+.drawer-body .form-field .multi-check-item--root span {
+  font-weight: 600;
+}
+
+.multi-check-item--child {
+  padding-left: 18px;
+}
+
+.multi-check-item input,
+.drawer-body .multi-check-item input,
+.form-field .multi-check-item input {
+  width: 16px;
+  height: 16px;
+  min-height: 16px;
+  margin: 0;
+  padding: 0;
+  flex-shrink: 0;
+  accent-color: var(--brand-600);
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.multi-check-empty {
+  padding: 12px 4px;
+  font-size: 13px;
+  color: var(--text-tertiary);
+}
+
 .drawer-body .form-field {
   display: flex;
   flex-direction: column;

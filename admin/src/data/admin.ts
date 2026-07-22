@@ -69,8 +69,7 @@ export const navItems: NavItem[] = [
   { key: 'chat', label: '客服会话', to: '/chat', icon: 'support' },
 
   { key: 'coupons', label: '优惠券管理', to: '/coupons', icon: 'coupon' },
-  { key: 'exchangeCoupons', label: '兑换券管理', to: '/exchange/coupons', icon: 'redPacket' },
-  { key: 'exchangeProducts', label: '兑换商品管理', to: '/exchange/products', icon: 'shopBag' },
+  { key: 'exchange', label: '积分兑换管理', to: '/marketing/points-exchange', icon: 'redPacket' },
   { key: 'activities', label: '活动管理', to: '/activities', icon: 'flash' },
   { key: 'groupBuys', label: '拼团管理', to: '/group-buys', icon: 'group' },
   { key: 'banners', label: '轮播广告', to: '/banners', icon: 'image' },
@@ -88,8 +87,7 @@ export const navItems: NavItem[] = [
 export const navGroups: NavGroup[] = [
   { key: 'dashboard', label: '运营大盘', icon: 'home', items: navItems.filter((i) => ['dashboard', 'analytics'].includes(i.key)) },
   { key: 'core', label: '核心电商', icon: 'shopBag', items: navItems.filter((i) => ['merchants', 'products', 'categories', 'orders', 'logistics', 'refunds', 'withdraws'].includes(i.key)) },
-  { key: 'marketing', label: '营销中心', icon: 'gift', items: navItems.filter((i) => ['coupons', 'activities', 'groupBuys', 'banners', 'messages'].includes(i.key)) },
-  { key: 'exchange', label: '兑换中心', icon: 'redPacket', items: navItems.filter((i) => ['exchangeCoupons', 'exchangeProducts'].includes(i.key)) },
+  { key: 'marketing', label: '营销中心', icon: 'gift', items: navItems.filter((i) => ['coupons', 'exchange', 'activities', 'groupBuys', 'banners', 'messages'].includes(i.key)) },
   { key: 'support', label: '客户服务', icon: 'support', items: navItems.filter((i) => ['chat'].includes(i.key)) },
   { key: 'leader', label: '社区团长', icon: 'group', items: navItems.filter((i) => ['leaders', 'pickup-points', 'commissions'].includes(i.key)) },
   { key: 'base', label: '系统基础', icon: 'settings', items: navItems.filter((i) => ['users', 'admins', 'settings'].includes(i.key)) },
@@ -270,8 +268,8 @@ export const resourceConfigs: Record<ResourceKey, ResourceConfig> = {
     ],
   },
   exchange: {
-    title: '兑换中心',
-    searchPlaceholder: '搜索兑换项 / 适用范围 / 类目',
+    title: '积分兑换管理',
+    searchPlaceholder: '搜索兑换券 / 兑换商品 / 类目',
     primaryAction: '新增兑换项',
     secondaryAction: '导出',
     columns: [

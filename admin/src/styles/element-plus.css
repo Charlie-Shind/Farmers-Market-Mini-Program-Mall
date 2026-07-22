@@ -12,7 +12,8 @@
 }
 
 .el-card__body {
-  padding: 0 !important;
+  /* padding: 0 !important; */
+  padding: 16px;
 }
 
 .el-button {

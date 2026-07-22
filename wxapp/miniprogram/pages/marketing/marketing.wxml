@@ -144,7 +144,7 @@
     <view wx:elif="{{groupEmpty}}" class="mkt-empty">
       <t-icon name="group" size="52rpx" color="#c9bda4"></t-icon>
       <text>暂无附近拼团活动</text>
-      <text class="mkt-empty__sub">去秒杀区看看其他好货</text>
+      <text class="mkt-empty__sub">快去更多拼团页面看看</text>
     </view>
 
     <view wx:else class="gb-list">

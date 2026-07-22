@@ -85,13 +85,13 @@
           </view>
         </view>
 
-        <view class="gbp__invite" wx:if="{{groupInviteCode && order.groupBuy.status === 'OPEN'}}">
+        <view class="gbp__invite" wx:if="{{canInviteGroupBuy && groupInviteCode}}">
           <text class="gbp__invite-label">邀请码 {{groupInviteCode}}</text>
           <view class="gbp__invite-copy" bindtap="copyGroupInviteCode">复制</view>
         </view>
 
         <button
-          wx:if="{{order.groupBuy.status === 'OPEN' && order.payStatus === 1}}"
+          wx:if="{{canInviteGroupBuy}}"
           class="gbp__btn"
           open-type="share"
         >邀请好友参团</button>
@@ -234,6 +234,9 @@
         {{item.label}}
       </button>
     </block>
+    <block wx:elif="{{statusLabel === '售后中' || statusLabel === '退款申请中' || order.refundStatus === 1 || order.refundStatus === 2 || order.afterSaleStatus === 1 || order.afterSaleStatus === 2}}">
+      <button class="refund-btn" plain="true" bindtap="onCancelAfterSale">取消售后</button>
+    </block>
     <block wx:else>
       <!-- 兜底：后端未返回 actionButtons 时保留原有按钮 -->
       <block wx:if="{{order.orderStatus === 1 && order.payStatus === 0}}">
@@ -258,15 +261,10 @@
 
       <block wx:if="{{order.orderStatus === 3 && order.refundStatus !== 3}}">
         <button class="refund-btn" plain="true" bindtap="onApplyRefund">申请售后退款</button>
-        <button class="confirm-btn" bindtap="onGoReview">去评价</button>
       </block>
 
-      <block wx:if="{{order.groupBuy && order.groupBuy.status === 'OPEN' && order.payStatus === 1}}">
+      <block wx:if="{{canInviteGroupBuy}}">
         <button class="invite-btn" open-type="share" bindtap="onInviteGroupBuy">邀请好友参团</button>
-      </block>
-
-      <block wx:if="{{statusLabel === '售后中' || statusLabel === '退款申请中'}}">
-        <button class="refund-btn" plain="true" bindtap="onCancelAfterSale">取消售后</button>
       </block>
     </block>
   </view>

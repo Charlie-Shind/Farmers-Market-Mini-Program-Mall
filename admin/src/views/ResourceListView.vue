@@ -1172,27 +1172,60 @@
                 <option value="CATEGORY_SHOP">类目店铺券</option>
               </select>
             </label>
-            <label v-if="couponForm.scope === 'CATEGORY' || couponForm.scope === 'PRODUCT' || couponForm.scope === 'CATEGORY_SHOP'" class="form-field">
+            <div
+              v-if="couponForm.scope === 'CATEGORY' || couponForm.scope === 'PRODUCT' || couponForm.scope === 'CATEGORY_SHOP'"
+              class="form-field form-field--full"
+            >
               <span>指定类目</span>
-              <select v-model="couponForm.categoryIds" multiple size="6">
-                <optgroup v-for="root in catalogCategories" :key="root.id" :label="root.name">
-                  <option :value="String(root.id)">{{ root.name }}</option>
-                  <option v-for="child in root.children ?? []" :key="child.id" :value="String(child.id)">
-                    {{ root.name }} / {{ child.name }}
-                  </option>
-                </optgroup>
-              </select>
-              <small class="form-help">只能从类目列表里勾选，不能手动填写 ID。</small>
-            </label>
-            <label v-if="couponForm.scope === 'SHOP' || couponForm.scope === 'CATEGORY_SHOP'" class="form-field">
+              <el-select
+                v-model="couponForm.categoryIds"
+                class="coupon-scope-select"
+                multiple
+                filterable
+                collapse-tags
+                collapse-tags-tooltip
+                clearable
+                placeholder="请选择适用类目"
+                :disabled="!couponCategoryOptions.length"
+              >
+                <el-option
+                  v-for="item in couponCategoryOptions"
+                  :key="item.id"
+                  :label="item.label"
+                  :value="String(item.id)"
+                />
+              </el-select>
+              <small class="form-help">
+                {{ couponCategoryOptions.length ? '支持搜索与多选，只能从类目列表选择。' : '暂无类目，请先在类目管理中维护。' }}
+              </small>
+            </div>
+            <div
+              v-if="couponForm.scope === 'SHOP' || couponForm.scope === 'CATEGORY_SHOP'"
+              class="form-field form-field--full"
+            >
               <span>指定店铺</span>
-              <select v-model="couponForm.merchantIds" multiple size="6">
-                <option v-for="merchant in merchantOptions" :key="merchant.id" :value="String(merchant.id)">
-                  {{ merchant.storeName }}
-                </option>
-              </select>
-              <small class="form-help">只能从店铺列表里勾选，不能手动填写 ID。</small>
-            </label>
+              <el-select
+                v-model="couponForm.merchantIds"
+                class="coupon-scope-select"
+                multiple
+                filterable
+                collapse-tags
+                collapse-tags-tooltip
+                clearable
+                placeholder="请选择适用店铺"
+                :disabled="!merchantOptions.length"
+              >
+                <el-option
+                  v-for="merchant in merchantOptions"
+                  :key="merchant.id"
+                  :label="merchant.storeName"
+                  :value="String(merchant.id)"
+                />
+              </el-select>
+              <small class="form-help">
+                {{ merchantOptions.length ? '支持搜索与多选，只能从店铺列表选择。' : '暂无店铺可选。' }}
+              </small>
+            </div>
             <label class="form-field">
               <span>状态</span>
               <select v-model="couponForm.status">
@@ -1808,6 +1841,16 @@ const selectedIds = ref<Array<string | number>>([]);
 const batchRunning = ref(false);
 const catalogCategories = ref<CategoryOption[]>([]);
 const merchantOptions = ref<MerchantOption[]>([]);
+const couponCategoryOptions = computed(() => {
+  const options: Array<{ id: number; label: string }> = [];
+  for (const root of catalogCategories.value) {
+    options.push({ id: root.id, label: root.name });
+    for (const child of root.children ?? []) {
+      options.push({ id: child.id, label: `${root.name} / ${child.name}` });
+    }
+  }
+  return options;
+});
 const activityProductOptions = ref<ActivityProductOption[]>([]);
 const activityProductLoading = ref(false);
 const supportsPagination = computed(() => !['activities', 'logistics'].includes(props.resourceKey));
@@ -3776,14 +3819,14 @@ function rowActions(row: any) {
       return actions;
     }
     case 'activities': {
+      const status = String(row.status);
+      const isEnded = status === 'ENDED' || status === '已结束';
       const actions = [
         { key: 'view', label: '详情' },
-        { key: 'edit', label: '编辑' },
-        { key: 'copy', label: '复制' },
+        ...(isEnded ? [] : [{ key: 'edit', label: '编辑' }]),
         { key: 'delete', label: '删除' },
       ];
-      const status = String(row.status);
-      if (status === 'DRAFT' || status === 'PAUSED') {
+      if (!isEnded && (status === 'DRAFT' || status === 'PAUSED')) {
         actions.push({ key: 'publish', label: '发布' });
       }
       if (status === 'RUNNING' || status === 'PUBLISHED') {
@@ -4096,6 +4139,11 @@ async function handleRowAction(action: string, row: any) {
     }
 
     if (props.resourceKey === 'activities' && action === 'edit') {
+      const status = String(row.status ?? '');
+      if (status === 'ENDED' || status === '已结束') {
+        actionError.value = '活动已结束，不可编辑';
+        return;
+      }
       const detail = await getActivityDetail(Number(row.id));
       const payload = await openActivityFormModal({ ...row, ...(detail && typeof detail === 'object' ? detail : {}) });
       if (!payload) {
@@ -4128,20 +4176,6 @@ async function handleRowAction(action: string, row: any) {
     if (props.resourceKey === 'activities' && action === 'finish') {
       await finishActivity(row.id);
       actionMessage.value = `活动「${row.activityName ?? row.title ?? row.id}」已结束`;
-      await loadRows();
-      return;
-    }
-
-    if (props.resourceKey === 'activities' && action === 'copy') {
-      await createActivity({
-        title: `${row.activityName ?? row.title ?? '活动'}（复制）`,
-        activityName: `${row.activityName ?? row.title ?? '活动'}（复制）`,
-        activityType: row.activityType ?? 'SECKILL',
-        startAt: row.startAt ?? '2026-06-08 10:00:00',
-        endAt: row.endAt ?? '2026-06-08 22:00:00',
-        products: [],
-      });
-      actionMessage.value = `活动「${row.activityName ?? row.title ?? row.id}」已复制为新草稿`;
       await loadRows();
       return;
     }
@@ -5217,6 +5251,15 @@ function getUserTierClass(orderCount: number | string): string {
   border-color: var(--green-2);
   box-shadow: 0 0 0 1px rgba(17, 17, 17, 0.12);
   background: rgba(17, 17, 17, 0.04);
+}
+
+.coupon-scope-select {
+  width: 100%;
+}
+
+.coupon-form .coupon-scope-select :deep(.el-select__wrapper) {
+  min-height: 36px;
+  width: 100%;
 }
 
 /* User Profile Card Styles */

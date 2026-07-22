@@ -149,6 +149,18 @@ function formatDateTime(value?: string) {
   return `${year}-${month}-${day} ${hours}:${minutes}`;
 }
 
+
+function canInviteGroupBuyOrder(order?: OrderDetailView | null): boolean {
+  if (!order?.groupBuy || order.groupBuy.status !== 'OPEN') return false;
+  if (Number(order.payStatus) !== 1) return false;
+  const refundStatus = Number(order.afterSaleStatus ?? order.refundStatus ?? 0);
+  // 1待审 / 2处理中 / 3退款成功：不可再邀请
+  if (refundStatus === 1 || refundStatus === 2 || refundStatus === 3) return false;
+  const statusLabel = String((order as any).statusLabel || order.status || '').trim();
+  if (['售后中', '退款申请中', '退款成功', '退款中'].includes(statusLabel)) return false;
+  return true;
+}
+
 function getGroupBuyStats(groupBuy?: AppOrderGroupBuy | null) {
   const memberCountRaw = Number(groupBuy?.memberCount ?? groupBuy?.members?.length ?? 0);
   const neededRaw = Number(groupBuy?.needed);
@@ -372,6 +384,7 @@ Component({
     groupBuyProgressText: '',
     groupBuySlots: [] as GroupBuySlotView[],
     groupBuyCountdown: '' as string,
+    canInviteGroupBuy: false,
     groupInviteCode: '',
     myAvatarUrl: '',
     icons: iconPaths,
@@ -466,11 +479,14 @@ Component({
           ...order,
           statusEnum: String(order.statusEnum || order.orderStatus || ''),
           statusLabel: String(order.statusLabel || order.status || ''),
-          actionButtons: Array.isArray((order as any).actionButtons) ? (order as any).actionButtons : [],
+          actionButtons: (Array.isArray((order as any).actionButtons) ? (order as any).actionButtons : []).filter(
+            (item: any) => item?.key !== 'review',
+          ),
           orderStatus: Number(order.orderStatus),
           payStatus: Number(order.payStatus),
           deliveryStatus: Number(order.deliveryStatus),
           refundStatus: Number(order.refundStatus),
+          afterSaleStatus: Number((order as any).afterSaleStatus ?? order.refundStatus ?? 0),
           createdAt: formatDateTime(order.createdAt),
           paidAt: order.paidAt ? formatDateTime(order.paidAt) : undefined,
           deliveredAt: order.deliveredAt ? formatDateTime(order.deliveredAt) : undefined,
@@ -556,19 +572,25 @@ Component({
       const order = this.data.order;
       const gb = order.groupBuy;
       const productTitle = gb?.productTitle || (order.items?.[0]?.productTitle ?? '拼团好货');
+      if (!canInviteGroupBuyOrder(order)) {
+        return {
+          title: `一起看看：${productTitle}`,
+          path: `/pages/order/detail/detail?orderNo=${order.orderNo}`,
+        };
+      }
       const remaining = gb ? getGroupBuyStats(gb).remaining : 0;
-      const title = gb
-        ? `【还差 ${remaining} 人成团】${productTitle}，一起来拼更划算`
-        : `一起看看：${productTitle}`;
-      const path = gb
-        ? `/pages/quick/group-buy/index?productId=${gb.productId}&title=${encodeURIComponent(productTitle)}&groupId=${gb.groupId}`
-        : `/pages/order/detail/detail?orderNo=${order.orderNo}`;
+      const title = `【还差 ${remaining} 人成团】${productTitle}，一起来拼更划算`;
+      const path = `/pages/quick/group-buy/index?productId=${gb!.productId}&title=${encodeURIComponent(productTitle)}&groupId=${gb!.groupId}`;
       return {
         title,
         path,
       };
     },
     onInviteGroupBuy() {
+      if (!canInviteGroupBuyOrder(this.data.order)) {
+        wx.showToast({ title: '售后中不可邀请好友', icon: 'none' });
+        return;
+      }
       // open-type="share" 已自动调起分享面板，此处仅做 toast 提示
       wx.showToast({ title: '点击右上角分享给好友', icon: 'none' });
     },
@@ -596,15 +618,19 @@ Component({
         this.onApplyRefund();
         return;
       }
-      if (key === 'review') {
-        this.onGoReview();
-        return;
-      }
       if (key === 'invite') {
         this.onInviteGroupBuy();
+        return;
+      }
+      if (key === 'cancelAfterSale') {
+        this.onCancelAfterSale();
       }
     },
     copyGroupInviteCode() {
+      if (!canInviteGroupBuyOrder(this.data.order)) {
+        wx.showToast({ title: '售后中不可邀请好友', icon: 'none' });
+        return;
+      }
       const inviteCode = String(this.data.groupInviteCode || '').trim();
       if (!inviteCode) {
         wx.showToast({ title: '暂无邀请码', icon: 'none' });
@@ -641,7 +667,9 @@ Component({
       }
 
       const backendStatusLabel = String((order as any).statusLabel || order.status || '').trim();
-      const backendActionButtons = Array.isArray((order as any).actionButtons) ? (order as any).actionButtons : [];
+      const backendActionButtons = (Array.isArray((order as any).actionButtons) ? (order as any).actionButtons : []).filter(
+        (item: any) => item?.key !== 'review',
+      );
       if (backendStatusLabel) {
         const normalizedBackendStatusLabel = backendStatusLabel === '已过期' ? '支付超时' : backendStatusLabel;
         let colorClass = 'banner--green';
@@ -663,6 +691,21 @@ Component({
         const statusSteps = buildStatusSteps(order, normalizedBackendStatusLabel);
         const backendHasActions = backendActionButtons.length > 0;
         const isRefundSuccess = normalizedBackendStatusLabel === '退款成功' || refundStatus === 3;
+        const isAfterSale =
+          normalizedBackendStatusLabel === '售后中' ||
+          normalizedBackendStatusLabel === '退款申请中' ||
+          refundStatus === 1 ||
+          refundStatus === 2;
+        const canInvite = canInviteGroupBuyOrder(order);
+        let filteredActionButtons = (isRefundSuccess ? [] : backendActionButtons).filter(
+          (item: any) => item?.key !== 'invite' || canInvite,
+        );
+        if (isAfterSale) {
+          const hasCancel = filteredActionButtons.some((item: any) => item?.key === 'cancelAfterSale');
+          filteredActionButtons = hasCancel
+            ? filteredActionButtons.filter((item: any) => item?.key === 'cancelAfterSale')
+            : [{ key: 'cancelAfterSale', label: '取消售后', type: 'secondary' }];
+        }
         this.setData({
           statusLabel: normalizedBackendStatusLabel,
           statusSubLabel,
@@ -672,12 +715,13 @@ Component({
           statusBgUrl: getStatusBgUrl(colorClass),
           statusSteps,
           statusProgressWidth: getStatusProgressWidth(statusSteps),
-          hasActionButtons: !isRefundSuccess && (backendHasActions || normalizedBackendStatusLabel === '售后中' || normalizedBackendStatusLabel === '退款申请中'),
-          actionButtons: isRefundSuccess ? [] : backendActionButtons,
+          hasActionButtons: !isRefundSuccess && (filteredActionButtons.length > 0 || isAfterSale),
+          actionButtons: filteredActionButtons,
           groupBuyProgress,
           groupBuyProgressText,
           groupBuySlots,
           groupInviteCode,
+          canInviteGroupBuy: canInvite,
         });
         return;
       }
@@ -698,8 +742,22 @@ Component({
       let statusColorClass = 'banner--gray';
       let hasActionButtons = false;
 
-      // 拼团订单特殊处理（优先级最高）
-      if (groupBuy && groupBuy.status === 'OPEN' && payStatus === 1) {
+      // 售后优先于拼团邀请态
+      if (refundStatus === 1 || refundStatus === 2) {
+        statusLabel = '退款申请中';
+        statusSubLabel = order.refund?.applyReason
+          ? `申请原因：${order.refund.applyReason}`
+          : '退款申请已提交，等待商家审核';
+        statusIcon = 'wallet';
+        statusColorClass = 'banner--gold';
+        hasActionButtons = true;
+      } else if (refundStatus === 3) {
+        statusLabel = '退款成功';
+        statusSubLabel = '退款已同意，退款金额已原路退回';
+        statusIcon = 'shield';
+        statusColorClass = 'banner--gray';
+        hasActionButtons = false;
+      } else if (groupBuy && groupBuy.status === 'OPEN' && payStatus === 1) {
         const remaining = getGroupBuyStats(groupBuy).remaining;
         statusLabel = '拼团中';
         statusSubLabel = remaining > 0
@@ -712,20 +770,6 @@ Component({
         statusLabel = '拼团失败';
         statusSubLabel = '未能在有效期内凑齐人数，已自动取消订单';
         statusIcon = 'close';
-        statusColorClass = 'banner--gray';
-        hasActionButtons = false;
-      } else if (refundStatus === 1 || refundStatus === 2) {
-        statusLabel = '退款申请中';
-        statusSubLabel = order.refund?.applyReason
-          ? `申请原因：${order.refund.applyReason}`
-          : '退款申请已提交，等待商家审核';
-        statusIcon = 'wallet';
-        statusColorClass = 'banner--gold';
-        hasActionButtons = true;
-      } else if (refundStatus === 3) {
-        statusLabel = '退款成功';
-        statusSubLabel = '退款已同意，退款金额已原路退回';
-        statusIcon = 'shield';
         statusColorClass = 'banner--gray';
         hasActionButtons = false;
       } else {
@@ -846,6 +890,7 @@ Component({
         groupBuyProgressText,
         groupBuySlots,
         groupInviteCode,
+        canInviteGroupBuy: canInviteGroupBuyOrder(order),
       });
     },
     copyOrderNumber() {
@@ -976,11 +1021,6 @@ Component({
           wx.hideLoading();
           wx.showToast({ title: err?.message || '支付单创建失败，请稍后重试', icon: 'none' });
         });
-    },
-    onGoReview() {
-      wx.navigateTo({
-        url: `/pages/order/review/review?orderNo=${this.data.orderNo}`,
-      });
     },
     onApplyRefund() {
       const order = this.data.order;

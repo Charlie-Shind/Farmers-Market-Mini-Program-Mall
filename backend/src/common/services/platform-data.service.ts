@@ -1245,8 +1245,13 @@ export class PlatformDataService {
     const buttons: Array<{ key: string; label: string; type: 'primary' | 'secondary' }> = [];
 
     const isExpired = expireAt != null && expireAt < new Date() && payStatus === 0;
+    const isRefunding =
+      refundStatus === PlatformDataService.REFUND_STATUS.PENDING_MERCHANT ||
+      refundStatus === PlatformDataService.REFUND_STATUS.PROCESSING ||
+      refundStatus === PlatformDataService.REFUND_STATUS.APPROVED;
 
-    if (groupBuy?.status === 'OPEN' && payStatus === 1) {
+    // 售后中/退款成功后不可再邀请参团
+    if (groupBuy?.status === 'OPEN' && payStatus === 1 && !isRefunding) {
       buttons.push({ key: 'invite', label: '邀请好友参团', type: 'primary' });
     }
 
@@ -1255,7 +1260,9 @@ export class PlatformDataService {
       return buttons;
     }
 
+    // 售后处理中：只允许取消售后，不再展示申请退款等操作
     if (refundStatus === 1 || refundStatus === 2) {
+      buttons.push({ key: 'cancelAfterSale', label: '取消售后', type: 'secondary' });
       return buttons;
     }
 
@@ -1268,7 +1275,6 @@ export class PlatformDataService {
         buttons.push({ key: 'logistics', label: '查看物流', type: 'secondary' });
       }
       buttons.push({ key: 'refund', label: '申请售后', type: 'secondary' });
-      buttons.push({ key: 'review', label: '去评价', type: 'primary' });
       return buttons;
     }
 
@@ -1301,7 +1307,6 @@ export class PlatformDataService {
 
     if (orderStatus === 3 || orderStatus === 4) {
       buttons.push({ key: 'refund', label: '申请售后', type: 'secondary' });
-      buttons.push({ key: 'review', label: '去评价', type: 'primary' });
     }
 
     return buttons;
@@ -1318,6 +1323,43 @@ export class PlatformDataService {
       return 'FAILED';
     }
     return status as 'OPEN' | 'COMPLETED' | 'FAILED';
+  }
+
+  private async getGroupBuyIdsWithActivePaidMembers(groupBuyIds: bigint[]): Promise<Set<string>> {
+    if (groupBuyIds.length === 0) {
+      return new Set();
+    }
+    const orders = await this.prisma.order.findMany({
+      where: {
+        groupBuyId: { in: groupBuyIds },
+        payStatus: PlatformDataService.PAY_STATUS.PAID,
+        refundStatus: PlatformDataService.REFUND_STATUS.NONE,
+        orderStatus: {
+          in: [PlatformDataService.ORDER_STATUS.PENDING, PlatformDataService.ORDER_STATUS.ACCEPTED],
+        },
+      },
+      select: { groupBuyId: true },
+      distinct: ['groupBuyId'],
+    });
+    return new Set(orders.map((o) => o.groupBuyId!.toString()));
+  }
+
+  private shouldFailOpenGroupBuyDueToRefunds(
+    paidOrders: Array<{ refundStatus: number; orderStatus: number }>,
+  ): boolean {
+    const hasRefundApplying = paidOrders.some(
+      (o) =>
+        o.refundStatus === PlatformDataService.REFUND_STATUS.PENDING_MERCHANT ||
+        o.refundStatus === PlatformDataService.REFUND_STATUS.PROCESSING ||
+        o.refundStatus === PlatformDataService.REFUND_STATUS.APPROVED,
+    );
+    const hasActivePaid = paidOrders.some(
+      (o) =>
+        o.refundStatus === PlatformDataService.REFUND_STATUS.NONE &&
+        (o.orderStatus === PlatformDataService.ORDER_STATUS.PENDING ||
+          o.orderStatus === PlatformDataService.ORDER_STATUS.ACCEPTED),
+    );
+    return hasRefundApplying && !hasActivePaid;
   }
 
   private async getOrderGroupBuySummary(groupBuyId: bigint | null | undefined) {
@@ -1343,11 +1385,27 @@ export class PlatformDataService {
     if (!group) {
       return null;
     }
+    let status = this.resolveGroupBuyStatus(group.status, group.expireAt);
+    if (group.status === 'OPEN' && status === 'OPEN') {
+      const paidOrders = await this.prisma.order.findMany({
+        where: { groupBuyId: group.id, payStatus: PlatformDataService.PAY_STATUS.PAID },
+        select: { refundStatus: true, orderStatus: true },
+      });
+      if (this.shouldFailOpenGroupBuyDueToRefunds(paidOrders)) {
+        await this.prisma.groupBuy
+          .updateMany({
+            where: { id: group.id, status: 'OPEN' },
+            data: { status: 'FAILED' },
+          })
+          .catch(() => undefined);
+        status = 'FAILED';
+      }
+    }
     return {
       groupId: this.toNumber(group.id),
       groupNo: group.groupNo,
       inviteCode: group.inviteCode,
-      status: this.resolveGroupBuyStatus(group.status, group.expireAt),
+      status,
       needed: group.needed,
       memberCount: group.members.length,
       expireAt: this.toIso(group.expireAt),
@@ -6836,6 +6894,66 @@ export class PlatformDataService {
     });
   }
 
+  /**
+   * 拼团成员发起售后/退款申请时，立即结束进行中的拼团并清理关联订单。
+   * 仅处理 status=OPEN 的团，不影响已 COMPLETED 的团。
+   */
+  private async failOpenGroupBuyDueToRefund(
+    groupBuyId: bigint,
+    options?: { excludeOrderId?: bigint; reason?: string },
+  ) {
+    const reason = options?.reason ?? '拼团成员申请售后，拼团已结束';
+    await this.prisma.$transaction(async (tx) => {
+      const updated = await tx.groupBuy.updateMany({
+        where: { id: groupBuyId, status: 'OPEN' },
+        data: { status: 'FAILED' },
+      });
+      if (updated.count === 0) {
+        return;
+      }
+
+      const pendingOrders = await tx.order.findMany({
+        where: {
+          groupBuyId,
+          payStatus: PlatformDataService.PAY_STATUS.UNPAID,
+          orderStatus: PlatformDataService.ORDER_STATUS.PENDING,
+        },
+        include: { items: true },
+      });
+      for (const order of pendingOrders) {
+        for (const item of order.items) {
+          await tx.productSku.update({
+            where: { id: item.skuId },
+            data: { stock: { increment: item.quantity }, lockedStock: { decrement: item.quantity } },
+          });
+        }
+        await tx.order.update({
+          where: { id: order.id },
+          data: {
+            orderStatus: PlatformDataService.ORDER_STATUS.CANCELLED,
+            cancelReason: reason,
+          },
+        });
+      }
+
+      const paidOrders = await tx.order.findMany({
+        where: {
+          groupBuyId,
+          payStatus: PlatformDataService.PAY_STATUS.PAID,
+          refundStatus: PlatformDataService.REFUND_STATUS.NONE,
+          orderStatus: {
+            in: [PlatformDataService.ORDER_STATUS.PENDING, PlatformDataService.ORDER_STATUS.ACCEPTED],
+          },
+          ...(options?.excludeOrderId != null ? { id: { not: options.excludeOrderId } } : {}),
+        },
+        select: { id: true },
+      });
+      for (const paidOrder of paidOrders) {
+        await this.autoRefundGroupBuyOrder(tx, paidOrder.id, reason);
+      }
+    });
+  }
+
   async applyMerchant(authUser: AuthUser, body: Record<string, unknown>) {
     const user = await this.ensureUser(authUser);
 
@@ -8731,8 +8849,15 @@ export class PlatformDataService {
 
     await this.prisma.order.updateMany({
       where: { id: order.id },
-      data: { refundStatus: 1 },
+      data: { refundStatus: PlatformDataService.REFUND_STATUS.PENDING_MERCHANT },
     });
+
+    if (order.groupBuyId != null) {
+      await this.failOpenGroupBuyDueToRefund(order.groupBuyId, {
+        excludeOrderId: order.id,
+        reason: '拼团成员申请售后，拼团已结束',
+      });
+    }
 
     return {
       refundNo: refund.refundNo,
@@ -10305,6 +10430,7 @@ export class PlatformDataService {
           status: true,
           productNature: true,
           deliveryType: true,
+          coverUrl: true,
           updatedAt: true,
           skus: {
             select: {
@@ -10369,6 +10495,7 @@ export class PlatformDataService {
         auditRemark: product.auditRemark ?? '',
         status: product.status === 1 ? 'ON_SHELF' : 'OFF_SHELF',
         minPrice: product.skus[0] ? this.computeDisplayPrice(product.skus[0]) : '0.00',
+        coverUrl: this.resolvePublicUrl(product.coverUrl) ?? '',
         salesCount: salesMap.get(product.id.toString()) ?? 0,
         updatedAt: product.updatedAt.toISOString().slice(0, 16).replace('T', ' '),
       })),
@@ -10733,15 +10860,104 @@ export class PlatformDataService {
     return 'COUPON';
   }
 
+  private getExchangeRuleObject(ruleJson: Prisma.JsonValue | null | undefined): Record<string, unknown> {
+    if (ruleJson && typeof ruleJson === 'object' && !Array.isArray(ruleJson)) {
+      return ruleJson as Record<string, unknown>;
+    }
+    return {};
+  }
+
+  private resolveExchangePointsCost(
+    coupon: { discountAmount: Prisma.Decimal | number | string; ruleJson?: Prisma.JsonValue | null },
+    redeemRate: number,
+  ) {
+    const rule = this.getExchangeRuleObject(coupon.ruleJson);
+    const explicit = Number(rule.pointsCost ?? 0);
+    if (Number.isFinite(explicit) && explicit > 0) {
+      return Math.max(Math.floor(explicit), 1);
+    }
+    const rate = Number.isFinite(redeemRate) && redeemRate > 0 ? redeemRate : 100;
+    return Math.max(Math.ceil(Number(coupon.discountAmount) * rate), rate);
+  }
+
   async createAdminExchangeItem(body: Record<string, unknown>, authUser?: AuthUser) {
+    const exchangeKind =
+      String((body.ruleJson as Record<string, unknown> | undefined)?.exchangeKind ?? body.exchangeKind ?? 'COUPON')
+        .trim()
+        .toUpperCase() === 'PRODUCT'
+        ? 'PRODUCT'
+        : 'COUPON';
+
+    let productMeta: {
+      productId: number;
+      skuId: number | null;
+      title: string;
+      coverUrl: string;
+      price: string;
+    } | null = null;
+
+    if (exchangeKind === 'PRODUCT') {
+      const productId = Number(
+        body.productId ??
+          (body.ruleJson && typeof body.ruleJson === 'object'
+            ? (body.ruleJson as Record<string, unknown>).productId
+            : 0),
+      );
+      if (!Number.isFinite(productId) || productId <= 0) {
+        throw new BadRequestException('请选择兑换商品');
+      }
+      const pointsCost = Number(body.pointsCost ?? (body.ruleJson as Record<string, unknown> | undefined)?.pointsCost ?? 0);
+      if (!Number.isFinite(pointsCost) || pointsCost <= 0) {
+        throw new BadRequestException('请设置兑换所需积分');
+      }
+
+      const product = await this.prisma.product.findFirst({
+        where: { id: BigInt(productId), deletedAt: null },
+        include: { skus: { orderBy: { id: 'asc' }, take: 1 } },
+      });
+      if (!product) {
+        throw new BadRequestException('所选商品不存在');
+      }
+      const sku = product.skus[0];
+      productMeta = {
+        productId: this.toNumber(product.id),
+        skuId: sku ? this.toNumber(sku.id) : null,
+        title: product.title,
+        coverUrl: this.resolvePublicUrl(product.coverUrl) ?? '',
+        price: sku ? this.toMoney(sku.price) : '0.01',
+      };
+    }
+
+    const incomingRule =
+      body.ruleJson && typeof body.ruleJson === 'object' && !Array.isArray(body.ruleJson)
+        ? (body.ruleJson as Record<string, unknown>)
+        : {};
+    const pointsCost = Number(body.pointsCost ?? incomingRule.pointsCost ?? 0);
+
     const payload = {
       ...body,
+      name: String(body.name ?? productMeta?.title ?? '').trim() || productMeta?.title || '积分兑换商品',
       type: 'CASHBACK',
+      thresholdAmount: exchangeKind === 'PRODUCT' ? '0.00' : body.thresholdAmount,
+      discountAmount:
+        exchangeKind === 'PRODUCT'
+          ? String(body.discountAmount ?? productMeta?.price ?? '0.01')
+          : body.discountAmount,
+      scope: exchangeKind === 'PRODUCT' ? 'ALL' : body.scope,
+      categoryIds: exchangeKind === 'PRODUCT' ? [] : body.categoryIds,
+      merchantIds: exchangeKind === 'PRODUCT' ? [] : body.merchantIds,
       ruleJson: {
-        ...(body.ruleJson && typeof body.ruleJson === 'object' ? (body.ruleJson as Record<string, unknown>) : {}),
-        exchangeKind: String((body.ruleJson as Record<string, unknown> | undefined)?.exchangeKind ?? body.exchangeKind ?? 'COUPON').trim().toUpperCase() === 'PRODUCT'
-          ? 'PRODUCT'
-          : 'COUPON',
+        ...incomingRule,
+        exchangeKind,
+        ...(exchangeKind === 'PRODUCT' && productMeta
+          ? {
+              productId: productMeta.productId,
+              skuId: productMeta.skuId,
+              coverUrl: productMeta.coverUrl,
+              productTitle: productMeta.title,
+            }
+          : {}),
+        ...(Number.isFinite(pointsCost) && pointsCost > 0 ? { pointsCost: Math.floor(pointsCost) } : {}),
       },
     };
 
@@ -10749,14 +10965,101 @@ export class PlatformDataService {
   }
 
   async updateAdminExchangeItem(couponId: number, body: Record<string, unknown>, authUser?: AuthUser) {
+    const existing = await this.prisma.coupon.findUnique({ where: { id: BigInt(couponId) } });
+    if (!existing || existing.deletedAt) {
+      throw new NotFoundException('Coupon not found');
+    }
+
+    const existingRule = this.getExchangeRuleObject(existing.ruleJson);
+    const exchangeKind =
+      String(
+        (body.ruleJson as Record<string, unknown> | undefined)?.exchangeKind ??
+          body.exchangeKind ??
+          existingRule.exchangeKind ??
+          'COUPON',
+      )
+        .trim()
+        .toUpperCase() === 'PRODUCT'
+        ? 'PRODUCT'
+        : 'COUPON';
+
+    let productMeta: {
+      productId: number;
+      skuId: number | null;
+      title: string;
+      coverUrl: string;
+      price: string;
+    } | null = null;
+
+    if (exchangeKind === 'PRODUCT') {
+      const productId = Number(
+        body.productId ??
+          (body.ruleJson && typeof body.ruleJson === 'object'
+            ? (body.ruleJson as Record<string, unknown>).productId
+            : existingRule.productId) ??
+          0,
+      );
+      if (!Number.isFinite(productId) || productId <= 0) {
+        throw new BadRequestException('请选择兑换商品');
+      }
+      const pointsCost = Number(
+        body.pointsCost ??
+          (body.ruleJson as Record<string, unknown> | undefined)?.pointsCost ??
+          existingRule.pointsCost ??
+          0,
+      );
+      if (!Number.isFinite(pointsCost) || pointsCost <= 0) {
+        throw new BadRequestException('请设置兑换所需积分');
+      }
+
+      const product = await this.prisma.product.findFirst({
+        where: { id: BigInt(productId), deletedAt: null },
+        include: { skus: { orderBy: { id: 'asc' }, take: 1 } },
+      });
+      if (!product) {
+        throw new BadRequestException('所选商品不存在');
+      }
+      const sku = product.skus[0];
+      productMeta = {
+        productId: this.toNumber(product.id),
+        skuId: sku ? this.toNumber(sku.id) : null,
+        title: product.title,
+        coverUrl: this.resolvePublicUrl(product.coverUrl) ?? '',
+        price: sku ? this.toMoney(sku.price) : '0.01',
+      };
+    }
+
+    const incomingRule =
+      body.ruleJson && typeof body.ruleJson === 'object' && !Array.isArray(body.ruleJson)
+        ? (body.ruleJson as Record<string, unknown>)
+        : {};
+    const pointsCost = Number(body.pointsCost ?? incomingRule.pointsCost ?? existingRule.pointsCost ?? 0);
+
     const payload = {
       ...body,
+      name: String(body.name ?? productMeta?.title ?? existing.name).trim() || existing.name,
       type: 'CASHBACK',
+      thresholdAmount: exchangeKind === 'PRODUCT' ? '0.00' : body.thresholdAmount,
+      discountAmount:
+        exchangeKind === 'PRODUCT'
+          ? String(body.discountAmount ?? productMeta?.price ?? existing.discountAmount)
+          : body.discountAmount,
+      scope: exchangeKind === 'PRODUCT' ? 'ALL' : body.scope,
+      categoryIds: exchangeKind === 'PRODUCT' ? [] : body.categoryIds,
+      merchantIds: exchangeKind === 'PRODUCT' ? [] : body.merchantIds,
       ruleJson: {
-        ...(body.ruleJson && typeof body.ruleJson === 'object' ? (body.ruleJson as Record<string, unknown>) : {}),
-        exchangeKind: String((body.ruleJson as Record<string, unknown> | undefined)?.exchangeKind ?? body.exchangeKind ?? 'COUPON').trim().toUpperCase() === 'PRODUCT'
-          ? 'PRODUCT'
-          : 'COUPON',
+        ...existingRule,
+        ...incomingRule,
+        exchangeKind,
+        ...(exchangeKind === 'PRODUCT' && productMeta
+          ? {
+              productId: productMeta.productId,
+              skuId: productMeta.skuId,
+              coverUrl: productMeta.coverUrl,
+              productTitle: productMeta.title,
+            }
+          : {}),
+        ...(Number.isFinite(pointsCost) && pointsCost > 0 ? { pointsCost: Math.floor(pointsCost) } : {}),
       },
     };
 
@@ -11077,9 +11380,11 @@ export class PlatformDataService {
       payAmount: this.toMoney(order.payAmount),
       remark: order.remark ?? '',
       addressSnapshot: order.addressSnapshot,
+      createdAt: this.formatChinaDateTime(order.createdAt),
+      paidAt: order.paidAt ? this.formatChinaDateTime(order.paidAt) : '',
       logisticsCompany: delivery?.logisticsCompany ?? '',
       trackingNo: delivery?.trackingNo ?? '',
-      shippedAt: delivery?.shippedAt ? this.toIso(delivery.shippedAt) : null,
+      shippedAt: delivery?.shippedAt ? this.formatChinaDateTime(delivery.shippedAt) : null,
       canShip:
         order.payStatus === PlatformDataService.PAY_STATUS.PAID &&
         order.orderStatus !== PlatformDataService.ORDER_STATUS.CANCELLED &&
@@ -11087,6 +11392,11 @@ export class PlatformDataService {
         order.deliveryStatus < PlatformDataService.DELIVERY_STATUS.SHIPPED &&
         order.refundStatus !== PlatformDataService.REFUND_STATUS.PENDING_MERCHANT &&
         order.refundStatus !== PlatformDataService.REFUND_STATUS.PROCESSING,
+      canUpdateLogistics:
+        order.payStatus === PlatformDataService.PAY_STATUS.PAID &&
+        order.orderStatus !== PlatformDataService.ORDER_STATUS.CANCELLED &&
+        order.deliveryStatus >= PlatformDataService.DELIVERY_STATUS.SHIPPED &&
+        Boolean(delivery?.trackingNo || delivery?.logisticsCompany),
       items: order.items.map((item) => ({
         orderItemId: this.toNumber(item.id),
         productId: this.toNumber(item.productId),
@@ -11191,6 +11501,79 @@ export class PlatformDataService {
       logisticsCompany,
       deliveryStatus: PlatformDataService.DELIVERY_STATUS.SHIPPED,
       status: '已发货',
+    };
+  }
+
+  async updateAdminOrderLogistics(orderNo: string, body: Record<string, unknown>, authUser?: AuthUser) {
+    await this.withSeed();
+    const trackingNo = String(body.trackingNo ?? '').trim();
+    if (!trackingNo) {
+      throw new BadRequestException('请填写快递单号');
+    }
+    const logisticsCompany = String(body.logisticsCompany ?? '').trim() || '默认物流';
+    const merchantScope = await this.resolveAdminMerchantScope(authUser);
+
+    const order = await this.prisma.order.findFirst({
+      where: {
+        orderNo,
+        deletedAt: null,
+        isParent: false,
+        ...(merchantScope != null ? { merchantId: BigInt(merchantScope) } : {}),
+      },
+      select: {
+        id: true,
+        merchantId: true,
+        orderStatus: true,
+        payStatus: true,
+        deliveryStatus: true,
+      },
+    });
+
+    if (!order) {
+      throw new NotFoundException('订单不存在');
+    }
+    if (order.payStatus !== PlatformDataService.PAY_STATUS.PAID) {
+      throw new BadRequestException('订单未支付，无法修正物流');
+    }
+    if (order.orderStatus === PlatformDataService.ORDER_STATUS.CANCELLED) {
+      throw new BadRequestException('订单已取消，无法修正物流');
+    }
+    if (order.deliveryStatus < PlatformDataService.DELIVERY_STATUS.SHIPPED) {
+      throw new BadRequestException('订单尚未发货，请先录入物流');
+    }
+
+    const existingDelivery = await this.prisma.deliveryRecord.findFirst({
+      where: { orderId: order.id },
+      orderBy: { id: 'desc' },
+    });
+    if (!existingDelivery) {
+      throw new BadRequestException('未找到物流记录，无法修正');
+    }
+
+    await this.prisma.deliveryRecord.update({
+      where: { id: existingDelivery.id },
+      data: {
+        logisticsCompany,
+        trackingNo,
+        deliveryStatus: PlatformDataService.DELIVERY_STATUS.SHIPPED,
+      },
+    });
+
+    await this.recordAdminOperation(authUser, 'UPDATE_ORDER_LOGISTICS', '订单管理', order.id, {
+      orderNo,
+      logisticsCompany,
+      trackingNo,
+      previousLogisticsCompany: existingDelivery.logisticsCompany,
+      previousTrackingNo: existingDelivery.trackingNo,
+    });
+
+    return {
+      orderNo,
+      trackingNo,
+      logisticsCompany,
+      deliveryStatus: PlatformDataService.DELIVERY_STATUS.SHIPPED,
+      status: '已发货',
+      updated: true,
     };
   }
 
@@ -11838,6 +12221,140 @@ export class PlatformDataService {
     return this.toNumber(windowId);
   }
 
+  /** 将后台 GROUP_BUY 活动同步到商品 groupBuyConfig，供小程序拼团专区读取 */
+  private async syncGroupBuyActivityToProducts(activity: {
+    id: bigint;
+    activityType: string;
+    status: string;
+    startAt: Date | null;
+    endAt: Date | null;
+    productsJson: unknown;
+    ruleJson: unknown;
+  }) {
+    if (String(activity.activityType).toUpperCase() !== 'GROUP_BUY') {
+      return;
+    }
+
+    const now = new Date();
+    const ruleJson = this.parseActivityRuleJson(activity.ruleJson);
+    const previousSyncedIds = (Array.isArray(ruleJson.syncedProductIds) ? ruleJson.syncedProductIds : [])
+      .map((item) => Number(item))
+      .filter((id) => Number.isFinite(id) && id > 0);
+    const products = Array.isArray(activity.productsJson)
+      ? activity.productsJson.filter((item): item is Record<string, unknown> => !!item && typeof item === 'object')
+      : [];
+    const productIdsFromActivity = products
+      .map((item) => Number(item.productId ?? 0))
+      .filter((id) => Number.isFinite(id) && id > 0);
+
+    const shouldEnable =
+      activity.status === 'PUBLISHED' &&
+      !!activity.startAt &&
+      !!activity.endAt &&
+      activity.startAt.getTime() <= now.getTime() &&
+      activity.endAt.getTime() >= now.getTime();
+
+    const needed = Math.max(Number(ruleJson.needed ?? 3) || 3, 2);
+    const expireHours = Math.max(Number(ruleJson.expireHours ?? 24) || 24, 1);
+    const activityId = this.toNumber(activity.id);
+    const syncedProductIds: number[] = [];
+
+    if (shouldEnable) {
+      for (const productEntry of products) {
+        const productId = Number(productEntry.productId ?? 0);
+        if (!Number.isFinite(productId) || productId <= 0) {
+          continue;
+        }
+
+        const product = await this.prisma.product.findFirst({
+          where: { id: BigInt(productId), deletedAt: null },
+          include: { skus: { orderBy: { id: 'asc' }, take: 1 } },
+        });
+        if (!product) {
+          continue;
+        }
+
+        const sku = product.skus?.[0];
+        const activityPrice = Number(productEntry.activityPrice ?? 0);
+        const originalPrice = Number(productEntry.originalPrice ?? sku?.price ?? 0);
+        let discountRate = Number(ruleJson.discountRate ?? 0.7) || 0.7;
+        if (originalPrice > 0 && activityPrice > 0) {
+          discountRate = activityPrice / originalPrice;
+        }
+        discountRate = Math.min(Math.max(discountRate, 0.1), 0.95);
+
+        await this.prisma.product.update({
+          where: { id: product.id },
+          data: {
+            groupBuyConfig: {
+              enabled: true,
+              needed,
+              expireHours,
+              discountRate: Number(discountRate.toFixed(4)),
+              sourceActivityId: activityId,
+            } as Prisma.InputJsonValue,
+          },
+        });
+        syncedProductIds.push(productId);
+      }
+    }
+
+    const idsToDisable = shouldEnable
+      ? previousSyncedIds.filter((id) => !syncedProductIds.includes(id))
+      : [...new Set([...previousSyncedIds, ...productIdsFromActivity])];
+
+    for (const productId of idsToDisable) {
+      const product = await this.prisma.product.findFirst({
+        where: { id: BigInt(productId), deletedAt: null },
+      });
+      if (!product) {
+        continue;
+      }
+      const existing = this.asJsonObject(product.groupBuyConfig);
+      if (!existing) {
+        continue;
+      }
+      const sourceId = Number(existing.sourceActivityId ?? 0);
+      if (sourceId !== activityId && !previousSyncedIds.includes(productId)) {
+        continue;
+      }
+      await this.prisma.product.update({
+        where: { id: product.id },
+        data: {
+          groupBuyConfig: {
+            ...existing,
+            enabled: false,
+            sourceActivityId: activityId,
+          } as Prisma.InputJsonValue,
+        },
+      });
+    }
+
+    await this.prisma.activity.update({
+      where: { id: activity.id },
+      data: {
+        ruleJson: {
+          ...ruleJson,
+          syncedProductIds: shouldEnable ? syncedProductIds : [],
+        } as Prisma.InputJsonValue,
+      },
+    });
+  }
+
+  private async ensurePublishedGroupBuyActivitiesSynced() {
+    const activities = await this.prisma.activity.findMany({
+      where: {
+        activityType: 'GROUP_BUY',
+        deletedAt: null,
+        status: { in: ['PUBLISHED', 'PAUSED', 'ENDED'] },
+      },
+      orderBy: { id: 'asc' },
+    });
+    for (const activity of activities) {
+      await this.syncGroupBuyActivityToProducts(activity);
+    }
+  }
+
   private async ensurePublishedSeckillFlashSalesSynced() {
     const now = new Date();
     const activities = await this.prisma.activity.findMany({
@@ -12099,6 +12616,10 @@ export class PlatformDataService {
         },
       });
       if (group && group.status === 'OPEN' && group.expireAt > new Date() && this.isGroupBuyEnabled(group.product.groupBuyConfig)) {
+        const activeGroupIds = await this.getGroupBuyIdsWithActivePaidMembers([group.id]);
+        if (!activeGroupIds.has(group.id.toString())) {
+          return { groups: [], generatedAt: new Date().toISOString() };
+        }
         return {
           groups: [{
             groupId: this.toNumber(group.id),
@@ -12138,9 +12659,11 @@ export class PlatformDataService {
     });
 
     const enabledDbGroups = dbGroups.filter((group) => this.isGroupBuyEnabled(group.product.groupBuyConfig));
+    const activeGroupIds = await this.getGroupBuyIdsWithActivePaidMembers(enabledDbGroups.map((g) => g.id));
+    const joinableDbGroups = enabledDbGroups.filter((g) => activeGroupIds.has(g.id.toString()));
 
     return {
-      groups: enabledDbGroups.map((g) => ({
+      groups: joinableDbGroups.map((g) => ({
         groupId: this.toNumber(g.id),
         groupNo: g.groupNo,
         inviteCode: g.inviteCode,
@@ -12161,6 +12684,7 @@ export class PlatformDataService {
 
   async getQuickGroupBuyProducts(query: Record<string, string>) {
     await this.withSeed();
+    await this.ensurePublishedGroupBuyActivitiesSynced();
 
     const page = this.normalizePage(query.page);
     const pageSize = this.normalizePageSize(query.pageSize);
@@ -12490,6 +13014,49 @@ export class PlatformDataService {
       : [];
     const pendingByGroup = new Map(pendingOrders.map((o) => [o.groupBuyId!.toString(), o.orderNo]));
 
+    const openGroupIds = groups
+      .filter((g) => g.status === 'OPEN' && this.resolveGroupBuyStatus(g.status, g.expireAt) === 'OPEN')
+      .map((g) => g.id);
+    const paidOrdersForOpen =
+      openGroupIds.length > 0
+        ? await this.prisma.order.findMany({
+            where: {
+              groupBuyId: { in: openGroupIds },
+              payStatus: PlatformDataService.PAY_STATUS.PAID,
+            },
+            select: { groupBuyId: true, refundStatus: true, orderStatus: true },
+          })
+        : [];
+    const paidOrdersByGroupId = new Map<string, typeof paidOrdersForOpen>();
+    for (const order of paidOrdersForOpen) {
+      const key = order.groupBuyId!.toString();
+      const list = paidOrdersByGroupId.get(key) ?? [];
+      list.push(order);
+      paidOrdersByGroupId.set(key, list);
+    }
+
+    const groupIdsToHeal: bigint[] = [];
+    const displayStatusByGroupId = new Map<string, 'OPEN' | 'COMPLETED' | 'FAILED'>();
+    for (const g of groups) {
+      let status = this.resolveGroupBuyStatus(g.status, g.expireAt);
+      if (g.status === 'OPEN' && status === 'OPEN') {
+        const paidOrders = paidOrdersByGroupId.get(g.id.toString()) ?? [];
+        if (this.shouldFailOpenGroupBuyDueToRefunds(paidOrders)) {
+          status = 'FAILED';
+          groupIdsToHeal.push(g.id);
+        }
+      }
+      displayStatusByGroupId.set(g.id.toString(), status);
+    }
+    if (groupIdsToHeal.length > 0) {
+      await this.prisma.groupBuy
+        .updateMany({
+          where: { id: { in: groupIdsToHeal }, status: 'OPEN' },
+          data: { status: 'FAILED' },
+        })
+        .catch(() => undefined);
+    }
+
     return {
       items: groups.map((g) => {
         const myMember = g.members.find((m) => this.toNumber(m.userId) === this.toNumber(user.id));
@@ -12502,7 +13069,7 @@ export class PlatformDataService {
           skuId: this.toNumber(g.skuId),
           title: g.product.title,
           coverUrl: this.resolvePublicUrl(g.product.coverUrl) ?? '',
-          status: this.resolveGroupBuyStatus(g.status, g.expireAt),
+          status: displayStatusByGroupId.get(g.id.toString()) ?? this.resolveGroupBuyStatus(g.status, g.expireAt),
           needed: g.needed,
           memberCount: g.members.length,
           isInitiator: this.toNumber(g.initiatorId) === this.toNumber(user.id),
@@ -13516,6 +14083,9 @@ export class PlatformDataService {
     if (activity.activityType === 'SECKILL') {
       await this.syncSeckillActivityToFlashSale(activity);
     }
+    if (activity.activityType === 'GROUP_BUY') {
+      await this.syncGroupBuyActivityToProducts(activity);
+    }
 
     await this.recordAdminOperation(authUser, 'CREATE_ACTIVITY', '活动管理', activity.id, {
       activityName: activity.activityName,
@@ -13626,6 +14196,9 @@ export class PlatformDataService {
     if (activity.activityType === 'SECKILL') {
       await this.syncSeckillActivityToFlashSale(activity);
     }
+    if (activity.activityType === 'GROUP_BUY') {
+      await this.syncGroupBuyActivityToProducts(activity);
+    }
 
     await this.recordAdminOperation(authUser, 'UPDATE_ACTIVITY', '活动管理', activity.id, {
       activityName: activity.activityName,
@@ -13665,6 +14238,12 @@ export class PlatformDataService {
 
     if (activity.activityType === 'SECKILL') {
       await this.syncSeckillActivityToFlashSale({
+        ...activity,
+        status: 'ENDED',
+      });
+    }
+    if (activity.activityType === 'GROUP_BUY') {
+      await this.syncGroupBuyActivityToProducts({
         ...activity,
         status: 'ENDED',
       });
@@ -13941,13 +14520,17 @@ export class PlatformDataService {
     const items = coupons
       .filter((coupon) => coupon.status === 'ENABLED' && this.isCouponInValidWindow(coupon))
       .map((coupon) => {
-        const pointsCost = Math.max(Math.ceil(Number(coupon.discountAmount) * pointRule.redeemRate), pointRule.redeemRate);
+        const rule = this.getExchangeRuleObject(coupon.ruleJson);
+        const exchangeKind = this.getExchangeKindFromRuleJson(coupon.ruleJson);
+        const pointsCost = this.resolveExchangePointsCost(coupon, pointRule.redeemRate);
         const received = receivedCouponIds.has(this.toNumber(coupon.id));
         return {
           couponId: this.toNumber(coupon.id),
           name: coupon.name,
           type: coupon.type,
-          exchangeKind: this.getExchangeKindFromRuleJson(coupon.ruleJson),
+          exchangeKind,
+          productId: Number(rule.productId ?? 0) || null,
+          coverUrl: typeof rule.coverUrl === 'string' ? rule.coverUrl : '',
           thresholdAmount: this.toMoney(coupon.thresholdAmount),
           discountAmount: this.toMoney(coupon.discountAmount),
           stock: coupon.stock,
@@ -14165,7 +14748,7 @@ export class PlatformDataService {
         };
       }
 
-      const pointsCost = Math.max(Math.ceil(Number(coupon.discountAmount ?? 0) * pointRule.redeemRate), pointRule.redeemRate);
+      const pointsCost = this.resolveExchangePointsCost(coupon, pointRule.redeemRate);
       const pointsAgg = await tx.pointLog.aggregate({
         where: { userId: user.id },
         _sum: { points: true },
@@ -16021,6 +16604,9 @@ export class PlatformDataService {
     if (updated.activityType === 'SECKILL') {
       await this.syncSeckillActivityToFlashSale(updated);
     }
+    if (updated.activityType === 'GROUP_BUY') {
+      await this.syncGroupBuyActivityToProducts(updated);
+    }
     return { success: true };
   }
 
@@ -16032,6 +16618,9 @@ export class PlatformDataService {
     if (updated.activityType === 'SECKILL') {
       await this.syncSeckillActivityToFlashSale(updated);
     }
+    if (updated.activityType === 'GROUP_BUY') {
+      await this.syncGroupBuyActivityToProducts(updated);
+    }
     return { success: true };
   }
 
@@ -16042,6 +16631,9 @@ export class PlatformDataService {
     });
     if (updated.activityType === 'SECKILL') {
       await this.syncSeckillActivityToFlashSale(updated);
+    }
+    if (updated.activityType === 'GROUP_BUY') {
+      await this.syncGroupBuyActivityToProducts(updated);
     }
     return { success: true };
   }

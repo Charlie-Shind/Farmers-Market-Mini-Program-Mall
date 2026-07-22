@@ -110,32 +110,27 @@ const router = createRouter({
           },
         },
         {
+          path: 'marketing/points-exchange',
+          name: 'points-exchange',
+          component: ExchangeCenterView,
+          meta: {
+            title: '积分兑换管理',
+            breadcrumb: '后台管理 / 营销中心 / 积分兑换管理',
+            searchPlaceholder: '搜索兑换券 / 兑换商品 / 类目',
+            permissionKey: 'exchange',
+          },
+        },
+        {
           path: 'exchange',
-          redirect: '/exchange/coupons',
+          redirect: '/marketing/points-exchange',
         },
         {
           path: 'exchange/coupons',
-          name: 'exchange',
-          component: ExchangeCenterView,
-          props: { defaultMode: 'COUPON' },
-          meta: {
-            title: '兑换券管理',
-            breadcrumb: '后台管理 / 兑换券管理',
-            searchPlaceholder: '搜索兑换券 / 适用类目 / 店铺',
-            permissionKey: 'exchange',
-          },
+          redirect: '/marketing/points-exchange',
         },
         {
           path: 'exchange/products',
-          name: 'exchange-products',
-          component: ExchangeCenterView,
-          props: { defaultMode: 'PRODUCT' },
-          meta: {
-            title: '兑换商品管理',
-            breadcrumb: '后台管理 / 兑换商品管理',
-            searchPlaceholder: '搜索兑换商品 / 适用类目 / 店铺',
-            permissionKey: 'exchange',
-          },
+          redirect: '/marketing/points-exchange',
         },
         {
           path: 'activities',
