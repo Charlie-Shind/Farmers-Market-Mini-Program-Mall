@@ -56,16 +56,12 @@
       >
         <view class="msg-card__accent msg-card__accent--{{item.tone}}"></view>
 
-        <view class="msg-card__icon msg-card__icon--{{item.tone}}">
+        <view class="msg-card__icon">
           <image
-            wx:if="{{item.showAvatarImage}}"
             class="msg-card__img"
-            src="{{item.avatarSrc}}"
+            src="{{item.avatarSrc || icons.defaultAvatar}}"
             mode="aspectFill"
-            data-receipt-id="{{item.receiptId}}"
-            binderror="handleAvatarError"
           />
-          <t-icon wx:else name="{{item.fallbackIconName}}" size="40rpx" color="{{item.iconColor}}"></t-icon>
           <view wx:if="{{!item.isRead}}" class="msg-card__dot"></view>
         </view>
 

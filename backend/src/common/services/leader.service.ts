@@ -716,6 +716,30 @@ export class LeaderService {
       },
     });
 
+    // 自提核销即订单结束：按团长佣金比例写入待结算佣金（与用户确认收货分佣对齐）
+    const existing = await this.prisma.leaderCommission.findFirst({
+      where: { orderNo: order.orderNo, leaderId: leader.id },
+    });
+    if (!existing) {
+      const rate = Number(leader.commissionRate ?? 0.05);
+      const amount = Number(order.payAmount) * rate;
+      const boundLeader = await this.prisma.leaderBinding.findUnique({ where: { userId: order.userId } });
+      await this.prisma.leaderCommission.create({
+        data: {
+          userId: order.userId,
+          leaderId: leader.id,
+          orderId: order.id,
+          orderNo: order.orderNo,
+          orderAmount: new Prisma.Decimal(Number(order.payAmount).toFixed(2)),
+          commissionRate: new Prisma.Decimal(rate.toFixed(4)),
+          commissionAmount: new Prisma.Decimal(amount.toFixed(2)),
+          status: 'PENDING_SETTLEMENT',
+          remark: '自提核销分佣',
+          boundLeaderId: boundLeader?.leaderId ?? leader.id,
+        },
+      });
+    }
+
     return { orderNo, pickupStatus: 'PICKED_UP' };
   }
 
@@ -841,6 +865,9 @@ export class LeaderService {
         rejectReason: status === 'REJECTED' ? String(body.rejectReason).trim() : null,
         auditedBy: this.resolveAdminUserId(authUser),
         auditedAt: new Date(),
+        ...(status === 'APPROVED' && body.commissionRate != null
+          ? { commissionRate: new Prisma.Decimal(Number(body.commissionRate)) }
+          : {}),
       },
       include: {
         user: { select: { id: true, nickname: true, mobile: true, openid: true, avatarUrl: true } },

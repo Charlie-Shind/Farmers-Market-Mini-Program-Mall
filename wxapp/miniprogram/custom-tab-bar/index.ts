@@ -1,4 +1,4 @@
-import { fetchCartItemCount, fetchUnreadMessageCount, invalidateCartItemCount } from '../services/app';
+import { fetchAssetsSummary, fetchCartItemCount, fetchUnreadMessageCount, invalidateCartItemCount } from '../services/app';
 import { getAuthTokenType } from '../services/token';
 
 type TabItem = {
@@ -33,14 +33,52 @@ function normalizeBadge(value: number): string {
   return String(value);
 }
 
-async function fetchProfileMessageBadge(): Promise<string> {
+/** 「我的」角标：超过 10 显示省略号 */
+function normalizeProfileBadge(value: number): string {
+  if (!Number.isFinite(value) || value <= 0) {
+    return '';
+  }
+
+  if (value > 10) {
+    return '…';
+  }
+
+  return String(value);
+}
+
+function sumPendingOrderCount(orders?: {
+  pendingPay?: number;
+  pendingShip?: number;
+  pendingReceive?: number;
+  pendingGroupBuy?: number;
+  refunding?: number;
+} | null): number {
+  if (!orders) {
+    return 0;
+  }
+  return (
+    Number(orders.pendingPay || 0) +
+    Number(orders.pendingShip || 0) +
+    Number(orders.pendingReceive || 0) +
+    Number(orders.pendingGroupBuy || 0) +
+    Number(orders.refunding || 0)
+  );
+}
+
+/** 「我的」角标 = 未读消息 + 待处理订单（待付/待发/拼团中/待收/售后） */
+async function fetchProfileTabBadge(): Promise<string> {
   if (getAuthTokenType() !== 'access') {
     return '';
   }
 
   try {
-    const res = await fetchUnreadMessageCount();
-    return normalizeBadge(Number(res.unreadCount || 0));
+    const [messageRes, assets] = await Promise.all([
+      fetchUnreadMessageCount().catch(() => ({ unreadCount: 0 })),
+      fetchAssetsSummary().catch(() => null),
+    ]);
+    const messageCount = Number(messageRes.unreadCount || 0);
+    const orderCount = sumPendingOrderCount(assets?.orders);
+    return normalizeProfileBadge(messageCount + orderCount);
   } catch {
     return '';
   }
@@ -87,11 +125,11 @@ Component({
           updateData.active = targetActive;
         }
 
-        const [cartCountResult, messageBadge] = await Promise.all([
+        const [cartCountResult, profileBadge] = await Promise.all([
           fetchCartItemCount()
             .then((count) => normalizeBadge(Number(count || 0)))
             .catch(() => ''),
-          fetchProfileMessageBadge(),
+          fetchProfileTabBadge(),
         ]);
 
         updateData.items = CUSTOMER_ITEMS.map((item) => {
@@ -100,7 +138,7 @@ Component({
             newItem.badge = cartCountResult;
           }
           if (newItem.key === 'profile') {
-            newItem.badge = messageBadge;
+            newItem.badge = profileBadge;
           }
           return newItem;
         });

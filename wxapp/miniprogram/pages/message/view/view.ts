@@ -21,16 +21,21 @@ type DetailBlock = AppMessageContentBlock & {
 
 const TYPE_META: Record<string, { tone: MessageTone; icon: string; iconColor: string; label: string }> = {
   NOTICE: { tone: 'green', icon: 'bell', iconColor: '#2c4a39', label: '公告' },
+  NOTIFICATION: { tone: 'green', icon: 'bell', iconColor: '#2c4a39', label: '通知' },
   SYSTEM: { tone: 'green', icon: 'shield', iconColor: '#3f6f44', label: '系统' },
   ACTIVITY: { tone: 'orange', icon: 'gift', iconColor: '#c65f2d', label: '活动' },
   ORDER: { tone: 'orange', icon: 'truck', iconColor: '#c65f2d', label: '订单' },
   DEFAULT: { tone: 'gold', icon: 'message', iconColor: '#8a6a3d', label: '消息' },
 };
 
+function isEnglishTypeCode(value: string): boolean {
+  return /^[A-Z][A-Z0-9_]*$/.test(String(value || '').trim());
+}
+
 function resolveTypeMeta(type: string, typeLabel: string) {
   const key = String(type || '').toUpperCase();
   if (TYPE_META[key]) return TYPE_META[key];
-  const label = typeLabel || '消息';
+  const label = typeLabel && !isEnglishTypeCode(typeLabel) ? typeLabel : '消息';
   if (/订单|物流|售后/.test(label)) return { ...TYPE_META.ORDER, label };
   if (/活动|营销|优惠/.test(label)) return { ...TYPE_META.ACTIVITY, label };
   if (/系统|安全/.test(label)) return { ...TYPE_META.SYSTEM, label };
@@ -204,7 +209,8 @@ Component({
       try {
         const detail = await fetchMessageDetail(receiptId);
         const avatar = resolveAvatar(detail);
-        const meta = resolveTypeMeta(String(detail.type || ''), String(detail.typeLabel || ''));
+        const rawTypeLabel = String(detail.typeLabel || '');
+        const meta = resolveTypeMeta(String(detail.type || ''), rawTypeLabel);
         const link = resolveLink(detail);
 
         this.setData({
@@ -212,7 +218,7 @@ Component({
           publisherName: resolvePublisherName(detail),
           displayTitle: String(detail.title || detail.summary || '').trim(),
           summaryText: String(detail.summary || '').trim(),
-          typeLabel: String(detail.typeLabel || meta.label),
+          typeLabel: rawTypeLabel && !isEnglishTypeCode(rawTypeLabel) ? rawTypeLabel : meta.label,
           tone: meta.tone,
           iconColor: meta.iconColor,
           senderAvatarSrc: avatar,

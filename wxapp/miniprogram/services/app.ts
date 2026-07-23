@@ -666,6 +666,7 @@ export type AppAssetsSummary = {
     pendingShip: number;
     pendingReceive: number;
     pendingReview: number;
+    pendingGroupBuy: number;
     refunding: number;
     totalCompleted: number;
   };
@@ -1040,6 +1041,21 @@ export type AppOrderPreviewResponse = {
 
 export async function previewOrder(payload: Record<string, unknown>) {
   return post<AppOrderPreviewResponse>('/app/orders/preview', payload, { auth: true });
+}
+
+export type AppLogisticsDeliveryOption = {
+  id: number;
+  name: string;
+  province: string;
+  thresholdAmount: string;
+  freightAmount: string;
+};
+
+export async function fetchLogisticsDeliveryOptions(params?: { province?: string }) {
+  return get<{ items: AppLogisticsDeliveryOption[] }>(
+    '/app/logistics/delivery-options',
+    params?.province ? { province: params.province } : undefined,
+  );
 }
 
 export async function createOrder(payload: Record<string, unknown>) {

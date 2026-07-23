@@ -124,6 +124,9 @@ type AdminOrderDetailRow = AdminOrderRow & {
   shippedAt?: string | null;
   canShip?: boolean;
   canUpdateLogistics?: boolean;
+  isGroupBuy?: boolean;
+  groupBuyId?: number | null;
+  shipBlockedReason?: string;
   items: Array<{
     orderItemId: number;
     productId: number;

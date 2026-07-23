@@ -99,6 +99,14 @@ export class MarketingController {
   assetsSummary(@CurrentUser() user: AuthUser) {
     return this.platformDataService.getAssetsSummary(user);
   }
+
+  @Public()
+  @Get('logistics/delivery-options')
+  logisticsDeliveryOptions(@Query() query: Record<string, string>) {
+    return this.platformDataService.listAppLogisticsDeliveryOptions({
+      province: query.province ? String(query.province) : undefined,
+    });
+  }
 }
 
 @Controller('leader')

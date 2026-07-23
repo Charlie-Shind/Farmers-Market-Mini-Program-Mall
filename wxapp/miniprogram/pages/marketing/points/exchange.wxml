@@ -1,4 +1,4 @@
-﻿<view class="phone-page px-page" style="{{pageStyle}}">
+﻿<view class="phone-page px-page" style="{{pageStyle}}" style="min-height: 90vh !important;">
   <image class="px-page__top-art" src="/assets/images/points/bg-top.jpg" mode="widthFix" />
   <page-nav title="积分兑换" theme="light" />
 

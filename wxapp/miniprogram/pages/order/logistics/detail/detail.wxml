@@ -1,56 +1,123 @@
-﻿<view class="phone-page logistics-page" style="{{pageStyle}}">
+﻿<view class="phone-page ld-page" style="{{pageStyle}}">
   <page-nav title="物流详情" theme="solid" />
 
-  <scroll-view scroll-y="true" class="logistics-scroll" enhanced="true" show-scrollbar="{{false}}">
-    <view wx:if="{{loading}}" class="loading-box">
-      <text class="loading-text">正在加载物流信息…</text>
+  <scroll-view scroll-y class="ld-scroll" enhanced show-scrollbar="{{false}}">
+    <view wx:if="{{loading}}" class="ld-loading">
+      <text>正在加载物流信息…</text>
     </view>
 
-    <view wx:if="{{order}}" class="panel summary-card">
-      <view class="summary-head">
-        <view>
-          <text class="summary-title">{{order.logisticsCompany || '物流查询'}}</text>
-          <text class="summary-subtitle">{{statusLabel}}</text>
+    <block wx:elif="{{order}}">
+      <!-- 状态头图 -->
+      <view class="ld-hero" style="background-image: url('{{heroBg}}')">
+        <view class="ld-hero__mask"></view>
+        <view class="ld-hero__copy">
+          <text class="ld-hero__title">{{statusLabel}}</text>
+          <text class="ld-hero__sub">{{statusSubLabel}}</text>
         </view>
-        <view class="summary-badge">{{statusLabel}}</view>
       </view>
-      <text class="summary-desc">{{statusSubLabel}}</text>
-      <view class="summary-meta">
-        <text class="summary-meta__text">订单号：{{order.orderNo}}</text>
-        <button class="summary-meta__action" bindtap="copyOrderNumber">复制单号</button>
-      </view>
-      <view class="summary-meta">
-        <text class="summary-meta__text">物流单号：{{order.trackingNo || '暂无单号'}}</text>
-        <button class="summary-meta__action" wx:if="{{order.trackingNo}}" data-express-no="{{order.trackingNo}}" bindtap="copyTrackingNumber">复制物流单号</button>
-      </view>
-    </view>
 
-    <view wx:if="{{order}}" class="panel timeline-card">
-      <view class="section-title">
-        <text class="section-title__title">物流轨迹</text>
-        <text class="section-title__meta">订单状态流转</text>
-      </view>
-      <view class="timeline-list">
-        <view wx:for="{{timeline}}" wx:key="key" class="timeline-item {{item.active ? 'timeline-item--active' : ''}}">
-          <view class="timeline-dot"></view>
-          <view class="timeline-body">
-            <text class="timeline-title">{{item.title}}</text>
-            <text class="timeline-desc">{{item.desc}}</text>
+      <!-- 横向进度 -->
+      <view class="ld-progress-card">
+        <view class="ld-progress">
+          <view
+            wx:for="{{progressSteps}}"
+            wx:key="key"
+            class="ld-progress__item {{item.done ? 'is-done' : ''}} {{item.current ? 'is-current' : ''}}"
+          >
+            <view class="ld-progress__rail" wx:if="{{index > 0}}"></view>
+            <view class="ld-progress__node">
+              <t-icon
+                name="{{item.current ? 'truck' : (item.done ? 'check' : item.icon)}}"
+                size="{{item.current ? '34rpx' : '26rpx'}}"
+                color="{{item.current || item.done ? '#ffffff' : '#b7b3a8'}}"
+              />
+            </view>
+            <text class="ld-progress__title">{{item.title}}</text>
+            <text wx:if="{{item.timeText}}" class="ld-progress__time">{{item.timeText}}</text>
           </view>
         </view>
       </view>
-    </view>
 
-    <view wx:if="{{order && !order.trackingNo && !loading}}" class="trace-empty">
-      <text class="trace-empty__title">暂无配送信息</text>
-      <text class="trace-empty__desc">该订单可能还未发货，或商家尚未回传物流单据。</text>
-    </view>
+      <!-- 承运信息 -->
+      <view class="ld-carrier">
+        <view class="ld-carrier__logo">{{companyInitial}}</view>
+        <view class="ld-carrier__main">
+          <text class="ld-carrier__name">{{order.logisticsCompany || '物流配送'}}</text>
+          <view class="ld-carrier__row">
+            <text class="ld-carrier__no">快递单号：{{order.trackingNo || '暂无单号'}}</text>
+            <text
+              wx:if="{{order.trackingNo}}"
+              class="ld-carrier__copy"
+              bindtap="copyTrackingNumber"
+            >复制</text>
+          </view>
+        </view>
+        <button class="ld-carrier__cs" bindtap="openContact">联系客服</button>
+      </view>
 
-    <view class="safe-bottom"></view>
+      <!-- 物流轨迹 -->
+      <view class="ld-track">
+        <text class="ld-track__title">物流轨迹</text>
+        <view class="ld-track__list">
+          <view
+            wx:for="{{trackItems}}"
+            wx:key="key"
+            class="ld-track__item {{item.current ? 'is-current' : ''}} {{item.done ? 'is-done' : ''}}"
+          >
+            <view class="ld-track__axis">
+              <view class="ld-track__dot">
+                <t-icon
+                  wx:if="{{item.current}}"
+                  name="truck"
+                  size="28rpx"
+                  color="#ffffff"
+                />
+              </view>
+              <view wx:if="{{index < trackItems.length - 1}}" class="ld-track__line"></view>
+            </view>
+            <view class="ld-track__body">
+              <view class="ld-track__head">
+                <text class="ld-track__name">{{item.title}}</text>
+                <text wx:if="{{item.timeText}}" class="ld-track__time">{{item.timeText}}</text>
+              </view>
+              <text class="ld-track__desc">{{item.desc}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 信任条 -->
+      <view class="ld-trust">
+        <view class="ld-trust__item">
+          <t-icon name="shield" size="36rpx" color="#8a877f" />
+          <view class="ld-trust__copy">
+            <text>正品保障</text>
+            <text>品质保证</text>
+          </view>
+        </view>
+        <view class="ld-trust__divider"></view>
+        <view class="ld-trust__item">
+          <t-icon name="truck" size="36rpx" color="#8a877f" />
+          <view class="ld-trust__copy">
+            <text>极速发货</text>
+            <text>次日送达</text>
+          </view>
+        </view>
+        <view class="ld-trust__divider"></view>
+        <view class="ld-trust__item">
+          <t-icon name="support" size="36rpx" color="#8a877f" />
+          <view class="ld-trust__copy">
+            <text>售后无忧</text>
+            <text>贴心服务</text>
+          </view>
+        </view>
+      </view>
+    </block>
+
+    <view wx:elif="{{!loading}}" class="ld-empty">
+      <text class="ld-empty__title">暂无物流信息</text>
+      <text class="ld-empty__desc">订单可能尚未发货，或商家还未回传物流单号</text>
+      <button class="ld-empty__btn" bindtap="openOrderDetail">查看订单详情</button>
+    </view>
   </scroll-view>
-
-  <view class="bottom-action-bar" wx:if="{{order}}">
-    <button class="toolbar-btn toolbar-btn--ghost" bindtap="openOrderDetail">查看订单详情</button>
-    <button class="toolbar-btn" bindtap="copyOrderNumber">复制订单号</button>
-  </view>
 </view>

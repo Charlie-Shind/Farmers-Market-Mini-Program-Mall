@@ -47,16 +47,21 @@ type ChannelRow = {
 
 const TYPE_META: Record<string, TypeMeta> = {
   NOTICE: { tone: 'green', icon: 'bell', iconColor: '#2c4a39', label: '公告' },
+  NOTIFICATION: { tone: 'green', icon: 'bell', iconColor: '#2c4a39', label: '通知' },
   SYSTEM: { tone: 'green', icon: 'shield', iconColor: '#3f6f44', label: '系统' },
   ACTIVITY: { tone: 'orange', icon: 'gift', iconColor: '#c65f2d', label: '活动' },
   ORDER: { tone: 'orange', icon: 'truck', iconColor: '#c65f2d', label: '订单' },
   DEFAULT: { tone: 'gold', icon: 'message', iconColor: '#8a6a3d', label: '消息' },
 };
 
+function isEnglishTypeCode(value: string): boolean {
+  return /^[A-Z][A-Z0-9_]*$/.test(String(value || '').trim());
+}
+
 function resolveTypeMeta(type: string, typeLabel: string): TypeMeta {
   const key = String(type || '').toUpperCase();
   if (TYPE_META[key]) return TYPE_META[key];
-  const label = typeLabel || '消息';
+  const label = typeLabel && !isEnglishTypeCode(typeLabel) ? typeLabel : '消息';
   if (/订单|物流|售后/.test(label)) return { ...TYPE_META.ORDER, label };
   if (/活动|营销|优惠/.test(label)) return { ...TYPE_META.ACTIVITY, label };
   if (/系统|安全/.test(label)) return { ...TYPE_META.SYSTEM, label };
@@ -149,18 +154,20 @@ function readPublishAt(item: any): string {
 function mapMessage(item: AppMessageListItem): MessageRow {
   const anyItem = item as any;
   const type = String(anyItem.type || 'DEFAULT');
-  const typeLabel = String(anyItem.typeLabel || anyItem.categoryName || '');
-  const meta = resolveTypeMeta(type, typeLabel);
+  const rawTypeLabel = String(anyItem.typeLabel || anyItem.categoryName || '');
+  const meta = resolveTypeMeta(type, rawTypeLabel);
   const imageUrl = readImageUrl(anyItem);
   const summary = readSummary(anyItem);
   const publishAt = readPublishAt(anyItem);
   const title = String(anyItem.title || '').trim() || summary;
-  const channelKey = type || typeLabel || 'DEFAULT';
+  const channelKey = type || rawTypeLabel || 'DEFAULT';
+  const typeLabel =
+    rawTypeLabel && !isEnglishTypeCode(rawTypeLabel) ? rawTypeLabel : meta.label;
 
   return {
     receiptId: Number(anyItem.receiptId || anyItem.id || 0),
     type,
-    typeLabel: typeLabel || meta.label,
+    typeLabel,
     title,
     summary,
     showSummary: Boolean(summary) && summary !== title,
@@ -169,8 +176,8 @@ function mapMessage(item: AppMessageListItem): MessageRow {
     timeText: formatRowTime(publishAt),
     timestamp: getTimestamp(publishAt),
     isRead: !!anyItem.isRead,
-    avatarSrc: imageUrl,
-    showAvatarImage: Boolean(imageUrl),
+    avatarSrc: String(iconPaths.defaultAvatar || ''),
+    showAvatarImage: Boolean(iconPaths.defaultAvatar),
     fallbackIconName: meta.icon,
     tone: meta.tone,
     iconColor: meta.iconColor,
@@ -346,23 +353,6 @@ Component({
     },
     goBack() {
       navigateBackOrHome();
-    },
-    handleAvatarError(this: any, e: WechatMiniprogram.BaseEvent) {
-      const { receiptId } = (e.currentTarget.dataset as { receiptId?: number | string }) || {};
-      const id = Number(receiptId || 0);
-      if (!id) return;
-
-      const patch = (list: MessageRow[], field: string) => {
-        const index = list.findIndex((item) => item.receiptId === id);
-        if (index < 0) return;
-        this.setData({
-          [`${field}[${index}].avatarSrc`]: '',
-          [`${field}[${index}].showAvatarImage`]: false,
-        });
-      };
-
-      patch(this.data.messages, 'messages');
-      patch(this.data.displayMessages, 'displayMessages');
     },
   },
 });

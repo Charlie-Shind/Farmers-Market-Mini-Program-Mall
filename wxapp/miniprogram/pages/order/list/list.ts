@@ -50,7 +50,16 @@ function buildOrderActionButtons(order: any) {
 
   const backendActionButtons = (Array.isArray(order?.actionButtons) ? order.actionButtons : []).filter(
     (item: any) => item?.key !== 'review' && !(isRefunding && item?.key === 'invite'),
-  );
+  ).map((item: any) => {
+    if (
+      item?.key === 'refund' &&
+      item?.label === '申请退款' &&
+      String(order?.groupBuy?.status || '').toUpperCase() === 'OPEN'
+    ) {
+      return { ...item, label: '取消拼团' };
+    }
+    return item;
+  });
   const hasCancelAfterSale = backendActionButtons.some((item: any) => item?.key === 'cancelAfterSale');
   const shouldShowCancelAfterSale =
     statusLabel === '售后中' ||

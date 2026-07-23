@@ -481,7 +481,12 @@ Component({
           statusLabel: String(order.statusLabel || order.status || ''),
           actionButtons: (Array.isArray((order as any).actionButtons) ? (order as any).actionButtons : []).filter(
             (item: any) => item?.key !== 'review',
-          ),
+          ).map((item: any) => {
+            if (item?.key === 'refund' && item?.label === '申请退款' && (order as any).groupBuy?.status === 'OPEN') {
+              return { ...item, label: '取消拼团' };
+            }
+            return item;
+          }),
           orderStatus: Number(order.orderStatus),
           payStatus: Number(order.payStatus),
           deliveryStatus: Number(order.deliveryStatus),
@@ -669,7 +674,12 @@ Component({
       const backendStatusLabel = String((order as any).statusLabel || order.status || '').trim();
       const backendActionButtons = (Array.isArray((order as any).actionButtons) ? (order as any).actionButtons : []).filter(
         (item: any) => item?.key !== 'review',
-      );
+      ).map((item: any) => {
+        if (item?.key === 'refund' && item?.label === '申请退款' && order.groupBuy?.status === 'OPEN') {
+          return { ...item, label: '取消拼团' };
+        }
+        return item;
+      });
       if (backendStatusLabel) {
         const normalizedBackendStatusLabel = backendStatusLabel === '已过期' ? '支付超时' : backendStatusLabel;
         let colorClass = 'banner--green';

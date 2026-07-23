@@ -5,6 +5,7 @@ import {
   fetchAssetsSummary,
   fetchProductDetail,
   fetchUserCoupons,
+  fetchLogisticsDeliveryOptions,
   previewOrder,
   createOrder,
   createWechatPayment,
@@ -16,6 +17,7 @@ import {
   type AppCartGroup,
   type AppCartItem,
   type AppProductDetail,
+  type AppLogisticsDeliveryOption,
 } from '../../services/app';
 import { fetchPickupPoints, type PickupPoint } from '../../services/leader';
 import { buildPageTopStyle } from '../../utils/page-layout';
@@ -58,15 +60,41 @@ type FlashSaleCheckoutContext = {
 };
 
 type DeliveryMethod = {
+  key: string;
   type: number;
   name: string;
+  logisticsRuleId?: number;
+  province?: string;
+  thresholdAmount?: string;
+  freightAmount?: string;
 };
 
-const DELIVERY_METHODS: DeliveryMethod[] = [
-  { type: 1, name: '标准快递' },
-  { type: 2, name: '同城冷链' },
-  { type: 3, name: '自提点自提' },
-];
+const PICKUP_DELIVERY: DeliveryMethod = {
+  key: 'pickup',
+  type: 3,
+  name: '自提点自提',
+};
+
+function mapLogisticsRulesToDeliveryMethods(rules: AppLogisticsDeliveryOption[]): DeliveryMethod[] {
+  const methods = (rules || []).map((rule) => ({
+    key: `rule:${rule.id}`,
+    type: 1,
+    name: rule.name,
+    logisticsRuleId: Number(rule.id),
+    province: rule.province,
+    thresholdAmount: rule.thresholdAmount,
+    freightAmount: rule.freightAmount,
+  }));
+  if (methods.length === 0) {
+    methods.push({
+      key: 'express',
+      type: 1,
+      name: '快递配送',
+    });
+  }
+  methods.push(PICKUP_DELIVERY);
+  return methods;
+}
 
 Component({
   data: {
@@ -76,8 +104,8 @@ Component({
     flashSaleContext: null as FlashSaleCheckoutContext | null,
     address: null as AppAddress | null,
     items: [] as CheckoutItemView[],
-    deliveryMethods: DELIVERY_METHODS,
-    selectedDelivery: DELIVERY_METHODS[0],
+    deliveryMethods: [PICKUP_DELIVERY] as DeliveryMethod[],
+    selectedDelivery: PICKUP_DELIVERY as DeliveryMethod,
     pickupPoints: [] as PickupPoint[],
     selectedPickupPoint: null as PickupPoint | null,
     selectedPickupPointId: 0,
@@ -415,6 +443,7 @@ Component({
           },
         });
 
+        await this.loadDeliveryMethods();
         await this.loadOrderPreview();
       } catch {
         wx.showToast({ title: '获取订单信息失败', icon: 'none' });
@@ -422,10 +451,33 @@ Component({
         wx.hideLoading();
       }
     },
+    async loadDeliveryMethods() {
+      try {
+        const result = await fetchLogisticsDeliveryOptions();
+        const deliveryMethods = mapLogisticsRulesToDeliveryMethods(result?.items || []);
+        const prevKey = String(this.data.selectedDelivery?.key || '');
+        const selectedDelivery =
+          deliveryMethods.find((item) => item.key === prevKey) || deliveryMethods[0] || PICKUP_DELIVERY;
+        this.setData({
+          deliveryMethods,
+          selectedDelivery,
+        });
+        if (selectedDelivery.type === 3 && this.data.pickupPoints.length === 0) {
+          await this.loadPickupPoints();
+        }
+      } catch {
+        const deliveryMethods = mapLogisticsRulesToDeliveryMethods([]);
+        this.setData({
+          deliveryMethods,
+          selectedDelivery: deliveryMethods[0] || PICKUP_DELIVERY,
+        });
+      }
+    },
     async loadPickupPoints() {
       try {
         const result = await fetchPickupPoints({ pageSize: 50 });
-        const list = (result?.list || []).map((p) => ({
+        const rawList = (result as any)?.items || (result as any)?.list || [];
+        const list = rawList.map((p: any) => ({
           ...p,
           name: p.storeName,
           address: p.storeAddress,
@@ -444,18 +496,13 @@ Component({
     async loadOrderPreview() {
       const address = this.data.address;
       const cartIds = this.data.cartIds;
-      const deliveryType = this.data.selectedDelivery.type;
+      const selectedDelivery = this.data.selectedDelivery || PICKUP_DELIVERY;
+      const deliveryType = selectedDelivery.type;
+      const logisticsRuleId = Number(selectedDelivery.logisticsRuleId || 0) || null;
       const couponId = this.data.selectedCoupon?.couponId || null;
       const usePointsVal = this.data.points.redeemEnabled && this.data.usePoints ? this.data.points.usable : 0;
       const groupBuyContext = this.data.groupBuyContext;
       const pickupPointId = this.data.selectedPickupPointId || null;
-
-      let freightAmount = 0;
-      if (deliveryType === 1) {
-        freightAmount = 8.0;
-      } else if (deliveryType === 2) {
-        freightAmount = 15.0;
-      }
 
       try {
         const previewPayload: Record<string, unknown> = {
@@ -463,7 +510,7 @@ Component({
           couponId,
           usePoints: usePointsVal,
           deliveryType,
-          freightAmount,
+          logisticsRuleId,
           pickupPointId,
         };
         if (this.data.checkoutMode === 'flashSale' && this.data.flashSaleContext) {
@@ -532,7 +579,8 @@ Component({
     },
     async onDeliveryChange(e: WechatMiniprogram.CustomEvent & { detail?: { value?: string } }) {
       const index = Number(e.detail?.value || 0);
-      const selectedDelivery = DELIVERY_METHODS[index] || DELIVERY_METHODS[0];
+      const methods = this.data.deliveryMethods || [];
+      const selectedDelivery = methods[index] || methods[0] || PICKUP_DELIVERY;
 
       this.setData({
         selectedDelivery,
@@ -637,16 +685,15 @@ Component({
         const usePointsVal = this.data.points.redeemEnabled && this.data.usePoints ? this.data.points.usable : 0;
         const groupBuyContext = this.data.groupBuyContext;
         const pickupPointId = this.data.selectedPickupPointId || null;
-        let freightAmount = 0;
-        if (deliveryType === 1) freightAmount = 8.0;
-        else if (deliveryType === 2) freightAmount = 15.0;
+        const selectedDelivery = this.data.selectedDelivery || PICKUP_DELIVERY;
+        const logisticsRuleId = Number(selectedDelivery.logisticsRuleId || 0) || null;
 
         const orderPayload: Record<string, unknown> = {
           addressId: this.data.address?.id || null,
           couponId,
           usePoints: usePointsVal,
           deliveryType,
-          freightAmount,
+          logisticsRuleId,
           pickupPointId,
           remark: '',
         };

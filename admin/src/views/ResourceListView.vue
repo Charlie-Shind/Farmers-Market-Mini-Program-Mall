@@ -1682,7 +1682,15 @@
           <div class="form-grid-2">
             <label class="form-field">
               <span>适用地区 *</span>
-              <input v-model.trim="logisticsFormModal.province" type="text" placeholder="全国 / 广东" required />
+              <select v-model="logisticsFormModal.province" required>
+                <option
+                  v-for="province in chinaProvinceOptions"
+                  :key="province"
+                  :value="province"
+                >
+                  {{ province }}
+                </option>
+              </select>
             </label>
             <label class="form-field">
               <span>状态</span>
@@ -1786,11 +1794,29 @@ import RefreshDataButton from '@/components/RefreshDataButton.vue';
 import { refreshWithFeedback } from '@/utils/refresh-feedback';
 import type { ResourceKey } from '@/data/admin';
 import { resourceConfigs } from '@/data/admin';
+import { CHINA_PROVINCE_OPTIONS } from '@/data/china-provinces';
 
 const refreshApi = inject<{
   register: (handler: () => void | Promise<void>) => () => void;
   tick: { value: number };
 } | null>('admin-refresh', null);
+
+const chinaProvinceOptions = [...CHINA_PROVINCE_OPTIONS];
+
+function normalizeLogisticsProvince(value: unknown): string {
+  const raw = String(value ?? '').trim();
+  if (!raw) return '全国';
+  if (chinaProvinceOptions.includes(raw as (typeof CHINA_PROVINCE_OPTIONS)[number])) {
+    return raw;
+  }
+  const normalized = raw
+    .replace(/(特别行政区|壮族自治区|回族自治区|维吾尔自治区|自治区|省|市)$/g, '')
+    .trim();
+  const matched = chinaProvinceOptions.find(
+    (item) => item !== '全国' && (normalized.includes(item) || item.includes(normalized)),
+  );
+  return matched || '全国';
+}
 
 type RowDetailField = {
   label: string;
@@ -2830,7 +2856,7 @@ function openLogisticsFormModal(initial: Record<string, unknown> = {}) {
   logisticsFormError.value = '';
   logisticsFormModal.id = initial.id != null ? Number(initial.id) : null;
   logisticsFormModal.name = String(initial.name ?? initial.ruleName ?? '');
-  logisticsFormModal.province = String(initial.province ?? '全国');
+  logisticsFormModal.province = normalizeLogisticsProvince(initial.province ?? '全国');
   logisticsFormModal.thresholdAmount = String(initial.thresholdAmount ?? '88.00');
   logisticsFormModal.freightAmount = String(initial.freightAmount ?? '0.00');
   logisticsFormModal.active = initial.active !== false && initial.active !== 'false';
@@ -2850,7 +2876,11 @@ async function submitLogisticsFormModal() {
     return;
   }
   if (!logisticsFormModal.province.trim()) {
-    logisticsFormError.value = '请填写适用地区';
+    logisticsFormError.value = '请选择适用地区';
+    return;
+  }
+  if (!chinaProvinceOptions.includes(logisticsFormModal.province as (typeof CHINA_PROVINCE_OPTIONS)[number])) {
+    logisticsFormError.value = '适用地区无效，请从省份列表中选择';
     return;
   }
 

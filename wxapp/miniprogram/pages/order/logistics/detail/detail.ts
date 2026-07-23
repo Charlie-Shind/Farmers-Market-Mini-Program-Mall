@@ -16,13 +16,6 @@ type LogisticsDetail = {
   timeline: LogisticsTimelineItem[];
 };
 
-type TimelineStep = {
-  key: string;
-  title: string;
-  desc: string;
-  active: boolean;
-};
-
 type LogisticsTimelineItem = {
   time: string | null;
   title: string;
@@ -30,88 +23,123 @@ type LogisticsTimelineItem = {
   status: 'done' | 'pending';
 };
 
-function formatDateTime(value?: string) {
+type ProgressStep = {
+  key: string;
+  title: string;
+  timeText: string;
+  done: boolean;
+  current: boolean;
+  icon: string;
+};
+
+type TrackItem = {
+  key: string;
+  title: string;
+  timeText: string;
+  desc: string;
+  done: boolean;
+  current: boolean;
+};
+
+function formatDateTime(value?: string | null, compact = false) {
   if (!value) {
     return '';
   }
-
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
     return value;
   }
-
-  const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   const hours = String(date.getHours()).padStart(2, '0');
   const minutes = String(date.getMinutes()).padStart(2, '0');
+  if (compact) {
+    return `${month}-${day} ${hours}:${minutes}`;
+  }
+  const year = date.getFullYear();
   return `${year}-${month}-${day} ${hours}:${minutes}`;
 }
 
-function resolveStatusLabel(order?: LogisticsDetail | null) {
+function resolveStatusCopy(order?: LogisticsDetail | null) {
   if (!order) {
-    return '加载中';
+    return { label: '加载中', sub: '正在同步物流信息…' };
   }
-
-  return order.statusLabel || '物流已更新';
-}
-
-function resolveStatusSubLabel(order?: LogisticsDetail | null) {
-  if (!order) {
-    return '';
-  }
-
   if (order.status === 'DELIVERED') {
-    return '包裹已签收，可前往订单详情继续处理售后。';
+    return { label: '已签收', sub: '包裹已签收，祝您购物愉快' };
   }
-
   if (order.status === 'IN_TRANSIT') {
-    return '包裹已出库，正在运送中。';
+    return { label: '运输中', sub: '包裹正在运输中，请耐心等待' };
   }
-
-  return '订单已提交，等待商家配货。';
+  return { label: '等待发货', sub: '商家正在备货，发货后可查看物流轨迹' };
 }
 
-function buildTimeline(order?: LogisticsDetail | null): TimelineStep[] {
+function buildProgressSteps(order?: LogisticsDetail | null): ProgressStep[] {
   const timeline = order?.timeline || [];
-  return [
-    {
-      key: 'submit',
-      title: '订单已提交',
-      desc: timeline[0]?.time ? `下单时间 ${formatDateTime(timeline[0].time || undefined)}` : timeline[0]?.desc || '等待商家审核和配货',
-      active: true,
-    },
-    {
-      key: 'pay',
-      title: '等待发货',
-      desc: timeline[1]?.time ? `付款时间 ${formatDateTime(timeline[1].time || undefined)}` : timeline[1]?.desc || '等待完成支付',
-      active: timeline[1]?.status === 'done' || order?.status !== 'PENDING_SHIP',
-    },
-    {
-      key: 'delivery',
-      title: '运输中',
-      desc: timeline[2]?.time ? `${formatDateTime(timeline[2].time || undefined)} · ${timeline[2].desc}` : timeline[2]?.desc || '物流节点更新后将显示最新信息',
-      active: timeline[2]?.status === 'done' || order?.status === 'IN_TRANSIT' || order?.status === 'DELIVERED',
-    },
-    {
-      key: 'signed',
-      title: '已签收',
-      desc: timeline[3]?.time ? `${formatDateTime(timeline[3].time || undefined)} · ${timeline[3].desc}` : timeline[3]?.desc || '签收后可在订单详情申请售后',
-      active: timeline[3]?.status === 'done' || order?.status === 'DELIVERED',
-    },
+  const status = order?.status || 'PENDING_SHIP';
+  const currentIndex =
+    status === 'DELIVERED' ? 4 : status === 'IN_TRANSIT' ? 2 : 1;
+
+  const defs = [
+    { key: 'submit', title: '订单提交', icon: 'check', time: timeline[0]?.time },
+    { key: 'wait', title: '等待发货', icon: 'package', time: timeline[1]?.time },
+    { key: 'transit', title: '运输中', icon: 'truck', time: timeline[2]?.time || order?.shippedAt },
+    { key: 'shipped', title: '已发货', icon: 'delivering', time: timeline[2]?.time || order?.shippedAt },
+    { key: 'signed', title: '已签收', icon: 'signed', time: timeline[3]?.time || order?.deliveredAt },
   ];
+
+  return defs.map((item, index) => {
+    const done = index < currentIndex || status === 'DELIVERED';
+    const current = index === currentIndex;
+    const showTime = done || current;
+    return {
+      key: item.key,
+      title: item.title,
+      icon: item.icon,
+      timeText: showTime ? formatDateTime(item.time, true) : '',
+      done: done && !current,
+      current,
+    };
+  });
+}
+
+function buildTrackItems(order?: LogisticsDetail | null): TrackItem[] {
+  const timeline = [...(order?.timeline || [])].reverse();
+  const items: TrackItem[] = timeline.map((item, index) => ({
+    key: `api-${index}`,
+    title: item.title,
+    timeText: formatDateTime(item.time),
+    desc: item.desc || '',
+    done: item.status === 'done',
+    current: false,
+  }));
+
+  if (!items.length) {
+    return items;
+  }
+
+  const firstDoneIndex = items.findIndex((item) => item.done);
+  if (firstDoneIndex >= 0) {
+    items[firstDoneIndex] = { ...items[firstDoneIndex], current: true };
+  } else {
+    items[0] = { ...items[0], current: true };
+  }
+
+  return items;
 }
 
 Page({
   data: {
     icons: iconPaths,
     pageStyle: '',
+    heroBg: '/assets/images/order/status-bg-green.jpg',
     loading: true,
     orderNo: '',
     order: null as LogisticsDetail | null,
     statusLabel: '',
     statusSubLabel: '',
-    timeline: [] as TimelineStep[],
+    progressSteps: [] as ProgressStep[],
+    trackItems: [] as TrackItem[],
+    companyInitial: '物',
   },
   onLoad(options) {
     this.setData({
@@ -132,11 +160,15 @@ Page({
     this.setData({ loading: true });
     try {
       const order = await fetchOrderLogisticsDetail(orderNo);
+      const copy = resolveStatusCopy(order);
+      const company = String(order.logisticsCompany || '物流').trim();
       this.setData({
         order,
-        statusLabel: resolveStatusLabel(order),
-        statusSubLabel: resolveStatusSubLabel(order),
-        timeline: buildTimeline(order),
+        statusLabel: copy.label,
+        statusSubLabel: copy.sub,
+        progressSteps: buildProgressSteps(order),
+        trackItems: buildTrackItems(order),
+        companyInitial: company.slice(0, 1) || '物',
       });
     } catch (err: any) {
       wx.showToast({ title: err?.message || '加载物流信息失败', icon: 'none' });
@@ -144,7 +176,8 @@ Page({
         order: null,
         statusLabel: '',
         statusSubLabel: '',
-        timeline: [],
+        progressSteps: [],
+        trackItems: [],
       });
     } finally {
       this.setData({ loading: false });
@@ -157,30 +190,24 @@ Page({
     if (!this.data.orderNo) {
       return;
     }
-
     wx.navigateTo({
       url: `/pages/order/detail/detail?orderNo=${this.data.orderNo}`,
     });
   },
-  copyOrderNumber() {
-    if (!this.data.orderNo) {
-      return;
-    }
-
-    wx.setClipboardData({
-      data: this.data.orderNo,
-      success: () => wx.showToast({ title: '单号已复制', icon: 'success' }),
+  openContact() {
+    wx.navigateTo({
+      url: '/pages/profile/contact/contact',
     });
   },
-  copyTrackingNumber(e: WechatMiniprogram.BaseEvent) {
-    const { expressNo } = e.currentTarget.dataset as { expressNo?: string };
-    if (!expressNo) {
+  copyTrackingNumber() {
+    const trackingNo = this.data.order?.trackingNo;
+    if (!trackingNo) {
+      wx.showToast({ title: '暂无快递单号', icon: 'none' });
       return;
     }
-
     wx.setClipboardData({
-      data: expressNo,
-      success: () => wx.showToast({ title: '快递单号已复制', icon: 'success' }),
+      data: trackingNo,
+      success: () => wx.showToast({ title: '单号已复制', icon: 'success' }),
     });
   },
 });

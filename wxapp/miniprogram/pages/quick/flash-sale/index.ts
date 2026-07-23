@@ -34,6 +34,28 @@ type FlashSaleProductView = {
   saveAmount: string;
 };
 
+type FreightSubsidyRuleView = FreightSubsidyRule & {
+  shortLabel: string;
+};
+
+function formatFreightShortLabel(rule: FreightSubsidyRule): string {
+  const threshold = Number(rule.thresholdAmount || 0);
+  const freight = Number(rule.freightAmount || 0);
+  const thresholdText = Number.isFinite(threshold) ? String(Math.round(threshold * 100) / 100).replace(/\.0$/, '') : '0';
+  if (!Number.isFinite(freight) || freight <= 0) {
+    return `满${thresholdText}免运`;
+  }
+  const freightText = String(Math.round(freight * 100) / 100).replace(/\.0$/, '');
+  return `满${thresholdText}运¥${freightText}`;
+}
+
+function mapFreightRules(rules: FreightSubsidyRule[] = []): FreightSubsidyRuleView[] {
+  return rules.slice(0, 2).map((rule) => ({
+    ...rule,
+    shortLabel: formatFreightShortLabel(rule),
+  }));
+}
+
 type FlashSaleWindowView = {
   id: number;
   label: string;
@@ -213,7 +235,7 @@ Component({
     pageTitle: '限时秒杀',
     products: [] as FlashSaleProductView[],
     displayProducts: [] as FlashSaleProductView[],
-    freightRules: [] as FreightSubsidyRule[],
+    freightRules: [] as FreightSubsidyRuleView[],
     windows: [] as FlashSaleWindowView[],
     activeWindowIndex: 0,
     activeWindow: null as FlashSaleWindowView | null,
@@ -339,7 +361,7 @@ Component({
 
         this.setData({
           windows,
-          freightRules: (result.freightRules || []).slice(0, 3),
+          freightRules: mapFreightRules(result.freightRules || []),
           activeWindowIndex,
           activeWindow,
           activeWindowId: activeWindow ? `flash-window-${activeWindow.id}` : '',

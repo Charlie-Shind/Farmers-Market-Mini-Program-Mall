@@ -20,35 +20,37 @@
     </view>
 
     <!-- 附近正在拼 -->
-    <scroll-view
-      wx:if="{{nearbyGroups.length}}"
-      class="phf-nearby"
-      scroll-x
-      enhanced
-      show-scrollbar="{{false}}"
-    >
-      <view
-        wx:for="{{nearbyGroups}}"
-        wx:key="groupId"
-        class="phf-nearby__card"
-        data-product-id="{{item.productId}}"
-        data-sku-id="{{item.skuId}}"
-        data-group-id="{{item.groupId}}"
-        catchtap="joinExistingGroup"
-      >
-        <view class="phf-nearby__img-wrap">
-          <image wx:if="{{item.coverUrl}}" class="phf-nearby__img" src="{{item.coverUrl}}" mode="aspectFill" />
-          <view wx:else class="phf-nearby__img phf-nearby__img--empty"></view>
-          <text class="phf-nearby__need">差{{item.remain}}人</text>
+    <view wx:if="{{nearbyGroups.length}}" class="phf-nearby">
+      <view class="phf-nearby__head">
+        <view class="phf-nearby__more" bindtap="loadMore">
+          <text>更多待成团</text>
+          <t-icon name="chevronRight" size="20rpx" color="#8b8880"></t-icon>
         </view>
-        <text class="phf-nearby__title">{{item.title}}</text>
-        <view class="phf-nearby__row">
-          <text class="phf-nearby__price">¥{{item.groupPrice}}</text>
-          <text class="phf-nearby__cta">跟团</text>
-        </view>
-        <text class="phf-nearby__area">{{item.area}}</text>
       </view>
-    </scroll-view>
+      <scroll-view class="phf-nearby__scroll" scroll-x enhanced show-scrollbar="{{false}}">
+        <view
+          wx:for="{{nearbyGroups}}"
+          wx:key="groupId"
+          class="phf-nearby__card"
+          data-product-id="{{item.productId}}"
+          data-sku-id="{{item.skuId}}"
+          data-group-id="{{item.groupId}}"
+          catchtap="joinExistingGroup"
+        >
+          <view class="phf-nearby__img-wrap">
+            <image wx:if="{{item.coverUrl}}" class="phf-nearby__img" src="{{item.coverUrl}}" mode="aspectFill" />
+            <view wx:else class="phf-nearby__img phf-nearby__img--empty"></view>
+            <text class="phf-nearby__need">差{{item.remain}}人</text>
+          </view>
+          <text class="phf-nearby__title">{{item.title}}</text>
+          <view class="phf-nearby__row">
+            <text class="phf-nearby__price">¥{{item.groupPrice}}</text>
+            <text class="phf-nearby__cta">跟团</text>
+          </view>
+          <text class="phf-nearby__area">{{item.area}}</text>
+        </view>
+      </scroll-view>
+    </view>
 
     <!-- 我正在拼的团 -->
     <view wx:if="{{myOngoingGroups.length}}" class="phf-mine">
@@ -153,11 +155,6 @@
             >去拼单</button>
           </view>
         </view>
-      </view>
-
-      <view class="phf-more" bindtap="loadMore">
-        <text>查看附近更多拼单</text>
-        <t-icon name="chevronRight" size="22rpx" color="#999999"></t-icon>
       </view>
       <view class="phf-list__pad"></view>
     </view>

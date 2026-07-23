@@ -59,6 +59,10 @@
     <view class="profile-section">
       <view class="profile-section__head">
         <text class="profile-section__title">我的订单</text>
+        <button class="profile-section__more" data-key="orders" data-label="全部订单" bindtap="openProtectedSection">
+          <text>全部订单</text>
+          <t-icon name="chevronRight" size="24rpx" color="#9aa097"></t-icon>
+        </button>
       </view>
       <view class="order-shortcuts">
         <button

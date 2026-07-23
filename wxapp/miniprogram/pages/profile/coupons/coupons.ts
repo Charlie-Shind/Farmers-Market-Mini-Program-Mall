@@ -3,27 +3,16 @@ import { fetchUserCoupons, type AppUserCoupon } from '../../../services/app';
 import { buildPageTopStyle } from '../../../utils/page-layout';
 import { navigateBackOrHome } from '../../../utils/auth-route';
 
-type CouponFilter = 'ALL' | 'RECEIVED' | 'USED' | 'EXPIRED';
-
-type CouponTab = {
-  key: CouponFilter;
-  label: string;
-  count: number;
-};
+type CouponFilter = 'RECEIVED' | 'EXPIRED';
 
 type CouponView = AppUserCoupon & {
   statusLabel: string;
   statusTone: string;
   periodText: string;
+  periodShort: string;
   usableHint: string;
+  discountText: string;
 };
-
-const FILTER_TABS: CouponTab[] = [
-  { key: 'ALL', label: '全部', count: 0 },
-  { key: 'RECEIVED', label: '可使用', count: 0 },
-  { key: 'USED', label: '已使用', count: 0 },
-  { key: 'EXPIRED', label: '已过期', count: 0 },
-];
 
 function formatDate(value?: string | null) {
   if (!value) {
@@ -44,24 +33,40 @@ function formatDate(value?: string | null) {
 function buildCouponView(item: AppUserCoupon): CouponView {
   const status = String(item.status || '').toUpperCase();
   const statusLabel = status === 'USED' ? '已使用' : status === 'EXPIRED' ? '已过期' : '可使用';
-  const statusTone = status === 'USED' ? 'coupon-status--used' : status === 'EXPIRED' ? 'coupon-status--expired' : 'coupon-status--ready';
+  const statusTone =
+    status === 'USED' ? 'coupon-status--used' : status === 'EXPIRED' ? 'coupon-status--expired' : 'coupon-status--ready';
   const start = formatDate(item.validStartAt);
   const end = formatDate(item.validEndAt || item.expiredAt);
   const periodText = start && end ? `有效期：${start} - ${end}` : end ? `有效期至：${end}` : '长期有效';
+  const periodShort = end ? `至 ${end}` : start && end ? `${start} - ${end}` : '长期有效';
+  const threshold = Number(item.thresholdAmount ?? 0);
   const usableHint =
     status === 'USED'
       ? '已在订单中使用'
       : status === 'EXPIRED'
-        ? '已过期'
-        : '可在结算页使用';
+        ? '卡券已过期'
+        : threshold > 0
+          ? `满 ${threshold.toFixed(2)} 元可用`
+          : '可在结算页使用';
+  const discountText = String(item.discountAmount ?? '0').replace(/\.00$/, '');
 
   return {
     ...item,
     statusLabel,
     statusTone,
     periodText,
+    periodShort,
     usableHint,
+    discountText,
   };
+}
+
+function filterCoupons(list: CouponView[], filter: CouponFilter) {
+  if (filter === 'RECEIVED') {
+    return list.filter((item) => item.statusTone === 'coupon-status--ready');
+  }
+  // 已过期：包含过期与已使用（均不可再使用）
+  return list.filter((item) => item.statusTone !== 'coupon-status--ready');
 }
 
 Component({
@@ -72,17 +77,17 @@ Component({
     loadingText: '正在加载卡券',
     coupons: [] as CouponView[],
     visibleCoupons: [] as CouponView[],
-    activeFilter: 'ALL' as CouponFilter,
-    filterTabs: FILTER_TABS,
-    summary: {
-      total: 0,
-      available: 0,
-      used: 0,
-      expired: 0,
-    },
+    activeFilter: 'RECEIVED' as CouponFilter,
   },
   lifetimes: {
     attached() {
+      this.setData({
+        pageStyle: buildPageTopStyle(0),
+      });
+    },
+  },
+  pageLifetimes: {
+    show() {
       this.setData({
         pageStyle: buildPageTopStyle(0),
       });
@@ -102,50 +107,14 @@ Component({
       try {
         const coupons = await fetchUserCoupons();
         const mapped = (coupons ?? []).map(buildCouponView);
-        const summary = {
-          total: mapped.length,
-          available: mapped.filter((item) => item.statusTone === 'coupon-status--ready').length,
-          used: mapped.filter((item) => item.statusTone === 'coupon-status--used').length,
-          expired: mapped.filter((item) => item.statusTone === 'coupon-status--expired').length,
-        };
-        const visibleCoupons = mapped.filter((item) => {
-          if (this.data.activeFilter === 'ALL') {
-            return true;
-          }
-
-          if (this.data.activeFilter === 'RECEIVED') {
-            return item.statusTone === 'coupon-status--ready';
-          }
-
-          if (this.data.activeFilter === 'USED') {
-            return item.statusTone === 'coupon-status--used';
-          }
-
-          return item.statusTone === 'coupon-status--expired';
-        });
-
-        const tabs = this.data.filterTabs.map((t) => {
-          if (t.key === 'ALL') return { ...t, count: mapped.length };
-          if (t.key === 'RECEIVED') return { ...t, count: mapped.filter((i) => i.statusTone === 'coupon-status--ready').length };
-          if (t.key === 'USED') return { ...t, count: mapped.filter((i) => i.statusTone === 'coupon-status--used').length };
-          return { ...t, count: mapped.filter((i) => i.statusTone === 'coupon-status--expired').length };
-        });
         this.setData({
           coupons: mapped,
-          summary,
-          filterTabs: tabs,
-          visibleCoupons,
+          visibleCoupons: filterCoupons(mapped, this.data.activeFilter),
         });
       } catch {
         this.setData({
           coupons: [],
           visibleCoupons: [],
-          summary: {
-            total: 0,
-            available: 0,
-            used: 0,
-            expired: 0,
-          },
         });
       } finally {
         this.setData({
@@ -153,35 +122,16 @@ Component({
         });
       }
     },
-    applyFilter(filter: CouponFilter) {
-      const visibleCoupons = this.data.coupons.filter((item) => {
-        if (filter === 'ALL') {
-          return true;
-        }
-
-        if (filter === 'RECEIVED') {
-          return item.statusTone === 'coupon-status--ready';
-        }
-
-        if (filter === 'USED') {
-          return item.statusTone === 'coupon-status--used';
-        }
-
-        return item.statusTone === 'coupon-status--expired';
-      });
-
-      this.setData({
-        activeFilter: filter,
-        visibleCoupons,
-      });
-    },
     switchFilter(e: WechatMiniprogram.BaseEvent) {
       const { key } = (e.currentTarget.dataset as { key?: CouponFilter }) || {};
-      if (!key) {
+      if (!key || key === this.data.activeFilter) {
         return;
       }
 
-      this.applyFilter(key);
+      this.setData({
+        activeFilter: key,
+        visibleCoupons: filterCoupons(this.data.coupons, key),
+      });
     },
   },
 });

@@ -1,90 +1,108 @@
-<view class="phone-page profile-coupons-page" style="{{pageStyle}}">
-  <page-nav title="卡券包" theme="solid" />
+<view class="phone-page px-page" style="{{pageStyle}}">
+  <image class="px-page__top-art" src="/assets/images/points/bg-top.jpg" mode="widthFix" />
+  <page-nav title="卡券包" theme="light" />
 
-  <view class="coupon-content">
-    <view class="coupon-hero">
-      <image class="coupon-hero__bg" src="/assets/images/points/kajuanbg.jpg" mode="aspectFill" />
-      <view class="coupon-hero__main">
-        <view class="coupon-hero__info">
-          <view class="coupon-hero__label-row">
-            <t-icon name="coupon" size="26rpx" color="#5c7a5e"></t-icon>
-            <text class="coupon-hero__label">可使用卡券</text>
-          </view>
-          <view class="coupon-hero__value-row">
-            <text class="coupon-hero__value">{{summary.available}}</text>
-            <text class="coupon-hero__unit">张</text>
-          </view>
+  <view class="px-content">
+    <view class="px-brand">
+      <view>
+        <view class="px-brand__title-row">
+          <text class="px-brand__name">浔源农仓</text>
+          <image class="px-brand__leaf" src="/assets/images/points/leaf-cut.png" mode="aspectFit" />
+          <text class="px-brand__seal">源</text>
         </view>
+        <text class="px-brand__slogan">源于自然 · 归于健康</text>
       </view>
-      <view class="coupon-hero__stats">
-        <view class="coupon-hero__stat">
-          <text class="coupon-hero__stat-value">{{summary.total}}</text>
-          <text class="coupon-hero__stat-label">全部</text>
-        </view>
-        <view class="coupon-hero__stat-line"></view>
-        <view class="coupon-hero__stat">
-          <text class="coupon-hero__stat-value">{{summary.used}}</text>
-          <text class="coupon-hero__stat-label">已使用</text>
-        </view>
-        <view class="coupon-hero__stat-line"></view>
-        <view class="coupon-hero__stat">
-          <text class="coupon-hero__stat-value">{{summary.expired}}</text>
-          <text class="coupon-hero__stat-label">已过期</text>
-        </view>
-      </view>
+      <image class="px-brand__house" src="/assets/images/points/house-cut.png" mode="aspectFit" />
     </view>
 
-    <scroll-view scroll-x="true" class="coupon-tabs" show-scrollbar="{{false}}">
-      <view class="coupon-tabs__row">
-        <view
-          wx:for="{{filterTabs}}"
-          wx:key="key"
-          class="coupon-tab {{activeFilter === item.key ? 'coupon-tab--active' : ''}}"
-          data-key="{{item.key}}"
-          bindtap="switchFilter"
-          hover-class="coupon-tab--hover"
-        >
-          <text class="coupon-tab__label">{{item.label}}</text>
-          <text class="coupon-tab__count">{{item.count}}</text>
-        </view>
-      </view>
-    </scroll-view>
+    <view class="px-tabs">
+      <view
+        class="px-tab {{activeFilter === 'RECEIVED' ? 'is-active' : ''}}"
+        data-key="RECEIVED"
+        bindtap="switchFilter"
+      >可使用</view>
+      <view
+        class="px-tab {{activeFilter === 'EXPIRED' ? 'is-active' : ''}}"
+        data-key="EXPIRED"
+        bindtap="switchFilter"
+      >已过期</view>
+    </view>
 
-    <view wx:if="{{visibleCoupons.length}}" class="coupon-list">
+    <view class="px-section">
+      <view class="px-section__line"></view>
+      <image class="px-section__leaf px-section__leaf--left" src="/assets/images/points/leaf-cut.png" mode="aspectFit" />
+      <text class="px-section__title">{{activeFilter === 'RECEIVED' ? '可用卡券' : '历史卡券'}}</text>
+      <image class="px-section__leaf" src="/assets/images/points/leaf-cut.png" mode="aspectFit" />
+      <view class="px-section__line"></view>
+    </view>
+
+    <view wx:if="{{loading}}" class="px-state">
+      <text class="px-state__title">{{loadingText}}</text>
+    </view>
+
+    <view wx:elif="{{!visibleCoupons.length}}" class="px-state">
+      <t-icon name="coupon" size="54rpx" color="#9eab83"></t-icon>
+      <text class="px-state__title">暂无{{activeFilter === 'RECEIVED' ? '可使用' : '已过期'}}卡券</text>
+    </view>
+
+    <view wx:else class="px-list">
       <view
         wx:for="{{visibleCoupons}}"
         wx:key="userCouponId"
-        class="coupon-card {{item.statusTone}}"
+        wx:for-index="index"
+        class="px-card {{item.statusTone !== 'coupon-status--ready' ? 'px-card--done' : ''}}"
       >
-        <view class="coupon-card__main">
-          <text class="coupon-card__badge">{{item.name}}</text>
-          <view class="coupon-card__amount-row">
-            <text class="coupon-card__amount">{{item.discountAmount}}</text>
-            <text class="coupon-card__unit">元</text>
+        <view class="px-card__stub">
+          <text class="px-card__amount"><text class="px-card__yen">¥</text>{{item.discountText}}</text>
+          <text class="px-card__stub-label">优惠券</text>
+          <image
+            class="px-card__deco {{index % 2 ? 'px-card__deco--basket' : ''}}"
+            src="{{index % 2 ? '/assets/images/points/basket-cut.png' : '/assets/images/points/wheat-cut.png'}}"
+            mode="aspectFit"
+          />
+        </view>
+
+        <view class="px-card__main">
+          <view class="px-card__top">
+            <text class="px-card__title">{{item.name}}</text>
+            <text class="px-card__status {{item.statusTone === 'coupon-status--ready' ? 'is-ready' : ''}}">
+              {{item.statusLabel}}
+            </text>
           </view>
-          <text class="coupon-card__meta-title">满{{item.thresholdAmount}}元可用</text>
-          <text class="coupon-card__period">{{item.periodText}}</text>
-        </view>
-        <view class="coupon-card__gap">
-          <view class="coupon-card__notch coupon-card__notch--top"></view>
-          <view class="coupon-card__dash"></view>
-          <view class="coupon-card__notch coupon-card__notch--bottom"></view>
-        </view>
-        <view class="coupon-card__footer">
-          <text class="coupon-card__action-text">{{item.statusLabel}}</text>
+          <text class="px-card__desc">{{item.usableHint}}</text>
+          <view class="px-card__foot">
+            <view class="px-card__cost">
+              <text class="px-card__cost-label">有效期</text>
+              <text class="px-card__period">{{item.periodShort}}</text>
+            </view>
+            <view class="px-card__btn {{item.statusTone !== 'coupon-status--ready' ? 'is-disabled' : ''}}">
+              {{item.statusLabel}}
+            </view>
+          </view>
         </view>
       </view>
     </view>
 
-    <view wx:else class="coupon-empty">
-      <view class="coupon-empty__icon">
-        <t-icon name="coupon" size="52rpx" color="#c7bfa8"></t-icon>
+    <view class="px-trust">
+      <view class="px-trust__item">
+        <view class="px-trust__icon"><t-icon name="shield" size="36rpx" color="#788867"></t-icon></view>
+        <text class="px-trust__title">安全可靠</text><text class="px-trust__desc">品质保障</text>
       </view>
-      <text class="coupon-empty__title">暂无卡券</text>
-      <text class="coupon-empty__desc">当前筛选条件下没有可展示的卡券。</text>
+      <view class="px-trust__item">
+        <view class="px-trust__icon"><t-icon name="origin" size="36rpx" color="#788867"></t-icon></view>
+        <text class="px-trust__title">绿色健康</text><text class="px-trust__desc">天然无害</text>
+      </view>
+      <view class="px-trust__item">
+        <view class="px-trust__icon"><t-icon name="favorite" size="36rpx" color="#788867"></t-icon></view>
+        <text class="px-trust__title">用心优选</text><text class="px-trust__desc">精选好物</text>
+      </view>
+      <view class="px-trust__item">
+        <view class="px-trust__icon"><t-icon name="gift" size="36rpx" color="#788867"></t-icon></view>
+        <text class="px-trust__title">更多好礼</text><text class="px-trust__desc">敬请期待</text>
+      </view>
     </view>
   </view>
 
-  <loading show="{{loading}}" text="{{loadingText}}"></loading>
-  <view class="bottom-safe"></view>
+  <image class="px-page__bottom-art" src="/assets/images/points/bg-bottom.jpg" mode="widthFix" />
+  <view class="px-safe"></view>
 </view>

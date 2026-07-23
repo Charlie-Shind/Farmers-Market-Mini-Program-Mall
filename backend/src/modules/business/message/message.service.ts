@@ -249,9 +249,10 @@ export class MessageService implements OnModuleInit {
       ORDER: '订单',
       ACTIVITY: '活动',
       NOTICE: '公告',
+      NOTIFICATION: '通知',
     };
 
-    return map[type] || type;
+    return map[String(type || '').toUpperCase()] || '消息';
   }
 
   private formatMessageItem(

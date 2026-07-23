@@ -52,6 +52,12 @@
           </view>
         </picker>
       </view>
+      <view
+        class="delivery-freight-hint"
+        wx:if="{{selectedDelivery.type !== 3 && selectedDelivery.thresholdAmount}}"
+      >
+        <text>满¥{{selectedDelivery.thresholdAmount}}包邮，未满运费¥{{selectedDelivery.freightAmount}}</text>
+      </view>
       <view class="option-row option-row--no-border" wx:if="{{selectedDelivery.type === 3}}" bindtap="openPickupPointSheet">
         <text class="option-label">自提点</text>
         <view class="option-right">

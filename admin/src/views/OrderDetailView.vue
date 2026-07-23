@@ -41,7 +41,15 @@
                 :title="shipButtonTitle"
                 @click="openLogisticsModal('ship')"
               >
-                {{ canShip ? '录入物流' : (order.deliveryStatus >= 2 ? '已发货' : '录入物流') }}
+                {{
+                  canShip
+                    ? '录入物流'
+                    : order.deliveryStatus >= 2
+                      ? '已发货'
+                      : order.shipBlockedReason
+                        ? '成团后可发货'
+                        : '录入物流'
+                }}
               </button>
             </div>
           </div>
@@ -53,6 +61,10 @@
           <div v-if="actionError" class="panel-banner warn" style="margin-bottom: 12px;">
             <strong>提示</strong>
             <span>{{ actionError }}</span>
+          </div>
+          <div v-if="order.shipBlockedReason" class="panel-banner warn" style="margin-bottom: 12px;">
+            <strong>拼团订单</strong>
+            <span>{{ order.shipBlockedReason }}</span>
           </div>
 
           <div class="detail-list">
@@ -328,6 +340,7 @@ const shipButtonTitle = computed(() => {
   if (!order.value) return '';
   if (order.value.deliveryStatus >= 2) return '订单已发货，如需改单号请点「修正物流」';
   if (order.value.payStatus !== 1) return '订单未支付，无法发货';
+  if (order.value.shipBlockedReason) return order.value.shipBlockedReason;
   if (!order.value.canShip) return '当前订单状态不可发货';
   return '录入物流并发货';
 });

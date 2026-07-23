@@ -111,9 +111,9 @@ Component({
         { key: 'favorite', label: '收藏', value: '--' },
       ],
       orders: [
-        { key: 'all', label: '全部订单', icon: 'invoice', iconColor: '#2c4a39' },
         { key: 'pay', label: '待付款', icon: 'wallet', iconColor: '#d97b2a' },
         { key: 'ship', label: '待发货', icon: 'truck', iconColor: '#2c4a39' },
+        { key: 'groupBuying', label: '拼团中', icon: 'group', iconColor: '#3d7a57' },
         { key: 'receive', label: '待收货', icon: 'delivering', iconColor: '#3d7a57' },
         { key: 'refund', label: '售后/退款', icon: 'refund', iconColor: '#c04f42' },
       ] as ProfileOrderEntry[],
@@ -169,6 +169,7 @@ Component({
       total: 0,
       pay: 0,
       ship: 0,
+      groupBuying: 0,
       receive: 0,
       refund: 0,
     },
@@ -386,12 +387,16 @@ Component({
             enumStatus === 'EXPIRED' ||
             enumStatus === 'REFUNDING' ||
             enumStatus === 'REFUND_SUCCESS' ||
-            enumStatus === 'AFTER_SALE'
+            enumStatus === 'AFTER_SALE' ||
+            enumStatus === 'GROUP_BUYING' ||
+            enumStatus === 'GROUP_FAILED'
           ) {
             return enumStatus;
           }
 
           const label = String(item?.status || '').trim();
+          if (label === '拼团中') return 'GROUP_BUYING';
+          if (label === '拼团失败') return 'GROUP_FAILED';
           if (label === '待付款' || label === '待支付' || label === '等待付款') return 'PENDING_PAY';
           if (label === '待发货' || label === '待接单' || label === '等待商家发货') return 'PENDING_SHIP';
           if (label === '待收货' || label === '已发货' || label === '运输中') return 'PENDING_RECEIVE';
@@ -420,6 +425,7 @@ Component({
           total: ordersPage.total ?? orderItems.length,
           pay: Number(assetsOrders?.pendingPay ?? orderStatuses.filter((status) => status === 'PENDING_PAY').length),
           ship: Number(assetsOrders?.pendingShip ?? orderStatuses.filter((status) => status === 'PENDING_SHIP').length),
+          groupBuying: Number(assetsOrders?.pendingGroupBuy ?? orderStatuses.filter((status) => status === 'GROUP_BUYING').length),
           receive: Number(assetsOrders?.pendingReceive ?? orderStatuses.filter((status) => status === 'PENDING_RECEIVE').length),
           refund: Number(
             assetsOrders?.refunding ??
@@ -441,6 +447,7 @@ Component({
         const orderBadgeMap: Record<string, number> = {
           pay: orderSummary.pay,
           ship: orderSummary.ship,
+          groupBuying: orderSummary.groupBuying,
           receive: orderSummary.receive,
           refund: orderSummary.refund,
         };
@@ -543,7 +550,7 @@ Component({
       const { action } = (e.currentTarget.dataset as { action?: string }) || {};
 
       if (action === 'scan') {
-        wx.showToast({ title: '扫码功能开发中', icon: 'none' });
+        wx.showToast({ title: '扫码功能暂未开放', icon: 'none' });
         return;
       }
 
@@ -624,7 +631,7 @@ Component({
         return;
       }
 
-      if (['orders', 'all', 'pay', 'ship', 'receive', 'refund'].includes(key || '')) {
+      if (['orders', 'all', 'pay', 'ship', 'groupBuying', 'receive', 'refund'].includes(key || '')) {
         const orderType = key === 'orders' ? 'all' : key;
         go(`/pages/order/list/list?type=${orderType}`);
         return;

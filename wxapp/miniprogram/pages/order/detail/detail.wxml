@@ -246,16 +246,16 @@
 
       <block wx:if="{{order.payStatus === 1 && order.deliveryStatus === 0}}">
         <text class="hint-text">等待商家接单</text>
-        <button class="refund-btn" plain="true" bindtap="onApplyRefund">申请退款</button>
+        <button class="refund-btn" plain="true" bindtap="onApplyRefund">{{order.groupBuy && order.groupBuy.status === 'OPEN' ? '取消拼团' : '申请退款'}}</button>
       </block>
 
       <block wx:if="{{order.payStatus === 1 && order.orderStatus === 2 && order.deliveryStatus === 1}}">
         <text class="hint-text">商家已接单，等待发货</text>
-        <button class="refund-btn" plain="true" bindtap="onApplyRefund">申请退款</button>
+        <button class="refund-btn" plain="true" bindtap="onApplyRefund">{{order.groupBuy && order.groupBuy.status === 'OPEN' ? '取消拼团' : '申请退款'}}</button>
       </block>
 
       <block wx:if="{{order.payStatus === 1 && order.orderStatus === 2 && order.deliveryStatus === 2}}">
-        <button class="refund-btn" plain="true" bindtap="onApplyRefund">申请退款</button>
+        <button class="refund-btn" plain="true" bindtap="onApplyRefund">{{order.groupBuy && order.groupBuy.status === 'OPEN' ? '取消拼团' : '申请退款'}}</button>
         <button class="confirm-btn" bindtap="onConfirmReceipt">确认收货</button>
       </block>
 

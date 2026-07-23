@@ -106,8 +106,29 @@
 }
 
 .phf-nearby {
-  white-space: nowrap;
   padding: 0 24rpx 18rpx;
+  box-sizing: border-box;
+}
+
+.phf-nearby__head {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-bottom: 10rpx;
+  padding: 0 4rpx;
+}
+
+.phf-nearby__more {
+  display: flex;
+  align-items: center;
+  gap: 2rpx;
+  font-size: 22rpx;
+  color: #8b8880;
+  font-weight: 600;
+}
+
+.phf-nearby__scroll {
+  white-space: nowrap;
   height: 280rpx;
   box-sizing: border-box;
 }
@@ -513,20 +534,6 @@
   &::after {
     border: none;
   }
-}
-
-.phf-more {
-  margin: 8rpx 0 20rpx;
-  height: 72rpx;
-  border-radius: 16rpx;
-  background: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6rpx;
-  font-size: 26rpx;
-  color: #666;
-  font-weight: 600;
 }
 
 .phf-list__pad {

@@ -1288,13 +1288,15 @@ export class PlatformDataService {
     }
 
     if (deliveryStatus === 0) {
-      buttons.push({ key: 'refund', label: '申请退款', type: 'secondary' });
+      const refundLabel = groupBuy?.status === 'OPEN' ? '取消拼团' : '申请退款';
+      buttons.push({ key: 'refund', label: refundLabel, type: 'secondary' });
       return buttons;
     }
 
     if (deliveryStatus === PlatformDataService.DELIVERY_STATUS.TO_SHIP) {
       buttons.push({ key: 'logistics', label: '查看物流', type: 'secondary' });
-      buttons.push({ key: 'refund', label: '申请退款', type: 'secondary' });
+      const refundLabel = groupBuy?.status === 'OPEN' ? '取消拼团' : '申请退款';
+      buttons.push({ key: 'refund', label: refundLabel, type: 'secondary' });
       return buttons;
     }
 
@@ -5050,16 +5052,52 @@ export class PlatformDataService {
   }
 
   // P0-8: 服务端按物流规则计算运费
-  private async calculateFreight(province: string, goodsAmount: number): Promise<number> {
+  private normalizeProvinceName(name: string): string {
+    return String(name || '')
+      .replace(/(特别行政区|壮族自治区|回族自治区|维吾尔自治区|自治区|省|市)$/g, '')
+      .trim();
+  }
+
+  private isLogisticsRuleMatchProvince(ruleProvince: string, addressProvince: string): boolean {
+    const rule = this.normalizeProvinceName(ruleProvince);
+    const addr = this.normalizeProvinceName(addressProvince);
+    if (!rule || !addr) {
+      return false;
+    }
+    if (rule === '全国') {
+      return true;
+    }
+    return addr.includes(rule) || rule.includes(addr);
+  }
+
+  private async calculateFreight(
+    province: string,
+    goodsAmount: number,
+    options?: { logisticsRuleId?: number },
+  ): Promise<number> {
     await this.withSeed();
+
+    if (options?.logisticsRuleId && options.logisticsRuleId > 0) {
+      const rule = await this.prisma.logisticsRule.findFirst({
+        where: { id: BigInt(options.logisticsRuleId), active: true },
+      });
+      if (!rule) {
+        throw new BadRequestException('所选配送方式不可用');
+      }
+      if (goodsAmount >= Number(rule.thresholdAmount)) {
+        return 0;
+      }
+      return Number(rule.freightAmount);
+    }
+
     const rules = await this.prisma.logisticsRule.findMany({
       where: { active: true },
       orderBy: [{ id: 'asc' }],
     });
 
-    let matchedRule = rules.find((r) => r.province && province.includes(r.province));
+    let matchedRule = rules.find((r) => this.isLogisticsRuleMatchProvince(r.province, province) && r.province !== '全国');
     if (!matchedRule) {
-      matchedRule = rules.find((r) => r.province === '全国');
+      matchedRule = rules.find((r) => this.normalizeProvinceName(r.province) === '全国');
     }
 
     if (!matchedRule) {
@@ -5071,6 +5109,41 @@ export class PlatformDataService {
     }
 
     return Number(matchedRule.freightAmount);
+  }
+
+  /** 预览/下单运费：自提免运费；指定物流规则则按该规则包邮门槛与运费计算 */
+  private async resolveOrderFreight(
+    body: Record<string, unknown>,
+    province: unknown,
+    goodsAmount: number,
+  ): Promise<number> {
+    const deliveryType = Number(body.deliveryType ?? 1);
+    if (deliveryType === 3) {
+      return 0;
+    }
+    const logisticsRuleId = body.logisticsRuleId != null ? Number(body.logisticsRuleId) : 0;
+    return this.calculateFreight(String(province ?? '全国'), goodsAmount, {
+      logisticsRuleId: logisticsRuleId > 0 ? logisticsRuleId : undefined,
+    });
+  }
+
+  /** 小程序确认订单：配送方式 = 全部启用中的物流规则名称 */
+  async listAppLogisticsDeliveryOptions(_query: { province?: string } = {}) {
+    await this.withSeed();
+    const rules = await this.prisma.logisticsRule.findMany({
+      where: { active: true },
+      orderBy: [{ id: 'asc' }],
+    });
+
+    return {
+      items: rules.map((rule) => ({
+        id: this.toNumber(rule.id),
+        name: rule.name,
+        province: rule.province,
+        thresholdAmount: this.toMoney(rule.thresholdAmount),
+        freightAmount: this.toMoney(rule.freightAmount),
+      })),
+    };
   }
 
   async addCartItem(authUser: AuthUser, body: Record<string, unknown>) {
@@ -5229,7 +5302,7 @@ export class PlatformDataService {
       const subtotal = Number(flashItem.flashPrice) * quantity;
       const addressSnapshot = await this.resolveOrderAddressSnapshot(authUser, body);
       const province = (addressSnapshot as Record<string, unknown> | null)?.province;
-      const freightAmount = await this.calculateFreight(String(province ?? '全国'), subtotal);
+      const freightAmount = await this.resolveOrderFreight(body, province, subtotal);
       const payAmount = Math.max(subtotal + freightAmount, 0);
 
       return {
@@ -5285,7 +5358,7 @@ export class PlatformDataService {
       const subtotal = Number(group.groupPrice);
       const addressSnapshot = await this.resolveOrderAddressSnapshot(authUser, body);
       const province = (addressSnapshot as Record<string, unknown> | null)?.province;
-      const freightAmount = await this.calculateFreight(String(province ?? '全国'), subtotal);
+      const freightAmount = await this.resolveOrderFreight(body, province, subtotal);
       const couponId = body.couponId != null ? Number(body.couponId) : null;
       const coupon = couponId ? await this.prisma.coupon.findUnique({ where: { id: BigInt(couponId) } }) : null;
       const userCoupon = couponId
@@ -5344,6 +5417,98 @@ export class PlatformDataService {
       };
     }
 
+    // 开新团预览：尚无 groupBuyId，按商品/SKU + 拼团配置估价（与 createOrder 开团分支对齐）
+    const isGroupBuyMode = String(body.orderMode ?? '').trim().toUpperCase() === 'GROUP_BUY';
+    if (isGroupBuyMode && groupProductId > 0 && groupSkuId > 0) {
+      const product = await this.prisma.product.findUnique({
+        where: { id: BigInt(groupProductId) },
+        include: { skus: { where: { id: BigInt(groupSkuId) }, take: 1 } },
+      });
+      if (!product) {
+        throw new BadRequestException('商品不存在');
+      }
+      const sku = product.skus[0] || (await this.prisma.productSku.findUnique({ where: { id: BigInt(groupSkuId) } }));
+      if (!sku || this.toNumber(sku.productId) !== groupProductId) {
+        throw new BadRequestException('SKU 不存在');
+      }
+      const groupConfig = this.normalizeGroupBuyConfig(product.groupBuyConfig);
+      if (!groupConfig?.enabled) {
+        throw new BadRequestException('该商品暂不支持拼团');
+      }
+
+      const quantity = Math.max(Number(body.quantity ?? 1) || 1, 1);
+      if (quantity !== 1) {
+        throw new BadRequestException('拼团商品仅支持单件下单');
+      }
+
+      const originPrice = Number(sku.price);
+      const groupPrice = Number((originPrice * Number(groupConfig.discountRate)).toFixed(2));
+      const subtotal = groupPrice * quantity;
+      const addressSnapshot = await this.resolveOrderAddressSnapshot(authUser, body);
+      const province = (addressSnapshot as Record<string, unknown> | null)?.province;
+      const freightAmount = await this.resolveOrderFreight(body, province, subtotal);
+      const couponId = body.couponId != null ? Number(body.couponId) : null;
+      const coupon = couponId ? await this.prisma.coupon.findUnique({ where: { id: BigInt(couponId) } }) : null;
+      const userCoupon = couponId
+        ? await this.prisma.userCoupon.findUnique({
+            where: {
+              userId_couponId: {
+                userId: user.id,
+                couponId: BigInt(couponId),
+              },
+            },
+          })
+        : null;
+      const categoryIds = [this.toNumber(product.categoryId)];
+      const couponUsage = this.evaluateCouponUsage(coupon, userCoupon, subtotal, {
+        merchantId: this.toNumber(product.merchantId),
+        categoryIds,
+      });
+      const couponDiscount = couponUsage.usable ? couponUsage.discountAmount : 0;
+      const pointRule = await this.getPointRuleConfig();
+      const pointsSum = await this.prisma.pointLog.aggregate({
+        where: { userId: user.id },
+        _sum: { points: true },
+      });
+      const availablePoints = Math.max(Number(pointsSum._sum.points ?? 0), 0);
+      const usePoints = Math.min(Math.max(Number(body.usePoints ?? 0), 0), availablePoints);
+      if (usePoints > 0 && !pointRule.redeemEnabled) {
+        throw new BadRequestException('积分抵扣已关闭');
+      }
+      const pointsDiscount = usePoints > 0 ? Math.min(usePoints / pointRule.redeemRate, Math.max(subtotal - couponDiscount, 0)) : 0;
+      const payAmount = Math.max(subtotal + freightAmount - couponDiscount - pointsDiscount, 0);
+
+      return {
+        input: body,
+        summary: {
+          productAmount: subtotal.toFixed(2),
+          freightAmount: freightAmount.toFixed(2),
+          discountAmount: (couponDiscount + pointsDiscount).toFixed(2),
+          payAmount: payAmount.toFixed(2),
+        },
+        addressSnapshot,
+        couponId,
+        coupon: coupon
+          ? {
+              couponId,
+              usable: couponUsage.usable,
+              reason: couponUsage.reason,
+              discountAmount: couponUsage.usable ? this.toMoney(couponUsage.discountAmount) : '0.00',
+            }
+          : null,
+        usePoints,
+        deliveryType: Number(body.deliveryType ?? 1),
+        orderMode: 'GROUP_BUY',
+        groupBuyId: 0,
+        productId: groupProductId,
+        skuId: groupSkuId,
+      };
+    }
+
+    if (isGroupBuyMode) {
+      throw new BadRequestException('拼团参数不完整');
+    }
+
     const selectedIds = Array.isArray(body.cartIds) ? body.cartIds.map((id) => Number(id)) : [];
     const cartItems = await this.prisma.cartItem.findMany({
       where: {
@@ -5361,7 +5526,7 @@ export class PlatformDataService {
     const addressSnapshot = await this.resolveOrderAddressSnapshot(authUser, body);
     // P0-8: 运费服务端计算，拒绝客户端传入
     const province = (addressSnapshot as Record<string, unknown> | null)?.province;
-    const freightAmount = await this.calculateFreight(String(province ?? '全国'), subtotal);
+    const freightAmount = await this.resolveOrderFreight(body, province, subtotal);
     const couponId = body.couponId != null ? Number(body.couponId) : null;
     const coupon = couponId ? await this.prisma.coupon.findUnique({ where: { id: BigInt(couponId) } }) : null;
     const userCoupon = couponId
@@ -5452,7 +5617,7 @@ export class PlatformDataService {
       const goodsAmount = groupPrice * quantity;
       const addressSnapshot = await this.resolveOrderAddressSnapshot(authUser, body);
       const province = (addressSnapshot as Record<string, unknown> | null)?.province;
-      const freightAmount = await this.calculateFreight(String(province ?? '全国'), goodsAmount);
+      const freightAmount = await this.resolveOrderFreight(body, province, goodsAmount);
       const couponId = body.couponId != null ? Number(body.couponId) : null;
       const coupon = couponId ? await this.prisma.coupon.findUnique({ where: { id: BigInt(couponId) } }) : null;
       const userCoupon = couponId
@@ -5611,7 +5776,7 @@ export class PlatformDataService {
       const merchantId = flashItem.sku.product.merchantId;
       const addressSnapshot = await this.resolveOrderAddressSnapshot(authUser, body);
       const province = (addressSnapshot as Record<string, unknown> | null)?.province;
-      const freightAmount = await this.calculateFreight(String(province ?? '全国'), goodsAmount);
+      const freightAmount = await this.resolveOrderFreight(body, province, goodsAmount);
       const payAmount = Math.max(goodsAmount + freightAmount, 0);
       const orderNo = `NO${randomUUID().replace(/-/g, '').slice(0, 12)}`;
 
@@ -5715,7 +5880,7 @@ export class PlatformDataService {
       const goodsAmount = Number(group.groupPrice) * quantity;
       const addressSnapshot = await this.resolveOrderAddressSnapshot(authUser, body);
       const province = (addressSnapshot as Record<string, unknown> | null)?.province;
-      const freightAmount = await this.calculateFreight(String(province ?? '全国'), goodsAmount);
+      const freightAmount = await this.resolveOrderFreight(body, province, goodsAmount);
       const couponId = body.couponId != null ? Number(body.couponId) : null;
       const coupon = couponId ? await this.prisma.coupon.findUnique({ where: { id: BigInt(couponId) } }) : null;
       const userCoupon = couponId
@@ -5883,7 +6048,7 @@ export class PlatformDataService {
     const addressSnapshot = await this.resolveOrderAddressSnapshot(authUser, body);
     // P0-8: 运费服务端计算，拒绝客户端传入
     const province = (addressSnapshot as Record<string, unknown> | null)?.province;
-    const freightAmount = await this.calculateFreight(String(province ?? '全国'), goodsAmount);
+    const freightAmount = await this.resolveOrderFreight(body, province, goodsAmount);
     const couponId = body.couponId != null ? Number(body.couponId) : null;
     const coupon = couponId ? await this.prisma.coupon.findUnique({ where: { id: BigInt(couponId) } }) : null;
     const userCoupon = couponId
@@ -6595,26 +6760,30 @@ export class PlatformDataService {
       timeline: [
         {
           time: this.toIso(order.createdAt),
-          title: '订单已创建',
-          desc: '等待商家处理',
+          title: '订单已提交',
+          desc: '您的订单已提交',
           status: 'done',
         },
         {
           time: order.paidAt ? this.toIso(order.paidAt) : null,
-          title: '支付完成',
-          desc: '已通过支付校验',
+          title: '等待发货',
+          desc: order.payStatus === 1 ? '支付完成，等待商家发货' : '等待完成支付',
           status: order.payStatus === 1 ? 'done' : 'pending',
         },
         {
           time: delivery?.shippedAt ? this.toIso(delivery.shippedAt) : null,
-          title: '已发货',
-          desc: logisticsCompany && trackingNo ? `${logisticsCompany} ${trackingNo}` : '等待商家发货',
+          title: shipped ? '运输中' : '等待发货',
+          desc: shipped
+            ? logisticsCompany && trackingNo
+              ? `包裹已从商家发出 · ${logisticsCompany} ${trackingNo}`
+              : '包裹已从商家发出'
+            : '等待商家发货',
           status: shipped ? 'done' : 'pending',
         },
         {
           time: delivery?.deliveredAt ? this.toIso(delivery.deliveredAt) : null,
           title: '已签收',
-          desc: '物流已完成',
+          desc: signed ? '包裹已签收' : '暂未签收',
           status: signed ? 'done' : 'pending',
         },
       ],
@@ -7894,11 +8063,35 @@ export class PlatformDataService {
       take: pageSize,
     });
 
+    const groupBuyIds = [
+      ...new Set(
+        orders
+          .map((order) => order.groupBuyId)
+          .filter((id): id is bigint => id != null)
+          .map((id) => id.toString()),
+      ),
+    ].map((id) => BigInt(id));
+    const groupBuyCompletedIds = new Set<string>();
+    if (groupBuyIds.length) {
+      const groups = await this.prisma.groupBuy.findMany({
+        where: { id: { in: groupBuyIds } },
+        select: { id: true, status: true, expireAt: true },
+      });
+      for (const group of groups) {
+        if (this.resolveGroupBuyStatus(group.status, group.expireAt) === 'COMPLETED') {
+          groupBuyCompletedIds.add(group.id.toString());
+        }
+      }
+    }
+
     return {
       page,
       pageSize,
       total,
-      items: orders.map((order) => ({
+      items: orders.map((order) => {
+        const groupBuyBlocked =
+          order.groupBuyId != null && !groupBuyCompletedIds.has(order.groupBuyId.toString());
+        return {
         orderNo: order.orderNo,
         userName: order.user.nickname ?? order.user.mobile ?? '用户',
         userAvatar: order.user.avatarUrl ?? '',
@@ -7929,9 +8122,18 @@ export class PlatformDataService {
               quantity: order.items[0].quantity,
             }]
           : [],
-        canAccept: order.orderStatus === PlatformDataService.ORDER_STATUS.PENDING && order.payStatus === PlatformDataService.PAY_STATUS.PAID,
-        canShip: order.orderStatus === PlatformDataService.ORDER_STATUS.ACCEPTED && order.payStatus === PlatformDataService.PAY_STATUS.PAID && order.deliveryStatus === PlatformDataService.DELIVERY_STATUS.TO_SHIP,
-      })),
+        canAccept:
+          !groupBuyBlocked &&
+          order.orderStatus === PlatformDataService.ORDER_STATUS.PENDING &&
+          order.payStatus === PlatformDataService.PAY_STATUS.PAID,
+        canShip:
+          !groupBuyBlocked &&
+          order.orderStatus === PlatformDataService.ORDER_STATUS.ACCEPTED &&
+          order.payStatus === PlatformDataService.PAY_STATUS.PAID &&
+          order.deliveryStatus === PlatformDataService.DELIVERY_STATUS.TO_SHIP,
+        shipBlockedReason: groupBuyBlocked ? '拼团尚未成团，暂不可发货' : undefined,
+      };
+      }),
     };
   }
 
@@ -7955,6 +8157,7 @@ export class PlatformDataService {
       orderBy: { createdAt: 'desc' },
     });
 
+    const shipBlockedReason = await this.getGroupBuyShipBlockReason(order.groupBuyId);
     const addr = order.addressSnapshot as Record<string, unknown> | null;
     return {
       orderNo: order.orderNo,
@@ -7984,6 +8187,17 @@ export class PlatformDataService {
       createdAt: this.toIso(order.createdAt),
       paidAt: this.toIso(order.paidAt),
       completedAt: this.toIso(order.completedAt),
+      isGroupBuy: order.groupBuyId != null,
+      shipBlockedReason: shipBlockedReason || undefined,
+      canAccept:
+        !shipBlockedReason &&
+        order.orderStatus === PlatformDataService.ORDER_STATUS.PENDING &&
+        order.payStatus === PlatformDataService.PAY_STATUS.PAID,
+      canShip:
+        !shipBlockedReason &&
+        order.orderStatus === PlatformDataService.ORDER_STATUS.ACCEPTED &&
+        order.payStatus === PlatformDataService.PAY_STATUS.PAID &&
+        order.deliveryStatus === PlatformDataService.DELIVERY_STATUS.TO_SHIP,
       items: order.items.map((item) => ({
         orderItemId: this.toNumber(item.id),
         productId: this.toNumber(item.productId),
@@ -11364,6 +11578,14 @@ export class PlatformDataService {
     }
 
     const delivery = order.deliveries[0];
+    const shipBlockedReason = await this.getGroupBuyShipBlockReason(order.groupBuyId);
+    const baseCanShip =
+      order.payStatus === PlatformDataService.PAY_STATUS.PAID &&
+      order.orderStatus !== PlatformDataService.ORDER_STATUS.CANCELLED &&
+      order.orderStatus !== PlatformDataService.ORDER_STATUS.COMPLETED &&
+      order.deliveryStatus < PlatformDataService.DELIVERY_STATUS.SHIPPED &&
+      order.refundStatus !== PlatformDataService.REFUND_STATUS.PENDING_MERCHANT &&
+      order.refundStatus !== PlatformDataService.REFUND_STATUS.PROCESSING;
 
     return {
       orderNo: order.orderNo,
@@ -11385,13 +11607,10 @@ export class PlatformDataService {
       logisticsCompany: delivery?.logisticsCompany ?? '',
       trackingNo: delivery?.trackingNo ?? '',
       shippedAt: delivery?.shippedAt ? this.formatChinaDateTime(delivery.shippedAt) : null,
-      canShip:
-        order.payStatus === PlatformDataService.PAY_STATUS.PAID &&
-        order.orderStatus !== PlatformDataService.ORDER_STATUS.CANCELLED &&
-        order.orderStatus !== PlatformDataService.ORDER_STATUS.COMPLETED &&
-        order.deliveryStatus < PlatformDataService.DELIVERY_STATUS.SHIPPED &&
-        order.refundStatus !== PlatformDataService.REFUND_STATUS.PENDING_MERCHANT &&
-        order.refundStatus !== PlatformDataService.REFUND_STATUS.PROCESSING,
+      isGroupBuy: order.groupBuyId != null,
+      groupBuyId: order.groupBuyId != null ? this.toNumber(order.groupBuyId) : null,
+      shipBlockedReason: shipBlockedReason || undefined,
+      canShip: baseCanShip && !shipBlockedReason,
       canUpdateLogistics:
         order.payStatus === PlatformDataService.PAY_STATUS.PAID &&
         order.orderStatus !== PlatformDataService.ORDER_STATUS.CANCELLED &&
@@ -12925,11 +13144,36 @@ export class PlatformDataService {
     }
     const group = await this.prisma.groupBuy.findUnique({
       where: { id: groupBuyId },
-      select: { status: true },
+      select: { status: true, expireAt: true },
     });
-    if (!group || group.status !== 'COMPLETED') {
-      throw new BadRequestException('拼团尚未成团，暂不能接单/发货');
+    if (!group) {
+      throw new BadRequestException('拼团不存在，无法发货');
     }
+    const status = this.resolveGroupBuyStatus(group.status, group.expireAt);
+    if (status !== 'COMPLETED') {
+      throw new BadRequestException(
+        status === 'FAILED' ? '拼团已失败，不可发货' : '拼团尚未成团，暂不能接单/发货',
+      );
+    }
+  }
+
+  /** 返回拼团履约阻断原因；空字符串表示可履约（非拼团或已成团） */
+  private async getGroupBuyShipBlockReason(groupBuyId: bigint | null | undefined): Promise<string> {
+    if (groupBuyId == null) {
+      return '';
+    }
+    const group = await this.prisma.groupBuy.findUnique({
+      where: { id: groupBuyId },
+      select: { status: true, expireAt: true },
+    });
+    if (!group) {
+      return '拼团不存在，不可发货';
+    }
+    const status = this.resolveGroupBuyStatus(group.status, group.expireAt);
+    if (status === 'COMPLETED') {
+      return '';
+    }
+    return status === 'FAILED' ? '拼团已失败，不可发货' : '拼团尚未成团，暂不可发货';
   }
 
   /** 拼团详情：供分享参团链接、邀请码落地页使用。groupId 优先，其次 inviteCode。 */
@@ -14850,6 +15094,7 @@ export class PlatformDataService {
           deliveryStatus: true,
           refundStatus: true,
           expireAt: true,
+          groupBuyId: true,
         },
       }),
       this.prisma.userCoupon.count({
@@ -14876,11 +15121,38 @@ export class PlatformDataService {
       pendingShip: 0,
       pendingReceive: 0,
       pendingReview: 0,
+      pendingGroupBuy: 0,
       refunding: 0,
       totalCompleted: 0,
     };
     const now = new Date();
+    const openGroupBuyIds = new Set<string>();
+    const groupBuyIds = [
+      ...new Set(
+        orderRows
+          .map((row) => row.groupBuyId)
+          .filter((id): id is bigint => id != null)
+          .map((id) => id.toString()),
+      ),
+    ].map((id) => BigInt(id));
+    if (groupBuyIds.length) {
+      const openGroups = await this.prisma.groupBuy.findMany({
+        where: {
+          id: { in: groupBuyIds },
+          status: 'OPEN',
+          expireAt: { gt: now },
+        },
+        select: { id: true },
+      });
+      for (const group of openGroups) {
+        openGroupBuyIds.add(group.id.toString());
+      }
+    }
     for (const row of orderRows) {
+      if (row.groupBuyId != null && openGroupBuyIds.has(row.groupBuyId.toString()) && row.payStatus === 1) {
+        orders.pendingGroupBuy += 1;
+        continue;
+      }
       const statusEnum = this.getUserOrderStatusEnum(
         row.orderStatus,
         row.payStatus,

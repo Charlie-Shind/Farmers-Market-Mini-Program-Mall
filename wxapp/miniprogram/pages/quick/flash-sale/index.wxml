@@ -16,18 +16,26 @@
 
     <!-- 三列补贴/券 -->
     <view class="pdd-grid">
-      <view class="pdd-grid__cell" bindtap="focusSubsidy">
-        <text class="pdd-grid__title">专属补贴</text>
-        <text class="pdd-grid__sub">运费满减</text>
-        <view class="pdd-grid__rules" wx:if="{{freightRules.length}}">
-          <text
+      <view class="pdd-grid__cell pdd-grid__cell--subsidy" bindtap="focusSubsidy">
+        <view class="pdd-subsidy__head">
+          <text class="pdd-grid__title">专属补贴</text>
+          <text class="pdd-subsidy__badge">运费</text>
+        </view>
+        <text class="pdd-grid__sub">下单立享满减</text>
+        <view class="pdd-subsidy__chips" wx:if="{{freightRules.length}}">
+          <view
             wx:for="{{freightRules}}"
             wx:key="id"
-            class="pdd-grid__rule"
-          >{{item.ruleText}}</text>
+            class="pdd-subsidy__chip {{index === 0 ? 'is-primary' : ''}}"
+          >
+            <text class="pdd-subsidy__chip-label">{{item.shortLabel}}</text>
+          </view>
         </view>
         <view wx:elif="{{loading}}" class="pdd-grid__empty">规则加载中</view>
-        <view wx:else class="pdd-grid__empty">暂无运费补贴</view>
+        <view wx:else class="pdd-subsidy__empty">
+          <text class="pdd-subsidy__empty-dot">·</text>
+          <text>暂无运费补贴</text>
+        </view>
       </view>
       <view class="pdd-grid__cell" bindtap="openCoupons">
         <text class="pdd-grid__title">秒杀神券</text>
